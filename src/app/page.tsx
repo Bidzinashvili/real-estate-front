@@ -2,8 +2,9 @@
 
 import { useStore } from "@/shared/lib/store";
 import { ExampleForm } from "@/features/example-form";
+import { GoogleLoginButton } from "@/features/auth";
 
-export default function Home() {
+function Home() {
   const { count, increment, decrement, reset } = useStore();
 
   return (
@@ -16,7 +17,9 @@ export default function Home() {
           Built with Next.js, FSD Architecture, Zustand, React Hook Form, and shadcn/ui
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          <GoogleLoginButton />
+
           <div className="p-6 border rounded-lg">
             <h2 className="text-2xl font-semibold mb-4">Zustand Store Example</h2>
             <div className="space-y-4">
@@ -45,7 +48,9 @@ export default function Home() {
           </div>
 
           <div className="p-6 border rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">React Hook Form Example</h2>
+            <h2 className="text-2xl font-semibold mb-4">
+              React Hook Form Example
+            </h2>
             <ExampleForm />
           </div>
         </div>
@@ -53,3 +58,5 @@ export default function Home() {
     </main>
   );
 }
+
+export default Home;
