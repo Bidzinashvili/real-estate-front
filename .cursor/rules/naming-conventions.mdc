@@ -1,0 +1,27 @@
+---
+description: File and directory naming conventions for the project
+alwaysApply: true
+---
+
+# Naming Conventions
+
+Use **camelCase** for all file and directory names. Do not use dashes (kebab-case) or underscores (snake_case).
+
+```
+# ✅ Good
+useSignOut.ts
+useStore.ts
+exampleForm.tsx
+authHelpers.ts
+
+# ❌ Bad
+use-sign-out.ts
+use-store.ts
+example-form.tsx
+auth-helpers.ts
+```
+
+Exceptions:
+- Next.js route files that must follow framework conventions (`page.tsx`, `layout.tsx`, `loading.tsx`, etc.)
+- Config files at the project root (`tailwind.config.ts`, `next.config.ts`, etc.)
+- Component files may use PascalCase (`GoogleLoginButton.tsx`, `SignUpForm.tsx`)

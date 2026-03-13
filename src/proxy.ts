@@ -12,17 +12,32 @@ export async function proxy(request: NextRequest) {
   const { nextUrl, cookies } = request;
   const { pathname } = nextUrl;
 
+  const token = cookies.get(AUTH_COOKIE_KEY)?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   if (isPublicPath(pathname)) {
+    if (pathname === '/sign-up' && token && baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+      } catch {
+        // If anything goes wrong, fall through and show sign-up
+      }
+    }
+
     return NextResponse.next();
   }
-
-  const token = cookies.get(AUTH_COOKIE_KEY)?.value;
 
   if (!token) {
     return NextResponse.redirect(new URL('/sign-up', request.url));
   }
-
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (!baseUrl) {
     return NextResponse.redirect(new URL('/sign-up', request.url));
