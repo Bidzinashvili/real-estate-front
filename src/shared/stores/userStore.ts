@@ -5,7 +5,7 @@ import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
 type User = {
   id: string;
   email: string;
-  role: string;
+  role: 'ADMIN' | 'AGENT';
 };
 
 type UserState = {
