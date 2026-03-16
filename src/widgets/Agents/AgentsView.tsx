@@ -65,6 +65,14 @@ export function AgentsView() {
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+          <button
+            type="button"
+            onClick={() => router.push("/agents/new")}
+            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+          >
+            Add agent
+          </button>
+
           <div className="flex w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 shadow-sm sm:w-72">
             <input
               type="search"
