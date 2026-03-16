@@ -17,28 +17,27 @@ function DashboardPage() {
 
   if (!user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-slate-500">Loading your dashboard…</p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-        <DashboardHeader email={user.email} role={user.role} onSignOut={signOut} />
-        <DashboardActions isAdmin={isAdmin} />
-        {isAdmin && (
-          <AdminAgentsSection
-            agents={agents}
-            isLoading={isLoading}
-            error={error}
-            onAddAgent={() => router.push("/agents/new")}
-          />
-        )}
-      </div>
-    </main>
+    <>
+      <DashboardHeader email={user.email} role={user.role} onSignOut={signOut} />
+      <DashboardActions isAdmin={isAdmin} />
+      {isAdmin && (
+        <AdminAgentsSection
+          agents={agents}
+          isLoading={isLoading}
+          error={error}
+          onAddAgent={() => router.push("/agents/new")}
+        />
+      )}
+    </>
   );
 }
 
 export default DashboardPage;
+

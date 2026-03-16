@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authenticateWithGoogleIdToken } from "@/shared/lib/auth";
 
-function SignUpForm() {
+function SignInForm() {
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -54,10 +54,10 @@ function SignUpForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="border rounded-xl p-8 shadow-sm bg-card">
         <h1 className="text-2xl font-bold text-center mb-2">
-          Create an account
+          Sign in to your account
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8">
-          Sign up to get started with Real Estate App
+          Sign in with Google to get started
         </p>
 
         <div className="flex justify-center">
@@ -66,23 +66,16 @@ function SignUpForm() {
 
         {loading && (
           <p className="text-sm text-muted-foreground text-center mt-4">
-            Signing you up...
+            Signing you in...
           </p>
         )}
 
         {error && (
           <p className="text-sm text-destructive text-center mt-4">{error}</p>
         )}
-
-        <p className="text-sm text-muted-foreground text-center mt-8">
-          Already have an account?{" "}
-          <a href="/" className="text-primary underline hover:no-underline">
-            Sign in
-          </a>
-        </p>
       </div>
     </div>
   );
 }
 
-export { SignUpForm };
+export { SignInForm };

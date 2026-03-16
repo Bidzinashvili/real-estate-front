@@ -20,7 +20,7 @@ export function useSignOut() {
       document.cookie = `${AUTH_TOKEN_KEY}=; Max-Age=0; Path=/`;
     }
 
-    router.push("/sign-up");
+    router.push("/sign-in");
   }, [router, clearUser]);
 
   return signOut;

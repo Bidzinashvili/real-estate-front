@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/sign-up"];
+const PUBLIC_PATHS = ["/sign-in"];
 const ADMIN_ONLY_PATHS = ["/agents"];
 const AUTH_COOKIE_KEY = "authToken";
 
@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (isPublicPath(pathname)) {
-    if (pathname === "/sign-up" && token && baseUrl) {
+    if (pathname === "/sign-in" && token && baseUrl) {
       const user = await fetchAuthUser(token, baseUrl);
 
       if (user) {
@@ -54,17 +54,17 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!token) {
-    return NextResponse.redirect(new URL("/sign-up", request.url));
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   if (!baseUrl) {
-    return NextResponse.redirect(new URL("/sign-up", request.url));
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   const user = await fetchAuthUser(token, baseUrl);
 
   if (!user) {
-    return NextResponse.redirect(new URL("/sign-up", request.url));
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   const isAdminOnlyPath = ADMIN_ONLY_PATHS.some((adminPath) =>
