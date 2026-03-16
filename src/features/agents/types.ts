@@ -23,4 +23,10 @@ export type AgentDetails = {
   deletedAt: string | null;
 };
 
+export type AgentCreatePayload = {
+  fullName: string;
+  email: string;
+  phone: string;
+};
 
+export type AgentUpdatePayload = AgentCreatePayload;

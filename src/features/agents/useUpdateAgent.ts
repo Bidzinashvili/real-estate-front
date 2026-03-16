@@ -1,17 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { AgentDetails } from "@/features/agents/types";
+import type { AgentDetails, AgentUpdatePayload } from "@/features/agents/types";
 import { updateAgent } from "@/features/agents/api";
 
-type UpdateAgentPayload = {
-  fullName: string;
-  email: string;
-  phone: string;
-};
-
 type UseUpdateAgentResult = {
-  update: (id: string, payload: UpdateAgentPayload) => Promise<AgentDetails>;
+  update: (id: string, payload: AgentUpdatePayload) => Promise<AgentDetails>;
   isLoading: boolean;
   error: string | null;
 };
@@ -22,7 +16,7 @@ export function useUpdateAgent(): UseUpdateAgentResult {
 
   const update = async (
     id: string,
-    payload: UpdateAgentPayload,
+    payload: AgentUpdatePayload,
   ): Promise<AgentDetails> => {
     setIsLoading(true);
     setError(null);

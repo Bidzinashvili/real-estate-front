@@ -1,12 +1,11 @@
 import axios from "axios";
 import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
-import type { AgentDetails } from "@/features/agents/types";
-
-type UpdateAgentPayload = {
-  fullName: string;
-  email: string;
-  phone: string;
-};
+import type {
+  Agent,
+  AgentDetails,
+  AgentCreatePayload,
+  AgentUpdatePayload,
+} from "@/features/agents/types";
 
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
@@ -48,9 +47,29 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
   }
 }
 
+export async function createAgent(payload: AgentCreatePayload): Promise<Agent> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post<Agent>(`${baseUrl}/admin/agents`, payload, {
+      headers,
+    });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message =
+        (error.response?.data as { message?: string } | undefined)?.message ??
+        "Could not create agent right now.";
+      throw new Error(message);
+    }
+
+    throw error;
+  }
+}
+
 export async function updateAgent(
   id: string,
-  payload: UpdateAgentPayload,
+  payload: AgentUpdatePayload,
 ): Promise<AgentDetails> {
   const { baseUrl, headers } = getAuthHeaders();
 
