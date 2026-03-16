@@ -29,6 +29,9 @@ export function DashboardActions({ isAdmin }: DashboardActionsProps) {
         {isAdmin && (
           <button
             type="button"
+            onClick={() => {
+              window.location.href = "/agents";
+            }}
             className="group flex flex-col items-start gap-2 rounded-xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
           >
             <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">

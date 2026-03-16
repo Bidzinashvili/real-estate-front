@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUpdateAgent } from "@/features/agents/useUpdateAgent";
 import { useDeleteAgent } from "@/features/agents/useDeleteAgent";
@@ -23,6 +24,15 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
     error: deleteError,
   } = useDeleteAgent();
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const handleGoBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/dashboard");
+  };
 
   const handleSubmit = async (values: {
     fullName: string;
@@ -57,10 +67,13 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
         <div className="flex w-full max-w-xl flex-col gap-4 px-4">
           <button
             type="button"
-            onClick={() => router.push("/dashboard")}
+            onClick={handleGoBack}
             className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
           >
-            ← Back to dashboard
+            <span className="inline-flex items-center gap-1.5">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Go back</span>
+            </span>
           </button>
           <p className="text-slate-500">
             {error ?? "We could not find this agent."}
@@ -75,10 +88,13 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
       <div className="flex w-full max-w-xl flex-col gap-4 px-4">
         <button
           type="button"
-          onClick={() => router.push("/dashboard")}
+          onClick={handleGoBack}
           className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
         >
-          ← Back to dashboard
+          <span className="inline-flex items-center gap-1.5">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          <span>Go back</span>
+          </span>
         </button>
         <AgentDetailsCard
           agent={agent}

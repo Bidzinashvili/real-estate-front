@@ -7,6 +7,9 @@ import type { Agent, AgentsResponse } from "@/features/agents/types";
 
 type UseAgentsListOptions = {
   enabled: boolean;
+  search?: string;
+  sortBy?: "fullName" | "email" | "createdAt";
+  order?: "asc" | "desc";
 };
 
 type UseAgentsListResult = {
@@ -16,7 +19,7 @@ type UseAgentsListResult = {
 };
 
 export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResult {
-  const { enabled } = options;
+  const { enabled, search, sortBy, order } = options;
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +51,11 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          params: {
+            search: search || undefined,
+            sortBy: sortBy || undefined,
+            order: order || undefined,
+          },
         });
 
         if (!cancelled) {
@@ -69,7 +77,7 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, search, sortBy, order]);
 
   return { agents, isLoading, error };
 }
