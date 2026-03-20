@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useCurrentUser, useSignOut } from "@/shared/hooks";
 import { useAgentsList } from "@/features/agents/useAgentsList";
+import { usePropertiesList } from "@/features/properties/usePropertiesList";
 import { DashboardHeader } from "@/widgets/Dashboard/DashboardHeader";
 import { DashboardActions } from "@/widgets/Dashboard/DashboardActions";
 import { AdminAgentsSection } from "@/widgets/Dashboard/AdminAgentsSection";
+import { AdminPropertiesSection } from "@/widgets/Dashboard/AdminPropertiesSection";
 
 function DashboardPage() {
   const router = useRouter();
@@ -14,6 +16,11 @@ function DashboardPage() {
 
   const isAdmin = user?.role === "ADMIN";
   const { agents, isLoading, error } = useAgentsList({ enabled: Boolean(isAdmin) });
+  const {
+    properties,
+    isLoading: isLoadingProperties,
+    error: propertiesError,
+  } = usePropertiesList({ enabled: Boolean(isAdmin) });
 
   if (!user) {
     return (
@@ -28,12 +35,19 @@ function DashboardPage() {
       <DashboardHeader email={user.email} role={user.role} onSignOut={signOut} />
       <DashboardActions isAdmin={isAdmin} />
       {isAdmin && (
-        <AdminAgentsSection
-          agents={agents}
-          isLoading={isLoading}
-          error={error}
-          onAddAgent={() => router.push("/agents/new")}
-        />
+        <>
+          <AdminAgentsSection
+            agents={agents}
+            isLoading={isLoading}
+            error={error}
+            onAddAgent={() => router.push("/agents/new")}
+          />
+          <AdminPropertiesSection
+            properties={properties}
+            isLoading={isLoadingProperties}
+            error={propertiesError}
+          />
+        </>
       )}
     </>
   );

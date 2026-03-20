@@ -4,11 +4,23 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAgentsList } from "@/features/agents/useAgentsList";
+import { InlineSelect } from "@/shared/ui/InlineSelect";
 
 const PAGE_SIZE = 10;
 
 type SortBy = "fullName" | "email" | "createdAt";
 type Order = "asc" | "desc";
+
+const AGENT_SORT_OPTIONS: { value: SortBy; label: string }[] = [
+  { value: "createdAt", label: "Newest" },
+  { value: "fullName", label: "Name" },
+  { value: "email", label: "Email" },
+];
+
+const ORDER_OPTIONS: { value: Order; label: string }[] = [
+  { value: "desc", label: "Desc" },
+  { value: "asc", label: "Asc" },
+];
 
 export function AgentsView() {
   const router = useRouter();
@@ -103,28 +115,19 @@ export function AgentsView() {
 
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">
             <span className="hidden font-medium sm:inline">Sort</span>
-            <select
+            <InlineSelect
+              aria-label="Sort agents by"
               value={sortBy}
-              onChange={(event) =>
-                handleSortChange(event.target.value as SortBy)
-              }
-              className="bg-transparent pr-2 text-xs outline-none"
-            >
-              <option value="createdAt">Newest</option>
-              <option value="fullName">Name</option>
-              <option value="email">Email</option>
-            </select>
+              onChange={(value) => handleSortChange(value as SortBy)}
+              options={AGENT_SORT_OPTIONS}
+            />
             <span className="h-4 w-px bg-slate-200" />
-            <select
+            <InlineSelect
+              aria-label="Sort order"
               value={order}
-              onChange={(event) =>
-                handleOrderChange(event.target.value as Order)
-              }
-              className="bg-transparent text-xs outline-none"
-            >
-              <option value="desc">Desc</option>
-              <option value="asc">Asc</option>
-            </select>
+              onChange={(value) => handleOrderChange(value as Order)}
+              options={ORDER_OPTIONS}
+            />
           </div>
         </div>
       </div>
