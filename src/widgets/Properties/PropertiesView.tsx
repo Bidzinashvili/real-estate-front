@@ -183,13 +183,15 @@ export function PropertiesView() {
         )}
 
         {!isLoading && !error && sorted.length > 0 && (
-          <div className="mt-2 grid justify-items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="mt-2 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6"
+          >
             {currentProperties.map((property) => (
               <article
                 key={property.id}
-                className="w-full max-w-[400px] overflow-hidden rounded-3xl bg-[#dfe8e4] shadow-sm ring-1 ring-slate-200"
+                className="flex min-w-0 w-full flex-col overflow-hidden rounded-3xl bg-[#dfe8e4] shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md"
               >
-                <div className="relative h-40 w-full overflow-hidden">
+                <div className="relative aspect-[3/2] w-full overflow-hidden">
                   <PropertyCardImageCarousel
                     propertyId={property.id}
                     images={property.images}
