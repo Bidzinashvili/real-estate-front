@@ -16,6 +16,8 @@ import {
 } from "@/features/properties/payloadBuilder";
 import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
+import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
+import { getApiBaseUrl } from "@/shared/lib/auth";
 
 type PropertyDetailsCardProps = {
   property: Property;
@@ -24,6 +26,7 @@ type PropertyDetailsCardProps = {
   isSaving: boolean;
   saveError: string | null;
   onSubmit: (payload: PropertyUpdatePayload) => Promise<void> | void;
+  onImagesChanged: () => Promise<void>;
 };
 
 type FormValues = PropertyFormValues;
@@ -35,7 +38,9 @@ export function PropertyDetailsCard({
   isSaving,
   saveError,
   onSubmit,
+  onImagesChanged,
 }: PropertyDetailsCardProps) {
+  const apiBaseUrl = getApiBaseUrl();
   const initialValues = useMemo<FormValues>(() => {
     return {
       dealType: property.dealType,
@@ -156,6 +161,16 @@ export function PropertyDetailsCard({
           not the listing agent. Administrators always see the full record.
         </p>
       )}
+
+      <div className="mt-6">
+        <PropertyDetailsImageGallery
+          propertyId={property.id}
+          images={property.images}
+          apiBaseUrl={apiBaseUrl}
+          canDelete={canEdit}
+          onDeleted={onImagesChanged}
+        />
+      </div>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
         <PropertyDetailsEditableSections

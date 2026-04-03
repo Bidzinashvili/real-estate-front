@@ -6,7 +6,6 @@ import {
   DetailMultiline,
   DetailNumber,
   DetailPhone,
-  DetailRow,
   DetailText,
   DetailYesNo,
 } from "@/widgets/PropertyDetails/DetailDisplay";
@@ -83,9 +82,6 @@ export function PropertyDetailsReadOnlySections({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="Assigned agent" value={property.userId} />
-          <DetailRow label="Images">
-            <span>{property.images?.length ?? 0} attached</span>
-          </DetailRow>
         </div>
       </section>
 

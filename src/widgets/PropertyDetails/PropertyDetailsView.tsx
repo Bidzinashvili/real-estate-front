@@ -118,6 +118,13 @@ export function PropertyDetailsView({
           isSaving={isSaving}
           saveError={saveError}
           onSubmit={handleSubmit}
+          onImagesChanged={async () => {
+            const list = await refetch();
+            const refreshed = list.find((p) => p.id === activeProperty.id);
+            if (refreshed) {
+              setLatestProperty(refreshed);
+            }
+          }}
         />
         {successMessage && !saveError && (
           <p className="text-sm text-emerald-600">{successMessage}</p>

@@ -83,6 +83,35 @@ export async function updateProperty(
   }
 }
 
+export async function deletePropertyImage(
+  propertyId: string,
+  imageUrl: string,
+): Promise<void> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    await axios.delete(`${baseUrl}/properties/${propertyId}/images`, {
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "Could not delete this image right now.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
 function buildCreatePropertyFormData(
   payload: CreatePropertyDto,
   images: File[],
