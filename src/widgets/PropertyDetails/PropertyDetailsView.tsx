@@ -7,8 +7,7 @@ import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { useUpdateProperty } from "@/features/properties/useUpdateProperty";
 import { PropertyDetailsCard } from "@/widgets/PropertyDetails/PropertyDetailsCard";
 import { useEffect, useMemo, useState } from "react";
-import type { PropertyUpdatePayload } from "@/features/properties/types";
-import type { Property } from "@/features/properties/types";
+import type { Property, PropertyUpdatePayload } from "@/features/properties/types";
 import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
 import { refetchUpdatedProperty } from "@/features/properties/saveFlow";
 
@@ -119,9 +118,8 @@ export function PropertyDetailsView({
           saveError={saveError}
           onSubmit={handleSubmit}
           onImagesChanged={async () => {
-            const list = await refetch();
-            const refreshed = list.find((p) => p.id === activeProperty.id);
-            if (refreshed) {
+            const refreshed = await refetch();
+            if (refreshed?.id === activeProperty.id) {
               setLatestProperty(refreshed);
             }
           }}

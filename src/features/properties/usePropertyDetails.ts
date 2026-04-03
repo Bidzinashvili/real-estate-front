@@ -1,28 +1,54 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getPropertyFromListById } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
-import { usePropertiesList } from "@/features/properties/usePropertiesList";
 
 type UsePropertyDetailsResult = {
   property: Property | null;
   isLoading: boolean;
   error: string | null;
-  refetch: () => Promise<Property[]>;
+  refetch: () => Promise<Property | null>;
 };
 
 export function usePropertyDetails(
   id: string | null | undefined,
 ): UsePropertyDetailsResult {
-  const { properties, isLoading, error, refetch } = usePropertiesList({
-    enabled: Boolean(id),
-  });
+  const [property, setProperty] = useState<Property | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const property = useMemo(() => {
-    if (!id) return null;
-    return properties.find((item) => item.id === id) ?? null;
-  }, [id, properties]);
+  const load = useCallback(async (): Promise<Property | null> => {
+    if (!id) {
+      setProperty(null);
+      setError(null);
+      return null;
+    }
 
-  return { property, isLoading, error, refetch };
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const next = await getPropertyFromListById(id);
+      setProperty(next);
+      if (!next) {
+        setError("Property not found.");
+      }
+      return next;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not load property details.";
+      setError(message);
+      setProperty(null);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { property, isLoading, error, refetch: load };
 }
-

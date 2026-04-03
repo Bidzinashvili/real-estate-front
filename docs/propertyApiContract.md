@@ -11,8 +11,16 @@
 
 ## `GET /properties`
 
-- **200** — JSON array of `Property` rows with relations: `apartment`, `privateHouse`, `landPlot`, `commercial` (at most one block populated per row; others `null`).
-- Ordered by `createdAt` descending.
+- **200** — The API historically returned a **JSON array** of `Property` rows with relations: `apartment`, `privateHouse`, `landPlot`, `commercial` (at most one block populated per row; others `null`), ordered by `createdAt` descending.
+- **Frontend normalization (this repo):** [`normalizePropertiesListResponse`](../src/features/properties/normalizers.ts) accepts **either** a raw **`Property[]` array** **or** an object envelope with at least `properties: Property[]` plus optional `total`, `page`, and `limit`. If the body is an array, the client treats it as a single page (`page: 1`, `total` and `limit` derived from the array length).
+
+### Query parameters the SPA may send
+
+The catalog and [`toGetPropertiesSearchParams`](../src/features/properties/getPropertiesQuery.ts) may append:
+
+`search`, `type` (property type enum; not `propertyType`), `dealType`, `city`, `district`, `minPrice`, `maxPrice`, `rooms`, `bedrooms`, `minArea`, `maxArea`, `floor`, `yardArea`, `houseArea`, `landArea`, `area` (commercial area), `sortBy` (`createdAt` | `pricePublic`), `order` (`asc` | `desc`), `page`, `limit`.
+
+**Verify on `GET /swagger`:** whether these names and semantics are implemented server-side. If the server ignores them or always returns the full array, list pagination and filters in the UI may not match server behavior or may download very large payloads per request.
 
 ### Enums (relevant)
 
@@ -62,11 +70,13 @@ If generated OpenAPI should list nested PATCH models fully, add `@ApiExtraModels
 
 ## Future API: server-driven list (proposed)
 
-The current **`GET /properties`** contract returns the full ordered array. For larger datasets the frontend should avoid downloading and paginating the entire list in the browser.
+For larger datasets the backend should implement server-side filtering, sorting, and pagination and return a stable envelope (`properties` + `total` + `page` + `limit`, or a documented `items` key) so the UI’s page controls match server truth.
 
-**Proposed extension (not implemented until the backend exposes it):**
+Until **`GET /swagger`** documents and implements that behavior, treat array-only responses and ignored query params as a known limitation and validate behavior against the live API.
 
-- `GET /properties?search=&sortBy=&order=&page=&limit=` (or cursor-based `cursor=` / `take=`), returning either a JSON array (backward compatible) or a paginated envelope such as `{ items: Property[]; total: number; page: number; … }`.
-- Align query parameter names and sort field whitelist with `Swagger` once added.
+### Backend checklist (confirm against Swagger)
 
-Until this exists, the app may keep client-side search/sort/pagination on the fetched array as a deliberate trade-off.
+1. Response shape: raw array only, or envelope with which keys (`properties`, `items`, `total`, `page`, `limit`)?
+2. Which of the query keys above are accepted and how are unknown params treated?
+3. Is `total` the count of all matching rows across pages?
+4. `PATCH /properties/:id`: response body is flat scalars without nested relations — ensure the frontend does not assume nested `apartment` / `privateHouse` / etc. in the PATCH JSON response when wiring any parser.

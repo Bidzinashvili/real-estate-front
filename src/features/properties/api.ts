@@ -1,13 +1,18 @@
 import axios from "axios";
 import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
 import type {
+  GetPropertiesQuery,
+  PropertiesListResult,
+} from "@/features/properties/getPropertiesQuery";
+import { toGetPropertiesSearchParams } from "@/features/properties/getPropertiesQuery";
+import type {
   CreatePropertyDto,
   Property,
   PropertyUpdatePayload,
 } from "@/features/properties/types";
 import {
   normalizeCreatePropertyResponse,
-  normalizePropertiesResponse,
+  normalizePropertiesListResponse,
 } from "@/features/properties/normalizers";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
 
@@ -31,15 +36,22 @@ function getAuthHeaders() {
   };
 }
 
-export async function getProperties(): Promise<Property[]> {
+const PROPERTY_LIST_PAGE_SCAN = 100;
+const PROPERTY_LIST_SCAN_MAX_PAGES = 500;
+
+export async function getProperties(
+  query?: GetPropertiesQuery,
+): Promise<PropertiesListResult> {
   const { baseUrl, headers } = getAuthHeaders();
+  const params = toGetPropertiesSearchParams(query);
 
   try {
     const res = await axios.get<unknown>(`${baseUrl}/properties`, {
       headers,
+      params,
     });
 
-    return normalizePropertiesResponse(res.data);
+    return normalizePropertiesListResponse(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "Could not load properties right now.";
@@ -53,6 +65,55 @@ export async function getProperties(): Promise<Property[]> {
 
     throw error;
   }
+}
+
+export async function getPropertyFromListById(
+  id: string,
+): Promise<Property | null> {
+  let page = 1;
+
+  while (page <= PROPERTY_LIST_SCAN_MAX_PAGES) {
+    const { properties, total, limit } = await getProperties({
+      page,
+      limit: PROPERTY_LIST_PAGE_SCAN,
+    });
+
+    const found = properties.find((p) => p.id === id) ?? null;
+    if (found) return found;
+
+    const seenEnd = page * limit >= total || properties.length === 0;
+    if (seenEnd) return null;
+
+    page += 1;
+  }
+
+  return null;
+}
+
+export async function getPropertiesBulk(options?: {
+  maxItems?: number;
+}): Promise<Property[]> {
+  const maxItems = options?.maxItems ?? 2500;
+  const pageLimit = 100;
+  const acc: Property[] = [];
+  let page = 1;
+
+  while (
+    acc.length < maxItems &&
+    page <= PROPERTY_LIST_SCAN_MAX_PAGES
+  ) {
+    const { properties, total } = await getProperties({
+      page,
+      limit: pageLimit,
+    });
+
+    acc.push(...properties);
+
+    if (acc.length >= total || properties.length === 0) break;
+    page += 1;
+  }
+
+  return acc;
 }
 
 export async function updateProperty(

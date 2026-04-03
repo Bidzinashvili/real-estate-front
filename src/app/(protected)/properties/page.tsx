@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PropertiesView } from "@/widgets/Properties/PropertiesView";
 
 export const metadata: Metadata = {
@@ -6,6 +7,14 @@ export const metadata: Metadata = {
 };
 
 export default function PropertiesPage() {
-  return <PropertiesView />;
+  return (
+    <Suspense
+      fallback={
+        <p className="p-6 text-sm text-slate-600">Loading properties…</p>
+      }
+    >
+      <PropertiesView />
+    </Suspense>
+  );
 }
 

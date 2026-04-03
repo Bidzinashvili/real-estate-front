@@ -10,8 +10,10 @@ export function AppHeader() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <header className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm sm:px-6">
-      <div className="flex items-center gap-2">
+    <header
+      className="mb-6 flex items-center gap-4 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm sm:px-6 max-[675px]:justify-center min-[676px]:justify-between"
+    >
+      <div className="hidden items-center gap-2 min-[676px]:flex">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
           RE
         </div>

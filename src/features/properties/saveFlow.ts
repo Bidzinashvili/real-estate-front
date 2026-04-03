@@ -2,9 +2,8 @@ import type { Property } from "@/features/properties/types";
 
 export async function refetchUpdatedProperty(
   propertyId: string,
-  refetch: () => Promise<Property[]>,
+  refetch: () => Promise<Property | null>,
 ): Promise<Property | null> {
-  const list = await refetch();
-  return list.find((item) => item.id === propertyId) ?? null;
+  const next = await refetch();
+  return next?.id === propertyId ? next : null;
 }
-

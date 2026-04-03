@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getProperties } from "@/features/properties/api";
+import { getPropertiesBulk } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
+
 
 type UsePropertiesListOptions = {
   enabled: boolean;
@@ -27,9 +28,9 @@ export function usePropertiesList({
     setError(null);
 
     try {
-      const list = await getProperties();
-      setProperties(list ?? []);
-      return list ?? [];
+      const list = await getPropertiesBulk();
+      setProperties(list);
+      return list;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not load properties right now.";
