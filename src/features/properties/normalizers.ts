@@ -39,6 +39,32 @@ function asNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function normalizeImages(
+  value: unknown,
+): Array<{ url: string; originalName: string }> {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (typeof item === "string") {
+        return { url: item, originalName: "" };
+      }
+      if (!isRecord(item)) return null;
+
+      const url = asString(item.url);
+      if (!url) return null;
+
+      return {
+        url,
+        originalName: asString(item.originalName),
+      };
+    })
+    .filter(
+      (item): item is { url: string; originalName: string } =>
+        item !== null,
+    );
+}
+
 function normalizeApartment(value: unknown): PropertyApartment | null {
   if (!isRecord(value)) return null;
 
@@ -106,26 +132,28 @@ function normalizeCommercial(value: unknown): PropertyCommercial | null {
 export function normalizeProperty(value: unknown): Property | null {
   if (!isRecord(value)) return null;
 
-  const rawImages = Array.isArray(value.images) ? value.images : [];
-  const images = rawImages.filter((item): item is string => typeof item === "string");
+  const images = normalizeImages(value.images);
 
   return {
     id: asString(value.id),
-    propertyType: asString(value.propertyType),
+    propertyType: asString(value.propertyType) as Property["propertyType"],
     dealType: parseDealType(value.dealType),
     city: asString(value.city),
     district: asString(value.district),
     address: asString(value.address),
-    cadastralCode: asString(value.cadastralCode),
+    cadastralCode: asNullableString(value.cadastralCode),
     pricePublic: asNumber(value.pricePublic),
-    priceInternal: asNumber(value.priceInternal),
+    priceInternal:
+      value.priceInternal === null || value.priceInternal === undefined
+        ? null
+        : asNumber(value.priceInternal),
     ownerName: asString(value.ownerName),
     ownerPhone: asString(value.ownerPhone),
-    ownerWhatsapp: asString(value.ownerWhatsapp),
-    ourSiteId: asString(value.ourSiteId),
-    myHomeId: asString(value.myHomeId),
-    ssGeId: asString(value.ssGeId),
-    description: asString(value.description),
+    ownerWhatsapp: asNullableString(value.ownerWhatsapp),
+    ourSiteId: asNullableString(value.ourSiteId),
+    myHomeId: asNullableString(value.myHomeId),
+    ssGeId: asNullableString(value.ssGeId),
+    description: asNullableString(value.description),
     comment: asNullableString(value.comment),
     internalComment: asNullableString(value.internalComment),
     reminderDate: asNullableString(value.reminderDate),
@@ -155,5 +183,33 @@ export function normalizePropertiesResponse(data: unknown): Property[] {
   return list
     .map((item) => normalizeProperty(item))
     .filter((item): item is Property => item !== null);
+}
+
+/**
+ * Normalizes POST /properties response bodies: plain row, single-element array,
+ * or common wrapper keys (`property`, `data`).
+ */
+export function normalizeCreatePropertyResponse(data: unknown): Property | null {
+  if (data == null) {
+    return null;
+  }
+
+  if (Array.isArray(data)) {
+    if (data.length !== 1) {
+      return null;
+    }
+    return normalizeProperty(data[0]);
+  }
+
+  if (!isRecord(data)) {
+    return null;
+  }
+
+  const nested = data.property ?? data.data;
+  if (nested !== undefined && nested !== null) {
+    return normalizeProperty(nested);
+  }
+
+  return normalizeProperty(data);
 }
 

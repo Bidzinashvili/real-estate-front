@@ -25,6 +25,12 @@ export function AdminPropertiesSection({
     <section className="mt-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-slate-800">Your properties</h2>
+        <Link
+          href="/properties/new"
+          className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-slate-800"
+        >
+          Add property
+        </Link>
       </div>
 
       {properties.length === 0 ? (

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
-import type { Agent, AgentsResponse } from "@/features/agents/types";
+import { getAgentsList } from "@/features/agents/api";
+import type { Agent } from "@/features/agents/types";
 
 type UseAgentsListOptions = {
   enabled: boolean;
@@ -47,23 +47,17 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
       }
 
       try {
-        const res = await axios.get<AgentsResponse>(`${baseUrl}/admin/agents`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            search: search || undefined,
-            sortBy: sortBy || undefined,
-            order: order || undefined,
-          },
-        });
-
+        const list = await getAgentsList({ search, sortBy, order });
         if (!cancelled) {
-          setAgents(res.data.agents ?? []);
+          setAgents(list);
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setError("Could not load agents right now.");
+          const message =
+            err instanceof Error
+              ? err.message
+              : "Could not load agents right now.";
+          setError(message);
         }
       } finally {
         if (!cancelled) {
@@ -72,7 +66,7 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
       }
     };
 
-    loadAgents();
+    void loadAgents();
 
     return () => {
       cancelled = true;
@@ -81,4 +75,3 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
 
   return { agents, isLoading, error };
 }
-

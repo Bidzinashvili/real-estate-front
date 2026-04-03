@@ -2,13 +2,18 @@ export type Agent = {
   id: string;
   fullName: string;
   email: string;
-  phone: string;
+  phone: string | null;
   createdAt: string;
 };
 
 export type AgentsResponse = {
+  items: Agent[];
+  page: number;
+  limit: number;
   total: number;
-  agents: Agent[];
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 };
 
 export type AgentDetails = {
@@ -29,4 +34,4 @@ export type AgentCreatePayload = {
   phone: string;
 };
 
-export type AgentUpdatePayload = AgentCreatePayload;
+export type AgentUpdatePayload = Partial<AgentCreatePayload>;

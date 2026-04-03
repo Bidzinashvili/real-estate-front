@@ -3,9 +3,17 @@ import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
 import type {
   Agent,
   AgentDetails,
+  AgentsResponse,
   AgentCreatePayload,
   AgentUpdatePayload,
 } from "@/features/agents/types";
+import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
+
+export type GetAgentsListParams = {
+  search?: string;
+  sortBy?: "fullName" | "email" | "createdAt";
+  order?: "asc" | "desc";
+};
 
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
@@ -27,6 +35,36 @@ function getAuthHeaders() {
   };
 }
 
+export async function getAgentsList(
+  params: GetAgentsListParams = {},
+): Promise<Agent[]> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.get<AgentsResponse>(`${baseUrl}/admin/agents`, {
+      headers,
+      params: {
+        search: params.search || undefined,
+        sortBy: params.sortBy || undefined,
+        order: params.order || undefined,
+      },
+    });
+    return res.data.items ?? [];
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "Could not load agents right now.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
 export async function getAgentById(id: string): Promise<AgentDetails> {
   const { baseUrl, headers } = getAuthHeaders();
 
@@ -37,10 +75,13 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const message =
-        (error.response?.data as { message?: string } | undefined)?.message ??
-        "Could not load this agent right now.";
-      throw new Error(message);
+      const fallback = "Could not load this agent right now.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
     }
 
     throw error;
@@ -57,10 +98,13 @@ export async function createAgent(payload: AgentCreatePayload): Promise<Agent> {
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const message =
-        (error.response?.data as { message?: string } | undefined)?.message ??
-        "Could not create agent right now.";
-      throw new Error(message);
+      const fallback = "Could not create agent right now.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
     }
 
     throw error;
@@ -84,36 +128,44 @@ export async function updateAgent(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const message =
-        (error.response?.data as { message?: string } | undefined)?.message ??
-        "Could not save changes for this agent.";
-      throw new Error(message);
+      const fallback = "Could not save changes for this agent.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
     }
 
     throw error;
   }
 }
 
-export async function deleteAgents(ids: string[]): Promise<void> {
+export async function deleteAgents(
+  ids: string[],
+): Promise<{ message: string; count: number }> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    await axios.post(
+    const res = await axios.post<{ message: string; count: number }>(
       `${baseUrl}/admin/agents/deletion`,
       {
         ids,
       },
       { headers },
     );
+    return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const message =
-        (error.response?.data as { message?: string } | undefined)?.message ??
-        "Could not delete this agent right now.";
-      throw new Error(message);
+      const fallback = "Could not delete this agent right now.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
     }
 
     throw error;
   }
 }
-

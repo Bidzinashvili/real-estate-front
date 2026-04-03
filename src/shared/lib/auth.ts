@@ -1,19 +1,26 @@
-import axios from 'axios';
+import axios from "axios";
+import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
 
-const AUTH_TOKEN_KEY = 'authToken';
+const AUTH_TOKEN_KEY = "authToken";
 
 function getApiBaseUrl(): string | null {
   return process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
 }
 
 function getStoredAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
 type AuthResponse = {
-  token?: string;
   accessToken?: string;
+  tokenType?: "Bearer";
+  expiresIn?: number;
+  user?: {
+    id: string;
+    email: string;
+    role: "ADMIN" | "AGENT";
+  };
   [key: string]: unknown;
 } | null;
 
@@ -21,7 +28,7 @@ async function authenticateWithGoogleIdToken(idToken: string) {
   const baseUrl = getApiBaseUrl();
 
   if (!baseUrl) {
-    throw new Error('API base URL is not configured');
+    throw new Error("API base URL is not configured");
   }
 
   try {
@@ -32,16 +39,14 @@ async function authenticateWithGoogleIdToken(idToken: string) {
     const data: AuthResponse = res.data ?? null;
 
     if (res.status === 201 && data) {
-      const token =
-        (data.token as string | undefined) ??
-        (data.accessToken as string | undefined);
+      const token = data.accessToken as string | undefined;
 
       if (token) {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           window.localStorage.setItem(AUTH_TOKEN_KEY, token);
         }
 
-        if (typeof document !== 'undefined') {
+        if (typeof document !== "undefined") {
           const maxAgeSeconds = 14 * 24 * 60 * 60;
           document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(
             token,
@@ -55,14 +60,13 @@ async function authenticateWithGoogleIdToken(idToken: string) {
     if (axios.isAxiosError(error)) {
       const response = error.response;
       const data = (response?.data ?? null) as AuthResponse;
-      const message =
-        (data && (data.message as string | undefined)) ??
-        (response
-          ? `Google auth failed: ${response.status} ${
-              response.statusText ?? ''
-            }`.trim()
-          : 'Google auth failed: network error');
-      throw new Error(message);
+      const message = response
+        ? `Google auth failed: ${response.status} ${
+            response.statusText ?? ""
+          }`.trim()
+        : "Google auth failed: network error";
+      const parsed = parseStandardApiError(data, response?.status ?? 500, message);
+      throw new ApiError(parsed, message);
     }
 
     throw error;

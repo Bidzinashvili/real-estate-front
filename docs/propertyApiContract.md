@@ -59,3 +59,14 @@ This repo’s **editable fields** and **PATCH payload** types are intended to ma
 ### Optional backend improvement
 
 If generated OpenAPI should list nested PATCH models fully, add `@ApiExtraModels` / `@ApiBody` for **`UpdatePropertyDto`** (create DTOs are already wired in the controller in some places).
+
+## Future API: server-driven list (proposed)
+
+The current **`GET /properties`** contract returns the full ordered array. For larger datasets the frontend should avoid downloading and paginating the entire list in the browser.
+
+**Proposed extension (not implemented until the backend exposes it):**
+
+- `GET /properties?search=&sortBy=&order=&page=&limit=` (or cursor-based `cursor=` / `take=`), returning either a JSON array (backward compatible) or a paginated envelope such as `{ items: Property[]; total: number; page: number; … }`.
+- Align query parameter names and sort field whitelist with `Swagger` once added.
+
+Until this exists, the app may keep client-side search/sort/pagination on the fetched array as a deliberate trade-off.

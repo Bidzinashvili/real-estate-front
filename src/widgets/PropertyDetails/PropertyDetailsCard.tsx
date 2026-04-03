@@ -43,8 +43,8 @@ export function PropertyDetailsCard({
       district: property.district,
       address: property.address,
       pricePublic: property.pricePublic,
-      priceInternal: property.priceInternal,
-      description: property.description,
+      priceInternal: property.priceInternal ?? undefined,
+      description: property.description ?? "",
       apartment: property.apartment
         ? {
             totalArea: property.apartment.totalArea,

@@ -7,6 +7,8 @@ import { formatDealTypeLabel } from "@/features/properties/dealType";
 import { usePropertiesList } from "@/features/properties/usePropertiesList";
 import type { Property } from "@/features/properties/types";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { getApiBaseUrl } from "@/shared/lib/auth";
+import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 
 const PAGE_SIZE = 10;
 
@@ -34,16 +36,9 @@ function formatAddress(property: Property) {
   return parts.join(" ");
 }
 
-function getPrimaryImage(property: Property): string {
-  if (!property.images || property.images.length === 0) {
-    return "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80";
-  }
-
-  return property.images[0];
-}
-
 export function PropertiesView() {
   const router = useRouter();
+  const apiBaseUrl = getApiBaseUrl();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("createdAt");
   const [order, setOrder] = useState<Order>("desc");
@@ -118,6 +113,13 @@ export function PropertiesView() {
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+          <button
+            type="button"
+            onClick={() => router.push("/properties/new")}
+            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+          >
+            Add property
+          </button>
           <div className="flex w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 shadow-sm sm:w-72">
             <input
               type="search"
@@ -188,10 +190,11 @@ export function PropertiesView() {
                 className="w-full max-w-[400px] overflow-hidden rounded-3xl bg-[#dfe8e4] shadow-sm ring-1 ring-slate-200"
               >
                 <div className="relative h-40 w-full overflow-hidden">
-                  <img
-                    src={getPrimaryImage(property)}
+                  <PropertyCardImageCarousel
+                    propertyId={property.id}
+                    images={property.images}
+                    apiBaseUrl={apiBaseUrl}
                     alt={formatAddress(property)}
-                    className="h-full w-full object-cover"
                   />
                   <div className="absolute left-3 top-3 inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
                     {formatDealTypeLabel(property.dealType)}

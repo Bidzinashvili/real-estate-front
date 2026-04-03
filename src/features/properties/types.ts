@@ -52,26 +52,26 @@ export type PropertyCommercial = {
 
 export type Property = {
   id: string;
-  propertyType: string;
+  propertyType: PropertyType;
   dealType: DealType;
   city: string;
   district: string;
   address: string;
-  cadastralCode: string;
+  cadastralCode?: string | null;
   pricePublic: number;
-  priceInternal: number;
+  priceInternal?: number | null;
   ownerName: string;
   ownerPhone: string;
-  ownerWhatsapp: string;
-  ourSiteId: string;
-  myHomeId: string;
-  ssGeId: string;
-  description: string;
+  ownerWhatsapp?: string | null;
+  ourSiteId?: string | null;
+  myHomeId?: string | null;
+  ssGeId?: string | null;
+  description?: string | null;
   comment: string | null;
   internalComment: string | null;
   reminderDate: string | null;
   commentDate: string | null;
-  images: string[];
+  images: Array<{ url: string; originalName: string }>;
   createdAt: string;
   updatedAt: string;
   userId: string;
@@ -114,12 +114,156 @@ export type PropertyUpdatePayload = {
   district?: string;
   address?: string;
   pricePublic?: number;
-  priceInternal?: number;
+  priceInternal?: number | null;
   description?: string;
 
   apartment?: PropertyApartmentUpdate;
   privateHouse?: PropertyPrivateHouseUpdate;
   landPlot?: PropertyLandPlotUpdate;
   commercial?: PropertyCommercialUpdate;
+};
+
+export const PROPERTY_TYPES = [
+  "APARTMENT",
+  "PRIVATE_HOUSE",
+  "LAND_PLOT",
+  "COMMERCIAL",
+  "COTTAGE",
+  "HOTEL",
+] as const;
+
+export type PropertyType = (typeof PROPERTY_TYPES)[number];
+
+export const BUILDING_CONDITIONS = ["OLD", "NEW", "UNDER_CONSTRUCTION"] as const;
+export type BuildingCondition = (typeof BUILDING_CONDITIONS)[number];
+
+export const KITCHEN_TYPES = ["SEPARATE", "STUDIO"] as const;
+export type KitchenType = (typeof KITCHEN_TYPES)[number];
+
+export const LAND_STATUSES = [
+  "AGRICULTURAL",
+  "NON_AGRICULTURAL",
+  "COMMERCIAL",
+  "SPECIAL",
+  "INVESTMENT",
+  "FARMING",
+] as const;
+export type LandStatus = (typeof LAND_STATUSES)[number];
+
+export const COMMERCIAL_STATUSES = [
+  "UNIVERSAL",
+  "OFFICE",
+  "RETAIL",
+  "WAREHOUSE",
+  "INDUSTRIAL",
+  "FOOD_FACILITY",
+  "GARAGE",
+  "BASEMENT",
+  "SEMI_BASEMENT",
+  "WHOLE_BUILDING",
+  "CAR_WASH",
+  "CAR_SERVICE",
+] as const;
+export type CommercialStatus = (typeof COMMERCIAL_STATUSES)[number];
+
+export type PropertyImageInput =
+  | string
+  | {
+      url: string;
+      originalName?: string;
+    };
+
+export type PropertyApartmentCreate = {
+  buildingCondition: BuildingCondition;
+  totalArea: number;
+  rooms: number;
+  bedrooms: number;
+  floor: number;
+  balcony: boolean;
+  elevator: boolean;
+  centralHeating: boolean;
+  airConditioner: boolean;
+  kitchenType: KitchenType;
+  furniture: boolean;
+  appliances: boolean;
+  parking: boolean;
+  buildingNumber?: string;
+  project?: string;
+  renovation?: string;
+  petsAllowed?: boolean;
+  minRentalPeriod?: number;
+};
+
+export type PropertyPrivateHouseCreate = {
+  buildingCondition: BuildingCondition;
+  houseArea: number;
+  yardArea: number;
+  totalArea: number;
+  rooms: number;
+  bedrooms: number;
+  balcony: boolean;
+  centralHeating: boolean;
+  airConditioner: boolean;
+  furniture: boolean;
+  appliances: boolean;
+  parking: boolean;
+  pool: boolean;
+  fruitTrees: boolean;
+  electricity: boolean;
+  water: boolean;
+  gas: boolean;
+  sewage: boolean;
+  renovation?: string;
+  petsAllowed?: boolean;
+  minRentalPeriod?: number;
+};
+
+export type PropertyLandPlotCreate = {
+  landArea: number;
+  status: LandStatus;
+  forInvestment: boolean;
+  approvedProject: boolean;
+  canBeDivided: boolean;
+  fruitTrees: boolean;
+  electricity: boolean;
+  water: boolean;
+  gas: boolean;
+  sewage: boolean;
+};
+
+export type PropertyCommercialCreate = {
+  area: number;
+  status: CommercialStatus;
+  floor: number;
+  centralHeating: boolean;
+  airConditioner: boolean;
+  parking: boolean;
+  electricity: boolean;
+  water: boolean;
+  gas: boolean;
+  sewage: boolean;
+  renovation?: string;
+};
+
+export type CreatePropertyDto = {
+  propertyType?: PropertyType;
+  dealType?: DealType;
+  city: string;
+  district: string;
+  address: string;
+  pricePublic: number;
+  ownerName: string;
+  ownerPhone: string;
+  cadastralCode?: string;
+  priceInternal?: number;
+  ownerWhatsapp?: string;
+  myHomeId?: string;
+  ssGeId?: string;
+  description?: string;
+  images?: PropertyImageInput[];
+  apartment?: PropertyApartmentCreate;
+  privateHouse?: PropertyPrivateHouseCreate;
+  landPlot?: PropertyLandPlotCreate;
+  commercial?: PropertyCommercialCreate;
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import type { Agent } from "@/features/agents/types";
 
 type FormValues = {
@@ -27,20 +27,20 @@ export function AgentDetailsCard({
   const [values, setValues] = useState<FormValues>({
     fullName: agent.fullName,
     email: agent.email,
-    phone: agent.phone,
+    phone: agent.phone ?? "",
   });
 
   useEffect(() => {
     setValues({
       fullName: agent.fullName,
       email: agent.email,
-      phone: agent.phone,
+      phone: agent.phone ?? "",
     });
   }, [agent.fullName, agent.email, agent.phone]);
 
   const handleChange =
     (field: keyof FormValues) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       setValues((prev) => ({
         ...prev,
         [field]: event.target.value,
