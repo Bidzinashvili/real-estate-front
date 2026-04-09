@@ -76,9 +76,28 @@ export function useAddPropertyForm() {
           hotelScope: nextPropertyType === "HOTEL" ? prev.hotelScope : "",
         };
       }
+      if (key === "city" || key === "district") {
+        return { ...prev, [key]: value, selectedStreetId: null };
+      }
       return { ...prev, [key]: value };
     });
   }, []);
+
+  const updateAddress = useCallback(
+    (next: string, addressChangeMeta?: { selectedStreetId: string | null }) => {
+      setFieldErrors((prev) => {
+        const nextErrors = { ...prev };
+        delete nextErrors.address;
+        return nextErrors;
+      });
+      setForm((prev) => ({
+        ...prev,
+        address: next,
+        selectedStreetId: addressChangeMeta?.selectedStreetId ?? null,
+      }));
+    },
+    [],
+  );
 
   const patchApartment = useCallback((patch: Partial<FormState["apartment"]>) => {
     setFieldErrors((prev) => {
@@ -187,6 +206,7 @@ export function useAddPropertyForm() {
     error,
     isLoading,
     updateForm,
+    updateAddress,
     patchApartment,
     patchPrivateHouse,
     patchLandPlot,

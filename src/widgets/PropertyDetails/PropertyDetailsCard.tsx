@@ -51,6 +51,7 @@ export function PropertyDetailsCard({
       city: property.city,
       district: property.district,
       address: property.address,
+      selectedStreetId: property.streetId,
       pricePublic: property.pricePublic,
       priceInternal: property.priceInternal ?? undefined,
       description: property.description ?? "",
@@ -144,8 +145,21 @@ export function PropertyDetailsCard({
   const handleFieldChange = (
     field: keyof Pick<FormValues, "city" | "district" | "address">,
     value: string,
+    addressChangeMeta?: { selectedStreetId: string | null },
   ) => {
-    setValues((prev) => ({ ...prev, [field]: value }));
+    setValues((prev) => {
+      if (field === "city" || field === "district") {
+        return { ...prev, [field]: value, selectedStreetId: null };
+      }
+      if (field === "address") {
+        return {
+          ...prev,
+          address: value,
+          selectedStreetId: addressChangeMeta?.selectedStreetId ?? null,
+        };
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handlePriceChange = (

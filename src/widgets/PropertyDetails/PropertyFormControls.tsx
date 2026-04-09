@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import type { InputHTMLAttributes } from "react";
 
-const inputClassName =
+export const propertyDetailsEditableInputClassName =
   "block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50";
+
+const inputClassName = propertyDetailsEditableInputClassName;
 
 export function EditableNumericTextInput({
   label,

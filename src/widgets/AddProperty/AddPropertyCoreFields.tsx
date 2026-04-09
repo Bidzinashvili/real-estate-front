@@ -7,6 +7,7 @@ import {
   PROPERTY_TYPE_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import type { HotelScope } from "@/features/properties/types";
+import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
   addPropertyInputClassName,
   SelectField,
@@ -34,6 +35,10 @@ type Props = {
   form: FormState;
   fieldErrors: FormErrors;
   updateForm: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
+  updateAddress: (
+    next: string,
+    addressChangeMeta?: { selectedStreetId: string | null },
+  ) => void;
   onImagesChange: (files: FileList | null) => void;
 };
 
@@ -41,6 +46,7 @@ export function AddPropertyCoreFields({
   form,
   fieldErrors,
   updateForm,
+  updateAddress,
   onImagesChange,
 }: Props) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
@@ -127,14 +133,17 @@ export function AddPropertyCoreFields({
         required
         error={fieldErrors.district}
       />
-      <TextField
-        id="address"
-        label="Address"
-        value={form.address}
-        onChange={(value) => updateForm("address", value)}
-        required
-        error={fieldErrors.address}
-      />
+      <div className="sm:col-span-2">
+        <StreetAutocompleteField
+          id="address"
+          label="Address"
+          value={form.address}
+          onChange={updateAddress}
+          required
+          error={fieldErrors.address}
+          inputClassName={addPropertyInputClassName()}
+        />
+      </div>
       <TextField
         id="priceInternal"
         label="Internal price"

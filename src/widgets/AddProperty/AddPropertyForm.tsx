@@ -16,6 +16,7 @@ export function AddPropertyForm() {
     error,
     isLoading,
     updateForm,
+    updateAddress,
     patchApartment,
     patchPrivateHouse,
     patchLandPlot,
@@ -38,6 +39,7 @@ export function AddPropertyForm() {
             form={form}
             fieldErrors={fieldErrors}
             updateForm={updateForm}
+            updateAddress={updateAddress}
             onImagesChange={onImagesChange}
           />
 

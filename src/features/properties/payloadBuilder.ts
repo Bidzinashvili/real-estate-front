@@ -27,6 +27,7 @@ export type PropertyFormValues = {
   city: string;
   district: string;
   address: string;
+  selectedStreetId: string | null;
   pricePublic: number | undefined;
   priceInternal: number | undefined;
   description: string;

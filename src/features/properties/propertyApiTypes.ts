@@ -144,6 +144,7 @@ export type PropertyApi = {
   city: string;
   district: string;
   address: string;
+  streetId?: string | null;
   title: string | null;
   cadastralCode: string | null;
   pricePublic: number;

@@ -18,9 +18,11 @@ import type {
   PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
 import { LabeledSelect } from "@/shared/ui/LabeledSelect";
+import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
   EditableNumericTextInput,
   EditableTextInput,
+  propertyDetailsEditableInputClassName,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import {
   ApartmentEditSection,
@@ -43,6 +45,7 @@ type PropertyDetailsEditableSectionsProps = {
   onFieldChange: (
     field: keyof Pick<PropertyFormValues, "city" | "district" | "address">,
     value: string,
+    addressChangeMeta?: { selectedStreetId: string | null },
   ) => void;
   onPriceChange: (
     field: "pricePublic" | "priceInternal",
@@ -116,10 +119,14 @@ export function PropertyDetailsEditableSections({
         />
       </div>
 
-      <EditableTextInput
+      <StreetAutocompleteField
+        id="propertyAddress"
         label="Address"
         value={values.address}
-        onChange={(value) => onFieldChange("address", value)}
+        onChange={(next, addressChangeMeta) =>
+          onFieldChange("address", next, addressChangeMeta)
+        }
+        inputClassName={propertyDetailsEditableInputClassName}
       />
 
       <div

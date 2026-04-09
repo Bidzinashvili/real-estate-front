@@ -233,6 +233,10 @@ export function normalizeProperty(value: JsonValue): Property | null {
     city: asString(value.city),
     district: asString(value.district),
     address: asString(value.address),
+    streetId:
+      value.streetId === undefined || value.streetId === null
+        ? null
+        : asString(value.streetId).trim() || null,
     title: asNullableString(value.title),
     cadastralCode: asNullableString(value.cadastralCode),
     pricePublic: asNumber(value.pricePublic),

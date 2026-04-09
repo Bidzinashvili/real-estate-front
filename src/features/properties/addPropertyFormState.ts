@@ -22,6 +22,7 @@ export type FormState = {
   city: string;
   district: string;
   address: string;
+  selectedStreetId: string | null;
   pricePublic: string;
   ownerName: string;
   ownerPhone: string;
@@ -110,6 +111,7 @@ export function initialFormState(): FormState {
     city: "Tbilisi",
     district: "",
     address: "",
+    selectedStreetId: null,
     pricePublic: "",
     ownerName: "",
     ownerPhone: "",
