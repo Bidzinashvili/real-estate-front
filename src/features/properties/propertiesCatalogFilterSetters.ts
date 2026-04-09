@@ -37,6 +37,8 @@ export function createPropertiesCatalogFilterSetters(args: {
     setHouseArea: (value: string) => bumpPage({ houseArea: value }),
     setLandArea: (value: string) => bumpPage({ landArea: value }),
     setCommercialArea: (value: string) => bumpPage({ commercialArea: value }),
+    setShowMyProperties: (value: boolean) =>
+      bumpPage({ showMyProperties: value }),
     setSortBy: (value: PropertySortBy) => bumpPage({ sortBy: value }),
     setOrder: (value: PropertyListSortOrder) => bumpPage({ order: value }),
     setPage: (value: number) => {
@@ -72,5 +74,6 @@ export function countActiveCatalogFilters(
   if (state.houseArea.trim()) n += 1;
   if (state.landArea.trim()) n += 1;
   if (state.commercialArea.trim()) n += 1;
+  if (state.showMyProperties) n += 1;
   return n;
 }

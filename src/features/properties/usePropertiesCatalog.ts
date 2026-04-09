@@ -22,6 +22,7 @@ import {
   type PropertyCatalogUrlState,
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { Property, PropertyType } from "@/features/properties/types";
+import { useUserStore } from "@/shared/stores";
 
 type UsePropertiesCatalogOptions = {
   enabled?: boolean;
@@ -61,6 +62,7 @@ export type UsePropertiesCatalogResult = {
   setHouseArea: (value: string) => void;
   setLandArea: (value: string) => void;
   setCommercialArea: (value: string) => void;
+  setShowMyProperties: (value: boolean) => void;
   setSortBy: (value: PropertySortBy) => void;
   setOrder: (value: PropertyListSortOrder) => void;
   setPage: (value: number) => void;
@@ -76,6 +78,8 @@ export function usePropertiesCatalog(
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentUser = useUserStore((userStore) => userStore.user);
+  const isUserFetchLoading = useUserStore((userStore) => userStore.isLoading);
 
   const [state, setState] = useState<PropertyCatalogUrlState>(
     () => DEFAULT_CATALOG_URL_STATE,
@@ -131,6 +135,18 @@ export function usePropertiesCatalog(
   ]);
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (useUserStore.getState().isLoading) return;
+      if (useUserStore.getState().user) return;
+      setState((previous) => {
+        if (!previous.showMyProperties) return previous;
+        return { ...previous, showMyProperties: false, page: 1 };
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [currentUser, isUserFetchLoading]);
+
+  useEffect(() => {
     if (!syncUrl || !allowUrlReplace.current) return;
     const nextQs = urlStateSignature(state);
     if (nextQs === searchParams.toString()) return;
@@ -140,7 +156,7 @@ export function usePropertiesCatalog(
     });
   }, [state, syncUrl, pathname, router, searchParams]);
 
-  const apiQuery = useMemo(
+  const catalogQuery = useMemo(
     () => catalogStateToApiQuery(state, debouncedTextFilters),
     [
       debouncedTextFilters,
@@ -150,7 +166,17 @@ export function usePropertiesCatalog(
       state.order,
       state.page,
       state.limit,
+      state.showMyProperties,
     ],
+  );
+
+  const apiQuery = useMemo(
+    () => ({
+      ...catalogQuery,
+      myProperties:
+        catalogQuery.myProperties === true && currentUser ? true : undefined,
+    }),
+    [catalogQuery, currentUser],
   );
 
   const load = useCallback(async () => {

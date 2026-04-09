@@ -5,18 +5,22 @@ import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePropertiesCatalog } from "@/features/properties/usePropertiesCatalog";
 import { getApiBaseUrl } from "@/shared/lib/auth";
+import { useCurrentUser } from "@/shared/hooks";
 import {
   PropertyCatalogDesktopAside,
   PropertyCatalogMobileDrawer,
   PropertyCatalogMobileFiltersButton,
 } from "@/widgets/Properties/propertyCatalogFilters";
+import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalogScopeToggle";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
 
 export function PropertiesView() {
   const router = useRouter();
   const apiBaseUrl = getApiBaseUrl();
+  const { user, isLoading: isAuthLoading } = useCurrentUser();
   const catalog = usePropertiesCatalog({ syncUrl: true });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const isLoggedIn = user !== null;
 
   const {
     properties,
@@ -45,6 +49,11 @@ export function PropertiesView() {
           >
             Add property
           </button>
+          <PropertyCatalogScopeToggle
+            catalog={catalog}
+            isLoggedIn={isLoggedIn}
+            isAuthLoading={isAuthLoading}
+          />
           <div className="flex w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 shadow-sm sm:w-72">
             <input
               type="search"
@@ -96,9 +105,7 @@ export function PropertiesView() {
           )}
 
           {!isLoading && !error && total === 0 && (
-            <p className="text-sm text-slate-600">
-              No properties match your filters.
-            </p>
+            <p className="text-sm text-slate-600">No properties found.</p>
           )}
 
           {!isLoading && !error && total > 0 && (

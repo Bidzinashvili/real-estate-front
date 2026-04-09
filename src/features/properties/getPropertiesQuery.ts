@@ -33,6 +33,7 @@ export type GetPropertiesQuery = {
   order?: PropertyListSortOrder;
   page?: number;
   limit?: number;
+  myProperties?: boolean;
 };
 
 export function isPropertySortBy(s: string): s is PropertySortBy {
@@ -107,6 +108,7 @@ export function toGetPropertiesSearchParams(
 
   if (query.sortBy) out.sortBy = query.sortBy;
   if (query.order) out.order = query.order;
+  if (query.myProperties === true) out.myProperties = "true";
 
   return out;
 }

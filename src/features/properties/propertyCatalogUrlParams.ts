@@ -18,6 +18,7 @@ export const CATALOG_LIMIT_OPTIONS = [10, 20, 50] as const;
 
 export type PropertyCatalogUrlState = {
   searchInput: string;
+  showMyProperties: boolean;
   dealType: DealType | "";
   propertyType: PropertyType | "";
   city: string;
@@ -80,6 +81,7 @@ export function pickCatalogDebouncedTextState(
 
 export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   searchInput: "",
+  showMyProperties: false,
   dealType: "",
   propertyType: "",
   city: "",
@@ -114,6 +116,11 @@ export function parsePropertyCatalogUrl(
 
   const search = searchParams.get("search");
   if (search) next.searchInput = search;
+
+  const myPropertiesRaw = searchParams.get("myProperties");
+  if (myPropertiesRaw === "true" || myPropertiesRaw === "1") {
+    next.showMyProperties = true;
+  }
 
   const type = searchParams.get("type");
   if (type && isPropertyType(type)) next.propertyType = type;
@@ -184,6 +191,9 @@ export function propertyCatalogUrlStateToSearchParams(
   if (state.limit === DEFAULT_CATALOG_URL_STATE.limit) {
     flat.delete("limit");
   }
+  if (!state.showMyProperties) {
+    flat.delete("myProperties");
+  }
 
   return flat;
 }
@@ -214,5 +224,6 @@ export function catalogStateToApiQuery(
     order: state.order,
     page: state.page,
     limit: state.limit,
+    myProperties: state.showMyProperties ? true : undefined,
   };
 }
