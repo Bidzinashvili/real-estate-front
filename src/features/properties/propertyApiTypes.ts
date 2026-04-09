@@ -3,11 +3,17 @@ import type {
   BuildingCondition,
   CommercialStatus,
   KitchenType,
-  LandStatus,
+  LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
 
-export type { BuildingCondition, CommercialStatus, KitchenType, LandStatus, PropertyType };
+export type {
+  BuildingCondition,
+  CommercialStatus,
+  KitchenType,
+  LandCategory,
+  PropertyType,
+};
 export type { DealType };
 
 export type PropertySortBy = "createdAt" | "pricePublic";
@@ -100,7 +106,8 @@ export type LandPlotApi = {
   id: string;
   propertyId: string;
   landArea: number;
-  status: LandStatus;
+  landCategory: LandCategory;
+  landUsage: CommercialStatus;
   forInvestment: boolean;
   approvedProject: boolean;
   canBeDivided: boolean;
@@ -232,7 +239,8 @@ export type CreatePrivateHousePayload = {
 
 export type CreateLandPlotPayload = {
   landArea: number;
-  status: LandStatus;
+  landCategory: LandCategory;
+  landUsage: CommercialStatus;
   forInvestment: boolean;
   approvedProject: boolean;
   canBeDivided: boolean;
@@ -299,6 +307,8 @@ export type UpdatePropertyRequestBody = {
   };
   landPlot?: {
     landArea?: number;
+    landCategory?: LandCategory;
+    landUsage?: CommercialStatus;
     forInvestment?: boolean;
     canBeDivided?: boolean;
   };

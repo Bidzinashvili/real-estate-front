@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  formatLandCategoryLabel,
+  formatLandUsageLabel,
+} from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
 import {
@@ -119,6 +123,14 @@ export function PropertyListingFieldsView({
               label="Land area"
               value={values.landPlot.landArea}
               suffix="m²"
+            />
+            <DetailText
+              label="Land category"
+              value={formatLandCategoryLabel(values.landPlot.landCategory)}
+            />
+            <DetailText
+              label="Land usage"
+              value={formatLandUsageLabel(values.landPlot.landUsage)}
             />
             <DetailYesNo
               label="For investment"

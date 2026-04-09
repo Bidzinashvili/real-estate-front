@@ -6,13 +6,13 @@ import {
   type Property,
   type PropertyApartmentUpdate,
   type PropertyCommercialUpdate,
-  type PropertyLandPlotUpdate,
   type PropertyPrivateHouseUpdate,
   type PropertyUpdatePayload,
   parseRenovationForForm,
 } from "@/features/properties/types";
 import {
   buildPropertyUpdatePayload,
+  type PropertyFormLandPlot,
   type PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
 import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
@@ -72,6 +72,8 @@ export function PropertyDetailsCard({
       landPlot: property.landPlot
         ? {
             landArea: property.landPlot.landArea,
+            landCategory: property.landPlot.landCategory,
+            landUsage: property.landPlot.landUsage,
             forInvestment: property.landPlot.forInvestment,
             canBeDivided: property.landPlot.canBeDivided,
           }
@@ -88,6 +90,7 @@ export function PropertyDetailsCard({
   }, [property]);
 
   const [values, setValues] = useState<FormValues>(initialValues);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   useEffect(() => {
     setValues(initialValues);
@@ -116,6 +119,15 @@ export function PropertyDetailsCard({
 
     if (!canEdit) return;
 
+    setClientError(null);
+
+    if (values.landPlot) {
+      if (values.landPlot.landCategory === "" || values.landPlot.landUsage === "") {
+        setClientError("Select land category and land usage.");
+        return;
+      }
+    }
+
     const payload = buildPropertyUpdatePayload(initialValues, values);
 
     if (Object.keys(payload).length === 0) {
@@ -143,7 +155,7 @@ export function PropertyDetailsCard({
     setNested("privateHouse", patch);
   };
 
-  const setLandPlot = (patch: PropertyLandPlotUpdate) => {
+  const setLandPlot = (patch: Partial<PropertyFormLandPlot>) => {
     setNested("landPlot", patch);
   };
 
@@ -199,9 +211,9 @@ export function PropertyDetailsCard({
           showPrivateNotes={canViewPrivateFields}
         />
 
-        {saveError && (
+        {(clientError || saveError) && (
           <p className="text-sm text-red-600" role="alert">
-            {saveError}
+            {clientError ?? saveError}
           </p>
         )}
 

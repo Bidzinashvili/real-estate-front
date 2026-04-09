@@ -3,7 +3,6 @@
 import type {
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
-  PropertyLandPlotUpdate,
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import {
@@ -11,7 +10,10 @@ import {
   isDealType,
   type DealType,
 } from "@/features/properties/dealType";
-import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
+import type {
+  PropertyFormLandPlot,
+  PropertyFormValues,
+} from "@/features/properties/payloadBuilder";
 import { LabeledSelect } from "@/shared/ui/LabeledSelect";
 import {
   EditableNumericTextInput,
@@ -45,7 +47,7 @@ type PropertyDetailsEditableSectionsProps = {
   onDescriptionChange: (value: string) => void;
   setApartment: (patch: PropertyApartmentUpdate) => void;
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
-  setLandPlot: (patch: PropertyLandPlotUpdate) => void;
+  setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
   setCommercial: (patch: PropertyCommercialUpdate) => void;
 };
 

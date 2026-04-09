@@ -1,4 +1,5 @@
 import type { CreatePropertyDto } from "@/features/properties/types";
+import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
 import type {
   AddPropertyActiveSubtype,
   FormState,
@@ -127,9 +128,18 @@ export function buildCreatePropertyPayload(
     }
   } else if (activeSubtype === "landPlot") {
     const landPlot = form.landPlot;
+    if (!isLandCategory(landPlot.landCategory)) {
+      errors.push("Land category is required.");
+    }
+    if (!isCommercialStatus(landPlot.landUsage)) {
+      errors.push("Land usage is required.");
+    }
     payload.landPlot = {
       landArea: parseNumber(landPlot.landArea, "Land area", errors),
-      status: landPlot.status,
+      landCategory: isLandCategory(landPlot.landCategory)
+        ? landPlot.landCategory
+        : "AGRICULTURAL",
+      landUsage: isCommercialStatus(landPlot.landUsage) ? landPlot.landUsage : "UNIVERSAL",
       forInvestment: landPlot.forInvestment,
       approvedProject: landPlot.approvedProject,
       canBeDivided: landPlot.canBeDivided,

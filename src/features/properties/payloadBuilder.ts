@@ -1,11 +1,21 @@
 import type { DealType } from "@/features/properties/dealType";
 import type {
+  CommercialStatus,
+  LandCategory,
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
   PropertyLandPlotUpdate,
   PropertyPrivateHouseUpdate,
   PropertyUpdatePayload,
 } from "@/features/properties/types";
+
+export type PropertyFormLandPlot = {
+  landArea: number;
+  forInvestment: boolean;
+  canBeDivided: boolean;
+  landCategory: LandCategory | "";
+  landUsage: CommercialStatus | "";
+};
 
 export type PropertyFormValues = {
   dealType: DealType;
@@ -17,7 +27,7 @@ export type PropertyFormValues = {
   description: string;
   apartment: PropertyApartmentUpdate | null;
   privateHouse: PropertyPrivateHouseUpdate | null;
-  landPlot: PropertyLandPlotUpdate | null;
+  landPlot: PropertyFormLandPlot | null;
   commercial: PropertyCommercialUpdate | null;
 };
 
@@ -41,6 +51,36 @@ function addIfChanged<T extends Record<string, unknown>>(
   }
 
   return Object.keys(result).length > 0 ? (result as T) : undefined;
+}
+
+function buildLandPlotPatch(
+  initial: PropertyFormLandPlot | null,
+  current: PropertyFormLandPlot | null,
+): PropertyLandPlotUpdate | undefined {
+  if (!current) return undefined;
+
+  const patch: PropertyLandPlotUpdate = {};
+
+  if (initial?.landArea !== current.landArea) {
+    patch.landArea = current.landArea;
+  }
+  if (initial?.forInvestment !== current.forInvestment) {
+    patch.forInvestment = current.forInvestment;
+  }
+  if (initial?.canBeDivided !== current.canBeDivided) {
+    patch.canBeDivided = current.canBeDivided;
+  }
+  if (
+    current.landCategory !== "" &&
+    current.landCategory !== initial?.landCategory
+  ) {
+    patch.landCategory = current.landCategory;
+  }
+  if (current.landUsage !== "" && current.landUsage !== initial?.landUsage) {
+    patch.landUsage = current.landUsage;
+  }
+
+  return Object.keys(patch).length > 0 ? patch : undefined;
 }
 
 export function buildPropertyUpdatePayload(
@@ -70,7 +110,7 @@ export function buildPropertyUpdatePayload(
   const privateHouse = addIfChanged(initial.privateHouse, current.privateHouse);
   if (privateHouse) payload.privateHouse = privateHouse;
 
-  const landPlot = addIfChanged(initial.landPlot, current.landPlot);
+  const landPlot = buildLandPlotPatch(initial.landPlot, current.landPlot);
   if (landPlot) payload.landPlot = landPlot;
 
   const commercial = addIfChanged(initial.commercial, current.commercial);

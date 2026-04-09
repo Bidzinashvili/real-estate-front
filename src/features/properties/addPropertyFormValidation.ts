@@ -92,6 +92,12 @@ export function validateFormInputs(
 
   if (activeSubtype === "landPlot") {
     requireNumber("landPlot.landArea", form.landPlot.landArea, "Land area");
+    if (form.landPlot.landCategory === "") {
+      errors["landPlot.landCategory"] = "Land category is required.";
+    }
+    if (form.landPlot.landUsage === "") {
+      errors["landPlot.landUsage"] = "Land usage is required.";
+    }
   }
 
   if (activeSubtype === "commercial") {

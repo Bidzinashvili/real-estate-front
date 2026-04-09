@@ -4,7 +4,7 @@ import type {
   BuildingCondition,
   CommercialStatus,
   KitchenType,
-  LandStatus,
+  LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
 
@@ -81,7 +81,8 @@ export type PropertyPrivateHouseCreate = {
 
 export type PropertyLandPlotCreate = {
   landArea: number;
-  status: LandStatus;
+  landCategory: LandCategory;
+  landUsage: CommercialStatus;
   forInvestment: boolean;
   approvedProject: boolean;
   canBeDivided: boolean;

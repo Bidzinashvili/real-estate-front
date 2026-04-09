@@ -1,14 +1,22 @@
 "use client";
 
 import type {
+  CommercialStatus,
+  LandCategory,
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
-  PropertyLandPlotUpdate,
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import { parseRenovationForForm } from "@/features/properties/types";
-import { RENOVATION_SELECT_OPTIONS } from "@/features/properties/addPropertyFormOptions";
-import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
+import {
+  LAND_CATEGORY_SELECT_OPTIONS,
+  LAND_USAGE_SELECT_OPTIONS,
+  RENOVATION_SELECT_OPTIONS,
+} from "@/features/properties/addPropertyFormOptions";
+import type {
+  PropertyFormLandPlot,
+  PropertyFormValues,
+} from "@/features/properties/payloadBuilder";
 import { NonNegativeCounterField, SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
@@ -132,10 +140,23 @@ export function PrivateHouseEditSection({
 
 type LandPlotProps = {
   landPlot: NonNullable<PropertyFormValues["landPlot"]>;
-  setLandPlot: (patch: PropertyLandPlotUpdate) => void;
+  setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
 };
 
 export function LandPlotEditSection({ landPlot, setLandPlot }: LandPlotProps) {
+  const hasLandCategory = landPlot.landCategory !== "";
+
+  function handleLandCategoryChange(nextRaw: string) {
+    setLandPlot({
+      landCategory: nextRaw as LandCategory | "",
+      landUsage: "",
+    });
+  }
+
+  function handleLandUsageChange(nextRaw: string) {
+    setLandPlot({ landUsage: nextRaw as CommercialStatus | "" });
+  }
+
   return (
     <fieldset className="space-y-3">
       <legend className="text-sm font-semibold text-slate-800">Land plot</legend>
@@ -147,6 +168,21 @@ export function LandPlotEditSection({ landPlot, setLandPlot }: LandPlotProps) {
           onValueChange={(next) => setLandPlot({ landArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+        />
+        <SelectField
+          id="editLpLandCategory"
+          label="Land category"
+          value={landPlot.landCategory}
+          onChange={handleLandCategoryChange}
+          options={LAND_CATEGORY_SELECT_OPTIONS}
+        />
+        <SelectField
+          id="editLpLandUsage"
+          label="Land usage"
+          value={landPlot.landUsage}
+          onChange={handleLandUsageChange}
+          options={LAND_USAGE_SELECT_OPTIONS}
+          disabled={!hasLandCategory}
         />
         <EditableCheckbox
           label="For investment"

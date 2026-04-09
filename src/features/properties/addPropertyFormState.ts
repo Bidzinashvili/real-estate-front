@@ -3,7 +3,7 @@ import type {
   BuildingCondition,
   CommercialStatus,
   KitchenType,
-  LandStatus,
+  LandCategory,
   PropertyType,
   Renovation,
 } from "@/features/properties/types";
@@ -74,7 +74,8 @@ export type FormState = {
   };
   landPlot: {
     landArea: string;
-    status: LandStatus;
+    landCategory: LandCategory | "";
+    landUsage: CommercialStatus | "";
     forInvestment: boolean;
     approvedProject: boolean;
     canBeDivided: boolean;
@@ -160,7 +161,8 @@ export function initialFormState(): FormState {
     },
     landPlot: {
       landArea: "",
-      status: "AGRICULTURAL",
+      landCategory: "",
+      landUsage: "",
       forInvestment: false,
       approvedProject: false,
       canBeDivided: false,

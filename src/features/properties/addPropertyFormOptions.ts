@@ -2,11 +2,21 @@ import type {
   BuildingCondition,
   CommercialStatus,
   KitchenType,
-  LandStatus,
+  LandCategory,
   PropertyType,
   Renovation,
 } from "@/features/properties/types";
-import { isRenovation } from "@/features/properties/types";
+import {
+  isCommercialStatus,
+  isLandCategory,
+  isRenovation,
+  LAND_CATEGORIES,
+} from "@/features/properties/types";
+
+const LAND_CATEGORY_LABELS: Readonly<Record<LandCategory, string>> = {
+  AGRICULTURAL: "Agricultural",
+  NON_AGRICULTURAL: "Non-agricultural",
+};
 
 export const PROPERTY_TYPE_OPTIONS: ReadonlyArray<{
   value: PropertyType;
@@ -37,16 +47,15 @@ export const KITCHEN_TYPE_OPTIONS: ReadonlyArray<{
   { value: "STUDIO", label: "Studio" },
 ];
 
-export const LAND_STATUS_OPTIONS: ReadonlyArray<{
-  value: LandStatus;
+export const LAND_CATEGORY_SELECT_OPTIONS: ReadonlyArray<{
+  value: LandCategory | "";
   label: string;
 }> = [
-  { value: "AGRICULTURAL", label: "Agricultural" },
-  { value: "NON_AGRICULTURAL", label: "Non-agricultural" },
-  { value: "COMMERCIAL", label: "Commercial" },
-  { value: "SPECIAL", label: "Special" },
-  { value: "INVESTMENT", label: "Investment" },
-  { value: "FARMING", label: "Farming" },
+  { value: "", label: "Select land category" },
+  ...LAND_CATEGORIES.map((category) => ({
+    value: category,
+    label: LAND_CATEGORY_LABELS[category],
+  })),
 ];
 
 export const COMMERCIAL_STATUS_OPTIONS: ReadonlyArray<{
@@ -66,6 +75,32 @@ export const COMMERCIAL_STATUS_OPTIONS: ReadonlyArray<{
   { value: "CAR_WASH", label: "Car wash" },
   { value: "CAR_SERVICE", label: "Car service" },
 ];
+
+export const LAND_USAGE_SELECT_OPTIONS: ReadonlyArray<{
+  value: CommercialStatus | "";
+  label: string;
+}> = [
+  { value: "", label: "Select land usage" },
+  ...COMMERCIAL_STATUS_OPTIONS.map((option) => ({
+    value: option.value,
+    label: option.label,
+  })),
+];
+
+export function formatLandCategoryLabel(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  if (!isLandCategory(trimmed)) return trimmed;
+  return LAND_CATEGORY_LABELS[trimmed];
+}
+
+export function formatLandUsageLabel(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  if (!isCommercialStatus(trimmed)) return trimmed;
+  const matched = COMMERCIAL_STATUS_OPTIONS.find((option) => option.value === trimmed);
+  return matched?.label ?? trimmed;
+}
 
 export const RENOVATION_OPTIONS: ReadonlyArray<{
   value: Renovation;

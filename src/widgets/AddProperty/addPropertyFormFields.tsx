@@ -64,6 +64,7 @@ type SelectProps<T extends string> = {
   onChange: (next: T) => void;
   options: ReadonlyArray<{ value: T; label: string }>;
   error?: string;
+  disabled?: boolean;
 };
 
 export function SelectField<T extends string>({
@@ -73,6 +74,7 @@ export function SelectField<T extends string>({
   onChange,
   options,
   error,
+  disabled = false,
 }: SelectProps<T>) {
   return (
     <div className="space-y-1.5">
@@ -83,8 +85,9 @@ export function SelectField<T extends string>({
         <select
           id={id}
           value={value}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value as T)}
-          className={`${addPropertySelectClassName()} ${error ? "border-red-500 focus:border-red-600" : ""}`}
+          className={`${addPropertySelectClassName()} ${error ? "border-red-500 focus:border-red-600" : ""} ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
         >
           {options.map((option) => (
             <option key={option.value} value={option.value}>

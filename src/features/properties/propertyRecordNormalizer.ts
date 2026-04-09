@@ -3,14 +3,14 @@ import {
   isBuildingCondition,
   isCommercialStatus,
   isKitchenType,
-  isLandStatus,
+  isLandCategory,
   parsePropertyType,
 } from "@/features/properties/propertyModelTypes";
 import type {
   BuildingCondition,
   CommercialStatus,
   KitchenType,
-  LandStatus,
+  LandCategory,
   Property,
   PropertyApartment,
   PropertyCommercial,
@@ -37,9 +37,9 @@ function parseKitchenType(value: JsonValue | undefined): KitchenType {
   return isKitchenType(candidate) ? candidate : "SEPARATE";
 }
 
-function parseLandStatus(value: JsonValue | undefined): LandStatus {
+function parseLandCategory(value: JsonValue | undefined): LandCategory {
   const candidate = typeof value === "string" ? value.trim() : "";
-  return isLandStatus(candidate) ? candidate : "AGRICULTURAL";
+  return isLandCategory(candidate) ? candidate : "AGRICULTURAL";
 }
 
 function parseCommercialStatus(value: JsonValue | undefined): CommercialStatus {
@@ -178,7 +178,8 @@ function normalizeLandPlot(value: JsonValue | undefined): PropertyLandPlot | nul
     id: asString(value.id),
     propertyId: asString(value.propertyId),
     landArea: asNumber(value.landArea),
-    status: parseLandStatus(value.status),
+    landCategory: parseLandCategory(value.landCategory),
+    landUsage: parseCommercialStatus(value.landUsage),
     forInvestment: asBoolean(value.forInvestment),
     approvedProject: asBoolean(value.approvedProject),
     canBeDivided: asBoolean(value.canBeDivided),

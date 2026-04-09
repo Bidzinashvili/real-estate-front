@@ -37,18 +37,11 @@ export function isKitchenType(value: string): value is KitchenType {
   return (KITCHEN_TYPES as readonly string[]).includes(value);
 }
 
-export const LAND_STATUSES = [
-  "AGRICULTURAL",
-  "NON_AGRICULTURAL",
-  "COMMERCIAL",
-  "SPECIAL",
-  "INVESTMENT",
-  "FARMING",
-] as const;
-export type LandStatus = (typeof LAND_STATUSES)[number];
+export const LAND_CATEGORIES = ["AGRICULTURAL", "NON_AGRICULTURAL"] as const;
+export type LandCategory = (typeof LAND_CATEGORIES)[number];
 
-export function isLandStatus(value: string): value is LandStatus {
-  return (LAND_STATUSES as readonly string[]).includes(value);
+export function isLandCategory(value: string): value is LandCategory {
+  return (LAND_CATEGORIES as readonly string[]).includes(value);
 }
 
 export const COMMERCIAL_STATUSES = [
@@ -153,7 +146,8 @@ export type PropertyLandPlot = {
   id: string;
   propertyId: string;
   landArea: number;
-  status: LandStatus;
+  landCategory: LandCategory;
+  landUsage: CommercialStatus;
   forInvestment: boolean;
   approvedProject: boolean;
   canBeDivided: boolean;
