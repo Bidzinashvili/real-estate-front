@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import { BUILDING_CONDITION_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
+import {
+  normalizeManualBedroomsString,
+  syncedBedroomsStringFromRoomsRaw,
+} from "@/widgets/AddProperty/roomsBedroomsSyncHelpers";
 
 function parseAreaNumber(rawInput: string): number {
   const trimmedInput = rawInput.trim();
@@ -34,6 +38,29 @@ export function AddPropertyPrivateHouseSection({
   fieldErrors,
   patchPrivateHouse,
 }: Props) {
+  const [isBedroomsManuallyEdited, setIsBedroomsManuallyEdited] = useState(false);
+
+  function handleRoomsChange(value: string) {
+    patchPrivateHouse({
+      rooms: value,
+      ...(!isBedroomsManuallyEdited
+        ? { bedrooms: syncedBedroomsStringFromRoomsRaw(value) }
+        : {}),
+    });
+  }
+
+  function handleBedroomsChange(value: string) {
+    if (value.trim() === "") {
+      setIsBedroomsManuallyEdited(false);
+      patchPrivateHouse({
+        bedrooms: syncedBedroomsStringFromRoomsRaw(privateHouse.rooms),
+      });
+      return;
+    }
+    setIsBedroomsManuallyEdited(true);
+    patchPrivateHouse({ bedrooms: normalizeManualBedroomsString(value) });
+  }
+
   const totalArea = totalAreaStringFromParts(
     privateHouse.houseArea,
     privateHouse.yardArea,
@@ -112,7 +139,7 @@ export function AddPropertyPrivateHouseSection({
           label="Rooms"
           type="number"
           value={privateHouse.rooms}
-          onChange={(value) => patchPrivateHouse({ rooms: value })}
+          onChange={handleRoomsChange}
           required
           error={fieldErrors["privateHouse.rooms"]}
         />
@@ -121,7 +148,7 @@ export function AddPropertyPrivateHouseSection({
           label="Bedrooms"
           type="number"
           value={privateHouse.bedrooms}
-          onChange={(value) => patchPrivateHouse({ bedrooms: value })}
+          onChange={handleBedroomsChange}
           required
           error={fieldErrors["privateHouse.bedrooms"]}
         />

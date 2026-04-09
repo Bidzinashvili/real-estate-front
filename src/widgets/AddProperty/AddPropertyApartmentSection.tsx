@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import {
   BUILDING_CONDITION_OPTIONS,
@@ -8,6 +9,10 @@ import {
 import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
+import {
+  normalizeManualBedroomsString,
+  syncedBedroomsStringFromRoomsRaw,
+} from "@/widgets/AddProperty/roomsBedroomsSyncHelpers";
 
 type Props = {
   dealType: DealType;
@@ -22,6 +27,29 @@ export function AddPropertyApartmentSection({
   fieldErrors,
   patchApartment,
 }: Props) {
+  const [isBedroomsManuallyEdited, setIsBedroomsManuallyEdited] = useState(false);
+
+  function handleRoomsChange(value: string) {
+    patchApartment({
+      rooms: value,
+      ...(!isBedroomsManuallyEdited
+        ? { bedrooms: syncedBedroomsStringFromRoomsRaw(value) }
+        : {}),
+    });
+  }
+
+  function handleBedroomsChange(value: string) {
+    if (value.trim() === "") {
+      setIsBedroomsManuallyEdited(false);
+      patchApartment({
+        bedrooms: syncedBedroomsStringFromRoomsRaw(apartment.rooms),
+      });
+      return;
+    }
+    setIsBedroomsManuallyEdited(true);
+    patchApartment({ bedrooms: normalizeManualBedroomsString(value) });
+  }
+
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h2 className="text-sm font-semibold text-slate-800">Apartment details</h2>
@@ -54,7 +82,7 @@ export function AddPropertyApartmentSection({
           label="Rooms"
           type="number"
           value={apartment.rooms}
-          onChange={(value) => patchApartment({ rooms: value })}
+          onChange={handleRoomsChange}
           required
           error={fieldErrors["apartment.rooms"]}
         />
@@ -63,7 +91,7 @@ export function AddPropertyApartmentSection({
           label="Bedrooms"
           type="number"
           value={apartment.bedrooms}
-          onChange={(value) => patchApartment({ bedrooms: value })}
+          onChange={handleBedroomsChange}
           required
           error={fieldErrors["apartment.bedrooms"]}
         />
