@@ -90,6 +90,11 @@ export function ApartmentEditSection({
           onChange={(next) => setApartment({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
         />
+        <EditableCheckbox
+          label="Furnished"
+          checked={Boolean(apartment.furnished)}
+          onChange={(checked) => setApartment({ furnished: checked })}
+        />
         <MinRentalPeriodEditField
           dealType={dealType}
           idPrefix="editApt"
@@ -130,6 +135,11 @@ export function PrivateHouseEditSection({
           onValueChange={(next) => setPrivateHouse({ yardArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+        />
+        <EditableCheckbox
+          label="Furnished"
+          checked={Boolean(privateHouse.furnished)}
+          onChange={(checked) => setPrivateHouse({ furnished: checked })}
         />
         <EditableCheckbox
           label="Pool"

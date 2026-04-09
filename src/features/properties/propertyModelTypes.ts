@@ -109,8 +109,7 @@ export type PropertyApartment = {
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
@@ -129,8 +128,7 @@ export type PropertyPrivateHouse = {
   balcony: number;
   centralHeating: boolean;
   airConditioner: boolean;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   pool: boolean;
   fruitTrees: boolean;

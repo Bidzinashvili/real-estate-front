@@ -69,8 +69,7 @@ export type ApartmentApi = {
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
@@ -89,8 +88,7 @@ export type PrivateHouseApi = {
   balcony: number;
   centralHeating: boolean;
   airConditioner: boolean;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   pool: boolean;
   fruitTrees: boolean;
@@ -208,8 +206,7 @@ export type CreateApartmentPayload = {
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   petsAllowed?: boolean;
   minRentalPeriod?: number;
@@ -226,8 +223,7 @@ export type CreatePrivateHousePayload = {
   balcony: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   pool: boolean;
   fruitTrees: boolean;
@@ -301,6 +297,7 @@ export type UpdatePropertyRequestBody = {
     balcony?: number;
     floor?: number;
     renovation?: string;
+    furnished?: boolean;
     minRentalPeriod?: number | null;
   };
   privateHouse?: {
@@ -309,6 +306,7 @@ export type UpdatePropertyRequestBody = {
     pool?: boolean;
     fruitTrees?: boolean;
     renovation?: string;
+    furnished?: boolean;
     minRentalPeriod?: number | null;
   };
   landPlot?: {

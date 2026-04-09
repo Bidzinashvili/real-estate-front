@@ -142,11 +142,7 @@ export function PropertyDetailsReadOnlySections({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailYesNo label="Furniture" value={property.apartment.furniture} />
-            <DetailYesNo label="Appliances" value={property.apartment.appliances} />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailYesNo label="Furnished" value={property.apartment.furnished} />
             <DetailYesNo label="Parking" value={property.apartment.parking} />
             <DetailYesNo
               label="Pets allowed"

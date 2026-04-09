@@ -78,6 +78,10 @@ export function PropertyListingFieldsView({
             <DetailNumber label="Rooms" value={values.apartment.rooms} />
             <DetailNumber label="Floor" value={values.apartment.floor} />
             <DetailNumber label="Balcony" value={values.apartment.balcony} />
+            <DetailYesNo
+              label="Furnished"
+              value={Boolean(values.apartment.furnished)}
+            />
             {values.dealType === "RENT" && (
               <DetailNumber
                 label="Min Rental Period (months)"
@@ -110,6 +114,10 @@ export function PropertyListingFieldsView({
                 value={readOnlyPrivateHouseBalcony}
               />
             ) : null}
+            <DetailYesNo
+              label="Furnished"
+              value={Boolean(values.privateHouse.furnished)}
+            />
             <DetailYesNo label="Pool" value={Boolean(values.privateHouse.pool)} />
             <DetailYesNo
               label="Fruit trees"

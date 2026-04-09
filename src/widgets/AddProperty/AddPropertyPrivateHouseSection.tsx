@@ -204,16 +204,10 @@ export function AddPropertyPrivateHouseSection({
           onChange={(checked) => patchPrivateHouse({ airConditioner: checked })}
         />
         <CheckboxField
-          id="phFurniture"
-          label="Furniture"
-          checked={privateHouse.furniture}
-          onChange={(checked) => patchPrivateHouse({ furniture: checked })}
-        />
-        <CheckboxField
-          id="phAppliances"
-          label="Appliances"
-          checked={privateHouse.appliances}
-          onChange={(checked) => patchPrivateHouse({ appliances: checked })}
+          id="phFurnished"
+          label="Furnished"
+          checked={privateHouse.furnished}
+          onChange={(checked) => patchPrivateHouse({ furnished: checked })}
         />
         <CheckboxField
           id="phParking"

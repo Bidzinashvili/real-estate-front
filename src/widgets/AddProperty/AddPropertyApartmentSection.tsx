@@ -172,16 +172,10 @@ export function AddPropertyApartmentSection({
           onChange={(checked) => patchApartment({ airConditioner: checked })}
         />
         <CheckboxField
-          id="aptFurniture"
-          label="Furniture"
-          checked={apartment.furniture}
-          onChange={(checked) => patchApartment({ furniture: checked })}
-        />
-        <CheckboxField
-          id="aptAppliances"
-          label="Appliances"
-          checked={apartment.appliances}
-          onChange={(checked) => patchApartment({ appliances: checked })}
+          id="aptFurnished"
+          label="Furnished"
+          checked={apartment.furnished}
+          onChange={(checked) => patchApartment({ furnished: checked })}
         />
         <CheckboxField
           id="aptParking"

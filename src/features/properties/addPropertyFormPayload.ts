@@ -88,8 +88,7 @@ export function buildCreatePropertyPayload(
       centralHeating: apartment.centralHeating,
       airConditioner: apartment.airConditioner,
       kitchenType: apartment.kitchenType,
-      furniture: apartment.furniture,
-      appliances: apartment.appliances,
+      furnished: apartment.furnished,
       parking: apartment.parking,
     };
     if (apartment.buildingNumber.trim()) {
@@ -119,8 +118,7 @@ export function buildCreatePropertyPayload(
       balcony: privateHouse.balcony > 0,
       centralHeating: privateHouse.centralHeating,
       airConditioner: privateHouse.airConditioner,
-      furniture: privateHouse.furniture,
-      appliances: privateHouse.appliances,
+      furnished: privateHouse.furnished,
       parking: privateHouse.parking,
       pool: privateHouse.pool,
       fruitTrees: privateHouse.fruitTrees,

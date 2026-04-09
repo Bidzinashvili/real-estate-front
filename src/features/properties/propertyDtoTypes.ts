@@ -45,8 +45,7 @@ export type PropertyApartmentCreate = {
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   buildingNumber?: string;
   project?: string;
@@ -65,8 +64,7 @@ export type PropertyPrivateHouseCreate = {
   balcony: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
-  furniture: boolean;
-  appliances: boolean;
+  furnished: boolean;
   parking: boolean;
   pool: boolean;
   fruitTrees: boolean;

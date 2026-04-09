@@ -58,6 +58,7 @@ export function PropertyDetailsCard({
             balcony: property.apartment.balcony,
             floor: property.apartment.floor,
             renovation: parseRenovationForForm(property.apartment.renovation),
+            furnished: property.apartment.furnished,
             minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
           }
         : null,
@@ -68,6 +69,7 @@ export function PropertyDetailsCard({
             pool: property.privateHouse.pool,
             fruitTrees: property.privateHouse.fruitTrees,
             renovation: parseRenovationForForm(property.privateHouse.renovation),
+            furnished: property.privateHouse.furnished,
             minRentalPeriod: property.privateHouse.minRentalPeriod ?? undefined,
           }
         : null,

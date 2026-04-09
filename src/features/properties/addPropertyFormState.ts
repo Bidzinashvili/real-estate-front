@@ -40,8 +40,7 @@ export type FormState = {
     centralHeating: boolean;
     airConditioner: boolean;
     kitchenType: KitchenType;
-    furniture: boolean;
-    appliances: boolean;
+    furnished: boolean;
     parking: boolean;
     buildingNumber: string;
     project: string;
@@ -59,8 +58,7 @@ export type FormState = {
     balcony: number;
     centralHeating: boolean;
     airConditioner: boolean;
-    furniture: boolean;
-    appliances: boolean;
+    furnished: boolean;
     parking: boolean;
     pool: boolean;
     fruitTrees: boolean;
@@ -129,8 +127,7 @@ export function initialFormState(): FormState {
       centralHeating: false,
       airConditioner: false,
       kitchenType: "SEPARATE",
-      furniture: false,
-      appliances: false,
+      furnished: false,
       parking: false,
       buildingNumber: "",
       project: "",
@@ -148,8 +145,7 @@ export function initialFormState(): FormState {
       balcony: 0,
       centralHeating: false,
       airConditioner: false,
-      furniture: false,
-      appliances: false,
+      furnished: false,
       parking: false,
       pool: false,
       fruitTrees: false,
