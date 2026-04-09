@@ -38,6 +38,10 @@ export async function proxy(request: NextRequest) {
   const { nextUrl, cookies } = request;
   const { pathname } = nextUrl;
 
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   const token = cookies.get(AUTH_COOKIE_KEY)?.value;
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -77,7 +81,3 @@ export async function proxy(request: NextRequest) {
 
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
-};
