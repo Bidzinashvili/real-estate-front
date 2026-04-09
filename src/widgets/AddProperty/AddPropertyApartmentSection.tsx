@@ -13,6 +13,7 @@ import {
   SelectField,
   TextField,
 } from "@/widgets/AddProperty/addPropertyFormFields";
+import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import {
@@ -138,10 +139,8 @@ export function AddPropertyApartmentSection({
           options={RENOVATION_SELECT_OPTIONS}
         />
         {dealType === "RENT" && (
-          <TextField
-            id="aptMinRentalPeriod"
-            label="Min rental period"
-            type="number"
+          <MinRentalPeriodField
+            idPrefix="apt"
             value={apartment.minRentalPeriod}
             onChange={(value) => patchApartment({ minRentalPeriod: value })}
             error={fieldErrors["apartment.minRentalPeriod"]}

@@ -188,6 +188,7 @@ function normalizeLandPlot(value: JsonValue | undefined): PropertyLandPlot | nul
     water: asBoolean(value.water),
     gas: asBoolean(value.gas),
     sewage: asBoolean(value.sewage),
+    minRentalPeriod: asNullableNumber(value.minRentalPeriod),
   };
 }
 
@@ -209,6 +210,7 @@ function normalizeCommercial(value: JsonValue | undefined): PropertyCommercial |
     water: asBoolean(value.water),
     gas: asBoolean(value.gas),
     sewage: asBoolean(value.sewage),
+    minRentalPeriod: asNullableNumber(value.minRentalPeriod),
   };
 }
 

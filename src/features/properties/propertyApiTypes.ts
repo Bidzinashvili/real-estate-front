@@ -116,6 +116,7 @@ export type LandPlotApi = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod: number | null;
 };
 
 export type CommercialApi = {
@@ -132,6 +133,7 @@ export type CommercialApi = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod: number | null;
 };
 
 export type PropertyApi = {
@@ -249,6 +251,7 @@ export type CreateLandPlotPayload = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod?: number;
 };
 
 export type CreateCommercialPayload = {
@@ -263,6 +266,7 @@ export type CreateCommercialPayload = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod?: number;
 };
 
 export type CreatePropertyRequestBody = CreatePropertyBase &
@@ -297,6 +301,7 @@ export type UpdatePropertyRequestBody = {
     balcony?: number;
     floor?: number;
     renovation?: string;
+    minRentalPeriod?: number | null;
   };
   privateHouse?: {
     houseArea?: number;
@@ -304,6 +309,7 @@ export type UpdatePropertyRequestBody = {
     pool?: boolean;
     fruitTrees?: boolean;
     renovation?: string;
+    minRentalPeriod?: number | null;
   };
   landPlot?: {
     landArea?: number;
@@ -311,12 +317,14 @@ export type UpdatePropertyRequestBody = {
     landUsage?: CommercialStatus;
     forInvestment?: boolean;
     canBeDivided?: boolean;
+    minRentalPeriod?: number | null;
   };
   commercial?: {
     area?: number;
     parking?: boolean;
     airConditioner?: boolean;
     renovation?: string;
+    minRentalPeriod?: number | null;
   };
 };
 

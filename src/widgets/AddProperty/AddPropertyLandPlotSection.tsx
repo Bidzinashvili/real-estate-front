@@ -1,21 +1,29 @@
 "use client";
 
+import type { DealType } from "@/features/properties/dealType";
 import {
   LAND_CATEGORY_SELECT_OPTIONS,
   LAND_USAGE_SELECT_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
+import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import type { CommercialStatus, LandCategory } from "@/features/properties/types";
 
 type Props = {
+  dealType: DealType;
   landPlot: FormState["landPlot"];
   fieldErrors: FormErrors;
   patchLandPlot: (patch: Partial<FormState["landPlot"]>) => void;
 };
 
-export function AddPropertyLandPlotSection({ landPlot, fieldErrors, patchLandPlot }: Props) {
+export function AddPropertyLandPlotSection({
+  dealType,
+  landPlot,
+  fieldErrors,
+  patchLandPlot,
+}: Props) {
   const hasLandCategory = landPlot.landCategory !== "";
 
   function handleLandCategoryChange(nextRaw: string) {
@@ -60,6 +68,14 @@ export function AddPropertyLandPlotSection({ landPlot, fieldErrors, patchLandPlo
           disabled={!hasLandCategory}
           error={fieldErrors["landPlot.landUsage"]}
         />
+        {dealType === "RENT" && (
+          <MinRentalPeriodField
+            idPrefix="lp"
+            value={landPlot.minRentalPeriod}
+            onChange={(value) => patchLandPlot({ minRentalPeriod: value })}
+            error={fieldErrors["landPlot.minRentalPeriod"]}
+          />
+        )}
         <CheckboxField
           id="lpForInvestment"
           label="For investment"

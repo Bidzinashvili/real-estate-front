@@ -13,6 +13,7 @@ export function EditableNumericTextInput({
   parse,
   disabled = false,
   inputMode = "decimal",
+  placeholder,
 }: {
   label: string;
   value: number | undefined;
@@ -20,6 +21,7 @@ export function EditableNumericTextInput({
   parse: (raw: string) => number | undefined;
   disabled?: boolean;
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
+  placeholder?: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -36,6 +38,7 @@ export function EditableNumericTextInput({
         type="text"
         inputMode={inputMode}
         autoComplete="off"
+        placeholder={placeholder}
         value={display}
         onChange={(event) => {
           const raw = event.target.value;

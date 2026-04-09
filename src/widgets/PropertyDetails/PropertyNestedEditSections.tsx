@@ -1,5 +1,6 @@
 "use client";
 
+import type { DealType } from "@/features/properties/dealType";
 import type {
   CommercialStatus,
   LandCategory,
@@ -22,17 +23,23 @@ import {
   EditableCheckbox,
   EditableNumericTextInput,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
+import { MinRentalPeriodEditField } from "@/widgets/PropertyDetails/MinRentalPeriodEditField";
 import {
   parseDecimalInput,
   parseIntegerInput,
 } from "@/shared/lib/parseNumericInput";
 
 type ApartmentProps = {
+  dealType: DealType;
   apartment: NonNullable<PropertyFormValues["apartment"]>;
   setApartment: (patch: PropertyApartmentUpdate) => void;
 };
 
-export function ApartmentEditSection({ apartment, setApartment }: ApartmentProps) {
+export function ApartmentEditSection({
+  dealType,
+  apartment,
+  setApartment,
+}: ApartmentProps) {
   const balconyCount = apartment.balcony ?? 0;
 
   function handleDecreaseBalcony() {
@@ -83,17 +90,25 @@ export function ApartmentEditSection({ apartment, setApartment }: ApartmentProps
           onChange={(next) => setApartment({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
         />
+        <MinRentalPeriodEditField
+          dealType={dealType}
+          idPrefix="editApt"
+          months={apartment.minRentalPeriod ?? undefined}
+          onMonthsChange={(next) => setApartment({ minRentalPeriod: next })}
+        />
       </div>
     </fieldset>
   );
 }
 
 type PrivateHouseProps = {
+  dealType: DealType;
   privateHouse: NonNullable<PropertyFormValues["privateHouse"]>;
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
 };
 
 export function PrivateHouseEditSection({
+  dealType,
   privateHouse,
   setPrivateHouse,
 }: PrivateHouseProps) {
@@ -133,17 +148,24 @@ export function PrivateHouseEditSection({
           onChange={(next) => setPrivateHouse({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
         />
+        <MinRentalPeriodEditField
+          dealType={dealType}
+          idPrefix="editPh"
+          months={privateHouse.minRentalPeriod ?? undefined}
+          onMonthsChange={(next) => setPrivateHouse({ minRentalPeriod: next })}
+        />
       </div>
     </fieldset>
   );
 }
 
 type LandPlotProps = {
+  dealType: DealType;
   landPlot: NonNullable<PropertyFormValues["landPlot"]>;
   setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
 };
 
-export function LandPlotEditSection({ landPlot, setLandPlot }: LandPlotProps) {
+export function LandPlotEditSection({ dealType, landPlot, setLandPlot }: LandPlotProps) {
   const hasLandCategory = landPlot.landCategory !== "";
 
   function handleLandCategoryChange(nextRaw: string) {
@@ -194,17 +216,25 @@ export function LandPlotEditSection({ landPlot, setLandPlot }: LandPlotProps) {
           checked={Boolean(landPlot.canBeDivided)}
           onChange={(checked) => setLandPlot({ canBeDivided: checked })}
         />
+        <MinRentalPeriodEditField
+          dealType={dealType}
+          idPrefix="editLp"
+          months={landPlot.minRentalPeriod ?? undefined}
+          onMonthsChange={(next) => setLandPlot({ minRentalPeriod: next })}
+        />
       </div>
     </fieldset>
   );
 }
 
 type CommercialProps = {
+  dealType: DealType;
   commercial: NonNullable<PropertyFormValues["commercial"]>;
   setCommercial: (patch: PropertyCommercialUpdate) => void;
 };
 
 export function CommercialEditSection({
+  dealType,
   commercial,
   setCommercial,
 }: CommercialProps) {
@@ -236,6 +266,12 @@ export function CommercialEditSection({
           value={parseRenovationForForm(commercial.renovation ?? null)}
           onChange={(next) => setCommercial({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
+        />
+        <MinRentalPeriodEditField
+          dealType={dealType}
+          idPrefix="editCm"
+          months={commercial.minRentalPeriod ?? undefined}
+          onMonthsChange={(next) => setCommercial({ minRentalPeriod: next })}
         />
       </div>
     </fieldset>

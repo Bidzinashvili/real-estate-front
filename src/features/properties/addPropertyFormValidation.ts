@@ -30,6 +30,21 @@ export function validateFormInputs(
       errors[key] = `${label} must be a valid number.`;
     }
   };
+  const requireMinRentalPeriodMonths = (key: string, value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      errors[key] = "Min Rental Period (months) is required.";
+      return;
+    }
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+      errors[key] = "Min Rental Period must be a whole number of months.";
+      return;
+    }
+    if (parsed < 1) {
+      errors[key] = "Min Rental Period must be at least 1 month.";
+    }
+  };
   const requireInternationalPhone = (key: string, value: string) => {
     const normalized = value.trim();
     if (!normalized) {
@@ -63,10 +78,9 @@ export function validateFormInputs(
     requireNumber("apartment.bedrooms", form.apartment.bedrooms, "Apartment bedrooms");
     requireNumber("apartment.floor", form.apartment.floor, "Apartment floor");
     if (form.dealType === "RENT") {
-      optionalNumber(
+      requireMinRentalPeriodMonths(
         "apartment.minRentalPeriod",
         form.apartment.minRentalPeriod,
-        "Apartment minimum rental period",
       );
     }
   }
@@ -82,10 +96,9 @@ export function validateFormInputs(
       "Private house bedrooms",
     );
     if (form.dealType === "RENT") {
-      optionalNumber(
+      requireMinRentalPeriodMonths(
         "privateHouse.minRentalPeriod",
         form.privateHouse.minRentalPeriod,
-        "Private house minimum rental period",
       );
     }
   }
@@ -98,11 +111,23 @@ export function validateFormInputs(
     if (form.landPlot.landUsage === "") {
       errors["landPlot.landUsage"] = "Land usage is required.";
     }
+    if (form.dealType === "RENT") {
+      requireMinRentalPeriodMonths(
+        "landPlot.minRentalPeriod",
+        form.landPlot.minRentalPeriod,
+      );
+    }
   }
 
   if (activeSubtype === "commercial") {
     requireNumber("commercial.area", form.commercial.area, "Commercial area");
     requireNumber("commercial.floor", form.commercial.floor, "Commercial floor");
+    if (form.dealType === "RENT") {
+      requireMinRentalPeriodMonths(
+        "commercial.minRentalPeriod",
+        form.commercial.minRentalPeriod,
+      );
+    }
   }
 
   return errors;

@@ -19,6 +19,24 @@ function parseNumber(value: string, field: string, errors: string[]): number {
   return parsed;
 }
 
+function parseMinRentalPeriodForPayload(value: string, field: string, errors: string[]): number {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    errors.push(`${field} is required.`);
+    return 0;
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+    errors.push(`${field} must be a whole number of months.`);
+    return 0;
+  }
+  if (parsed < 1) {
+    errors.push(`${field} must be at least 1 month.`);
+    return 0;
+  }
+  return parsed;
+}
+
 export function buildCreatePropertyPayload(
   form: FormState,
   activeSubtype: AddPropertyActiveSubtype,
@@ -83,13 +101,11 @@ export function buildCreatePropertyPayload(
     }
     if (form.dealType === "RENT") {
       payload.apartment.petsAllowed = apartment.petsAllowed;
-      if (apartment.minRentalPeriod.trim()) {
-        payload.apartment.minRentalPeriod = parseNumber(
-          apartment.minRentalPeriod,
-          "Apartment minimum rental period",
-          errors,
-        );
-      }
+      payload.apartment.minRentalPeriod = parseMinRentalPeriodForPayload(
+        apartment.minRentalPeriod,
+        "Apartment Min Rental Period (months)",
+        errors,
+      );
     }
   } else if (activeSubtype === "privateHouse") {
     const privateHouse = form.privateHouse;
@@ -118,13 +134,11 @@ export function buildCreatePropertyPayload(
     }
     if (form.dealType === "RENT") {
       payload.privateHouse.petsAllowed = privateHouse.petsAllowed;
-      if (privateHouse.minRentalPeriod.trim()) {
-        payload.privateHouse.minRentalPeriod = parseNumber(
-          privateHouse.minRentalPeriod,
-          "Private house minimum rental period",
-          errors,
-        );
-      }
+      payload.privateHouse.minRentalPeriod = parseMinRentalPeriodForPayload(
+        privateHouse.minRentalPeriod,
+        "Private house Min Rental Period (months)",
+        errors,
+      );
     }
   } else if (activeSubtype === "landPlot") {
     const landPlot = form.landPlot;
@@ -149,6 +163,13 @@ export function buildCreatePropertyPayload(
       gas: landPlot.gas,
       sewage: landPlot.sewage,
     };
+    if (form.dealType === "RENT") {
+      payload.landPlot.minRentalPeriod = parseMinRentalPeriodForPayload(
+        landPlot.minRentalPeriod,
+        "Land plot Min Rental Period (months)",
+        errors,
+      );
+    }
   } else {
     const commercial = form.commercial;
     payload.commercial = {
@@ -165,6 +186,13 @@ export function buildCreatePropertyPayload(
     };
     if (commercial.renovation.trim()) {
       payload.commercial.renovation = commercial.renovation.trim();
+    }
+    if (form.dealType === "RENT") {
+      payload.commercial.minRentalPeriod = parseMinRentalPeriodForPayload(
+        commercial.minRentalPeriod,
+        "Commercial Min Rental Period (months)",
+        errors,
+      );
     }
   }
 

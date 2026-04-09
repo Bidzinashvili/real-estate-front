@@ -91,6 +91,7 @@ export type PropertyLandPlotCreate = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod?: number;
 };
 
 export type PropertyCommercialCreate = {
@@ -105,6 +106,7 @@ export type PropertyCommercialCreate = {
   gas: boolean;
   sewage: boolean;
   renovation?: string;
+  minRentalPeriod?: number;
 };
 
 export type CreatePropertyDto = {

@@ -156,6 +156,7 @@ export type PropertyLandPlot = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod: number | null;
 };
 
 export type PropertyCommercial = {
@@ -172,6 +173,7 @@ export type PropertyCommercial = {
   water: boolean;
   gas: boolean;
   sewage: boolean;
+  minRentalPeriod: number | null;
 };
 
 export type Property = {

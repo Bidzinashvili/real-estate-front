@@ -78,6 +78,12 @@ export function PropertyListingFieldsView({
             <DetailNumber label="Rooms" value={values.apartment.rooms} />
             <DetailNumber label="Floor" value={values.apartment.floor} />
             <DetailNumber label="Balcony" value={values.apartment.balcony} />
+            {values.dealType === "RENT" && (
+              <DetailNumber
+                label="Min Rental Period (months)"
+                value={values.apartment.minRentalPeriod ?? undefined}
+              />
+            )}
           </div>
         </section>
       )}
@@ -109,6 +115,12 @@ export function PropertyListingFieldsView({
               label="Fruit trees"
               value={Boolean(values.privateHouse.fruitTrees)}
             />
+            {values.dealType === "RENT" && (
+              <DetailNumber
+                label="Min Rental Period (months)"
+                value={values.privateHouse.minRentalPeriod ?? undefined}
+              />
+            )}
           </div>
         </section>
       )}
@@ -140,6 +152,12 @@ export function PropertyListingFieldsView({
               label="Can be divided"
               value={Boolean(values.landPlot.canBeDivided)}
             />
+            {values.dealType === "RENT" && (
+              <DetailNumber
+                label="Min Rental Period (months)"
+                value={values.landPlot.minRentalPeriod ?? undefined}
+              />
+            )}
           </div>
         </section>
       )}
@@ -163,6 +181,12 @@ export function PropertyListingFieldsView({
               label="Air conditioner"
               value={Boolean(values.commercial.airConditioner)}
             />
+            {values.dealType === "RENT" && (
+              <DetailNumber
+                label="Min Rental Period (months)"
+                value={values.commercial.minRentalPeriod ?? undefined}
+              />
+            )}
           </div>
         </section>
       )}

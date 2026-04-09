@@ -138,6 +138,7 @@ export function PropertyDetailsEditableSections({
 
       {values.apartment && (
         <ApartmentEditSection
+          dealType={values.dealType}
           apartment={values.apartment}
           setApartment={setApartment}
         />
@@ -145,6 +146,7 @@ export function PropertyDetailsEditableSections({
 
       {values.privateHouse && (
         <PrivateHouseEditSection
+          dealType={values.dealType}
           privateHouse={values.privateHouse}
           setPrivateHouse={setPrivateHouse}
         />
@@ -152,6 +154,7 @@ export function PropertyDetailsEditableSections({
 
       {values.landPlot && (
         <LandPlotEditSection
+          dealType={values.dealType}
           landPlot={values.landPlot}
           setLandPlot={setLandPlot}
         />
@@ -159,6 +162,7 @@ export function PropertyDetailsEditableSections({
 
       {values.commercial && (
         <CommercialEditSection
+          dealType={values.dealType}
           commercial={values.commercial}
           setCommercial={setCommercial}
         />

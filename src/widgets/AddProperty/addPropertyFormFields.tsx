@@ -22,6 +22,8 @@ type FieldProps = {
   required?: boolean;
   error?: string;
   readOnly?: boolean;
+  placeholder?: string;
+  name?: string;
 };
 
 export function TextField({
@@ -33,6 +35,8 @@ export function TextField({
   required,
   error,
   readOnly,
+  placeholder,
+  name,
 }: FieldProps) {
   return (
     <div className="space-y-1.5">
@@ -41,10 +45,12 @@ export function TextField({
       </label>
       <input
         id={id}
+        name={name}
         type={type}
         value={value}
         required={required}
         readOnly={readOnly}
+        placeholder={placeholder}
         onChange={readOnly ? undefined : (event) => onChange(event.target.value)}
         className={`${addPropertyInputClassName()} ${error ? "border-red-500 focus:border-red-600" : ""} ${readOnly ? "cursor-default bg-slate-50 text-slate-700" : ""}`}
       />

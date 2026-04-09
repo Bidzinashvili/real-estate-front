@@ -12,6 +12,7 @@ import {
   SelectField,
   TextField,
 } from "@/widgets/AddProperty/addPropertyFormFields";
+import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import {
@@ -176,10 +177,8 @@ export function AddPropertyPrivateHouseSection({
           options={RENOVATION_SELECT_OPTIONS}
         />
         {dealType === "RENT" && (
-          <TextField
-            id="phMinRentalPeriod"
-            label="Min rental period"
-            type="number"
+          <MinRentalPeriodField
+            idPrefix="ph"
             value={privateHouse.minRentalPeriod}
             onChange={(value) => patchPrivateHouse({ minRentalPeriod: value })}
             error={fieldErrors["privateHouse.minRentalPeriod"]}

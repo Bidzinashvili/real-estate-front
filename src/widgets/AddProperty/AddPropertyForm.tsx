@@ -61,6 +61,7 @@ export function AddPropertyForm() {
 
           {activeSubtype === "landPlot" && (
             <AddPropertyLandPlotSection
+              dealType={form.dealType}
               landPlot={form.landPlot}
               fieldErrors={fieldErrors}
               patchLandPlot={patchLandPlot}
@@ -69,6 +70,7 @@ export function AddPropertyForm() {
 
           {activeSubtype === "commercial" && (
             <AddPropertyCommercialSection
+              dealType={form.dealType}
               commercial={form.commercial}
               fieldErrors={fieldErrors}
               patchCommercial={patchCommercial}

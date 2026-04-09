@@ -36,6 +36,8 @@ export function useAddPropertyForm() {
         const next = { ...prev };
         delete next["apartment.minRentalPeriod"];
         delete next["privateHouse.minRentalPeriod"];
+        delete next["landPlot.minRentalPeriod"];
+        delete next["commercial.minRentalPeriod"];
         return next;
       });
     } else {
@@ -51,7 +53,23 @@ export function useAddPropertyForm() {
       });
     }
 
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      if (key === "dealType") {
+        const nextDealType = value as FormState["dealType"];
+        if (nextDealType !== "RENT") {
+          return {
+            ...prev,
+            dealType: nextDealType,
+            apartment: { ...prev.apartment, minRentalPeriod: "" },
+            privateHouse: { ...prev.privateHouse, minRentalPeriod: "" },
+            landPlot: { ...prev.landPlot, minRentalPeriod: "" },
+            commercial: { ...prev.commercial, minRentalPeriod: "" },
+          };
+        }
+        return { ...prev, dealType: nextDealType };
+      }
+      return { ...prev, [key]: value };
+    });
   }, []);
 
   const patchApartment = useCallback((patch: Partial<FormState["apartment"]>) => {

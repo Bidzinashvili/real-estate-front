@@ -15,6 +15,7 @@ export type PropertyFormLandPlot = {
   canBeDivided: boolean;
   landCategory: LandCategory | "";
   landUsage: CommercialStatus | "";
+  minRentalPeriod?: number;
 };
 
 export type PropertyFormValues = {
@@ -53,6 +54,27 @@ function addIfChanged<T extends Record<string, unknown>>(
   return Object.keys(result).length > 0 ? (result as T) : undefined;
 }
 
+function mergeMinRentalPeriodIntoPatch<T extends Record<string, unknown>>(
+  initial: T | null,
+  current: T | null,
+  patch: Partial<T> | undefined,
+): Partial<T> | undefined {
+  if (!current) return patch;
+
+  const initialMin = initial?.minRentalPeriod ?? null;
+  const currentMin = current.minRentalPeriod ?? null;
+  if (initialMin === currentMin) return patch;
+
+  const minPatch = {
+    minRentalPeriod:
+      current.minRentalPeriod === undefined || current.minRentalPeriod === null
+        ? null
+        : current.minRentalPeriod,
+  } as unknown as Partial<T>;
+
+  return { ...(patch ?? {}), ...minPatch };
+}
+
 function buildLandPlotPatch(
   initial: PropertyFormLandPlot | null,
   current: PropertyFormLandPlot | null,
@@ -80,6 +102,15 @@ function buildLandPlotPatch(
     patch.landUsage = current.landUsage;
   }
 
+  const initialMin = initial?.minRentalPeriod ?? null;
+  const currentMin = current.minRentalPeriod ?? null;
+  if (initialMin !== currentMin) {
+    patch.minRentalPeriod =
+      current.minRentalPeriod === undefined || current.minRentalPeriod === null
+        ? null
+        : current.minRentalPeriod;
+  }
+
   return Object.keys(patch).length > 0 ? patch : undefined;
 }
 
@@ -88,6 +119,10 @@ export function buildPropertyUpdatePayload(
   current: PropertyFormValues,
 ): PropertyUpdatePayload {
   const payload: PropertyUpdatePayload = {};
+
+  if (initial.dealType !== current.dealType) {
+    payload.dealType = current.dealType;
+  }
 
   if (initial.city !== current.city) payload.city = current.city;
   if (initial.district !== current.district) payload.district = current.district;
@@ -104,17 +139,29 @@ export function buildPropertyUpdatePayload(
   }
   if (initial.description !== current.description) payload.description = current.description;
 
-  const apartment = addIfChanged(initial.apartment, current.apartment);
-  if (apartment) payload.apartment = apartment;
+  const apartmentPatch = mergeMinRentalPeriodIntoPatch(
+    initial.apartment,
+    current.apartment,
+    addIfChanged(initial.apartment, current.apartment),
+  );
+  if (apartmentPatch) payload.apartment = apartmentPatch;
 
-  const privateHouse = addIfChanged(initial.privateHouse, current.privateHouse);
-  if (privateHouse) payload.privateHouse = privateHouse;
+  const privateHousePatch = mergeMinRentalPeriodIntoPatch(
+    initial.privateHouse,
+    current.privateHouse,
+    addIfChanged(initial.privateHouse, current.privateHouse),
+  );
+  if (privateHousePatch) payload.privateHouse = privateHousePatch;
 
   const landPlot = buildLandPlotPatch(initial.landPlot, current.landPlot);
   if (landPlot) payload.landPlot = landPlot;
 
-  const commercial = addIfChanged(initial.commercial, current.commercial);
-  if (commercial) payload.commercial = commercial;
+  const commercialPatch = mergeMinRentalPeriodIntoPatch(
+    initial.commercial,
+    current.commercial,
+    addIfChanged(initial.commercial, current.commercial),
+  );
+  if (commercialPatch) payload.commercial = commercialPatch;
 
   return payload;
 }

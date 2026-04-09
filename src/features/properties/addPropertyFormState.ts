@@ -84,6 +84,7 @@ export type FormState = {
     water: boolean;
     gas: boolean;
     sewage: boolean;
+    minRentalPeriod: string;
   };
   commercial: {
     area: string;
@@ -97,6 +98,7 @@ export type FormState = {
     gas: boolean;
     sewage: boolean;
     renovation: Renovation | "";
+    minRentalPeriod: string;
   };
 };
 
@@ -171,6 +173,7 @@ export function initialFormState(): FormState {
       water: false,
       gas: false,
       sewage: false,
+      minRentalPeriod: "",
     },
     commercial: {
       area: "",
@@ -184,6 +187,7 @@ export function initialFormState(): FormState {
       gas: false,
       sewage: false,
       renovation: "",
+      minRentalPeriod: "",
     },
   };
 }

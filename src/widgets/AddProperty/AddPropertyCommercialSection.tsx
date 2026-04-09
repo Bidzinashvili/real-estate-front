@@ -1,20 +1,24 @@
 "use client";
 
+import type { DealType } from "@/features/properties/dealType";
 import {
   COMMERCIAL_STATUS_OPTIONS,
   RENOVATION_SELECT_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
+import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 
 type Props = {
+  dealType: DealType;
   commercial: FormState["commercial"];
   fieldErrors: FormErrors;
   patchCommercial: (patch: Partial<FormState["commercial"]>) => void;
 };
 
 export function AddPropertyCommercialSection({
+  dealType,
   commercial,
   fieldErrors,
   patchCommercial,
@@ -55,6 +59,14 @@ export function AddPropertyCommercialSection({
           onChange={(value) => patchCommercial({ renovation: value })}
           options={RENOVATION_SELECT_OPTIONS}
         />
+        {dealType === "RENT" && (
+          <MinRentalPeriodField
+            idPrefix="cm"
+            value={commercial.minRentalPeriod}
+            onChange={(value) => patchCommercial({ minRentalPeriod: value })}
+            error={fieldErrors["commercial.minRentalPeriod"]}
+          />
+        )}
         <CheckboxField
           id="cmCentralHeating"
           label="Central heating"

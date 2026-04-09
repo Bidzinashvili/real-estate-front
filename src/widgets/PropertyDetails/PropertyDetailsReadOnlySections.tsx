@@ -113,11 +113,13 @@ export function PropertyDetailsReadOnlySections({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailNumber label="Bedrooms" value={property.apartment.bedrooms} />
-            <DetailNumber
-              label="Min rental period"
-              value={property.apartment.minRentalPeriod}
-              suffix="months"
-            />
+            {property.dealType === "RENT" && (
+              <DetailNumber
+                label="Min Rental Period (months)"
+                value={property.apartment.minRentalPeriod}
+                suffix="months"
+              />
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

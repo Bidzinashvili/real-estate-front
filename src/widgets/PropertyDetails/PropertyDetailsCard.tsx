@@ -58,6 +58,7 @@ export function PropertyDetailsCard({
             balcony: property.apartment.balcony,
             floor: property.apartment.floor,
             renovation: parseRenovationForForm(property.apartment.renovation),
+            minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
           }
         : null,
       privateHouse: property.privateHouse
@@ -67,6 +68,7 @@ export function PropertyDetailsCard({
             pool: property.privateHouse.pool,
             fruitTrees: property.privateHouse.fruitTrees,
             renovation: parseRenovationForForm(property.privateHouse.renovation),
+            minRentalPeriod: property.privateHouse.minRentalPeriod ?? undefined,
           }
         : null,
       landPlot: property.landPlot
@@ -76,6 +78,7 @@ export function PropertyDetailsCard({
             landUsage: property.landPlot.landUsage,
             forInvestment: property.landPlot.forInvestment,
             canBeDivided: property.landPlot.canBeDivided,
+            minRentalPeriod: property.landPlot.minRentalPeriod ?? undefined,
           }
         : null,
       commercial: property.commercial
@@ -84,6 +87,7 @@ export function PropertyDetailsCard({
             parking: property.commercial.parking,
             airConditioner: property.commercial.airConditioner,
             renovation: parseRenovationForForm(property.commercial.renovation),
+            minRentalPeriod: property.commercial.minRentalPeriod ?? undefined,
           }
         : null,
     };
@@ -97,7 +101,39 @@ export function PropertyDetailsCard({
   }, [initialValues]);
 
   const handleDealTypeChange = (value: DealType) => {
-    setValues((prev) => ({ ...prev, dealType: value }));
+    const clearRentFields = value !== "RENT";
+    setValues((prev) => ({
+      ...prev,
+      dealType: value,
+      apartment: prev.apartment
+        ? {
+            ...prev.apartment,
+            minRentalPeriod: clearRentFields ? undefined : prev.apartment.minRentalPeriod,
+          }
+        : null,
+      privateHouse: prev.privateHouse
+        ? {
+            ...prev.privateHouse,
+            minRentalPeriod: clearRentFields
+              ? undefined
+              : prev.privateHouse.minRentalPeriod,
+          }
+        : null,
+      landPlot: prev.landPlot
+        ? {
+            ...prev.landPlot,
+            minRentalPeriod: clearRentFields ? undefined : prev.landPlot.minRentalPeriod,
+          }
+        : null,
+      commercial: prev.commercial
+        ? {
+            ...prev.commercial,
+            minRentalPeriod: clearRentFields
+              ? undefined
+              : prev.commercial.minRentalPeriod,
+          }
+        : null,
+    }));
   };
 
   const handleFieldChange = (
@@ -125,6 +161,46 @@ export function PropertyDetailsCard({
       if (values.landPlot.landCategory === "" || values.landPlot.landUsage === "") {
         setClientError("Select land category and land usage.");
         return;
+      }
+    }
+
+    if (values.dealType === "RENT") {
+      const rentMinMessage = (months: number | undefined): string | null => {
+        if (months === undefined || Number.isNaN(months)) {
+          return "Min Rental Period (months) is required.";
+        }
+        if (!Number.isInteger(months) || months < 1) {
+          return "Min Rental Period must be a whole number of at least 1 month.";
+        }
+        return null;
+      };
+      if (values.apartment) {
+        const message = rentMinMessage(values.apartment.minRentalPeriod ?? undefined);
+        if (message) {
+          setClientError(message);
+          return;
+        }
+      }
+      if (values.privateHouse) {
+        const message = rentMinMessage(values.privateHouse.minRentalPeriod ?? undefined);
+        if (message) {
+          setClientError(message);
+          return;
+        }
+      }
+      if (values.landPlot) {
+        const message = rentMinMessage(values.landPlot.minRentalPeriod ?? undefined);
+        if (message) {
+          setClientError(message);
+          return;
+        }
+      }
+      if (values.commercial) {
+        const message = rentMinMessage(values.commercial.minRentalPeriod ?? undefined);
+        if (message) {
+          setClientError(message);
+          return;
+        }
       }
     }
 
