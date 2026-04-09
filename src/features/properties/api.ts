@@ -40,8 +40,13 @@ function getAuthHeaders() {
 const PROPERTY_LIST_PAGE_SCAN = 100;
 const PROPERTY_LIST_SCAN_MAX_PAGES = 500;
 
+export type GetPropertiesRequestOptions = {
+  signal?: AbortSignal;
+};
+
 export async function getProperties(
   query?: GetPropertiesQuery,
+  requestOptions?: GetPropertiesRequestOptions,
 ): Promise<PropertiesListResult> {
   const { baseUrl, headers } = getAuthHeaders();
   const params = toGetPropertiesSearchParams(query);
@@ -50,10 +55,14 @@ export async function getProperties(
     const res = await axios.get<PropertyListResponse>(`${baseUrl}/properties`, {
       headers,
       params,
+      signal: requestOptions?.signal,
     });
 
     return normalizePropertiesListResponse(res.data);
   } catch (error) {
+    if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+      throw error;
+    }
     if (axios.isAxiosError(error)) {
       const fallback = "Could not load properties right now.";
       const parsed = parseStandardApiError(

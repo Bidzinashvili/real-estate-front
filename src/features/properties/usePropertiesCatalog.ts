@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProperties } from "@/features/properties/api";
 import type { DealType } from "@/features/properties/dealType";
@@ -31,8 +32,34 @@ type UsePropertiesCatalogOptions = {
 
 const CATALOG_TEXT_FILTER_DEBOUNCE_MS = 300;
 
+function areCatalogDebouncedTextFiltersEqual(
+  previous: CatalogDebouncedTextState,
+  next: CatalogDebouncedTextState,
+): boolean {
+  return (
+    previous.searchInput === next.searchInput &&
+    previous.city === next.city &&
+    previous.district === next.district &&
+    previous.minPrice === next.minPrice &&
+    previous.maxPrice === next.maxPrice &&
+    previous.minArea === next.minArea &&
+    previous.maxArea === next.maxArea &&
+    previous.rooms === next.rooms &&
+    previous.bedrooms === next.bedrooms &&
+    previous.floor === next.floor &&
+    previous.yardArea === next.yardArea &&
+    previous.houseArea === next.houseArea &&
+    previous.landArea === next.landArea &&
+    previous.commercialArea === next.commercialArea
+  );
+}
+
 function urlStateSignature(s: PropertyCatalogUrlState): string {
   return propertyCatalogUrlStateToSearchParams(s).toString();
+}
+
+function isCanceledRequestError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.code === "ERR_CANCELED";
 }
 
 export type UsePropertiesCatalogResult = {
@@ -92,6 +119,7 @@ export function usePropertiesCatalog(
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTick, setRefetchTick] = useState(0);
 
   const allowUrlReplace = useRef(false);
   const urlChangeFromReplaceRef = useRef(false);
@@ -105,18 +133,35 @@ export function usePropertiesCatalog(
     const fromOurReplace = urlChangeFromReplaceRef.current;
     urlChangeFromReplaceRef.current = false;
 
-    setState(parsed);
+    setState((previous) => {
+      if (urlStateSignature(previous) === urlStateSignature(parsed)) {
+        return previous;
+      }
+      return parsed;
+    });
     if (!fromOurReplace) {
-      setDebouncedTextFilters(pickCatalogDebouncedTextState(parsed));
+      setDebouncedTextFilters((previousDebounced) => {
+        const nextDebounced = pickCatalogDebouncedTextState(parsed);
+        if (areCatalogDebouncedTextFiltersEqual(previousDebounced, nextDebounced)) {
+          return previousDebounced;
+        }
+        return nextDebounced;
+      });
     }
     allowUrlReplace.current = true;
   }, [searchParams, syncUrl]);
 
   useEffect(() => {
-    const id = window.setTimeout(() => {
-      setDebouncedTextFilters(pickCatalogDebouncedTextState(state));
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedTextFilters((previousDebounced) => {
+        const nextDebounced = pickCatalogDebouncedTextState(state);
+        if (areCatalogDebouncedTextFiltersEqual(previousDebounced, nextDebounced)) {
+          return previousDebounced;
+        }
+        return nextDebounced;
+      });
     }, CATALOG_TEXT_FILTER_DEBOUNCE_MS);
-    return () => window.clearTimeout(id);
+    return () => window.clearTimeout(timeoutId);
   }, [
     state.searchInput,
     state.city,
@@ -170,43 +215,75 @@ export function usePropertiesCatalog(
     ],
   );
 
+  const wantsMyPropertiesFilter = state.showMyProperties === true;
+  const myPropertiesCatalogDependency: string | false | null = wantsMyPropertiesFilter
+    ? (currentUser?.id ?? false)
+    : null;
+
   const apiQuery = useMemo(
     () => ({
       ...catalogQuery,
       myProperties:
         catalogQuery.myProperties === true && currentUser ? true : undefined,
     }),
-    [catalogQuery, currentUser],
+    [catalogQuery, myPropertiesCatalogDependency],
   );
 
-  const load = useCallback(async () => {
-    if (!enabled) return;
+  const canFetchCatalog =
+    enabled &&
+    (!wantsMyPropertiesFilter ||
+      (!isUserFetchLoading && currentUser !== null));
+
+  useEffect(() => {
+    if (!canFetchCatalog) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let effectCommitted = true;
 
     setIsLoading(true);
     setError(null);
-    try {
-      const res = await getProperties(apiQuery);
-      setProperties(res.properties);
-      setTotal(res.total);
 
-      const lastPage = Math.max(1, Math.ceil(res.total / res.limit) || 1);
-      if (res.total > 0 && state.page > lastPage) {
-        setState((s) => ({ ...s, page: lastPage }));
+    void (async () => {
+      try {
+        const res = await getProperties(apiQuery, { signal: controller.signal });
+        if (!effectCommitted) {
+          return;
+        }
+        setProperties(res.properties);
+        setTotal(res.total);
+
+        const lastPage = Math.max(1, Math.ceil(res.total / res.limit) || 1);
+        if (res.total > 0 && state.page > lastPage) {
+          setState((previousState) => ({ ...previousState, page: lastPage }));
+        }
+      } catch (error) {
+        if (!effectCommitted || isCanceledRequestError(error)) {
+          return;
+        }
+        const message =
+          error instanceof Error ? error.message : "Could not load properties right now.";
+        setError(message);
+        setProperties([]);
+        setTotal(0);
+      } finally {
+        if (effectCommitted) {
+          setIsLoading(false);
+        }
       }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not load properties right now.";
-      setError(message);
-      setProperties([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiQuery, enabled, state.page]);
+    })();
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+    return () => {
+      effectCommitted = false;
+      controller.abort();
+    };
+  }, [apiQuery, canFetchCatalog, refetchTick, state.page]);
+
+  const refetch = useCallback(() => {
+    setRefetchTick((previousTick) => previousTick + 1);
+    return Promise.resolve();
+  }, []);
 
   const bumpPage = useCallback((patch: Partial<PropertyCatalogUrlState>) => {
     setState((s) => ({ ...s, ...patch, page: 1 }));
@@ -243,7 +320,7 @@ export function usePropertiesCatalog(
     totalPages,
     isLoading,
     error,
-    refetch: load,
+    refetch,
     state,
     debouncedTextFilters,
     ...setters,
