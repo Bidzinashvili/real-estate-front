@@ -12,6 +12,7 @@ type FieldProps = {
   type?: "text" | "number" | "tel";
   required?: boolean;
   error?: string;
+  readOnly?: boolean;
 };
 
 export function TextField({
@@ -22,6 +23,7 @@ export function TextField({
   type = "text",
   required,
   error,
+  readOnly,
 }: FieldProps) {
   return (
     <div className="space-y-1.5">
@@ -33,8 +35,9 @@ export function TextField({
         type={type}
         value={value}
         required={required}
-        onChange={(event) => onChange(event.target.value)}
-        className={`${addPropertyInputClassName()} ${error ? "border-red-500 focus:border-red-600" : ""}`}
+        readOnly={readOnly}
+        onChange={readOnly ? undefined : (event) => onChange(event.target.value)}
+        className={`${addPropertyInputClassName()} ${error ? "border-red-500 focus:border-red-600" : ""} ${readOnly ? "cursor-default bg-slate-50 text-slate-700" : ""}`}
       />
       {error ? (
         <p className="text-xs text-red-600" role="alert">

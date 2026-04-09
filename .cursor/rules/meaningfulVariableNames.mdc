@@ -1,0 +1,40 @@
+---
+description: Meaningful variable names; minimum 3 characters — mandatory
+alwaysApply: true
+---
+
+# Meaningful identifiers (mandatory)
+
+This rule is **non-negotiable** for any code you write or edit in this project.
+
+## Requirements
+
+1. **Minimum length**: Every name you introduce for a variable, parameter, function (when naming locally), or `const` binding must be **at least 3 characters long**.
+
+2. **Meaningful**: The name must communicate **purpose or contents**. Do not use opaque placeholders such as `n`, `x`, `i`, `j`, `tmp`, `obj`, `val`, `fn`, `cb`, `e`, `ev` as a generic “holder.”
+
+3. **Loops**: Use names like `index`, `itemIndex`, `elementIndex`, or `characterIndex` instead of `i` / `j` / `k`.
+
+4. **Parsing / coercion**: Use names like `parsedNumber`, `trimmedInput`, `combinedArea` instead of `n`, `s`, `t`.
+
+## Allowed narrow exceptions
+
+- Identifiers **fixed by a language, framework, or external contract** (e.g. the prop name `id` on a DOM element, library callback parameter names you cannot rename, destructuring to match a third-party type). Prefer aliasing when it clarifies: `{ id: imageId }`.
+
+## Examples
+
+```typescript
+// ❌ Disallowed
+const n = parseFloat(trimmed);
+catch (e) { … }
+for (let i = 0; i < items.length; i += 1) { … }
+const cb = () => { … };
+
+// ✅ Required style
+const parsedNumber = parseFloat(trimmed);
+catch (error) { … }
+for (let index = 0; index < items.length; index += 1) { … }
+const handleSubmit = () => { … };
+```
+
+When touching existing code that violates this rule, **rename to comply** as part of the same change, unless the edit is a one-line trivial fix in a legacy block (then still follow the rule for any **new** bindings).

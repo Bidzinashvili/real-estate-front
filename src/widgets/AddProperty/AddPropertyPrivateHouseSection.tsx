@@ -1,10 +1,25 @@
 "use client";
 
+import { useEffect } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import { BUILDING_CONDITION_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
+
+function parseAreaNumber(rawInput: string): number {
+  const trimmedInput = rawInput.trim();
+  if (trimmedInput === "") return 0;
+  const parsedNumber = parseFloat(trimmedInput);
+  return Number.isFinite(parsedNumber) ? parsedNumber : 0;
+}
+
+function totalAreaStringFromParts(houseArea: string, yardArea: string): string {
+  if (houseArea.trim() === "" && yardArea.trim() === "") return "";
+  const combinedSquareMeters =
+    parseAreaNumber(houseArea) + parseAreaNumber(yardArea);
+  return String(combinedSquareMeters);
+}
 
 type Props = {
   dealType: DealType;
@@ -19,6 +34,40 @@ export function AddPropertyPrivateHouseSection({
   fieldErrors,
   patchPrivateHouse,
 }: Props) {
+  const totalArea = totalAreaStringFromParts(
+    privateHouse.houseArea,
+    privateHouse.yardArea,
+  );
+
+  function handleHouseAreaChange(value: string) {
+    patchPrivateHouse({
+      houseArea: value,
+      totalArea: totalAreaStringFromParts(value, privateHouse.yardArea),
+    });
+  }
+
+  function handleYardAreaChange(value: string) {
+    patchPrivateHouse({
+      yardArea: value,
+      totalArea: totalAreaStringFromParts(privateHouse.houseArea, value),
+    });
+  }
+
+  useEffect(() => {
+    const nextTotal = totalAreaStringFromParts(
+      privateHouse.houseArea,
+      privateHouse.yardArea,
+    );
+    if (nextTotal !== privateHouse.totalArea) {
+      patchPrivateHouse({ totalArea: nextTotal });
+    }
+  }, [
+    privateHouse.houseArea,
+    privateHouse.yardArea,
+    privateHouse.totalArea,
+    patchPrivateHouse,
+  ]);
+
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h2 className="text-sm font-semibold text-slate-800">Private house details</h2>
@@ -35,7 +84,7 @@ export function AddPropertyPrivateHouseSection({
           label="House area"
           type="number"
           value={privateHouse.houseArea}
-          onChange={(value) => patchPrivateHouse({ houseArea: value })}
+          onChange={handleHouseAreaChange}
           required
           error={fieldErrors["privateHouse.houseArea"]}
         />
@@ -44,7 +93,7 @@ export function AddPropertyPrivateHouseSection({
           label="Yard area"
           type="number"
           value={privateHouse.yardArea}
-          onChange={(value) => patchPrivateHouse({ yardArea: value })}
+          onChange={handleYardAreaChange}
           required
           error={fieldErrors["privateHouse.yardArea"]}
         />
@@ -52,8 +101,9 @@ export function AddPropertyPrivateHouseSection({
           id="phTotalArea"
           label="Total area"
           type="number"
-          value={privateHouse.totalArea}
-          onChange={(value) => patchPrivateHouse({ totalArea: value })}
+          value={totalArea}
+          onChange={() => {}}
+          readOnly
           required
           error={fieldErrors["privateHouse.totalArea"]}
         />
