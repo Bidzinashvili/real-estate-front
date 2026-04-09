@@ -1,148 +1,218 @@
 import { parseDealType } from "@/features/properties/dealType";
-import { parsePropertyType } from "@/features/properties/propertyModelTypes";
+import {
+  isBuildingCondition,
+  isCommercialStatus,
+  isKitchenType,
+  isLandStatus,
+  parsePropertyType,
+} from "@/features/properties/propertyModelTypes";
 import type {
+  BuildingCondition,
+  CommercialStatus,
+  KitchenType,
+  LandStatus,
   Property,
   PropertyApartment,
   PropertyCommercial,
   PropertyLandPlot,
+  PropertyListingImage,
   PropertyPrivateHouse,
 } from "@/features/properties/propertyModelTypes";
+import {
+  asBoolean,
+  asNullableString,
+  asNumber,
+  asString,
+  isJsonObject,
+} from "@/shared/lib/jsonValue";
+import type { JsonValue } from "@/shared/lib/jsonValue";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return isBuildingCondition(candidate) ? candidate : "NEW";
 }
 
-function asString(value: unknown, fallback = ""): string {
-  return typeof value === "string" ? value : fallback;
+function parseKitchenType(value: JsonValue | undefined): KitchenType {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return isKitchenType(candidate) ? candidate : "SEPARATE";
 }
 
-function asNumber(value: unknown, fallback = 0): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
+function parseLandStatus(value: JsonValue | undefined): LandStatus {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return isLandStatus(candidate) ? candidate : "AGRICULTURAL";
+}
+
+function parseCommercialStatus(value: JsonValue | undefined): CommercialStatus {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return isCommercialStatus(candidate) ? candidate : "UNIVERSAL";
+}
+
+function asBalconyCount(value: JsonValue | undefined): number {
+  if (value === undefined || value === null) {
+    return 0;
   }
+  if (typeof value === "boolean") {
+    return value ? 1 : 0;
+  }
+  const parsed = asNumber(value, 0);
+  return Math.max(0, Math.trunc(parsed));
+}
 
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (trimmed === "") return fallback;
-    const parsed = Number(trimmed);
+function asNullableBoolean(value: JsonValue | undefined): boolean | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value;
+  return null;
+}
+
+function asNullableNumber(value: JsonValue | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value.trim());
     if (Number.isFinite(parsed)) return parsed;
   }
-
-  return fallback;
+  return null;
 }
 
-function asBoolean(value: unknown, fallback = false): boolean {
-  return typeof value === "boolean" ? value : fallback;
+function legacyImageIdFromUrl(url: string): string {
+  const pathOnly = url.split("?")[0] ?? url;
+  const segment = pathOnly.split("/").pop();
+  return segment && segment.length > 0 ? segment : url;
 }
 
-function asNullableString(value: unknown): string | null {
-  if (value === null) return null;
-  return typeof value === "string" ? value : null;
-}
-
-function normalizeImages(
-  value: unknown,
-): Array<{ url: string; originalName: string }> {
+function normalizeImages(value: JsonValue | undefined): PropertyListingImage[] {
   if (!Array.isArray(value)) return [];
 
   return value
-    .map((item) => {
+    .map((item): PropertyListingImage | null => {
       if (typeof item === "string") {
-        return { url: item, originalName: "" };
+        const url = item.trim();
+        if (!url) return null;
+        return {
+          id: legacyImageIdFromUrl(url),
+          url,
+          originalName: "",
+        };
       }
-      if (!isRecord(item)) return null;
+      if (!isJsonObject(item)) return null;
 
       const url = asString(item.url);
       if (!url) return null;
 
+      const idRaw = asString(item.id).trim();
       return {
+        id: idRaw || legacyImageIdFromUrl(url),
         url,
         originalName: asString(item.originalName),
       };
     })
-    .filter(
-      (item): item is { url: string; originalName: string } =>
-        item !== null,
-    );
+    .filter((item): item is PropertyListingImage => item !== null);
 }
 
-function normalizeApartment(value: unknown): PropertyApartment | null {
-  if (!isRecord(value)) return null;
+function normalizeApartment(value: JsonValue | undefined): PropertyApartment | null {
+  if (value === undefined) return null;
+  if (!isJsonObject(value)) return null;
 
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
-    buildingNumber: asString(value.buildingNumber),
-    buildingCondition: asString(value.buildingCondition),
+    buildingNumber: asNullableString(value.buildingNumber),
+    buildingCondition: parseBuildingCondition(value.buildingCondition),
     totalArea: asNumber(value.totalArea),
-    project: asString(value.project),
-    renovation: asString(value.renovation),
+    project: asNullableString(value.project),
+    renovation: asNullableString(value.renovation),
     rooms: asNumber(value.rooms),
     bedrooms: asNumber(value.bedrooms),
     floor: asNumber(value.floor),
-    balcony: asBoolean(value.balcony),
+    balcony: asBalconyCount(value.balcony),
     elevator: asBoolean(value.elevator),
     centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
-    kitchenType: asString(value.kitchenType),
+    kitchenType: parseKitchenType(value.kitchenType),
     furniture: asBoolean(value.furniture),
     appliances: asBoolean(value.appliances),
     parking: asBoolean(value.parking),
-    petsAllowed: asBoolean(value.petsAllowed),
-    minRentalPeriod: asNumber(value.minRentalPeriod),
+    petsAllowed: asNullableBoolean(value.petsAllowed),
+    minRentalPeriod: asNullableNumber(value.minRentalPeriod),
   };
 }
 
-function optionalNumber(value: unknown): number | undefined {
-  if (value === undefined || value === null) return undefined;
-  const n = asNumber(value, Number.NaN);
-  return Number.isFinite(n) ? n : undefined;
-}
-
-function normalizePrivateHouse(value: unknown): PropertyPrivateHouse | null {
-  if (!isRecord(value)) return null;
+function normalizePrivateHouse(
+  value: JsonValue | undefined,
+): PropertyPrivateHouse | null {
+  if (value === undefined) return null;
+  if (!isJsonObject(value)) return null;
 
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
-    totalArea: optionalNumber(value.totalArea),
-    rooms: optionalNumber(value.rooms),
-    bedrooms: optionalNumber(value.bedrooms),
-    floor: optionalNumber(value.floor),
+    buildingCondition: parseBuildingCondition(value.buildingCondition),
     houseArea: asNumber(value.houseArea),
     yardArea: asNumber(value.yardArea),
+    totalArea: asNumber(value.totalArea),
+    renovation: asNullableString(value.renovation),
+    rooms: asNumber(value.rooms),
+    bedrooms: asNumber(value.bedrooms),
+    balcony: asBalconyCount(value.balcony),
+    centralHeating: asBoolean(value.centralHeating),
+    airConditioner: asBoolean(value.airConditioner),
+    furniture: asBoolean(value.furniture),
+    appliances: asBoolean(value.appliances),
+    parking: asBoolean(value.parking),
     pool: asBoolean(value.pool),
     fruitTrees: asBoolean(value.fruitTrees),
+    electricity: asBoolean(value.electricity),
+    water: asBoolean(value.water),
+    gas: asBoolean(value.gas),
+    sewage: asBoolean(value.sewage),
+    petsAllowed: asNullableBoolean(value.petsAllowed),
+    minRentalPeriod: asNullableNumber(value.minRentalPeriod),
   };
 }
 
-function normalizeLandPlot(value: unknown): PropertyLandPlot | null {
-  if (!isRecord(value)) return null;
+function normalizeLandPlot(value: JsonValue | undefined): PropertyLandPlot | null {
+  if (value === undefined) return null;
+  if (!isJsonObject(value)) return null;
 
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
     landArea: asNumber(value.landArea),
+    status: parseLandStatus(value.status),
     forInvestment: asBoolean(value.forInvestment),
+    approvedProject: asBoolean(value.approvedProject),
     canBeDivided: asBoolean(value.canBeDivided),
+    fruitTrees: asBoolean(value.fruitTrees),
+    electricity: asBoolean(value.electricity),
+    water: asBoolean(value.water),
+    gas: asBoolean(value.gas),
+    sewage: asBoolean(value.sewage),
   };
 }
 
-function normalizeCommercial(value: unknown): PropertyCommercial | null {
-  if (!isRecord(value)) return null;
+function normalizeCommercial(value: JsonValue | undefined): PropertyCommercial | null {
+  if (value === undefined) return null;
+  if (!isJsonObject(value)) return null;
 
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
     area: asNumber(value.area),
-    floor: optionalNumber(value.floor),
-    parking: asBoolean(value.parking),
+    status: parseCommercialStatus(value.status),
+    floor: asNumber(value.floor),
+    renovation: asNullableString(value.renovation),
+    centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
+    parking: asBoolean(value.parking),
+    electricity: asBoolean(value.electricity),
+    water: asBoolean(value.water),
+    gas: asBoolean(value.gas),
+    sewage: asBoolean(value.sewage),
   };
 }
 
-export function normalizeProperty(value: unknown): Property | null {
-  if (!isRecord(value)) return null;
+export function normalizeProperty(value: JsonValue): Property | null {
+  if (!isJsonObject(value)) return null;
 
   const images = normalizeImages(value.images);
 
@@ -153,6 +223,7 @@ export function normalizeProperty(value: unknown): Property | null {
     city: asString(value.city),
     district: asString(value.district),
     address: asString(value.address),
+    title: asNullableString(value.title),
     cadastralCode: asNullableString(value.cadastralCode),
     pricePublic: asNumber(value.pricePublic),
     priceInternal:
@@ -173,6 +244,7 @@ export function normalizeProperty(value: unknown): Property | null {
     images,
     createdAt: asNullableString(value.createdAt) ?? "",
     updatedAt: asNullableString(value.updatedAt) ?? "",
+    deletedAt: asNullableString(value.deletedAt),
     userId: asString(value.userId),
     apartment: normalizeApartment(value.apartment),
     privateHouse: normalizePrivateHouse(value.privateHouse),

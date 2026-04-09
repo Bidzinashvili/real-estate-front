@@ -32,6 +32,7 @@ type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
   canEdit: boolean;
   showInternalPrice: boolean;
+  readOnlyPrivateHouseBalcony?: number;
   onDealTypeChange: (value: DealType) => void;
   onFieldChange: (
     field: keyof Pick<PropertyFormValues, "city" | "district" | "address">,
@@ -52,6 +53,7 @@ export function PropertyDetailsEditableSections({
   values,
   canEdit,
   showInternalPrice,
+  readOnlyPrivateHouseBalcony,
   onDealTypeChange,
   onFieldChange,
   onPriceChange,
@@ -66,6 +68,7 @@ export function PropertyDetailsEditableSections({
       <PropertyListingFieldsView
         values={values}
         showInternalPrice={showInternalPrice}
+        readOnlyPrivateHouseBalcony={readOnlyPrivateHouseBalcony}
       />
     );
   }

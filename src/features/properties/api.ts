@@ -7,7 +7,9 @@ import type {
 import { toGetPropertiesSearchParams } from "@/features/properties/getPropertiesQuery";
 import type {
   CreatePropertyDto,
+  CreatePropertyResponse,
   Property,
+  PropertyListResponse,
   PropertyUpdatePayload,
 } from "@/features/properties/types";
 import {
@@ -15,7 +17,6 @@ import {
   normalizePropertiesListResponse,
 } from "@/features/properties/normalizers";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
-
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
   const token = getStoredAuthToken();
@@ -46,7 +47,7 @@ export async function getProperties(
   const params = toGetPropertiesSearchParams(query);
 
   try {
-    const res = await axios.get<unknown>(`${baseUrl}/properties`, {
+    const res = await axios.get<PropertyListResponse>(`${baseUrl}/properties`, {
       headers,
       params,
     });
@@ -146,18 +147,18 @@ export async function updateProperty(
 
 export async function deletePropertyImage(
   propertyId: string,
-  imageUrl: string,
+  imageId: string,
 ): Promise<void> {
   const { baseUrl, headers } = getAuthHeaders();
+  const encodedImageId = encodeURIComponent(imageId);
 
   try {
-    await axios.delete(`${baseUrl}/properties/${propertyId}/images`, {
-      headers: {
-        ...headers,
-        "Content-Type": "application/json",
+    await axios.delete(
+      `${baseUrl}/properties/${propertyId}/images/${encodedImageId}`,
+      {
+        headers,
       },
-      data: { url: imageUrl },
-    });
+    );
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "Could not delete this image right now.";
@@ -194,12 +195,12 @@ export async function createProperty(
 
   try {
     const res = hasImages
-      ? await axios.post<unknown>(
+      ? await axios.post<CreatePropertyResponse>(
           `${baseUrl}/properties`,
           buildCreatePropertyFormData(payload, images as File[]),
           { headers },
         )
-      : await axios.post<unknown>(`${baseUrl}/properties`, payload, {
+      : await axios.post<CreatePropertyResponse>(`${baseUrl}/properties`, payload, {
           headers: {
             ...headers,
             "Content-Type": "application/json",

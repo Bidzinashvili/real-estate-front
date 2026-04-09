@@ -144,7 +144,7 @@ export function PropertyDetailsReadOnlySections({
             <DetailYesNo label="Parking" value={property.apartment.parking} />
             <DetailYesNo
               label="Pets allowed"
-              value={property.apartment.petsAllowed}
+              value={Boolean(property.apartment.petsAllowed)}
             />
           </div>
         </section>

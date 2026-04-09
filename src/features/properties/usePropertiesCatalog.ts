@@ -44,7 +44,6 @@ export type UsePropertiesCatalogResult = {
   error: string | null;
   refetch: () => Promise<void>;
   state: PropertyCatalogUrlState;
-  /** Snapshot used for list API after debounce; URL still follows `state` immediately. */
   debouncedTextFilters: CatalogDebouncedTextState;
   setSearchInput: (value: string) => void;
   setDealType: (value: DealType | "") => void;

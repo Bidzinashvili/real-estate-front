@@ -39,7 +39,6 @@ export type PropertyCatalogUrlState = {
   limit: number;
 };
 
-/** String fields that trigger list fetches while typing; debounce before API/derived stable query. */
 export type CatalogDebouncedTextState = Pick<
   PropertyCatalogUrlState,
   | "searchInput"
@@ -189,10 +188,6 @@ export function propertyCatalogUrlStateToSearchParams(
   return flat;
 }
 
-/**
- * @param debouncedText When omitted, all text/numeric filters are taken from `state` (e.g. URL sync).
- *  When set, those fields come from the debounced snapshot; list queries should use this to avoid fetching on every keystroke.
- */
 export function catalogStateToApiQuery(
   state: PropertyCatalogUrlState,
   debouncedText?: CatalogDebouncedTextState,

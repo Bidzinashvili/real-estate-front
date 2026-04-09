@@ -1,49 +1,19 @@
 import type { PropertiesListResult } from "@/features/properties/getPropertiesQuery";
+import type {
+  CreatePropertyResponse,
+  PropertyListResponse,
+} from "@/features/properties/propertyApiTypes";
 import { normalizeProperty } from "@/features/properties/propertyRecordNormalizer";
 import type { Property } from "@/features/properties/types";
+import { asNumber } from "@/shared/lib/jsonValue";
+import type { JsonValue } from "@/shared/lib/jsonValue";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function asNumber(value: unknown, fallback = 0): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (trimmed === "") return fallback;
-    const parsed = Number(trimmed);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-
-  return fallback;
-}
-
-export function normalizePropertiesListResponse(data: unknown): PropertiesListResult {
-  const list = Array.isArray(data)
-    ? data
-    : isRecord(data) && Array.isArray(data.properties)
-      ? data.properties
-      : null;
-
-  if (!list) {
-    throw new Error("Invalid properties response format.");
-  }
-
-  const properties = list
-    .map((item) => normalizeProperty(item))
+export function normalizePropertiesListResponse(
+  data: PropertyListResponse,
+): PropertiesListResult {
+  const properties = data.properties
+    .map((item) => normalizeProperty(item as JsonValue))
     .filter((item): item is Property => item !== null);
-
-  if (Array.isArray(data)) {
-    const n = properties.length;
-    return { properties, total: n, page: 1, limit: Math.max(n, 1) };
-  }
-
-  if (!isRecord(data)) {
-    throw new Error("Invalid properties response format.");
-  }
 
   const total = asNumber(data.total, properties.length);
   const page = asNumber(data.page, 1);
@@ -57,30 +27,16 @@ export function normalizePropertiesListResponse(data: unknown): PropertiesListRe
   };
 }
 
-export function normalizePropertiesResponse(data: unknown): Property[] {
+export function normalizePropertiesResponse(data: PropertyListResponse): Property[] {
   return normalizePropertiesListResponse(data).properties;
 }
 
-export function normalizeCreatePropertyResponse(data: unknown): Property | null {
-  if (data == null) {
+export function normalizeCreatePropertyResponse(
+  data: CreatePropertyResponse | null | undefined,
+): Property | null {
+  if (data === undefined || data === null) {
     return null;
   }
 
-  if (Array.isArray(data)) {
-    if (data.length !== 1) {
-      return null;
-    }
-    return normalizeProperty(data[0]);
-  }
-
-  if (!isRecord(data)) {
-    return null;
-  }
-
-  const nested = data.property ?? data.data;
-  if (nested !== undefined && nested !== null) {
-    return normalizeProperty(nested);
-  }
-
-  return normalizeProperty(data);
+  return normalizeProperty(data as JsonValue);
 }

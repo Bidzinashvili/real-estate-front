@@ -7,6 +7,7 @@ import type {
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
+import { NonNegativeCounterField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
   EditableNumericTextInput,
@@ -22,6 +23,16 @@ type ApartmentProps = {
 };
 
 export function ApartmentEditSection({ apartment, setApartment }: ApartmentProps) {
+  const balconyCount = apartment.balcony ?? 0;
+
+  function handleDecreaseBalcony() {
+    setApartment({ balcony: Math.max(0, balconyCount - 1) });
+  }
+
+  function handleIncreaseBalcony() {
+    setApartment({ balcony: balconyCount + 1 });
+  }
+
   return (
     <fieldset className="space-y-3">
       <legend className="text-sm font-semibold text-slate-800">Apartment</legend>
@@ -48,10 +59,12 @@ export function ApartmentEditSection({ apartment, setApartment }: ApartmentProps
           parse={parseIntegerInput}
           inputMode="numeric"
         />
-        <EditableCheckbox
+        <NonNegativeCounterField
+          id="editAptBalcony"
           label="Balcony"
-          checked={Boolean(apartment.balcony)}
-          onChange={(checked) => setApartment({ balcony: checked })}
+          value={balconyCount}
+          onDecrease={handleDecreaseBalcony}
+          onIncrease={handleIncreaseBalcony}
         />
       </div>
     </fieldset>

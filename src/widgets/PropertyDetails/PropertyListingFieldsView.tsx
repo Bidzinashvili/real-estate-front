@@ -12,11 +12,13 @@ import {
 type PropertyListingFieldsViewProps = {
   values: PropertyFormValues;
   showInternalPrice: boolean;
+  readOnlyPrivateHouseBalcony?: number;
 };
 
 export function PropertyListingFieldsView({
   values,
   showInternalPrice,
+  readOnlyPrivateHouseBalcony,
 }: PropertyListingFieldsViewProps) {
   return (
     <>
@@ -71,7 +73,7 @@ export function PropertyListingFieldsView({
             />
             <DetailNumber label="Rooms" value={values.apartment.rooms} />
             <DetailNumber label="Floor" value={values.apartment.floor} />
-            <DetailYesNo label="Balcony" value={Boolean(values.apartment.balcony)} />
+            <DetailNumber label="Balcony" value={values.apartment.balcony} />
           </div>
         </section>
       )}
@@ -92,6 +94,12 @@ export function PropertyListingFieldsView({
               value={values.privateHouse.yardArea}
               suffix="m²"
             />
+            {readOnlyPrivateHouseBalcony !== undefined ? (
+              <DetailNumber
+                label="Balcony"
+                value={readOnlyPrivateHouseBalcony}
+              />
+            ) : null}
             <DetailYesNo label="Pool" value={Boolean(values.privateHouse.pool)} />
             <DetailYesNo
               label="Fruit trees"

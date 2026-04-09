@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { JsonValue } from "@/shared/lib/jsonValue";
 
 export type { DealType };
 
@@ -17,16 +18,24 @@ export function isPropertyType(value: string): value is PropertyType {
   return (PROPERTY_TYPES as readonly string[]).includes(value);
 }
 
-export function parsePropertyType(value: unknown): PropertyType {
-  const s = typeof value === "string" ? value.trim() : "";
-  return isPropertyType(s) ? s : "APARTMENT";
+export function parsePropertyType(value: JsonValue | undefined): PropertyType {
+  const stringCandidate = typeof value === "string" ? value.trim() : "";
+  return isPropertyType(stringCandidate) ? stringCandidate : "APARTMENT";
 }
 
 export const BUILDING_CONDITIONS = ["OLD", "NEW", "UNDER_CONSTRUCTION"] as const;
 export type BuildingCondition = (typeof BUILDING_CONDITIONS)[number];
 
+export function isBuildingCondition(value: string): value is BuildingCondition {
+  return (BUILDING_CONDITIONS as readonly string[]).includes(value);
+}
+
 export const KITCHEN_TYPES = ["SEPARATE", "STUDIO"] as const;
 export type KitchenType = (typeof KITCHEN_TYPES)[number];
+
+export function isKitchenType(value: string): value is KitchenType {
+  return (KITCHEN_TYPES as readonly string[]).includes(value);
+}
 
 export const LAND_STATUSES = [
   "AGRICULTURAL",
@@ -37,6 +46,10 @@ export const LAND_STATUSES = [
   "FARMING",
 ] as const;
 export type LandStatus = (typeof LAND_STATUSES)[number];
+
+export function isLandStatus(value: string): value is LandStatus {
+  return (LAND_STATUSES as readonly string[]).includes(value);
+}
 
 export const COMMERCIAL_STATUSES = [
   "UNIVERSAL",
@@ -54,57 +67,94 @@ export const COMMERCIAL_STATUSES = [
 ] as const;
 export type CommercialStatus = (typeof COMMERCIAL_STATUSES)[number];
 
+export function isCommercialStatus(value: string): value is CommercialStatus {
+  return (COMMERCIAL_STATUSES as readonly string[]).includes(value);
+}
+
+export type PropertyListingImage = {
+  id: string;
+  url: string;
+  originalName: string;
+};
+
 export type PropertyApartment = {
   id: string;
   propertyId: string;
-  buildingNumber: string;
-  buildingCondition: string;
+  buildingNumber: string | null;
+  buildingCondition: BuildingCondition;
   totalArea: number;
-  project: string;
-  renovation: string;
+  project: string | null;
+  renovation: string | null;
   rooms: number;
   bedrooms: number;
   floor: number;
-  balcony: boolean;
+  balcony: number;
   elevator: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
-  kitchenType: string;
+  kitchenType: KitchenType;
   furniture: boolean;
   appliances: boolean;
   parking: boolean;
-  petsAllowed: boolean;
-  minRentalPeriod: number;
+  petsAllowed: boolean | null;
+  minRentalPeriod: number | null;
 };
 
 export type PropertyPrivateHouse = {
   id: string;
   propertyId: string;
-  totalArea?: number;
-  rooms?: number;
-  bedrooms?: number;
-  floor?: number;
+  buildingCondition: BuildingCondition;
   houseArea: number;
   yardArea: number;
+  totalArea: number;
+  renovation: string | null;
+  rooms: number;
+  bedrooms: number;
+  balcony: number;
+  centralHeating: boolean;
+  airConditioner: boolean;
+  furniture: boolean;
+  appliances: boolean;
+  parking: boolean;
   pool: boolean;
   fruitTrees: boolean;
+  electricity: boolean;
+  water: boolean;
+  gas: boolean;
+  sewage: boolean;
+  petsAllowed: boolean | null;
+  minRentalPeriod: number | null;
 };
 
 export type PropertyLandPlot = {
   id: string;
   propertyId: string;
   landArea: number;
+  status: LandStatus;
   forInvestment: boolean;
+  approvedProject: boolean;
   canBeDivided: boolean;
+  fruitTrees: boolean;
+  electricity: boolean;
+  water: boolean;
+  gas: boolean;
+  sewage: boolean;
 };
 
 export type PropertyCommercial = {
   id: string;
   propertyId: string;
   area: number;
-  floor?: number;
-  parking: boolean;
+  status: CommercialStatus;
+  floor: number;
+  renovation: string | null;
+  centralHeating: boolean;
   airConditioner: boolean;
+  parking: boolean;
+  electricity: boolean;
+  water: boolean;
+  gas: boolean;
+  sewage: boolean;
 };
 
 export type Property = {
@@ -114,23 +164,25 @@ export type Property = {
   city: string;
   district: string;
   address: string;
-  cadastralCode?: string | null;
+  title: string | null;
+  cadastralCode: string | null;
   pricePublic: number;
-  priceInternal?: number | null;
+  priceInternal: number | null;
   ownerName: string;
   ownerPhone: string;
-  ownerWhatsapp?: string | null;
-  ourSiteId?: string | null;
-  myHomeId?: string | null;
-  ssGeId?: string | null;
-  description?: string | null;
+  ownerWhatsapp: string | null;
+  ourSiteId: string | null;
+  myHomeId: string | null;
+  ssGeId: string | null;
+  description: string | null;
   comment: string | null;
   internalComment: string | null;
   reminderDate: string | null;
   commentDate: string | null;
-  images: Array<{ url: string; originalName: string }>;
+  images: PropertyListingImage[];
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
   userId: string;
 
   apartment: PropertyApartment | null;

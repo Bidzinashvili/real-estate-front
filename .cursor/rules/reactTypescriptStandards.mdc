@@ -1,9 +1,6 @@
 ---
-description: Senior React/TypeScript standards—clean, scalable, production-ready code
-globs: "**/*.{ts,tsx}"
-alwaysApply: false
+alwaysApply: true
 ---
-
 # React & TypeScript standards
 
 Act as a senior React/TypeScript engineer. Code must be production-ready, clean, scalable, and maintainable—as if the next reader is another developer.

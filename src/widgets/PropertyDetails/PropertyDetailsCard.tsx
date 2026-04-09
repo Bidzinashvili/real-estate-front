@@ -177,6 +177,7 @@ export function PropertyDetailsCard({
           values={values}
           canEdit={canEdit}
           showInternalPrice={canViewPrivateFields}
+          readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
           onDealTypeChange={handleDealTypeChange}
           onFieldChange={handleFieldChange}
           onPriceChange={handlePriceChange}

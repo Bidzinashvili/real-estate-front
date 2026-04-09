@@ -144,7 +144,6 @@ export function useAddPropertyForm() {
         }
         router.push("/properties");
       } catch {
-        // useCreateProperty sets error state
       }
     },
     [activeSubtype, create, form, images, router],

@@ -34,7 +34,7 @@ export type FormState = {
     rooms: string;
     bedrooms: string;
     floor: string;
-    balcony: boolean;
+    balcony: number;
     elevator: boolean;
     centralHeating: boolean;
     airConditioner: boolean;
@@ -55,7 +55,7 @@ export type FormState = {
     totalArea: string;
     rooms: string;
     bedrooms: string;
-    balcony: boolean;
+    balcony: number;
     centralHeating: boolean;
     airConditioner: boolean;
     furniture: boolean;
@@ -120,7 +120,7 @@ export function initialFormState(): FormState {
       rooms: "",
       bedrooms: "",
       floor: "",
-      balcony: false,
+      balcony: 0,
       elevator: false,
       centralHeating: false,
       airConditioner: false,
@@ -141,7 +141,7 @@ export function initialFormState(): FormState {
       totalArea: "",
       rooms: "",
       bedrooms: "",
-      balcony: false,
+      balcony: 0,
       centralHeating: false,
       airConditioner: false,
       furniture: false,

@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import { BUILDING_CONDITION_OPTIONS } from "@/features/properties/addPropertyFormOptions";
-import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
+import {
+  CheckboxField,
+  NonNegativeCounterField,
+  SelectField,
+  TextField,
+} from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import {
@@ -95,6 +100,14 @@ export function AddPropertyPrivateHouseSection({
     patchPrivateHouse,
   ]);
 
+  function handleDecreaseBalcony() {
+    patchPrivateHouse({ balcony: Math.max(0, privateHouse.balcony - 1) });
+  }
+
+  function handleIncreaseBalcony() {
+    patchPrivateHouse({ balcony: privateHouse.balcony + 1 });
+  }
+
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h2 className="text-sm font-semibold text-slate-800">Private house details</h2>
@@ -168,11 +181,12 @@ export function AddPropertyPrivateHouseSection({
             error={fieldErrors["privateHouse.minRentalPeriod"]}
           />
         )}
-        <CheckboxField
+        <NonNegativeCounterField
           id="phBalcony"
           label="Balcony"
-          checked={privateHouse.balcony}
-          onChange={(checked) => patchPrivateHouse({ balcony: checked })}
+          value={privateHouse.balcony}
+          onDecrease={handleDecreaseBalcony}
+          onIncrease={handleIncreaseBalcony}
         />
         <CheckboxField
           id="phCentralHeating"

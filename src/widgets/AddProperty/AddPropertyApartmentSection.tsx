@@ -6,7 +6,12 @@ import {
   BUILDING_CONDITION_OPTIONS,
   KITCHEN_TYPE_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
-import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
+import {
+  CheckboxField,
+  NonNegativeCounterField,
+  SelectField,
+  TextField,
+} from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import {
@@ -48,6 +53,14 @@ export function AddPropertyApartmentSection({
     }
     setIsBedroomsManuallyEdited(true);
     patchApartment({ bedrooms: normalizeManualBedroomsString(value) });
+  }
+
+  function handleDecreaseBalcony() {
+    patchApartment({ balcony: Math.max(0, apartment.balcony - 1) });
+  }
+
+  function handleIncreaseBalcony() {
+    patchApartment({ balcony: apartment.balcony + 1 });
   }
 
   return (
@@ -132,11 +145,12 @@ export function AddPropertyApartmentSection({
             error={fieldErrors["apartment.minRentalPeriod"]}
           />
         )}
-        <CheckboxField
+        <NonNegativeCounterField
           id="aptBalcony"
           label="Balcony"
-          checked={apartment.balcony}
-          onChange={(checked) => patchApartment({ balcony: checked })}
+          value={apartment.balcony}
+          onDecrease={handleDecreaseBalcony}
+          onIncrease={handleIncreaseBalcony}
         />
         <CheckboxField
           id="aptElevator"

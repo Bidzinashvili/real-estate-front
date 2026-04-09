@@ -115,3 +115,60 @@ export function CheckboxField({ id, label, checked, onChange }: CheckboxProps) {
     </label>
   );
 }
+
+const counterButtonClassName =
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-base font-medium text-slate-800 shadow-sm outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40";
+
+type NonNegativeCounterFieldProps = {
+  id: string;
+  label: string;
+  value: number;
+  onDecrease: () => void;
+  onIncrease: () => void;
+};
+
+export function NonNegativeCounterField({
+  id,
+  label,
+  value,
+  onDecrease,
+  onIncrease,
+}: NonNegativeCounterFieldProps) {
+  const decreaseButtonId = `${id}Decrease`;
+  const increaseButtonId = `${id}Increase`;
+  return (
+    <div className="space-y-1.5">
+      <p className="block text-sm font-medium text-slate-800" id={`${id}Label`}>
+        {label}
+      </p>
+      <div
+        className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm"
+        role="group"
+        aria-labelledby={`${id}Label`}
+      >
+        <button
+          id={decreaseButtonId}
+          type="button"
+          className={counterButtonClassName}
+          aria-label="Decrease"
+          disabled={value <= 0}
+          onClick={onDecrease}
+        >
+          −
+        </button>
+        <span className="min-w-[2ch] text-center text-base font-semibold tabular-nums text-slate-900">
+          {value}
+        </span>
+        <button
+          id={increaseButtonId}
+          type="button"
+          className={counterButtonClassName}
+          aria-label="Increase"
+          onClick={onIncrease}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
 import type {
   BuildingCondition,
   CommercialStatus,
@@ -7,50 +8,28 @@ import type {
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
 
-export type PropertyApartmentUpdate = {
-  totalArea?: number;
-  rooms?: number;
-  balcony?: boolean;
-  floor?: number;
-};
+export type PropertyUpdatePayload = UpdatePropertyRequestBody;
 
-export type PropertyPrivateHouseUpdate = {
-  houseArea?: number;
-  yardArea?: number;
-  pool?: boolean;
-  fruitTrees?: boolean;
-};
+export type PropertyApartmentUpdate = NonNullable<
+  UpdatePropertyRequestBody["apartment"]
+>;
 
-export type PropertyLandPlotUpdate = {
-  landArea?: number;
-  forInvestment?: boolean;
-  canBeDivided?: boolean;
-};
+export type PropertyPrivateHouseUpdate = NonNullable<
+  UpdatePropertyRequestBody["privateHouse"]
+>;
 
-export type PropertyCommercialUpdate = {
-  area?: number;
-  parking?: boolean;
-  airConditioner?: boolean;
-};
+export type PropertyLandPlotUpdate = NonNullable<
+  UpdatePropertyRequestBody["landPlot"]
+>;
 
-export type PropertyUpdatePayload = {
-  dealType?: DealType;
-  city?: string;
-  district?: string;
-  address?: string;
-  pricePublic?: number;
-  priceInternal?: number | null;
-  description?: string;
-
-  apartment?: PropertyApartmentUpdate;
-  privateHouse?: PropertyPrivateHouseUpdate;
-  landPlot?: PropertyLandPlotUpdate;
-  commercial?: PropertyCommercialUpdate;
-};
+export type PropertyCommercialUpdate = NonNullable<
+  UpdatePropertyRequestBody["commercial"]
+>;
 
 export type PropertyImageInput =
   | string
   | {
+      id?: string;
       url: string;
       originalName?: string;
     };

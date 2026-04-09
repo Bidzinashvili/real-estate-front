@@ -1,0 +1,50 @@
+---
+description: Git commit message format — feature, bugfix, refactor prefixes and gerund summaries
+alwaysApply: true
+---
+
+# Git commit conventions
+
+Use this format for every commit message **subject line** (first line):
+
+```text
+<prefix>: <Gerund verb> <short description of what changed>
+```
+
+## Prefix (required, lowercase)
+
+Use exactly one of:
+
+- `feature` — new behavior or capability
+- `bugfix` — correcting incorrect behavior or regressions
+- `refactor` — restructuring without intended behavior change
+
+Do **not** use `feat`, `fix`, `chore`, etc., in new commits.
+
+## After the colon (required)
+
+1. **Single space** after `:`.
+2. The summary **must start with an uppercase letter** (English sentence case for the first word).
+3. Start with a **gerund** (*-ing* verb): *Adding*, *Fixing*, *Updating*, *Removing*, *Refactoring*, *Extracting*, etc., then a concise phrase describing **what** changed (not “ticket #” only).
+
+**Good**
+
+- `feature: Adding JWT refresh flow for agents`
+- `bugfix: Handling null district in property search filters`
+- `refactor: Moving property filters into a dedicated builder`
+
+**Bad**
+
+- `feat: add login` (wrong prefix; not gerund; lowercase after colon)
+- `feature: add login` (lowercase after colon; use gerund + capital: `Adding login`)
+- `Feature: Adding login` (prefix must be lowercase)
+- `feature:Adding login` (missing space after colon)
+- `bugfix: fix bug in list` (redundant; prefer `Fixing duplicate rows in property list`)
+
+## Body (optional)
+
+If the change needs context, add a blank line after the subject and use normal prose. The subject line rules above still apply to the first line.
+
+## History note
+
+Older commits in this repo mixed `feat:`, informal subjects, and inconsistent casing. **New commits** should follow this document.

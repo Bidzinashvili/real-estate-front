@@ -7,16 +7,29 @@ import { deletePropertyImage } from "@/features/properties/api";
 import { resolveApiMediaUrl } from "@/features/properties/resolveApiMediaUrl";
 
 type PreparedItem = {
-  img: { url: string; originalName: string };
+  img: PropertyImageRow;
   src: string;
   label: string;
+  deleteId: string;
 };
 
-type ImageItem = { url: string; originalName: string };
+type PropertyImageRow = {
+  id: string;
+  url: string;
+  originalName: string;
+};
+
+function imageIdForApiDelete(image: PropertyImageRow): string {
+  const trimmedId = image.id.trim();
+  if (trimmedId) return trimmedId;
+  const pathOnly = image.url.split("?")[0] ?? image.url;
+  const segment = pathOnly.split("/").pop();
+  return segment && segment.length > 0 ? segment : image.url;
+}
 
 type PropertyDetailsImageGalleryProps = {
   propertyId: string;
-  images: ImageItem[];
+  images: PropertyImageRow[];
   apiBaseUrl: string | null;
   canDelete: boolean;
   onDeleted: () => Promise<void>;
@@ -29,7 +42,7 @@ export function PropertyDetailsImageGallery({
   canDelete,
   onDeleted,
 }: PropertyDetailsImageGalleryProps) {
-  const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -39,7 +52,8 @@ export function PropertyDetailsImageGallery({
       const src = resolveApiMediaUrl(img.url, apiBaseUrl);
       if (!src) continue;
       const label = img.originalName?.trim() || "Listing photo";
-      list.push({ img, src, label });
+      const deleteId = imageIdForApiDelete(img);
+      list.push({ img, src, label, deleteId });
     }
     return list;
   }, [images, apiBaseUrl]);
@@ -49,16 +63,16 @@ export function PropertyDetailsImageGallery({
   }, []);
 
   const goPrev = useCallback(() => {
-    setLightboxIndex((i) => {
-      if (i === null || visibleItems.length < 2) return i;
-      return (i - 1 + visibleItems.length) % visibleItems.length;
+    setLightboxIndex((index) => {
+      if (index === null || visibleItems.length < 2) return index;
+      return (index - 1 + visibleItems.length) % visibleItems.length;
     });
   }, [visibleItems.length]);
 
   const goNext = useCallback(() => {
-    setLightboxIndex((i) => {
-      if (i === null || visibleItems.length < 2) return i;
-      return (i + 1) % visibleItems.length;
+    setLightboxIndex((index) => {
+      if (index === null || visibleItems.length < 2) return index;
+      return (index + 1) % visibleItems.length;
     });
   }, [visibleItems.length]);
 
@@ -76,41 +90,41 @@ export function PropertyDetailsImageGallery({
   useEffect(() => {
     if (lightboxIndex === null) return;
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
+    const onKeyDown = (keyboardEvent: KeyboardEvent) => {
+      if (keyboardEvent.key === "Escape") {
+        keyboardEvent.preventDefault();
         closeLightbox();
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
+      } else if (keyboardEvent.key === "ArrowLeft") {
+        keyboardEvent.preventDefault();
         goPrev();
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
+      } else if (keyboardEvent.key === "ArrowRight") {
+        keyboardEvent.preventDefault();
         goNext();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
-    const prevOverflow = document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = previousOverflow;
     };
   }, [lightboxIndex, closeLightbox, goPrev, goNext]);
 
-  const handleDelete = async (imageUrl: string) => {
+  const handleDelete = async (imageIdForDelete: string) => {
     setError(null);
-    setDeletingUrl(imageUrl);
+    setDeletingImageId(imageIdForDelete);
     try {
-      await deletePropertyImage(propertyId, imageUrl);
+      await deletePropertyImage(propertyId, imageIdForDelete);
       await onDeleted();
-    } catch (e) {
+    } catch (error) {
       const message =
-        e instanceof Error ? e.message : "Could not remove this image.";
+        error instanceof Error ? error.message : "Could not remove this image.";
       setError(message);
     } finally {
-      setDeletingUrl(null);
+      setDeletingImageId(null);
     }
   };
 
@@ -145,11 +159,11 @@ export function PropertyDetailsImageGallery({
         </p>
       )}
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {visibleItems.map(({ img, src, label }, index) => {
-          const busy = deletingUrl === img.url;
+        {visibleItems.map(({ img, src, label, deleteId }, index) => {
+          const busy = deletingImageId === deleteId;
           return (
             <li
-              key={img.url}
+              key={`${deleteId}-${img.url}`}
               className="relative aspect-square overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200"
             >
               <button
@@ -168,10 +182,13 @@ export function PropertyDetailsImageGallery({
               {canDelete && (
                 <button
                   type="button"
-                  disabled={busy || Boolean(deletingUrl && deletingUrl !== img.url)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void handleDelete(img.url);
+                  disabled={
+                    busy ||
+                    Boolean(deletingImageId && deletingImageId !== deleteId)
+                  }
+                  onClick={(clickEvent) => {
+                    clickEvent.stopPropagation();
+                    void handleDelete(deleteId);
                   }}
                   className="absolute right-2 top-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white shadow-sm backdrop-blur-[2px] transition hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label={`Remove ${label}`}
@@ -213,8 +230,8 @@ export function PropertyDetailsImageGallery({
                   type="button"
                   className="pointer-events-auto fixed left-3 top-1/2 z-[110] inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/65 sm:left-5 md:left-8"
                   aria-label="Previous photo"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={(clickEvent) => {
+                    clickEvent.stopPropagation();
                     goPrev();
                   }}
                 >
@@ -224,8 +241,8 @@ export function PropertyDetailsImageGallery({
                   type="button"
                   className="pointer-events-auto fixed right-3 top-1/2 z-[110] inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/65 sm:right-5 md:right-8"
                   aria-label="Next photo"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={(clickEvent) => {
+                    clickEvent.stopPropagation();
                     goNext();
                   }}
                 >

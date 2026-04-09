@@ -49,7 +49,6 @@ export function buildPropertyUpdatePayload(
 ): PropertyUpdatePayload {
   const payload: PropertyUpdatePayload = {};
 
-  if (initial.dealType !== current.dealType) payload.dealType = current.dealType;
   if (initial.city !== current.city) payload.city = current.city;
   if (initial.district !== current.district) payload.district = current.district;
   if (initial.address !== current.address) payload.address = current.address;
