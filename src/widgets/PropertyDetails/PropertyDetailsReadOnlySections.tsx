@@ -1,6 +1,7 @@
 "use client";
 
 import type { Property } from "@/features/properties/types";
+import { formatRenovationLabel } from "@/features/properties/addPropertyFormOptions";
 import {
   DetailDateTime,
   DetailMultiline,
@@ -104,7 +105,10 @@ export function PropertyDetailsReadOnlySections({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailText label="Project" value={property.apartment.project} />
-            <DetailText label="Renovation" value={property.apartment.renovation} />
+            <DetailText
+              label="Renovation"
+              value={formatRenovationLabel(property.apartment.renovation)}
+            />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

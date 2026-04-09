@@ -71,6 +71,29 @@ export function isCommercialStatus(value: string): value is CommercialStatus {
   return (COMMERCIAL_STATUSES as readonly string[]).includes(value);
 }
 
+export const RENOVATION_VALUES = [
+  "NEW_RENOVATED",
+  "RENOVATED",
+  "OLD_RENOVATED",
+  "NEEDS_RENOVATION",
+  "GREEN_FRAME",
+  "WHITE_FRAME",
+  "BLACK_FRAME",
+] as const;
+export type Renovation = (typeof RENOVATION_VALUES)[number];
+
+export function isRenovation(value: string): value is Renovation {
+  return (RENOVATION_VALUES as readonly string[]).includes(value);
+}
+
+export function parseRenovationForForm(
+  raw: string | null | undefined,
+): Renovation | "" {
+  const trimmed = typeof raw === "string" ? raw.trim() : "";
+  if (trimmed === "") return "";
+  return isRenovation(trimmed) ? trimmed : "";
+}
+
 export type PropertyListingImage = {
   id: string;
   url: string;

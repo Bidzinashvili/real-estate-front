@@ -288,12 +288,14 @@ export type UpdatePropertyRequestBody = {
     rooms?: number;
     balcony?: number;
     floor?: number;
+    renovation?: string;
   };
   privateHouse?: {
     houseArea?: number;
     yardArea?: number;
     pool?: boolean;
     fruitTrees?: boolean;
+    renovation?: string;
   };
   landPlot?: {
     landArea?: number;
@@ -304,6 +306,7 @@ export type UpdatePropertyRequestBody = {
     area?: number;
     parking?: boolean;
     airConditioner?: boolean;
+    renovation?: string;
   };
 };
 

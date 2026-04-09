@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
-import type {
-  Property,
-  PropertyApartmentUpdate,
-  PropertyCommercialUpdate,
-  PropertyLandPlotUpdate,
-  PropertyPrivateHouseUpdate,
-  PropertyUpdatePayload,
+import {
+  type Property,
+  type PropertyApartmentUpdate,
+  type PropertyCommercialUpdate,
+  type PropertyLandPlotUpdate,
+  type PropertyPrivateHouseUpdate,
+  type PropertyUpdatePayload,
+  parseRenovationForForm,
 } from "@/features/properties/types";
 import {
   buildPropertyUpdatePayload,
@@ -56,6 +57,7 @@ export function PropertyDetailsCard({
             rooms: property.apartment.rooms,
             balcony: property.apartment.balcony,
             floor: property.apartment.floor,
+            renovation: parseRenovationForForm(property.apartment.renovation),
           }
         : null,
       privateHouse: property.privateHouse
@@ -64,6 +66,7 @@ export function PropertyDetailsCard({
             yardArea: property.privateHouse.yardArea,
             pool: property.privateHouse.pool,
             fruitTrees: property.privateHouse.fruitTrees,
+            renovation: parseRenovationForForm(property.privateHouse.renovation),
           }
         : null,
       landPlot: property.landPlot
@@ -78,6 +81,7 @@ export function PropertyDetailsCard({
             area: property.commercial.area,
             parking: property.commercial.parking,
             airConditioner: property.commercial.airConditioner,
+            renovation: parseRenovationForForm(property.commercial.renovation),
           }
         : null,
     };

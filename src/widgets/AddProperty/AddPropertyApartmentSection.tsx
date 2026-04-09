@@ -5,6 +5,7 @@ import type { DealType } from "@/features/properties/dealType";
 import {
   BUILDING_CONDITION_OPTIONS,
   KITCHEN_TYPE_OPTIONS,
+  RENOVATION_SELECT_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import {
   CheckboxField,
@@ -129,11 +130,12 @@ export function AddPropertyApartmentSection({
           value={apartment.project}
           onChange={(value) => patchApartment({ project: value })}
         />
-        <TextField
+        <SelectField
           id="aptRenovation"
           label="Renovation"
           value={apartment.renovation}
           onChange={(value) => patchApartment({ renovation: value })}
+          options={RENOVATION_SELECT_OPTIONS}
         />
         {dealType === "RENT" && (
           <TextField

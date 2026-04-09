@@ -6,8 +6,10 @@ import type {
   PropertyLandPlotUpdate,
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
+import { parseRenovationForForm } from "@/features/properties/types";
+import { RENOVATION_SELECT_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
-import { NonNegativeCounterField } from "@/widgets/AddProperty/addPropertyFormFields";
+import { NonNegativeCounterField, SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
   EditableNumericTextInput,
@@ -66,6 +68,13 @@ export function ApartmentEditSection({ apartment, setApartment }: ApartmentProps
           onDecrease={handleDecreaseBalcony}
           onIncrease={handleIncreaseBalcony}
         />
+        <SelectField
+          id="editAptRenovation"
+          label="Renovation"
+          value={parseRenovationForForm(apartment.renovation ?? null)}
+          onChange={(next) => setApartment({ renovation: next })}
+          options={RENOVATION_SELECT_OPTIONS}
+        />
       </div>
     </fieldset>
   );
@@ -108,6 +117,13 @@ export function PrivateHouseEditSection({
           label="Fruit trees"
           checked={Boolean(privateHouse.fruitTrees)}
           onChange={(checked) => setPrivateHouse({ fruitTrees: checked })}
+        />
+        <SelectField
+          id="editPhRenovation"
+          label="Renovation"
+          value={parseRenovationForForm(privateHouse.renovation ?? null)}
+          onChange={(next) => setPrivateHouse({ renovation: next })}
+          options={RENOVATION_SELECT_OPTIONS}
         />
       </div>
     </fieldset>
@@ -177,6 +193,13 @@ export function CommercialEditSection({
           label="Air conditioner"
           checked={Boolean(commercial.airConditioner)}
           onChange={(checked) => setCommercial({ airConditioner: checked })}
+        />
+        <SelectField
+          id="editCmRenovation"
+          label="Renovation"
+          value={parseRenovationForForm(commercial.renovation ?? null)}
+          onChange={(next) => setCommercial({ renovation: next })}
+          options={RENOVATION_SELECT_OPTIONS}
         />
       </div>
     </fieldset>

@@ -5,6 +5,7 @@ import type {
   KitchenType,
   LandStatus,
   PropertyType,
+  Renovation,
 } from "@/features/properties/types";
 
 export type AddPropertyActiveSubtype =
@@ -44,7 +45,7 @@ export type FormState = {
     parking: boolean;
     buildingNumber: string;
     project: string;
-    renovation: string;
+    renovation: Renovation | "";
     petsAllowed: boolean;
     minRentalPeriod: string;
   };
@@ -67,7 +68,7 @@ export type FormState = {
     water: boolean;
     gas: boolean;
     sewage: boolean;
-    renovation: string;
+    renovation: Renovation | "";
     petsAllowed: boolean;
     minRentalPeriod: string;
   };
@@ -94,7 +95,7 @@ export type FormState = {
     water: boolean;
     gas: boolean;
     sewage: boolean;
-    renovation: string;
+    renovation: Renovation | "";
   };
 };
 

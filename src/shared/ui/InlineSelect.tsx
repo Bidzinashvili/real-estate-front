@@ -1,5 +1,7 @@
 "use client";
 
+import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+
 export type InlineSelectOption = { value: string; label: string };
 
 type InlineSelectProps = {
@@ -18,20 +20,19 @@ export function InlineSelect({
   className,
 }: InlineSelectProps) {
   return (
-    <select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      aria-label={ariaLabel}
-      className={
-        className ??
-        "bg-transparent pr-2 text-xs outline-none"
-      }
-    >
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+    <NativeSelectSurface className={className ?? "text-xs"}>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={ariaLabel}
+        className="w-full appearance-none bg-transparent pr-10 outline-none"
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </NativeSelectSurface>
   );
 }

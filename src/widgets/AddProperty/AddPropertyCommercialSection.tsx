@@ -1,6 +1,9 @@
 "use client";
 
-import { COMMERCIAL_STATUS_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import {
+  COMMERCIAL_STATUS_OPTIONS,
+  RENOVATION_SELECT_OPTIONS,
+} from "@/features/properties/addPropertyFormOptions";
 import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
@@ -45,11 +48,12 @@ export function AddPropertyCommercialSection({
           onChange={(value) => patchCommercial({ status: value })}
           options={COMMERCIAL_STATUS_OPTIONS}
         />
-        <TextField
+        <SelectField
           id="cmRenovation"
           label="Renovation"
           value={commercial.renovation}
           onChange={(value) => patchCommercial({ renovation: value })}
+          options={RENOVATION_SELECT_OPTIONS}
         />
         <CheckboxField
           id="cmCentralHeating"

@@ -2,6 +2,10 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["class"],
+  blocklist: [
+    "bg-[url('${CHEVRON_DATA_URL}')]",
+    'bg-[url("${CHEVRON_DATA_URL}")]',
+  ],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",

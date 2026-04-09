@@ -14,9 +14,11 @@ import { CATALOG_LIMIT_OPTIONS } from "@/features/properties/propertyCatalogUrlP
 import { isPropertyType, type PropertyType } from "@/features/properties/types";
 import type { UsePropertiesCatalogResult } from "@/features/properties/usePropertiesCatalog";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
 import {
   PROPERTY_CATALOG_INPUT_CLASS as INPUT_CLASS,
   PROPERTY_CATALOG_LABEL_CLASS as LABEL_CLASS,
+  PROPERTY_CATALOG_SELECT_CLASS as SELECT_CLASS,
 } from "@/widgets/Properties/propertyCatalogFilterSharedStyles";
 import { PropertyCatalogMoreFiltersDetails } from "@/widgets/Properties/propertyCatalogMoreFiltersDetails";
 
@@ -57,38 +59,42 @@ export function PropertyCatalogFilterFields({
     <div className="space-y-5">
       <div>
         <span className={LABEL_CLASS}>Deal type</span>
-        <select
-          aria-label="Filter by deal type"
-          value={state.dealType}
-          onChange={(e) => catalog.setDealType(parseDealTypeSelectValue(e.target.value))}
-          className={INPUT_CLASS}
-        >
-          <option value="">All deals</option>
-          {DEAL_TYPE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <NativeSelectSurface>
+          <select
+            aria-label="Filter by deal type"
+            value={state.dealType}
+            onChange={(e) => catalog.setDealType(parseDealTypeSelectValue(e.target.value))}
+            className={SELECT_CLASS}
+          >
+            <option value="">All deals</option>
+            {DEAL_TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </NativeSelectSurface>
       </div>
 
       <div>
         <span className={LABEL_CLASS}>Property type</span>
-        <select
-          aria-label="Filter by property type"
-          value={state.propertyType}
-          onChange={(e) =>
-            catalog.setPropertyType(parsePropertyTypeSelectValue(e.target.value))
-          }
-          className={INPUT_CLASS}
-        >
-          <option value="">All types</option>
-          {PROPERTY_TYPE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <NativeSelectSurface>
+          <select
+            aria-label="Filter by property type"
+            value={state.propertyType}
+            onChange={(e) =>
+              catalog.setPropertyType(parsePropertyTypeSelectValue(e.target.value))
+            }
+            className={SELECT_CLASS}
+          >
+            <option value="">All types</option>
+            {PROPERTY_TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </NativeSelectSurface>
       </div>
 
       <div>
@@ -193,18 +199,20 @@ export function PropertyCatalogFilterFields({
 
       <div>
         <span className={LABEL_CLASS}>Per page</span>
-        <select
-          aria-label="Results per page"
-          value={String(state.limit)}
-          onChange={(e) => catalog.setLimit(Number(e.target.value))}
-          className={INPUT_CLASS}
-        >
-          {CATALOG_LIMIT_OPTIONS.map((n) => (
-            <option key={n} value={n}>
-              {n} listings
-            </option>
-          ))}
-        </select>
+        <NativeSelectSurface>
+          <select
+            aria-label="Results per page"
+            value={String(state.limit)}
+            onChange={(e) => catalog.setLimit(Number(e.target.value))}
+            className={SELECT_CLASS}
+          >
+            {CATALOG_LIMIT_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n} listings
+              </option>
+            ))}
+          </select>
+        </NativeSelectSurface>
       </div>
 
       <div className="flex flex-wrap gap-2 pt-1">

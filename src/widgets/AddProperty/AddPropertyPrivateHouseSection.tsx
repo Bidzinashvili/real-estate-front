@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
-import { BUILDING_CONDITION_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import {
+  BUILDING_CONDITION_OPTIONS,
+  RENOVATION_SELECT_OPTIONS,
+} from "@/features/properties/addPropertyFormOptions";
 import {
   CheckboxField,
   NonNegativeCounterField,
@@ -165,11 +168,12 @@ export function AddPropertyPrivateHouseSection({
           required
           error={fieldErrors["privateHouse.bedrooms"]}
         />
-        <TextField
+        <SelectField
           id="phRenovation"
           label="Renovation"
           value={privateHouse.renovation}
           onChange={(value) => patchPrivateHouse({ renovation: value })}
+          options={RENOVATION_SELECT_OPTIONS}
         />
         {dealType === "RENT" && (
           <TextField
