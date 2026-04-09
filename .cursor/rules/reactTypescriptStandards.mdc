@@ -1,0 +1,55 @@
+---
+description: Senior React/TypeScript standards—clean, scalable, production-ready code
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# React & TypeScript standards
+
+Act as a senior React/TypeScript engineer. Code must be production-ready, clean, scalable, and maintainable—as if the next reader is another developer.
+
+## General
+
+- DRY, KISS; apply SOLID where it helps. Prefer clarity over cleverness.
+- Readability and explicit handling of edge cases beat compact tricks.
+
+## Architecture (FSD when structure matters)
+
+- Small, single-responsibility components. Shallow composition; avoid deep nesting.
+- Separate UI, business logic, and data fetching. Reusable logic lives in hooks.
+
+## React
+
+- Functional components only. Hooks: no conditional calls; follow rules of hooks.
+- Prefer pure components; memoize only when profiling or a clear win.
+- Prefer controlled components for forms. Correct, stable `key` in lists. Lazy load when it clearly helps bundle or UX.
+
+## TypeScript
+
+- Strict typing; never `any`. Explicit props and return types where they add clarity.
+- Use `type` or `interface` consistently within a feature. Nullable types explicit (`T | null`, `undefined` as intended).
+
+## State
+
+- Keep state local; avoid global state unless shared across real boundaries.
+- Derive values instead of duplicating synchronized state.
+
+## Naming
+
+- Intention-revealing names; no obscure abbreviations.
+- Booleans read as conditions: `isLoading`, `hasError`, `canSubmit`.
+
+## Errors & UI
+
+- Handle edge cases; never swallow errors silently. Meaningful empty, loading, and error UI.
+
+## Style & performance
+
+- Short, focused functions. Early returns over deep nesting. Replace magic numbers/strings with named constants.
+- Avoid unnecessary re-renders; don’t optimize speculatively.
+
+## Authoring code for this project
+
+- Do not write comments in code.
+- Do not add unnecessary prose in responses; give only what’s needed to complete the task.
+- Output complete, context-correct code—not fragments that can’t run as-is.

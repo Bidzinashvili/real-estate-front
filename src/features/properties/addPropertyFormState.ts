@@ -102,7 +102,7 @@ export function initialFormState(): FormState {
   return {
     propertyType: "APARTMENT",
     dealType: "RENT",
-    city: "",
+    city: "Tbilisi",
     district: "",
     address: "",
     pricePublic: "",

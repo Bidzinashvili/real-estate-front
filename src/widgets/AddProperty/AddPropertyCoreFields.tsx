@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
 import { PROPERTY_TYPE_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import {
@@ -23,6 +24,25 @@ export function AddPropertyCoreFields({
   updateForm,
   onImagesChange,
 }: Props) {
+  const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
+
+  function handleOwnerPhoneChange(value: string) {
+    updateForm("ownerPhone", value);
+    if (!isWhatsappManuallyEdited) {
+      updateForm("ownerWhatsapp", value);
+    }
+  }
+
+  function handleOwnerWhatsappChange(value: string) {
+    if (value === "") {
+      setIsWhatsappManuallyEdited(false);
+      updateForm("ownerWhatsapp", form.ownerPhone);
+      return;
+    }
+    updateForm("ownerWhatsapp", value);
+    setIsWhatsappManuallyEdited(true);
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2">
       <SelectField
@@ -84,7 +104,7 @@ export function AddPropertyCoreFields({
         id="ownerPhone"
         label="Owner phone"
         value={form.ownerPhone}
-        onChange={(value) => updateForm("ownerPhone", value)}
+        onChange={handleOwnerPhoneChange}
         type="tel"
         required
         error={fieldErrors.ownerPhone}
@@ -93,7 +113,7 @@ export function AddPropertyCoreFields({
         id="ownerWhatsapp"
         label="Owner WhatsApp"
         value={form.ownerWhatsapp}
-        onChange={(value) => updateForm("ownerWhatsapp", value)}
+        onChange={handleOwnerWhatsappChange}
       />
       <TextField
         id="cadastralCode"
