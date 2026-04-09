@@ -1,6 +1,7 @@
 import type {
   BuildingCondition,
   CommercialStatus,
+  HotelScope,
   KitchenType,
   LandCategory,
   PropertyType,
@@ -29,6 +30,25 @@ export const PROPERTY_TYPE_OPTIONS: ReadonlyArray<{
   { value: "COTTAGE", label: "Cottage" },
   { value: "HOTEL", label: "Hotel" },
 ];
+
+export const HOTEL_SCOPE_FORM_OPTIONS: ReadonlyArray<{
+  value: HotelScope;
+  label: string;
+}> = [
+  { value: "WHOLE_HOTEL", label: "Whole hotel" },
+  { value: "HOTEL_ROOM", label: "Hotel room" },
+];
+
+export function formatHotelScopeLabel(scope: HotelScope): string {
+  return scope === "WHOLE_HOTEL" ? "Whole hotel" : "Hotel room";
+}
+
+export function formatHotelScopeLabelOrUnset(
+  scope: HotelScope | null | undefined,
+): string {
+  if (scope === null || scope === undefined) return "Not specified";
+  return formatHotelScopeLabel(scope);
+}
 
 export const BUILDING_CONDITION_OPTIONS: ReadonlyArray<{
   value: BuildingCondition;

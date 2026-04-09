@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
-import { PROPERTY_TYPE_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import {
+  HOTEL_SCOPE_FORM_OPTIONS,
+  PROPERTY_TYPE_OPTIONS,
+} from "@/features/properties/addPropertyFormOptions";
+import type { HotelScope } from "@/features/properties/types";
 import {
   addPropertyInputClassName,
   SelectField,
@@ -86,6 +90,20 @@ export function AddPropertyCoreFields({
         onChange={(value) => updateForm("propertyType", value)}
         options={PROPERTY_TYPE_OPTIONS}
       />
+      {form.propertyType === "HOTEL" && (
+        <SelectField<"" | HotelScope>
+          id="hotelScope"
+          label="Hotel scope"
+          value={form.hotelScope}
+          onChange={(next) => updateForm("hotelScope", next)}
+          options={[
+            { value: "", label: "Select hotel scope" },
+            ...HOTEL_SCOPE_FORM_OPTIONS,
+          ]}
+          required
+          error={fieldErrors.hotelScope}
+        />
+      )}
       <SelectField
         id="dealType"
         label="Deal type"

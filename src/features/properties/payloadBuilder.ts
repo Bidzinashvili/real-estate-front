@@ -1,11 +1,13 @@
 import type { DealType } from "@/features/properties/dealType";
 import type {
   CommercialStatus,
+  HotelScope,
   LandCategory,
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
   PropertyLandPlotUpdate,
   PropertyPrivateHouseUpdate,
+  PropertyType,
   PropertyUpdatePayload,
 } from "@/features/properties/types";
 
@@ -19,6 +21,8 @@ export type PropertyFormLandPlot = {
 };
 
 export type PropertyFormValues = {
+  propertyType: PropertyType;
+  hotelScope: HotelScope | null;
   dealType: DealType;
   city: string;
   district: string;
@@ -117,11 +121,20 @@ function buildLandPlotPatch(
 export function buildPropertyUpdatePayload(
   initial: PropertyFormValues,
   current: PropertyFormValues,
+  listingPropertyType: PropertyType,
 ): PropertyUpdatePayload {
   const payload: PropertyUpdatePayload = {};
 
   if (initial.dealType !== current.dealType) {
     payload.dealType = current.dealType;
+  }
+
+  if (listingPropertyType === "HOTEL") {
+    const initialScope = initial.hotelScope ?? null;
+    const currentScope = current.hotelScope ?? null;
+    if (initialScope !== currentScope && currentScope !== null) {
+      payload.hotelScope = currentScope;
+    }
   }
 
   if (initial.city !== current.city) payload.city = current.city;

@@ -6,6 +6,9 @@ import type {
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import {
+  HOTEL_SCOPE_FORM_OPTIONS,
+} from "@/features/properties/addPropertyFormOptions";
+import {
   DEAL_TYPE_OPTIONS,
   isDealType,
   type DealType,
@@ -36,6 +39,7 @@ type PropertyDetailsEditableSectionsProps = {
   showInternalPrice: boolean;
   readOnlyPrivateHouseBalcony?: number;
   onDealTypeChange: (value: DealType) => void;
+  onHotelScopeChange: (raw: string) => void;
   onFieldChange: (
     field: keyof Pick<PropertyFormValues, "city" | "district" | "address">,
     value: string,
@@ -57,6 +61,7 @@ export function PropertyDetailsEditableSections({
   showInternalPrice,
   readOnlyPrivateHouseBalcony,
   onDealTypeChange,
+  onHotelScopeChange,
   onFieldChange,
   onPriceChange,
   onDescriptionChange,
@@ -85,6 +90,18 @@ export function PropertyDetailsEditableSections({
         }}
         options={DEAL_TYPE_OPTIONS}
       />
+
+      {values.propertyType === "HOTEL" && (
+        <LabeledSelect
+          label="Hotel scope"
+          value={values.hotelScope ?? ""}
+          onChange={onHotelScopeChange}
+          options={[
+            { value: "", label: "Not specified" },
+            ...HOTEL_SCOPE_FORM_OPTIONS,
+          ]}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableTextInput

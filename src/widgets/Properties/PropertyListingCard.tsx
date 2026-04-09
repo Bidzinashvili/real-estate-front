@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, MapPin } from "lucide-react";
+import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { Property } from "@/features/properties/types";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
@@ -87,8 +88,15 @@ export function PropertyListingCard({
           <p className="text-2xl font-semibold tracking-tight text-slate-900">
             {property.pricePublic.toLocaleString()} ₾
           </p>
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-            {property.propertyType}
+          <span className="flex shrink-0 flex-col items-end gap-1">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+              {property.propertyType}
+            </span>
+            {property.propertyType === "HOTEL" && property.hotelScope ? (
+              <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-800">
+                {formatHotelScopeLabel(property.hotelScope)}
+              </span>
+            ) : null}
           </span>
         </div>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { Property } from "@/features/properties/types";
 
@@ -56,7 +57,11 @@ export function AdminPropertiesSection({
               {properties.map((property) => (
                 <tr key={property.id} className="border-t border-slate-100">
                   <td className="px-4 py-3 text-slate-900">
-                    {property.propertyType} • {formatDealTypeLabel(property.dealType)}
+                    {property.propertyType}
+                    {property.propertyType === "HOTEL" && property.hotelScope
+                      ? ` (${formatHotelScopeLabel(property.hotelScope)})`
+                      : ""}{" "}
+                    • {formatDealTypeLabel(property.dealType)}
                   </td>
                   <td className="hidden px-4 py-3 text-slate-700 md:table-cell">
                     {property.city} / {property.district}

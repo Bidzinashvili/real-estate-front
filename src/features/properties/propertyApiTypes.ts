@@ -2,6 +2,7 @@ import type { DealType } from "@/features/properties/dealType";
 import type {
   BuildingCondition,
   CommercialStatus,
+  HotelScope,
   KitchenType,
   LandCategory,
   PropertyType,
@@ -10,6 +11,7 @@ import type {
 export type {
   BuildingCondition,
   CommercialStatus,
+  HotelScope,
   KitchenType,
   LandCategory,
   PropertyType,
@@ -137,6 +139,7 @@ export type CommercialApi = {
 export type PropertyApi = {
   id: string;
   propertyType: PropertyType;
+  hotelScope?: HotelScope | null;
   dealType: DealType;
   city: string;
   district: string;
@@ -269,7 +272,12 @@ export type CreatePropertyRequestBody = CreatePropertyBase &
   (
     | { propertyType?: "APARTMENT"; apartment: CreateApartmentPayload }
     | {
-        propertyType: "PRIVATE_HOUSE" | "COTTAGE" | "HOTEL";
+        propertyType: "PRIVATE_HOUSE" | "COTTAGE";
+        privateHouse: CreatePrivateHousePayload;
+      }
+    | {
+        propertyType: "HOTEL";
+        hotelScope: HotelScope;
         privateHouse: CreatePrivateHousePayload;
       }
     | { propertyType?: "LAND_PLOT"; landPlot: CreateLandPlotPayload }
@@ -284,6 +292,7 @@ export type CreatePropertyResponse = Omit<
 
 export type UpdatePropertyRequestBody = {
   dealType?: DealType;
+  hotelScope?: HotelScope;
   city?: string;
   district?: string;
   address?: string;

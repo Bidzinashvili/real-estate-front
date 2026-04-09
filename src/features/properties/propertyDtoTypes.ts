@@ -3,6 +3,7 @@ import type { UpdatePropertyRequestBody } from "@/features/properties/propertyAp
 import type {
   BuildingCondition,
   CommercialStatus,
+  HotelScope,
   KitchenType,
   LandCategory,
   PropertyType,
@@ -109,6 +110,7 @@ export type PropertyCommercialCreate = {
 
 export type CreatePropertyDto = {
   propertyType?: PropertyType;
+  hotelScope?: HotelScope;
   dealType?: DealType;
   city: string;
   district: string;

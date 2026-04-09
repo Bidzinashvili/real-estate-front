@@ -194,5 +194,13 @@ export function buildCreatePropertyPayload(
     }
   }
 
+  if (form.propertyType === "HOTEL") {
+    if (form.hotelScope === "WHOLE_HOTEL" || form.hotelScope === "HOTEL_ROOM") {
+      payload.hotelScope = form.hotelScope;
+    } else {
+      errors.push("Hotel scope is required.");
+    }
+  }
+
   return { payload: errors.length === 0 ? payload : null, errors };
 }

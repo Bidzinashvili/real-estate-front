@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  formatHotelScopeLabelOrUnset,
   formatLandCategoryLabel,
   formatLandUsageLabel,
 } from "@/features/properties/addPropertyFormOptions";
@@ -38,6 +39,13 @@ export function PropertyListingFieldsView({
           label="Deal type"
           value={formatDealTypeLabel(values.dealType)}
         />
+
+        {values.propertyType === "HOTEL" && (
+          <DetailText
+            label="Hotel scope"
+            value={formatHotelScopeLabelOrUnset(values.hotelScope)}
+          />
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="City" value={values.city} />

@@ -71,6 +71,7 @@ type SelectProps<T extends string> = {
   options: ReadonlyArray<{ value: T; label: string }>;
   error?: string;
   disabled?: boolean;
+  required?: boolean;
 };
 
 export function SelectField<T extends string>({
@@ -81,6 +82,7 @@ export function SelectField<T extends string>({
   options,
   error,
   disabled = false,
+  required = false,
 }: SelectProps<T>) {
   return (
     <div className="space-y-1.5">
@@ -92,6 +94,7 @@ export function SelectField<T extends string>({
           id={id}
           value={value}
           disabled={disabled}
+          required={required}
           onChange={(event) => onChange(event.target.value as T)}
           className={`${addPropertySelectClassName()} ${error ? "border-red-500 focus:border-red-600" : ""} ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
         >

@@ -2,6 +2,7 @@ import type { DealType } from "@/features/properties/dealType";
 import type {
   BuildingCondition,
   CommercialStatus,
+  HotelScope,
   KitchenType,
   LandCategory,
   PropertyType,
@@ -16,6 +17,7 @@ export type AddPropertyActiveSubtype =
 
 export type FormState = {
   propertyType: PropertyType;
+  hotelScope: HotelScope | "";
   dealType: DealType;
   city: string;
   district: string;
@@ -103,6 +105,7 @@ export type FormState = {
 export function initialFormState(): FormState {
   return {
     propertyType: "APARTMENT",
+    hotelScope: "",
     dealType: "RENT",
     city: "Tbilisi",
     district: "",

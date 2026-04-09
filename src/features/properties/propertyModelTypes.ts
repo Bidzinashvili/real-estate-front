@@ -18,6 +18,13 @@ export function isPropertyType(value: string): value is PropertyType {
   return (PROPERTY_TYPES as readonly string[]).includes(value);
 }
 
+export const HOTEL_SCOPES = ["WHOLE_HOTEL", "HOTEL_ROOM"] as const;
+export type HotelScope = (typeof HOTEL_SCOPES)[number];
+
+export function isHotelScope(value: string): value is HotelScope {
+  return (HOTEL_SCOPES as readonly string[]).includes(value);
+}
+
 export function parsePropertyType(value: JsonValue | undefined): PropertyType {
   const stringCandidate = typeof value === "string" ? value.trim() : "";
   return isPropertyType(stringCandidate) ? stringCandidate : "APARTMENT";
@@ -177,6 +184,7 @@ export type PropertyCommercial = {
 export type Property = {
   id: string;
   propertyType: PropertyType;
+  hotelScope?: HotelScope | null;
   dealType: DealType;
   city: string;
   district: string;

@@ -8,6 +8,7 @@ import {
   type PropertyCommercialUpdate,
   type PropertyPrivateHouseUpdate,
   type PropertyUpdatePayload,
+  isHotelScope,
   parseRenovationForForm,
 } from "@/features/properties/types";
 import {
@@ -44,6 +45,8 @@ export function PropertyDetailsCard({
   const apiBaseUrl = getApiBaseUrl();
   const initialValues = useMemo<FormValues>(() => {
     return {
+      propertyType: property.propertyType,
+      hotelScope: property.hotelScope ?? null,
       dealType: property.dealType,
       city: property.city,
       district: property.district,
@@ -206,7 +209,11 @@ export function PropertyDetailsCard({
       }
     }
 
-    const payload = buildPropertyUpdatePayload(initialValues, values);
+    const payload = buildPropertyUpdatePayload(
+      initialValues,
+      values,
+      property.propertyType,
+    );
 
     if (Object.keys(payload).length === 0) {
       return;
@@ -273,6 +280,17 @@ export function PropertyDetailsCard({
           showInternalPrice={canViewPrivateFields}
           readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
           onDealTypeChange={handleDealTypeChange}
+          onHotelScopeChange={(raw) => {
+            setValues((prev) => {
+              if (raw === "") {
+                return { ...prev, hotelScope: null };
+              }
+              if (isHotelScope(raw)) {
+                return { ...prev, hotelScope: raw };
+              }
+              return prev;
+            });
+          }}
           onFieldChange={handleFieldChange}
           onPriceChange={handlePriceChange}
           onDescriptionChange={(value) =>

@@ -1,4 +1,5 @@
 import type { AddPropertyActiveSubtype, FormState } from "@/features/properties/addPropertyFormState";
+import { isHotelScope } from "@/features/properties/types";
 
 export type FormErrors = Partial<Record<string, string>>;
 
@@ -71,6 +72,12 @@ export function validateFormInputs(
   optionalInternationalPhone("ownerWhatsapp", form.ownerWhatsapp);
   requireNumber("pricePublic", form.pricePublic, "Public price");
   optionalNumber("priceInternal", form.priceInternal, "Internal price");
+
+  if (form.propertyType === "HOTEL") {
+    if (!isHotelScope(form.hotelScope)) {
+      errors.hotelScope = "Select whole hotel or hotel room.";
+    }
+  }
 
   if (activeSubtype === "apartment") {
     requireNumber("apartment.totalArea", form.apartment.totalArea, "Apartment total area");

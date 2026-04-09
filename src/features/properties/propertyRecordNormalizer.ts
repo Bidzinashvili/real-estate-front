@@ -2,6 +2,7 @@ import { parseDealType } from "@/features/properties/dealType";
 import {
   isBuildingCondition,
   isCommercialStatus,
+  isHotelScope,
   isKitchenType,
   isLandCategory,
   parsePropertyType,
@@ -9,6 +10,7 @@ import {
 import type {
   BuildingCondition,
   CommercialStatus,
+  HotelScope,
   KitchenType,
   LandCategory,
   Property,
@@ -45,6 +47,12 @@ function parseLandCategory(value: JsonValue | undefined): LandCategory {
 function parseCommercialStatus(value: JsonValue | undefined): CommercialStatus {
   const candidate = typeof value === "string" ? value.trim() : "";
   return isCommercialStatus(candidate) ? candidate : "UNIVERSAL";
+}
+
+function parseHotelScope(value: JsonValue | undefined): HotelScope | null {
+  if (value === null || value === undefined) return null;
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return isHotelScope(candidate) ? candidate : null;
 }
 
 function asBalconyCount(value: JsonValue | undefined): number {
@@ -220,6 +228,7 @@ export function normalizeProperty(value: JsonValue): Property | null {
   return {
     id: asString(value.id),
     propertyType: parsePropertyType(value.propertyType),
+    hotelScope: parseHotelScope(value.hotelScope),
     dealType: parseDealType(value.dealType),
     city: asString(value.city),
     district: asString(value.district),

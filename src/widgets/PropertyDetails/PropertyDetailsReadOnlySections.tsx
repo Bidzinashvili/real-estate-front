@@ -1,7 +1,10 @@
 "use client";
 
 import type { Property } from "@/features/properties/types";
-import { formatRenovationLabel } from "@/features/properties/addPropertyFormOptions";
+import {
+  formatHotelScopeLabel,
+  formatRenovationLabel,
+} from "@/features/properties/addPropertyFormOptions";
 import {
   DetailDateTime,
   DetailMultiline,
@@ -34,6 +37,13 @@ export function PropertyDetailsReadOnlySections({
           <DetailText label="Property type" value={property.propertyType} />
           <DetailText label="Cadastral code" value={property.cadastralCode} />
         </div>
+
+        {property.propertyType === "HOTEL" && property.hotelScope ? (
+          <DetailText
+            label="Hotel scope"
+            value={formatHotelScopeLabel(property.hotelScope)}
+          />
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="Owner name" value={property.ownerName} />

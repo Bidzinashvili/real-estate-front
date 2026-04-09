@@ -68,6 +68,14 @@ export function useAddPropertyForm() {
         }
         return { ...prev, dealType: nextDealType };
       }
+      if (key === "propertyType") {
+        const nextPropertyType = value as FormState["propertyType"];
+        return {
+          ...prev,
+          propertyType: nextPropertyType,
+          hotelScope: nextPropertyType === "HOTEL" ? prev.hotelScope : "",
+        };
+      }
       return { ...prev, [key]: value };
     });
   }, []);
