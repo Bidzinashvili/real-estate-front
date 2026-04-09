@@ -11,6 +11,21 @@ import {
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 
+const publicPriceMarkupRatio = 1.03;
+const publicPriceFractionDigits = 2;
+
+function computePublicPriceFromInternal(internalPriceInput: string): string {
+  const trimmedInternal = internalPriceInput.trim();
+  if (trimmedInternal === "") return "";
+  const internalNumber = parseFloat(trimmedInternal);
+  if (!Number.isFinite(internalNumber)) return "";
+  const scaled =
+    Math.round(
+      internalNumber * publicPriceMarkupRatio * 10 ** publicPriceFractionDigits,
+    ) / 10 ** publicPriceFractionDigits;
+  return String(scaled);
+}
+
 type Props = {
   form: FormState;
   fieldErrors: FormErrors;
@@ -25,6 +40,25 @@ export function AddPropertyCoreFields({
   onImagesChange,
 }: Props) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
+  const [isPublicPriceManuallyEdited, setIsPublicPriceManuallyEdited] =
+    useState(false);
+
+  function handleInternalPriceChange(value: string) {
+    updateForm("priceInternal", value);
+    if (!isPublicPriceManuallyEdited) {
+      updateForm("pricePublic", computePublicPriceFromInternal(value));
+    }
+  }
+
+  function handlePublicPriceChange(value: string) {
+    if (value.trim() === "") {
+      setIsPublicPriceManuallyEdited(false);
+      updateForm("pricePublic", "");
+      return;
+    }
+    updateForm("pricePublic", value);
+    setIsPublicPriceManuallyEdited(true);
+  }
 
   function handleOwnerPhoneChange(value: string) {
     updateForm("ownerPhone", value);
@@ -34,9 +68,9 @@ export function AddPropertyCoreFields({
   }
 
   function handleOwnerWhatsappChange(value: string) {
-    if (value === "") {
+    if (value.trim() === "") {
       setIsWhatsappManuallyEdited(false);
-      updateForm("ownerWhatsapp", form.ownerPhone);
+      updateForm("ownerWhatsapp", "");
       return;
     }
     updateForm("ownerWhatsapp", value);
@@ -84,10 +118,18 @@ export function AddPropertyCoreFields({
         error={fieldErrors.address}
       />
       <TextField
+        id="priceInternal"
+        label="Internal price"
+        value={form.priceInternal}
+        onChange={handleInternalPriceChange}
+        type="number"
+        error={fieldErrors.priceInternal}
+      />
+      <TextField
         id="pricePublic"
         label="Public price"
         value={form.pricePublic}
-        onChange={(value) => updateForm("pricePublic", value)}
+        onChange={handlePublicPriceChange}
         type="number"
         required
         error={fieldErrors.pricePublic}
@@ -120,14 +162,6 @@ export function AddPropertyCoreFields({
         label="Cadastral code"
         value={form.cadastralCode}
         onChange={(value) => updateForm("cadastralCode", value)}
-      />
-      <TextField
-        id="priceInternal"
-        label="Internal price"
-        value={form.priceInternal}
-        onChange={(value) => updateForm("priceInternal", value)}
-        type="number"
-        error={fieldErrors.priceInternal}
       />
       <TextField
         id="myHomeId"
