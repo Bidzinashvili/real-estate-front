@@ -9,6 +9,7 @@ import {
   type PropertyStatus,
 } from "@/features/properties/types";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
+import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListingCardPriceRow";
 
 function formatAddress(property: Property) {
   const parts = [
@@ -106,9 +107,7 @@ export function PropertyListingCard({
 
       <div className="space-y-2.5 p-3">
         <div className="flex items-start justify-between gap-3">
-          <p className="text-2xl font-semibold tracking-tight text-slate-900">
-            {property.pricePublic.toLocaleString()} ₾
-          </p>
+          <PropertyListingCardPriceRow pricePublic={property.pricePublic} />
           <span className="flex shrink-0 flex-col items-end gap-1">
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
               {property.propertyType}

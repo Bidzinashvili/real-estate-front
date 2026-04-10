@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePropertiesCatalog } from "@/features/properties/usePropertiesCatalog";
@@ -12,6 +12,7 @@ import {
   PropertyCatalogMobileFiltersButton,
 } from "@/widgets/Properties/propertyCatalogFilters";
 import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalogScopeToggle";
+import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertCache";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
 
 export function PropertiesView() {
@@ -33,6 +34,18 @@ export function PropertiesView() {
     setSearchInput,
     setPage,
   } = catalog;
+
+  const catalogPrefetchKey = useMemo(
+    () =>
+      properties.map((property) => `${property.id}:${property.pricePublic}`).join("|"),
+    [properties],
+  );
+
+  useEffect(() => {
+    if (isLoading || error || properties.length === 0) return;
+    const publicPrices = properties.map((property) => property.pricePublic);
+    void prefetchGelToUsdForAmounts(publicPrices);
+  }, [catalogPrefetchKey, error, isLoading, properties]);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
