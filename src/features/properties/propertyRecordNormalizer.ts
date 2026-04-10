@@ -1,4 +1,5 @@
 import { parseDealType } from "@/features/properties/dealType";
+import { parsePropertyStatus } from "@/features/properties/propertyStatus";
 import {
   isBuildingCondition,
   isCommercialStatus,
@@ -230,6 +231,7 @@ export function normalizeProperty(value: JsonValue): Property | null {
     propertyType: parsePropertyType(value.propertyType),
     hotelScope: parseHotelScope(value.hotelScope),
     dealType: parseDealType(value.dealType),
+    status: parsePropertyStatus(value.status),
     city: asString(value.city),
     district: asString(value.district),
     address: asString(value.address),

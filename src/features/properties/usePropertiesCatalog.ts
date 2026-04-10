@@ -5,6 +5,7 @@ import axios from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProperties } from "@/features/properties/api";
 import type { DealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
   PropertyListSortOrder,
   PropertySortBy,
@@ -75,6 +76,7 @@ export type UsePropertiesCatalogResult = {
   debouncedTextFilters: CatalogDebouncedTextState;
   setSearchInput: (value: string) => void;
   setDealType: (value: DealType | "") => void;
+  setLifecycleStatus: (value: PropertyStatus | "") => void;
   setPropertyType: (value: PropertyType | "") => void;
   setCity: (value: string) => void;
   setDistrict: (value: string) => void;
@@ -206,6 +208,7 @@ export function usePropertiesCatalog(
     [
       debouncedTextFilters,
       state.dealType,
+      state.lifecycleStatus,
       state.propertyType,
       state.sortBy,
       state.order,

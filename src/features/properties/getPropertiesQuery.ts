@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { Property, PropertyType } from "@/features/properties/types";
 
 export type PropertiesListResult = {
@@ -16,6 +17,7 @@ export type GetPropertiesQuery = {
   search?: string;
   type?: PropertyType;
   dealType?: DealType;
+  status?: PropertyStatus;
   city?: string;
   district?: string;
   minPrice?: number;
@@ -99,6 +101,7 @@ export function toGetPropertiesSearchParams(
   appendString(out, "search", query.search);
   if (query.type) out.type = query.type;
   if (query.dealType) out.dealType = query.dealType;
+  if (query.status) out.status = query.status;
   appendString(out, "city", query.city);
   appendString(out, "district", query.district);
 

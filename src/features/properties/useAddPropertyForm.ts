@@ -68,6 +68,17 @@ export function useAddPropertyForm() {
         }
         return { ...prev, dealType: nextDealType };
       }
+      if (key === "listingLifecycleStatus") {
+        const nextLifecycle = value as FormState["listingLifecycleStatus"];
+        return {
+          ...prev,
+          listingLifecycleStatus: nextLifecycle,
+          verificationReminderLocal:
+            nextLifecycle === "TO_BE_VERIFIED"
+              ? prev.verificationReminderLocal
+              : "",
+        };
+      }
       if (key === "propertyType") {
         const nextPropertyType = value as FormState["propertyType"];
         return {

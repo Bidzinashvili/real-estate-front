@@ -1,4 +1,5 @@
 import type { CreatePropertyDto } from "@/features/properties/types";
+import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
 import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
 import type {
   AddPropertyActiveSubtype,
@@ -71,6 +72,17 @@ export function buildCreatePropertyPayload(
   if (form.myHomeId.trim()) payload.myHomeId = form.myHomeId.trim();
   if (form.ssGeId.trim()) payload.ssGeId = form.ssGeId.trim();
   if (form.description.trim()) payload.description = form.description.trim();
+
+  if (form.listingLifecycleStatus) {
+    payload.status = form.listingLifecycleStatus;
+  }
+  if (form.listingLifecycleStatus === "TO_BE_VERIFIED") {
+    const reminderIso = datetimeLocalValueToIso(form.verificationReminderLocal);
+    if (reminderIso) {
+      payload.reminderDate = reminderIso;
+    }
+  }
+
   if (form.priceInternal.trim()) {
     payload.priceInternal = parseNumber(form.priceInternal, "Internal price", errors);
   }

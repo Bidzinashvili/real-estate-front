@@ -5,6 +5,7 @@ import type {
   HotelScope,
   KitchenType,
   LandCategory,
+  PropertyStatus,
   PropertyType,
   Renovation,
 } from "@/features/properties/types";
@@ -19,6 +20,8 @@ export type FormState = {
   propertyType: PropertyType;
   hotelScope: HotelScope | "";
   dealType: DealType;
+  listingLifecycleStatus: PropertyStatus | "";
+  verificationReminderLocal: string;
   city: string;
   district: string;
   address: string;
@@ -108,6 +111,8 @@ export function initialFormState(): FormState {
     propertyType: "APARTMENT",
     hotelScope: "",
     dealType: "RENT",
+    listingLifecycleStatus: "",
+    verificationReminderLocal: "",
     city: "Tbilisi",
     district: "",
     address: "",

@@ -8,6 +8,7 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import type { HotelScope } from "@/features/properties/types";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
+import { PROPERTY_STATUS_FILTER_OPTIONS } from "@/features/properties/types";
 import {
   addPropertyInputClassName,
   SelectField,
@@ -117,6 +118,36 @@ export function AddPropertyCoreFields({
         onChange={(value) => updateForm("dealType", value)}
         options={DEAL_TYPE_OPTIONS}
       />
+      <SelectField
+        id="listingLifecycleStatus"
+        label="Listing status (optional)"
+        value={form.listingLifecycleStatus}
+        onChange={(value) => updateForm("listingLifecycleStatus", value)}
+        options={PROPERTY_STATUS_FILTER_OPTIONS}
+      />
+      {form.listingLifecycleStatus === "TO_BE_VERIFIED" ? (
+        <div className="space-y-1.5 sm:col-span-2">
+          <label
+            htmlFor="verificationReminderLocal"
+            className="block text-sm font-medium text-slate-800"
+          >
+            Verification reminder (optional)
+          </label>
+          <input
+            id="verificationReminderLocal"
+            type="datetime-local"
+            value={form.verificationReminderLocal}
+            onChange={(event) =>
+              updateForm("verificationReminderLocal", event.target.value)
+            }
+            className={addPropertyInputClassName()}
+          />
+          <p className="text-xs text-slate-500">
+            The server uses this date for scheduled reminders when the listing status is needs
+            verification.
+          </p>
+        </div>
+      ) : null}
       <TextField
         id="city"
         label="City"

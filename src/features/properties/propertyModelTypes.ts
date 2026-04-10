@@ -1,7 +1,9 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
 
 export type { DealType };
+export type { PropertyStatus };
 
 export const PROPERTY_TYPES = [
   "APARTMENT",
@@ -186,6 +188,7 @@ export type Property = {
   propertyType: PropertyType;
   hotelScope?: HotelScope | null;
   dealType: DealType;
+  status: PropertyStatus;
   city: string;
   district: string;
   address: string;

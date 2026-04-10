@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
+import { formatPropertyStatusLabel } from "@/features/properties/types";
 import type { Property } from "@/features/properties/types";
 
 type AdminPropertiesSectionProps = {
@@ -44,6 +45,7 @@ export function AdminPropertiesSection({
             <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500">
               <tr>
                 <th className="px-4 py-3">Type</th>
+                <th className="hidden px-4 py-3 sm:table-cell">Status</th>
                 <th className="hidden px-4 py-3 md:table-cell">Location</th>
                 <th className="hidden px-4 py-3 md:table-cell">Address</th>
                 <th className="px-4 py-3">Price</th>
@@ -62,6 +64,9 @@ export function AdminPropertiesSection({
                       ? ` (${formatHotelScopeLabel(property.hotelScope)})`
                       : ""}{" "}
                     • {formatDealTypeLabel(property.dealType)}
+                  </td>
+                  <td className="hidden px-4 py-3 text-slate-700 sm:table-cell">
+                    {formatPropertyStatusLabel(property.status)}
                   </td>
                   <td className="hidden px-4 py-3 text-slate-700 md:table-cell">
                     {property.city} / {property.district}

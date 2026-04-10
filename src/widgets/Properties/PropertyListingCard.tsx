@@ -3,7 +3,11 @@
 import { Heart, MapPin } from "lucide-react";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
-import type { Property } from "@/features/properties/types";
+import {
+  formatPropertyStatusLabel,
+  type Property,
+  type PropertyStatus,
+} from "@/features/properties/types";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 
 function formatAddress(property: Property) {
@@ -49,6 +53,16 @@ function formatOwnerLine(property: Property) {
   return "—";
 }
 
+function lifecycleStatusBadgeClass(status: PropertyStatus): string {
+  if (status === "TO_BE_VERIFIED") {
+    return "bg-amber-500";
+  }
+  if (status === "RENTED") {
+    return "bg-slate-700";
+  }
+  return "bg-teal-600";
+}
+
 type PropertyListingCardProps = {
   property: Property;
   apiBaseUrl: string | null;
@@ -71,8 +85,15 @@ export function PropertyListingCard({
           apiBaseUrl={apiBaseUrl}
           alt={addressLine}
         />
-        <div className="absolute left-3 top-3 inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
-          {formatDealTypeLabel(property.dealType)}
+        <div className="absolute left-3 top-3 flex max-w-[calc(100%-4rem)] flex-wrap gap-2">
+          <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
+            {formatDealTypeLabel(property.dealType)}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white ${lifecycleStatusBadgeClass(property.status)}`}
+          >
+            {formatPropertyStatusLabel(property.status)}
+          </span>
         </div>
         <button
           type="button"

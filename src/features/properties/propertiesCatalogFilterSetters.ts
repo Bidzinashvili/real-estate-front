@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { DealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
   PropertyListSortOrder,
   PropertySortBy,
@@ -22,6 +23,8 @@ export function createPropertiesCatalogFilterSetters(args: {
       setState((s) => ({ ...s, searchInput: value, page: 1 }));
     },
     setDealType: (value: DealType | "") => bumpPage({ dealType: value }),
+    setLifecycleStatus: (value: PropertyStatus | "") =>
+      bumpPage({ lifecycleStatus: value }),
     setPropertyType: (value: PropertyType | "") =>
       bumpPage({ propertyType: value }),
     setCity: (value: string) => bumpPage({ city: value }),
@@ -60,6 +63,7 @@ export function countActiveCatalogFilters(
   let n = 0;
   if (state.searchInput.trim()) n += 1;
   if (state.dealType) n += 1;
+  if (state.lifecycleStatus) n += 1;
   if (state.propertyType) n += 1;
   if (state.city.trim()) n += 1;
   if (state.district.trim()) n += 1;

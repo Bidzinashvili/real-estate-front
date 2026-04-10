@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
 import type {
   BuildingCondition,
@@ -112,6 +113,8 @@ export type CreatePropertyDto = {
   propertyType?: PropertyType;
   hotelScope?: HotelScope;
   dealType?: DealType;
+  status?: PropertyStatus;
+  reminderDate?: string;
   city: string;
   district: string;
   address: string;

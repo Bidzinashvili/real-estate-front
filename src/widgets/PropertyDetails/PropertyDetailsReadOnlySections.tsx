@@ -1,6 +1,6 @@
 "use client";
 
-import type { Property } from "@/features/properties/types";
+import { formatPropertyStatusLabel, type Property } from "@/features/properties/types";
 import {
   formatHotelScopeLabel,
   formatRenovationLabel,
@@ -35,6 +35,10 @@ export function PropertyDetailsReadOnlySections({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="Property type" value={property.propertyType} />
+          <DetailText
+            label="Listing status"
+            value={formatPropertyStatusLabel(property.status)}
+          />
           <DetailText label="Cadastral code" value={property.cadastralCode} />
         </div>
 

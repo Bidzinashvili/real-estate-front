@@ -10,8 +10,16 @@ import {
   isPropertyListSortOrder,
   isPropertySortBy,
 } from "@/features/properties/getPropertiesQuery";
+import {
+  isPropertyStatus,
+  PROPERTY_STATUS_FILTER_OPTIONS,
+} from "@/features/properties/types";
 import { CATALOG_LIMIT_OPTIONS } from "@/features/properties/propertyCatalogUrlParams";
-import { isPropertyType, type PropertyType } from "@/features/properties/types";
+import {
+  isPropertyType,
+  type PropertyStatus,
+  type PropertyType,
+} from "@/features/properties/types";
 import type { UsePropertiesCatalogResult } from "@/features/properties/usePropertiesCatalog";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
@@ -42,6 +50,11 @@ function parsePropertyTypeSelectValue(raw: string): PropertyType | "" {
   return isPropertyType(raw) ? raw : "";
 }
 
+function parseLifecycleStatusFilterValue(raw: string): PropertyStatus | "" {
+  if (raw === "") return "";
+  return isPropertyStatus(raw) ? raw : "";
+}
+
 type PropertyCatalogFilterFieldsProps = {
   catalog: UsePropertiesCatalogResult;
   showMobileFooter: boolean;
@@ -70,6 +83,28 @@ export function PropertyCatalogFilterFields({
             {DEAL_TYPE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
+              </option>
+            ))}
+          </select>
+        </NativeSelectSurface>
+      </div>
+
+      <div>
+        <span className={LABEL_CLASS}>Listing status</span>
+        <NativeSelectSurface>
+          <select
+            aria-label="Filter by listing lifecycle status"
+            value={state.lifecycleStatus}
+            onChange={(event) =>
+              catalog.setLifecycleStatus(
+                parseLifecycleStatusFilterValue(event.target.value),
+              )
+            }
+            className={SELECT_CLASS}
+          >
+            {PROPERTY_STATUS_FILTER_OPTIONS.map((option) => (
+              <option key={option.value || "all"} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>

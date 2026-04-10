@@ -2,24 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
-import {
-  type Property,
-  type PropertyApartmentUpdate,
-  type PropertyCommercialUpdate,
-  type PropertyPrivateHouseUpdate,
-  type PropertyUpdatePayload,
-  isHotelScope,
-  parseRenovationForForm,
-} from "@/features/properties/types";
+import { buildLifecycleUpdatePatch } from "@/features/properties/buildLifecycleUpdatePatch";
 import {
   buildPropertyUpdatePayload,
   type PropertyFormLandPlot,
   type PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
-import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
+import {
+  type Property,
+  type PropertyApartmentUpdate,
+  type PropertyCommercialUpdate,
+  type PropertyPrivateHouseUpdate,
+  type PropertyStatus,
+  type PropertyUpdatePayload,
+  isHotelScope,
+  parseRenovationForForm,
+} from "@/features/properties/types";
+import { isoToDatetimeLocalValue } from "@/shared/lib/datetimeLocalIso";
+import { getApiBaseUrl } from "@/shared/lib/auth";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
 import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
-import { getApiBaseUrl } from "@/shared/lib/auth";
+import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
+import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
 
 type PropertyDetailsCardProps = {
   property: Property;
@@ -43,6 +47,14 @@ export function PropertyDetailsCard({
   onImagesChanged,
 }: PropertyDetailsCardProps) {
   const apiBaseUrl = getApiBaseUrl();
+  const initialLifecycle = useMemo(
+    () => ({
+      status: property.status,
+      reminderLocal: isoToDatetimeLocalValue(property.reminderDate),
+    }),
+    [property.status, property.reminderDate],
+  );
+
   const initialValues = useMemo<FormValues>(() => {
     return {
       propertyType: property.propertyType,
@@ -101,10 +113,28 @@ export function PropertyDetailsCard({
 
   const [values, setValues] = useState<FormValues>(initialValues);
   const [clientError, setClientError] = useState<string | null>(null);
+  const [lifecycleStatus, setLifecycleStatus] = useState<PropertyStatus>(
+    property.status,
+  );
+  const [verificationReminderLocal, setVerificationReminderLocal] = useState(
+    () => isoToDatetimeLocalValue(property.reminderDate),
+  );
 
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
+
+  useEffect(() => {
+    setLifecycleStatus(initialLifecycle.status);
+    setVerificationReminderLocal(initialLifecycle.reminderLocal);
+  }, [initialLifecycle]);
+
+  const handleLifecycleStatusChange = (next: PropertyStatus) => {
+    setLifecycleStatus(next);
+    if (next !== "TO_BE_VERIFIED") {
+      setVerificationReminderLocal("");
+    }
+  };
 
   const handleDealTypeChange = (value: DealType) => {
     const clearRentFields = value !== "RENT";
@@ -229,11 +259,24 @@ export function PropertyDetailsCard({
       property.propertyType,
     );
 
-    if (Object.keys(payload).length === 0) {
+    const lifecyclePatch = buildLifecycleUpdatePatch(
+      {
+        status: initialLifecycle.status,
+        reminderLocal: initialLifecycle.reminderLocal,
+      },
+      {
+        status: lifecycleStatus,
+        reminderLocal: verificationReminderLocal,
+      },
+    );
+
+    const merged: PropertyUpdatePayload = { ...payload, ...lifecyclePatch };
+
+    if (Object.keys(merged).length === 0) {
       return;
     }
 
-    onSubmit(payload);
+    onSubmit(merged);
   };
 
   const setNested = <T extends Record<string, unknown>>(
@@ -288,6 +331,14 @@ export function PropertyDetailsCard({
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        <PropertyDetailsLifecycleSection
+          canEdit={canEdit}
+          lifecycleStatus={lifecycleStatus}
+          reminderLocal={verificationReminderLocal}
+          onLifecycleStatusChange={handleLifecycleStatusChange}
+          onReminderLocalChange={setVerificationReminderLocal}
+        />
+
         <PropertyDetailsEditableSections
           values={values}
           canEdit={canEdit}

@@ -1,5 +1,7 @@
 import type { DealType } from "@/features/properties/dealType";
 import { isDealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
+import { isPropertyStatus } from "@/features/properties/propertyStatus";
 import {
   isPropertyListSortOrder,
   isPropertySortBy,
@@ -20,6 +22,7 @@ export type PropertyCatalogUrlState = {
   searchInput: string;
   showMyProperties: boolean;
   dealType: DealType | "";
+  lifecycleStatus: PropertyStatus | "";
   propertyType: PropertyType | "";
   city: string;
   district: string;
@@ -83,6 +86,7 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   searchInput: "",
   showMyProperties: false,
   dealType: "",
+  lifecycleStatus: "",
   propertyType: "",
   city: "",
   district: "",
@@ -127,6 +131,9 @@ export function parsePropertyCatalogUrl(
 
   const deal = searchParams.get("dealType");
   if (deal && isDealType(deal)) next.dealType = deal;
+
+  const status = searchParams.get("status");
+  if (status && isPropertyStatus(status)) next.lifecycleStatus = status;
 
   const city = searchParams.get("city");
   if (city) next.city = city;
@@ -207,6 +214,7 @@ export function catalogStateToApiQuery(
     search: t.searchInput.trim() || undefined,
     type: state.propertyType || undefined,
     dealType: state.dealType || undefined,
+    status: state.lifecycleStatus || undefined,
     city: t.city.trim() || undefined,
     district: t.district.trim() || undefined,
     minPrice: parseDecimalInput(t.minPrice),

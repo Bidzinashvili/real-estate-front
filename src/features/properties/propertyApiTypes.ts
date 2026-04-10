@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
   BuildingCondition,
   CommercialStatus,
@@ -17,6 +18,7 @@ export type {
   PropertyType,
 };
 export type { DealType };
+export type { PropertyStatus };
 
 export type PropertySortBy = "createdAt" | "pricePublic";
 
@@ -26,6 +28,7 @@ export type GetPropertiesQueryApi = {
   search?: string;
   type?: PropertyType;
   dealType?: DealType;
+  status?: PropertyStatus;
   city?: string;
   district?: string;
   minPrice?: number;
@@ -141,6 +144,7 @@ export type PropertyApi = {
   propertyType: PropertyType;
   hotelScope?: HotelScope | null;
   dealType: DealType;
+  status: PropertyStatus;
   city: string;
   district: string;
   address: string;
@@ -181,6 +185,8 @@ export type PropertyListResponse = {
 export type CreatePropertyBase = {
   propertyType?: PropertyType;
   dealType?: DealType;
+  status?: PropertyStatus;
+  reminderDate?: string;
   city: string;
   district: string;
   address: string;
@@ -292,6 +298,8 @@ export type CreatePropertyResponse = Omit<
   Partial<Pick<PropertyApi, "apartment" | "privateHouse" | "landPlot" | "commercial">>;
 
 export type UpdatePropertyRequestBody = {
+  status?: PropertyStatus;
+  reminderDate?: string | null;
   dealType?: DealType;
   hotelScope?: HotelScope;
   city?: string;
