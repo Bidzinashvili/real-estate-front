@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, MapPin } from "lucide-react";
+import { Eye, MapPin } from "lucide-react";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import {
@@ -9,6 +9,7 @@ import {
   type PropertyStatus,
 } from "@/features/properties/types";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
+import { PropertyListingCardManager } from "@/widgets/Properties/PropertyListingCardManager";
 import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListingCardPriceRow";
 
 function formatAddress(property: Property) {
@@ -27,22 +28,29 @@ function cardTitle(property: Property) {
 }
 
 function cardRooms(property: Property) {
-  const n = property.apartment?.rooms ?? property.privateHouse?.rooms;
-  return n !== undefined && Number.isFinite(n) ? String(n) : "—";
+  const roomsCount = property.apartment?.rooms ?? property.privateHouse?.rooms;
+  return roomsCount !== undefined && Number.isFinite(roomsCount)
+    ? String(roomsCount)
+    : "—";
 }
 
 function cardBedrooms(property: Property) {
-  const n = property.apartment?.bedrooms ?? property.privateHouse?.bedrooms;
-  return n !== undefined && Number.isFinite(n) ? String(n) : "—";
+  const bedroomsCount =
+    property.apartment?.bedrooms ?? property.privateHouse?.bedrooms;
+  return bedroomsCount !== undefined && Number.isFinite(bedroomsCount)
+    ? String(bedroomsCount)
+    : "—";
 }
 
 function cardAreaM2(property: Property) {
-  const n =
+  const areaSquareMeters =
     property.apartment?.totalArea ??
     property.privateHouse?.totalArea ??
     property.landPlot?.landArea ??
     property.commercial?.area;
-  return n !== undefined && Number.isFinite(n) ? String(n) : "—";
+  return areaSquareMeters !== undefined && Number.isFinite(areaSquareMeters)
+    ? String(areaSquareMeters)
+    : "—";
 }
 
 function formatOwnerLine(property: Property) {
@@ -68,12 +76,16 @@ type PropertyListingCardProps = {
   property: Property;
   apiBaseUrl: string | null;
   onView: (propertyId: string) => void;
+  canManageListing?: boolean;
+  onListingChanged?: () => void;
 };
 
 export function PropertyListingCard({
   property,
   apiBaseUrl,
   onView,
+  canManageListing = false,
+  onListingChanged,
 }: PropertyListingCardProps) {
   const addressLine = formatAddress(property);
 
@@ -86,7 +98,7 @@ export function PropertyListingCard({
           apiBaseUrl={apiBaseUrl}
           alt={addressLine}
         />
-        <div className="absolute left-3 top-3 flex max-w-[calc(100%-4rem)] flex-wrap gap-2">
+        <div className="absolute left-3 top-3 z-[15] flex max-w-[calc(100%-3.25rem)] flex-wrap gap-2">
           <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
             {formatDealTypeLabel(property.dealType)}
           </span>
@@ -96,13 +108,12 @@ export function PropertyListingCard({
             {formatPropertyStatusLabel(property.status)}
           </span>
         </div>
-        <button
-          type="button"
-          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
-          aria-label="Favorite"
-        >
-          <Heart className="h-4 w-4" />
-        </button>
+        {canManageListing && onListingChanged ? (
+          <PropertyListingCardManager
+            property={property}
+            onListingChanged={onListingChanged}
+          />
+        ) : null}
       </div>
 
       <div className="space-y-2.5 p-3">
@@ -141,17 +152,18 @@ export function PropertyListingCard({
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <p className="min-w-0 truncate text-xs text-slate-500">
-            {formatOwnerLine(property)}
-          </p>
+        <div className="space-y-2 pt-1">
           <button
             type="button"
             onClick={() => onView(property.id)}
-            className="shrink-0 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-slate-900 px-3 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800 sm:w-auto sm:min-w-[7rem]"
           >
+            <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
             View
           </button>
+          <p className="min-w-0 truncate text-xs text-slate-500">
+            {formatOwnerLine(property)}
+          </p>
         </div>
       </div>
     </article>

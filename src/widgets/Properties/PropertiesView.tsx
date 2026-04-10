@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePropertiesCatalog } from "@/features/properties/usePropertiesCatalog";
@@ -13,6 +13,7 @@ import {
 } from "@/widgets/Properties/propertyCatalogFilters";
 import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalogScopeToggle";
 import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertCache";
+import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
 
 export function PropertiesView() {
@@ -33,7 +34,17 @@ export function PropertiesView() {
     state,
     setSearchInput,
     setPage,
+    refetch,
   } = catalog;
+
+  const canManageListing = useCallback(
+    (listing: Property) => {
+      if (!user) return false;
+      if (user.role === "ADMIN") return true;
+      return user.role === "AGENT" && listing.userId === user.id;
+    },
+    [user],
+  );
 
   const catalogPrefetchKey = useMemo(
     () =>
@@ -135,6 +146,8 @@ export function PropertiesView() {
                     property={property}
                     apiBaseUrl={apiBaseUrl}
                     onView={(id) => router.push(`/properties/${id}`)}
+                    canManageListing={canManageListing(property)}
+                    onListingChanged={() => void refetch()}
                   />
                 ))}
               </div>

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
-import { buildLifecycleUpdatePatch } from "@/features/properties/buildLifecycleUpdatePatch";
 import {
   buildPropertyUpdatePayload,
   type PropertyFormLandPlot,
@@ -13,12 +12,10 @@ import {
   type PropertyApartmentUpdate,
   type PropertyCommercialUpdate,
   type PropertyPrivateHouseUpdate,
-  type PropertyStatus,
   type PropertyUpdatePayload,
   isHotelScope,
   parseRenovationForForm,
 } from "@/features/properties/types";
-import { isoToDatetimeLocalValue } from "@/shared/lib/datetimeLocalIso";
 import { getApiBaseUrl } from "@/shared/lib/auth";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
 import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
@@ -47,14 +44,6 @@ export function PropertyDetailsCard({
   onImagesChanged,
 }: PropertyDetailsCardProps) {
   const apiBaseUrl = getApiBaseUrl();
-  const initialLifecycle = useMemo(
-    () => ({
-      status: property.status,
-      reminderLocal: isoToDatetimeLocalValue(property.reminderDate),
-    }),
-    [property.status, property.reminderDate],
-  );
-
   const initialValues = useMemo<FormValues>(() => {
     return {
       propertyType: property.propertyType,
@@ -113,28 +102,9 @@ export function PropertyDetailsCard({
 
   const [values, setValues] = useState<FormValues>(initialValues);
   const [clientError, setClientError] = useState<string | null>(null);
-  const [lifecycleStatus, setLifecycleStatus] = useState<PropertyStatus>(
-    property.status,
-  );
-  const [verificationReminderLocal, setVerificationReminderLocal] = useState(
-    () => isoToDatetimeLocalValue(property.reminderDate),
-  );
-
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
-
-  useEffect(() => {
-    setLifecycleStatus(initialLifecycle.status);
-    setVerificationReminderLocal(initialLifecycle.reminderLocal);
-  }, [initialLifecycle]);
-
-  const handleLifecycleStatusChange = (next: PropertyStatus) => {
-    setLifecycleStatus(next);
-    if (next !== "TO_BE_VERIFIED") {
-      setVerificationReminderLocal("");
-    }
-  };
 
   const handleDealTypeChange = (value: DealType) => {
     const clearRentFields = value !== "RENT";
@@ -259,24 +229,11 @@ export function PropertyDetailsCard({
       property.propertyType,
     );
 
-    const lifecyclePatch = buildLifecycleUpdatePatch(
-      {
-        status: initialLifecycle.status,
-        reminderLocal: initialLifecycle.reminderLocal,
-      },
-      {
-        status: lifecycleStatus,
-        reminderLocal: verificationReminderLocal,
-      },
-    );
-
-    const merged: PropertyUpdatePayload = { ...payload, ...lifecyclePatch };
-
-    if (Object.keys(merged).length === 0) {
+    if (Object.keys(payload).length === 0) {
       return;
     }
 
-    onSubmit(merged);
+    onSubmit(payload);
   };
 
   const setNested = <T extends Record<string, unknown>>(
@@ -332,11 +289,8 @@ export function PropertyDetailsCard({
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
         <PropertyDetailsLifecycleSection
-          canEdit={canEdit}
-          lifecycleStatus={lifecycleStatus}
-          reminderLocal={verificationReminderLocal}
-          onLifecycleStatusChange={handleLifecycleStatusChange}
-          onReminderLocalChange={setVerificationReminderLocal}
+          lifecycleStatus={property.status}
+          verificationReminderIso={property.reminderDate}
         />
 
         <PropertyDetailsEditableSections

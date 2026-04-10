@@ -164,6 +164,8 @@ export type PropertyApi = {
   internalComment: string | null;
   reminderDate: string | null;
   commentDate: string | null;
+  tenantClientId?: string | null;
+  rentalDurationMonths?: number | null;
   images: PropertyImageEntry[];
   createdAt: string;
   updatedAt: string;
@@ -300,6 +302,8 @@ export type CreatePropertyResponse = Omit<
 export type UpdatePropertyRequestBody = {
   status?: PropertyStatus;
   reminderDate?: string | null;
+  tenantClientId?: string | null;
+  rentalDurationMonths?: number | null;
   dealType?: DealType;
   hotelScope?: HotelScope;
   city?: string;

@@ -208,6 +208,8 @@ export type Property = {
   internalComment: string | null;
   reminderDate: string | null;
   commentDate: string | null;
+  tenantClientId: string | null;
+  rentalDurationMonths: number | null;
   images: PropertyListingImage[];
   createdAt: string;
   updatedAt: string;

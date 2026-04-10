@@ -257,6 +257,14 @@ export function normalizeProperty(value: JsonValue): Property | null {
     internalComment: asNullableString(value.internalComment),
     reminderDate: asNullableString(value.reminderDate),
     commentDate: asNullableString(value.commentDate),
+    tenantClientId:
+      value.tenantClientId === undefined || value.tenantClientId === null
+        ? null
+        : asString(value.tenantClientId).trim() || null,
+    rentalDurationMonths:
+      value.rentalDurationMonths === undefined || value.rentalDurationMonths === null
+        ? null
+        : asNullableNumber(value.rentalDurationMonths),
     images,
     createdAt: asNullableString(value.createdAt) ?? "",
     updatedAt: asNullableString(value.updatedAt) ?? "",
