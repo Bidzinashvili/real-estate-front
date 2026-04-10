@@ -49,7 +49,7 @@ export async function getAgentsList(
         order: params.order || undefined,
       },
     });
-    return res.data.items ?? [];
+    return res.data.agents ?? res.data.items ?? [];
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "Could not load agents right now.";

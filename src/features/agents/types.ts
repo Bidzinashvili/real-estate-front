@@ -7,13 +7,14 @@ export type Agent = {
 };
 
 export type AgentsResponse = {
-  items: Agent[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
+  agents?: Agent[];
+  items?: Agent[];
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
 };
 
 export type AgentDetails = {
