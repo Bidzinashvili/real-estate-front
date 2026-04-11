@@ -74,7 +74,7 @@ function buildUpdateDto(values: ClientFormValues): UpdateClientDto {
     description: values.description,
     districts: values.districts,
     addresses: values.addresses,
-    status: values.status,
+    status: values.status === "" ? undefined : values.status,
   };
 
   dto.whatsapp = values.whatsapp || undefined;

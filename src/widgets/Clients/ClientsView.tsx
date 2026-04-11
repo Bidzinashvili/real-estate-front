@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientsList } from "@/features/clients/useClientsList";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
@@ -118,13 +119,21 @@ export function ClientsView() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => router.push("/clients/new")}
-          className="inline-flex items-center justify-center self-start rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800 sm:self-auto"
-        >
-          Add client
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <Link
+            href="/clients/invite-links"
+            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Invite links
+          </Link>
+          <button
+            type="button"
+            onClick={() => router.push("/clients/new")}
+            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+          >
+            Add client
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">

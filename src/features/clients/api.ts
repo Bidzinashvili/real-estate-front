@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
+import { getBearerAuthContext } from "@/shared/lib/auth";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
 import { toGetClientsSearchParams } from "@/features/clients/getClientsQuery";
 import type { GetClientsQuery } from "@/features/clients/getClientsQuery";
@@ -19,26 +19,6 @@ import type {
   UpdateClientDto,
 } from "@/features/clients/types";
 
-function getAuthHeaders() {
-  const baseUrl = getApiBaseUrl();
-  const token = getStoredAuthToken();
-
-  if (!baseUrl) {
-    throw new Error("API base URL is not configured");
-  }
-
-  if (!token) {
-    throw new Error("You are not authenticated.");
-  }
-
-  return {
-    baseUrl,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-}
-
 export type GetClientsRequestOptions = {
   signal?: AbortSignal;
 };
@@ -47,7 +27,7 @@ export async function getClients(
   query?: GetClientsQuery,
   requestOptions?: GetClientsRequestOptions,
 ): Promise<ClientsListResponse> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
   const params = toGetClientsSearchParams(query);
 
   try {
@@ -75,7 +55,7 @@ export async function getClients(
 }
 
 export async function getClientById(id: string): Promise<ClientDetail> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
 
   try {
     const res = await axios.get<ClientDetail>(`${baseUrl}/clients/${id}`, {
@@ -97,7 +77,7 @@ export async function getClientById(id: string): Promise<ClientDetail> {
 }
 
 export async function createClient(dto: CreateClientDto): Promise<Client> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
 
   try {
     const res = await axios.post<Client>(`${baseUrl}/clients`, dto, {
@@ -124,7 +104,7 @@ export async function updateClient(
   id: string,
   dto: UpdateClientDto,
 ): Promise<Client> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
 
   try {
     const res = await axios.patch<Client>(`${baseUrl}/clients/${id}`, dto, {
@@ -146,7 +126,7 @@ export async function updateClient(
 }
 
 export async function deleteClient(id: string): Promise<DeleteClientResponse> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
 
   try {
     const res = await axios.delete<DeleteClientResponse>(
@@ -172,7 +152,7 @@ export async function addClientComment(
   clientId: string,
   text: string,
 ): Promise<Comment> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
 
   try {
     const res = await axios.post<Comment>(
@@ -199,7 +179,7 @@ export async function addClientInternalComment(
   clientId: string,
   text: string,
 ): Promise<Comment> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
 
   try {
     const res = await axios.post<Comment>(
@@ -226,7 +206,7 @@ export async function deleteClientComment(
   clientId: string,
   commentId: string,
 ): Promise<DeleteClientCommentResponse> {
-  const { baseUrl, headers } = getAuthHeaders();
+  const { baseUrl, headers } = getBearerAuthContext();
   const encodedCommentId = encodeURIComponent(commentId);
 
   try {

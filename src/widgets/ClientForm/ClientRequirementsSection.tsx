@@ -10,6 +10,7 @@ import {
   BUILDING_CONDITION_LABELS,
   KITCHEN_TYPE_LABELS,
 } from "@/features/clients/clientEnums";
+import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
 
 const NUMERIC_FIELDS = [
   { name: "minRooms", label: "Min rooms", min: 0 },
@@ -35,13 +36,40 @@ type ClientRequirementsSectionProps = {
   register: UseFormRegister<ClientFormValues>;
   errors: FieldErrors<ClientFormValues>;
   isRentDeal: boolean;
+  fieldDescriptions?: Record<string, string>;
+  renovationSelectOptions?: EnumSelectOption[];
+  buildingConditionSelectOptions?: EnumSelectOption[];
+  kitchenTypeSelectOptions?: EnumSelectOption[];
 };
 
 export function ClientRequirementsSection({
   register,
   errors,
   isRentDeal,
+  fieldDescriptions,
+  renovationSelectOptions,
+  buildingConditionSelectOptions,
+  kitchenTypeSelectOptions,
 }: ClientRequirementsSectionProps) {
+  const renovationOptions =
+    renovationSelectOptions ??
+    RENOVATION_VALUES.map((value) => ({
+      value,
+      label: RENOVATION_LABELS[value],
+    }));
+  const buildingOptions =
+    buildingConditionSelectOptions ??
+    BUILDING_CONDITIONS.map((value) => ({
+      value,
+      label: BUILDING_CONDITION_LABELS[value],
+    }));
+  const kitchenOptions =
+    kitchenTypeSelectOptions ??
+    KITCHEN_TYPES.map((value) => ({
+      value,
+      label: KITCHEN_TYPE_LABELS[value],
+    }));
+
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <h2 className="mb-4 text-base font-semibold text-slate-800">Requirements</h2>
@@ -61,6 +89,9 @@ export function ClientRequirementsSection({
                   {errors.minFloor.message}
                 </p>
               )}
+              {fieldDescriptions?.[name] ? (
+                <p className="text-xs text-slate-500">{fieldDescriptions[name]}</p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -81,6 +112,9 @@ export function ClientRequirementsSection({
                 {errors.minRentalPeriod.message}
               </p>
             )}
+            {fieldDescriptions?.minRentalPeriod ? (
+              <p className="text-xs text-slate-500">{fieldDescriptions.minRentalPeriod}</p>
+            ) : null}
           </div>
         )}
 
@@ -92,12 +126,15 @@ export function ClientRequirementsSection({
               className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">Any</option>
-              {RENOVATION_VALUES.map((renovation) => (
-                <option key={renovation} value={renovation}>
-                  {RENOVATION_LABELS[renovation]}
+              {renovationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
+            {fieldDescriptions?.renovation ? (
+              <p className="text-xs text-slate-500">{fieldDescriptions.renovation}</p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">
@@ -107,12 +144,15 @@ export function ClientRequirementsSection({
               className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">Any</option>
-              {BUILDING_CONDITIONS.map((condition) => (
-                <option key={condition} value={condition}>
-                  {BUILDING_CONDITION_LABELS[condition]}
+              {buildingOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
+            {fieldDescriptions?.buildingCondition ? (
+              <p className="text-xs text-slate-500">{fieldDescriptions.buildingCondition}</p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">
@@ -122,25 +162,33 @@ export function ClientRequirementsSection({
               className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             >
               <option value="">Any</option>
-              {KITCHEN_TYPES.map((kitchenType) => (
-                <option key={kitchenType} value={kitchenType}>
-                  {KITCHEN_TYPE_LABELS[kitchenType]}
+              {kitchenOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
+            {fieldDescriptions?.kitchenType ? (
+              <p className="text-xs text-slate-500">{fieldDescriptions.kitchenType}</p>
+            ) : null}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
           {BOOLEAN_FIELDS.map(({ name, label }) => (
-            <label key={name} className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                {...register(name)}
-                className="h-4 w-4 rounded border-slate-300 text-slate-900"
-              />
-              <span className="text-sm text-slate-700">{label}</span>
-            </label>
+            <div key={name} className="space-y-1">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  {...register(name)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900"
+                />
+                <span className="text-sm text-slate-700">{label}</span>
+              </label>
+              {fieldDescriptions?.[name] ? (
+                <p className="text-xs text-slate-500">{fieldDescriptions[name]}</p>
+              ) : null}
+            </div>
           ))}
         </div>
 
@@ -159,6 +207,9 @@ export function ClientRequirementsSection({
                 {errors.balconyAreaMin.message}
               </p>
             )}
+            {fieldDescriptions?.balconyAreaMin ? (
+              <p className="text-xs text-slate-500">{fieldDescriptions.balconyAreaMin}</p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">
@@ -170,6 +221,9 @@ export function ClientRequirementsSection({
               {...register("balconyAreaMax", { valueAsNumber: true })}
               className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
             />
+            {fieldDescriptions?.balconyAreaMax ? (
+              <p className="text-xs text-slate-500">{fieldDescriptions.balconyAreaMax}</p>
+            ) : null}
           </div>
         </div>
       </div>

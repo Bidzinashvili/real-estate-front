@@ -5,6 +5,10 @@ const PUBLIC_PATHS = ["/sign-in"];
 const ADMIN_ONLY_PATHS = ["/agents"];
 const AUTH_COOKIE_KEY = "authToken";
 
+function isInvitePublicPath(pathname: string): boolean {
+  return pathname === "/invite" || pathname.startsWith("/invite/");
+}
+
 type AuthUser = {
   id: string;
   email: string;
@@ -12,7 +16,10 @@ type AuthUser = {
 };
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname);
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return true;
+  }
+  return isInvitePublicPath(pathname);
 }
 
 async function fetchAuthUser(token: string, baseUrl: string): Promise<AuthUser | null> {

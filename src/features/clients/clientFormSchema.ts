@@ -30,7 +30,7 @@ export const clientFormSchema = z
     pet: z.string().max(200).optional().or(z.literal("")),
     districts: z.array(z.string().min(1)).max(100).default([]),
     addresses: z.array(z.string().min(1)).max(200).default([]),
-    status: z.enum(CLIENT_STATUSES).optional(),
+    status: z.union([z.enum(CLIENT_STATUSES), z.literal("")]).optional(),
     reminderDate: z.string().optional().or(z.literal("")),
     relatedPersons: z.array(relatedPersonSchema).max(100).optional().default([]),
     minRooms: z.number().int().min(0).optional(),

@@ -6,9 +6,10 @@ import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 type ClientBudgetSectionProps = {
   register: UseFormRegister<ClientFormValues>;
   errors: FieldErrors<ClientFormValues>;
+  fieldDescriptions?: Record<string, string>;
 };
 
-export function ClientBudgetSection({ register, errors }: ClientBudgetSectionProps) {
+export function ClientBudgetSection({ register, errors, fieldDescriptions }: ClientBudgetSectionProps) {
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <h2 className="mb-4 text-base font-semibold text-slate-800">Budget</h2>
@@ -25,6 +26,9 @@ export function ClientBudgetSection({ register, errors }: ClientBudgetSectionPro
               {errors.budgetMin.message}
             </p>
           )}
+          {fieldDescriptions?.budgetMin ? (
+            <p className="text-xs text-slate-500">{fieldDescriptions.budgetMin}</p>
+          ) : null}
         </div>
 
         <div className="space-y-1.5">
@@ -34,6 +38,9 @@ export function ClientBudgetSection({ register, errors }: ClientBudgetSectionPro
             {...register("budgetMax", { valueAsNumber: true })}
             className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
           />
+          {fieldDescriptions?.budgetMax ? (
+            <p className="text-xs text-slate-500">{fieldDescriptions.budgetMax}</p>
+          ) : null}
         </div>
       </div>
     </section>

@@ -26,6 +26,8 @@ export type RelatedPersonInput = {
   note?: string;
 };
 
+export type ClientRelatedPersonInput = RelatedPersonInput;
+
 export type ClientRequirements = {
   id: string;
   clientId: string;

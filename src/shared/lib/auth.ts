@@ -73,4 +73,29 @@ async function authenticateWithGoogleIdToken(idToken: string) {
   }
 }
 
+export function requireApiBaseUrl(): string {
+  const baseUrl = getApiBaseUrl();
+  if (!baseUrl) {
+    throw new Error("API base URL is not configured");
+  }
+  return baseUrl;
+}
+
+export function getBearerAuthContext(): {
+  baseUrl: string;
+  headers: { Authorization: string };
+} {
+  const baseUrl = requireApiBaseUrl();
+  const token = getStoredAuthToken();
+  if (!token) {
+    throw new Error("You are not authenticated.");
+  }
+  return {
+    baseUrl,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+}
+
 export { AUTH_TOKEN_KEY, getApiBaseUrl, getStoredAuthToken, authenticateWithGoogleIdToken };
