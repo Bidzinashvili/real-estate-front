@@ -22,27 +22,38 @@ import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyD
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
 import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
 
-type PropertyDetailsCardProps = {
+type PropertyDetailsCardBaseProps = {
   property: Property;
-  canEdit: boolean;
   canViewPrivateFields: boolean;
+};
+
+type PropertyDetailsCardEditProps = PropertyDetailsCardBaseProps & {
+  presentation: "edit";
+  canEdit: boolean;
   isSaving: boolean;
   saveError: string | null;
   onSubmit: (payload: PropertyUpdatePayload) => Promise<void> | void;
   onImagesChanged: () => Promise<void>;
 };
 
+type PropertyDetailsCardViewProps = PropertyDetailsCardBaseProps & {
+  presentation: "view";
+};
+
+export type PropertyDetailsCardProps =
+  | PropertyDetailsCardEditProps
+  | PropertyDetailsCardViewProps;
+
 type FormValues = PropertyFormValues;
 
-export function PropertyDetailsCard({
-  property,
-  canEdit,
-  canViewPrivateFields,
-  isSaving,
-  saveError,
-  onSubmit,
-  onImagesChanged,
-}: PropertyDetailsCardProps) {
+export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
+  const { property, canViewPrivateFields, presentation } = props;
+  const canEdit = presentation === "edit" ? props.canEdit : false;
+  const isSaving = presentation === "edit" ? props.isSaving : false;
+  const saveError = presentation === "edit" ? props.saveError : null;
+  const onSubmit = presentation === "edit" ? props.onSubmit : undefined;
+  const onImagesChanged = presentation === "edit" ? props.onImagesChanged : undefined;
+
   const apiBaseUrl = getApiBaseUrl();
   const initialValues = useMemo<FormValues>(() => {
     return {
@@ -172,7 +183,7 @@ export function PropertyDetailsCard({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!canEdit) return;
+    if (presentation !== "edit" || !canEdit || !onSubmit) return;
 
     setClientError(null);
 
@@ -233,7 +244,7 @@ export function PropertyDetailsCard({
       return;
     }
 
-    onSubmit(payload);
+    void onSubmit(payload);
   };
 
   const setNested = <T extends Record<string, unknown>>(
@@ -262,93 +273,144 @@ export function PropertyDetailsCard({
     setNested("commercial", patch);
   };
 
-  return (
-    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Property details
-      </h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Update listing information. Agents can only edit their own properties.
-      </p>
-      {!canViewPrivateFields && (
-        <p className="mt-2 text-sm text-slate-600">
-          Notes, internal price, and some workflow fields are hidden because you are
-          not the listing agent. Administrators always see the full record.
-        </p>
-      )}
-
+  const detailsBody = (
+    <>
       <div className="mt-6">
         <PropertyDetailsImageGallery
           propertyId={property.id}
           images={property.images}
           apiBaseUrl={apiBaseUrl}
-          canDelete={canEdit}
-          onDeleted={onImagesChanged}
+          canDelete={presentation === "edit" && canEdit}
+          onDeleted={onImagesChanged ?? (async () => {})}
         />
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-        <PropertyDetailsLifecycleSection
-          lifecycleStatus={property.status}
-          verificationReminderIso={property.reminderDate}
-        />
+      {presentation === "view" ? (
+        <div className="mt-6 space-y-6">
+          <PropertyDetailsLifecycleSection
+            lifecycleStatus={property.status}
+            verificationReminderIso={property.reminderDate}
+          />
 
-        <PropertyDetailsEditableSections
-          values={values}
-          canEdit={canEdit}
-          showInternalPrice={canViewPrivateFields}
-          readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
-          onDealTypeChange={handleDealTypeChange}
-          onHotelScopeChange={(raw) => {
-            setValues((prev) => {
-              if (raw === "") {
-                return { ...prev, hotelScope: null };
-              }
-              if (isHotelScope(raw)) {
-                return { ...prev, hotelScope: raw };
-              }
-              return prev;
-            });
-          }}
-          onFieldChange={handleFieldChange}
-          onPriceChange={handlePriceChange}
-          onDescriptionChange={(value) =>
-            setValues((prev) => ({ ...prev, description: value }))
-          }
-          setApartment={setApartment}
-          setPrivateHouse={setPrivateHouse}
-          setLandPlot={setLandPlot}
-          setCommercial={setCommercial}
-        />
+          <PropertyDetailsEditableSections
+            values={values}
+            canEdit={false}
+            showInternalPrice={canViewPrivateFields}
+            readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
+            onDealTypeChange={handleDealTypeChange}
+            onHotelScopeChange={() => {}}
+            onFieldChange={handleFieldChange}
+            onPriceChange={handlePriceChange}
+            onDescriptionChange={() => {}}
+            setApartment={setApartment}
+            setPrivateHouse={setPrivateHouse}
+            setLandPlot={setLandPlot}
+            setCommercial={setCommercial}
+          />
 
-        <PropertyDetailsReadOnlySections
-          property={property}
-          showPrivateNotes={canViewPrivateFields}
-        />
-
-        {(clientError || saveError) && (
-          <p className="text-sm text-red-600" role="alert">
-            {clientError ?? saveError}
-          </p>
-        )}
-
-        {!canEdit && (
-          <p className="text-xs text-slate-500">
-            You don&apos;t have permission to edit this property.
-          </p>
-        )}
-
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <button
-            type="submit"
-            disabled={!canEdit || isSaving}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSaving ? "Saving…" : "Save changes"}
-          </button>
+          <PropertyDetailsReadOnlySections
+            property={property}
+            showPrivateNotes={canViewPrivateFields}
+          />
         </div>
-      </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          <PropertyDetailsLifecycleSection
+            lifecycleStatus={property.status}
+            verificationReminderIso={property.reminderDate}
+          />
+
+          <PropertyDetailsEditableSections
+            values={values}
+            canEdit={canEdit}
+            showInternalPrice={canViewPrivateFields}
+            readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
+            onDealTypeChange={handleDealTypeChange}
+            onHotelScopeChange={(raw) => {
+              setValues((prev) => {
+                if (raw === "") {
+                  return { ...prev, hotelScope: null };
+                }
+                if (isHotelScope(raw)) {
+                  return { ...prev, hotelScope: raw };
+                }
+                return prev;
+              });
+            }}
+            onFieldChange={handleFieldChange}
+            onPriceChange={handlePriceChange}
+            onDescriptionChange={(value) =>
+              setValues((prev) => ({ ...prev, description: value }))
+            }
+            setApartment={setApartment}
+            setPrivateHouse={setPrivateHouse}
+            setLandPlot={setLandPlot}
+            setCommercial={setCommercial}
+          />
+
+          <PropertyDetailsReadOnlySections
+            property={property}
+            showPrivateNotes={canViewPrivateFields}
+          />
+
+          {(clientError || saveError) && (
+            <p className="text-sm text-red-600" role="alert">
+              {clientError ?? saveError}
+            </p>
+          )}
+
+          {!canEdit && (
+            <p className="text-xs text-slate-500">
+              You don&apos;t have permission to edit this property.
+            </p>
+          )}
+
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <button
+              type="submit"
+              disabled={!canEdit || isSaving}
+              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSaving ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        </form>
+      )}
+    </>
+  );
+
+  if (presentation === "view") {
+    return (
+      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <h1 className="text-2xl font-semibold tracking-tight">Property details</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          View listing information. Use Edit listing to change fields you are allowed to
+          update.
+        </p>
+        {!canViewPrivateFields && (
+          <p className="mt-2 text-sm text-slate-600">
+            Notes, internal price, and some workflow fields are hidden because you are not
+            the listing agent. Administrators always see the full record.
+          </p>
+        )}
+        {detailsBody}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <h1 className="text-2xl font-semibold tracking-tight">Property details</h1>
+      <p className="mt-1 text-sm text-slate-600">
+        Update listing information. Agents can only edit their own properties.
+      </p>
+      {!canViewPrivateFields && (
+        <p className="mt-2 text-sm text-slate-600">
+          Notes, internal price, and some workflow fields are hidden because you are not the
+          listing agent. Administrators always see the full record.
+        </p>
+      )}
+      {detailsBody}
     </div>
   );
 }
-

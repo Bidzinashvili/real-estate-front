@@ -15,6 +15,7 @@ import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalog
 import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertCache";
 import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
+import { PropertyViewModal } from "@/widgets/Properties/PropertyViewModal";
 
 export function PropertiesView() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export function PropertiesView() {
   const { user, isLoading: isAuthLoading } = useCurrentUser();
   const catalog = usePropertiesCatalog({ syncUrl: true });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [viewingPropertyId, setViewingPropertyId] = useState<string | null>(null);
   const isLoggedIn = user !== null;
 
   const {
@@ -36,6 +38,20 @@ export function PropertiesView() {
     setPage,
     refetch,
   } = catalog;
+
+  const handleViewProperty = useCallback(
+    (propertyId: string) => {
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(min-width: 1024px)").matches
+      ) {
+        setViewingPropertyId(propertyId);
+        return;
+      }
+      router.push(`/properties/${propertyId}`);
+    },
+    [router],
+  );
 
   const canManageListing = useCallback(
     (listing: Property) => {
@@ -59,7 +75,16 @@ export function PropertiesView() {
   }, [catalogPrefetchKey, error, isLoading, properties]);
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+    <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start">
+      {viewingPropertyId ? (
+        <PropertyViewModal
+          propertyId={viewingPropertyId}
+          onClose={() => {
+            setViewingPropertyId(null);
+            void refetch();
+          }}
+        />
+      ) : null}
       <div className="hidden w-72 shrink-0 lg:block">
         <PropertyCatalogDesktopAside catalog={catalog} />
       </div>
@@ -145,7 +170,7 @@ export function PropertiesView() {
                     key={property.id}
                     property={property}
                     apiBaseUrl={apiBaseUrl}
-                    onView={(id) => router.push(`/properties/${id}`)}
+                    onView={handleViewProperty}
                     canManageListing={canManageListing(property)}
                     onListingChanged={() => void refetch()}
                   />

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PropertyDetailsView } from "@/widgets/PropertyDetails/PropertyDetailsView";
+import { PropertyDetailsReadOnlyPage } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlyPage";
 
 type PropertyDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -14,6 +14,5 @@ export default async function PropertyDetailsPage({
 }: PropertyDetailsPageProps) {
   const { id } = await params;
 
-  return <PropertyDetailsView propertyId={id} />;
+  return <PropertyDetailsReadOnlyPage propertyId={id} />;
 }
-

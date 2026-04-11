@@ -11,13 +11,11 @@ import type { Property, PropertyUpdatePayload } from "@/features/properties/type
 import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
 import { refetchUpdatedProperty } from "@/features/properties/saveFlow";
 
-type PropertyDetailsViewProps = {
+type PropertyDetailsEditViewProps = {
   propertyId: string;
 };
 
-export function PropertyDetailsView({
-  propertyId,
-}: PropertyDetailsViewProps) {
+export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
   const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
@@ -43,6 +41,13 @@ export function PropertyDetailsView({
     if (!user || !activeProperty) return false;
     return canViewPrivateListingFields(user, activeProperty);
   }, [activeProperty, user]);
+
+  useEffect(() => {
+    if (!activeProperty || !user) return;
+    if (!canEdit) {
+      router.replace(`/properties/${propertyId}`);
+    }
+  }, [activeProperty, canEdit, propertyId, router, user]);
 
   const handleGoBack = () => {
     router.push("/properties");
@@ -96,6 +101,14 @@ export function PropertyDetailsView({
     );
   }
 
+  if (!canEdit) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
+        <p className="text-slate-500">Redirecting…</p>
+      </main>
+    );
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
       <div className="flex w-full max-w-2xl flex-col gap-4 px-4">
@@ -112,6 +125,7 @@ export function PropertyDetailsView({
 
         <PropertyDetailsCard
           property={activeProperty}
+          presentation="edit"
           canEdit={canEdit}
           canViewPrivateFields={canViewPrivateFields}
           isSaving={isSaving}
@@ -131,4 +145,3 @@ export function PropertyDetailsView({
     </main>
   );
 }
-
