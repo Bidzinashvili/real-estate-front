@@ -7,13 +7,6 @@ import type {
 } from "@/features/reminders/remindersApiTypes";
 import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
 
-export function isDashboardReminderEditable(row: DashboardReminderRow): boolean {
-  if (row.reminderVariant !== "SCHEDULED_PROPERTY") {
-    return true;
-  }
-  return row.sentAtIso === null;
-}
-
 export type DashboardReminderEditFormSnapshot = {
   notifyLocal: string;
   note: string;

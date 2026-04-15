@@ -17,6 +17,7 @@ const DASHBOARD_REMINDERS_QUERY: GetRemindersQuery = {
   limit: 500,
   page: 1,
 };
+const DASHBOARD_REMINDERS_POLL_INTERVAL_MS = 60_000;
 
 export function DashboardPage() {
   const router = useRouter();
@@ -39,8 +40,8 @@ export function DashboardPage() {
   } = useRemindersList({
     enabled: Boolean(user),
     query: DASHBOARD_REMINDERS_QUERY,
+    pollIntervalMs: DASHBOARD_REMINDERS_POLL_INTERVAL_MS,
   });
-
   if (!user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">

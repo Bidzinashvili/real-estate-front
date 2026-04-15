@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { submitPublicClientInvite } from "@/features/clientInviteLinks/api";
-import type { CreateClientDto, Client } from "@/features/clients/types";
+import type { CreateClientPayload, Client } from "@/features/clients/types";
 import { ClientInviteLinkRequestError } from "@/features/clientInviteLinks/clientInviteLinkRequestError";
 import { ApiError } from "@/shared/lib/apiError";
 
@@ -24,7 +24,7 @@ const INVITE_LINK_ERROR_KIND_BY_STATUS: Partial<
 };
 
 type UseSubmitPublicClientInviteResult = {
-  submit: (inviteToken: string, dto: CreateClientDto) => Promise<Client | null>;
+  submit: (inviteToken: string, dto: CreateClientPayload) => Promise<Client | null>;
   isLoading: boolean;
   error: SubmitPublicInviteError | null;
 };
@@ -35,7 +35,7 @@ export function useSubmitPublicClientInvite(): UseSubmitPublicClientInviteResult
 
   const submit = async (
     inviteToken: string,
-    dto: CreateClientDto,
+    dto: CreateClientPayload,
   ): Promise<Client | null> => {
     setIsLoading(true);
     setError(null);

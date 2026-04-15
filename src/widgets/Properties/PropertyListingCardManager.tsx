@@ -9,11 +9,15 @@ import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyList
 type PropertyListingCardManagerProps = {
   property: Property;
   onListingChanged: () => void;
+  canChangeStatus?: boolean;
+  canSetReminders?: boolean;
 };
 
 export function PropertyListingCardManager({
   property,
   onListingChanged,
+  canChangeStatus = false,
+  canSetReminders = false,
 }: PropertyListingCardManagerProps) {
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -56,47 +60,55 @@ export function PropertyListingCardManager({
             role="menu"
             className="absolute right-0 top-full mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-slate-200/60"
           >
-            <button
-              type="button"
-              role="menuitem"
-              className="flex w-full px-3 py-2 text-left text-slate-800 transition hover:bg-slate-50"
-              onClick={(event) => {
-                event.stopPropagation();
-                setIsActionMenuOpen(false);
-                setIsChangeStatusOpen(true);
-              }}
-            >
-              Change status
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              className="flex w-full px-3 py-2 text-left text-slate-800 transition hover:bg-slate-50"
-              onClick={(event) => {
-                event.stopPropagation();
-                setIsActionMenuOpen(false);
-                setIsRemindersOpen(true);
-              }}
-            >
-              Set reminders
-            </button>
+            {canChangeStatus ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full px-3 py-2 text-left text-slate-800 transition hover:bg-slate-50"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsActionMenuOpen(false);
+                  setIsChangeStatusOpen(true);
+                }}
+              >
+                Change status
+              </button>
+            ) : null}
+            {canSetReminders ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full px-3 py-2 text-left text-slate-800 transition hover:bg-slate-50"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsActionMenuOpen(false);
+                  setIsRemindersOpen(true);
+                }}
+              >
+                Set reminders
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
 
-      <PropertyListingChangeStatusModal
-        open={isChangeStatusOpen}
-        property={property}
-        onClose={() => setIsChangeStatusOpen(false)}
-        onSaved={onListingChanged}
-      />
+      {canChangeStatus ? (
+        <PropertyListingChangeStatusModal
+          open={isChangeStatusOpen}
+          property={property}
+          onClose={() => setIsChangeStatusOpen(false)}
+          onSaved={onListingChanged}
+        />
+      ) : null}
 
-      <PropertyListingRemindersModal
-        open={isRemindersOpen}
-        property={property}
-        onClose={() => setIsRemindersOpen(false)}
-        onScheduled={onListingChanged}
-      />
+      {canSetReminders ? (
+        <PropertyListingRemindersModal
+          open={isRemindersOpen}
+          property={property}
+          onClose={() => setIsRemindersOpen(false)}
+          onScheduled={onListingChanged}
+        />
+      ) : null}
     </>
   );
 }

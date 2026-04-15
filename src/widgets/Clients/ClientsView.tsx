@@ -12,6 +12,11 @@ import {
   CLIENT_STATUS_LABELS,
 } from "@/features/clients/clientEnums";
 import type { ClientSortBy, ClientSortOrder } from "@/features/clients/getClientsQuery";
+import {
+  buildBudgetFilterParam,
+  buildDistrictFilterParam,
+  buildStatusFilterParam,
+} from "@/features/clients/getClientsQuery";
 import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
 
 const SORT_OPTIONS: { value: ClientSortBy; label: string }[] = [
@@ -61,15 +66,12 @@ export function ClientsView() {
   const [order, setOrder] = useState<ClientSortOrder>("desc");
   const [page, setPage] = useState(1);
 
-  const budgetMin = budgetMinInput !== "" ? Number(budgetMinInput) : undefined;
-  const budgetMax = budgetMaxInput !== "" ? Number(budgetMaxInput) : undefined;
-
   const { clients, total, isLoading, error } = useClientsList({
-    district: district.trim() || undefined,
-    budgetMin: budgetMin !== undefined && Number.isFinite(budgetMin) ? budgetMin : undefined,
-    budgetMax: budgetMax !== undefined && Number.isFinite(budgetMax) ? budgetMax : undefined,
+    district: buildDistrictFilterParam(district),
+    budgetMin: buildBudgetFilterParam(budgetMinInput),
+    budgetMax: buildBudgetFilterParam(budgetMaxInput),
     dealType: dealTypeFilter || undefined,
-    status: statusFilter || undefined,
+    status: buildStatusFilterParam(statusFilter),
     sortBy,
     order,
     page,

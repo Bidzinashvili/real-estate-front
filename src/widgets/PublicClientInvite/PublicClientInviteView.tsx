@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useFieldArray, type Resolver, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { clientFormSchema } from "@/features/clients/clientFormSchema";
+import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
 import { usePublicClientInvite } from "@/features/clientInviteLinks/usePublicClientInvite";
@@ -35,17 +35,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema) as Resolver<ClientFormValues>,
-    defaultValues: {
-      name: "",
-      phones: [""],
-      whatsapp: "",
-      dealType: "SALE",
-      description: "",
-      pet: "",
-      districts: [],
-      addresses: [],
-      projectExclude: [],
-    },
+    defaultValues: emptyClientFormDefaults,
   });
 
   const {
@@ -148,6 +138,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
         <ClientCoreInfoSection
+          control={control}
           register={register}
           errors={errors}
           phoneFields={phoneFields}
@@ -157,27 +148,31 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
           showReminderDateField={false}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
           dealTypeSelectOptions={formSchemaDerived.dealTypeSelectOptions}
+          showLockForPath={formSchemaDerived.showLockForPath}
         />
 
         <ClientLocationSection
-          register={register}
+          control={control}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
+          showLockForPath={formSchemaDerived.showLockForPath}
         />
 
         <ClientBudgetSection
-          register={register}
+          control={control}
           errors={errors}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
+          showLockForPath={formSchemaDerived.showLockForPath}
         />
 
         <ClientRequirementsSection
-          register={register}
+          control={control}
           errors={errors}
           isRentDeal={isRentDeal}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
           renovationSelectOptions={formSchemaDerived.renovationSelectOptions}
           buildingConditionSelectOptions={formSchemaDerived.buildingConditionSelectOptions}
           kitchenTypeSelectOptions={formSchemaDerived.kitchenTypeSelectOptions}
+          showLockForPath={formSchemaDerived.showLockForPath}
         />
 
         {submitError && submitError.kind !== "field" && (

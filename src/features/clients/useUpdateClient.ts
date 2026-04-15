@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { updateClient } from "@/features/clients/api";
-import type { UpdateClientDto, Client } from "@/features/clients/types";
+import type { UpdateClientPayload, Client } from "@/features/clients/types";
 
 type UseUpdateClientResult = {
-  update: (id: string, dto: UpdateClientDto) => Promise<Client>;
+  update: (id: string, dto: UpdateClientPayload) => Promise<Client>;
   isLoading: boolean;
   error: string | null;
 };
@@ -14,7 +14,7 @@ export function useUpdateClient(): UseUpdateClientResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const update = async (id: string, dto: UpdateClientDto): Promise<Client> => {
+  const update = async (id: string, dto: UpdateClientPayload): Promise<Client> => {
     setIsLoading(true);
     setError(null);
 

@@ -13,11 +13,16 @@ import type {
   ClientDetail,
   ClientsListResponse,
   Comment,
-  CreateClientDto,
+  CreateClientPayload,
   DeleteClientCommentResponse,
   DeleteClientResponse,
-  UpdateClientDto,
+  UpdateClientPayload,
 } from "@/features/clients/types";
+import type {
+  ClientApi,
+  ClientDetailApi,
+  GetClientsResponse,
+} from "@/features/clients/clientApi.types";
 
 export type GetClientsRequestOptions = {
   signal?: AbortSignal;
@@ -31,7 +36,7 @@ export async function getClients(
   const params = toGetClientsSearchParams(query);
 
   try {
-    const res = await axios.get<ClientsListResponse>(`${baseUrl}/clients`, {
+    const res = await axios.get<GetClientsResponse>(`${baseUrl}/clients`, {
       headers,
       params,
       signal: requestOptions?.signal,
@@ -58,7 +63,7 @@ export async function getClientById(id: string): Promise<ClientDetail> {
   const { baseUrl, headers } = getBearerAuthContext();
 
   try {
-    const res = await axios.get<ClientDetail>(`${baseUrl}/clients/${id}`, {
+    const res = await axios.get<ClientDetailApi>(`${baseUrl}/clients/${id}`, {
       headers,
     });
     return normalizeClientDetail(res.data);
@@ -76,11 +81,11 @@ export async function getClientById(id: string): Promise<ClientDetail> {
   }
 }
 
-export async function createClient(dto: CreateClientDto): Promise<Client> {
+export async function createClient(dto: CreateClientPayload): Promise<Client> {
   const { baseUrl, headers } = getBearerAuthContext();
 
   try {
-    const res = await axios.post<Client>(`${baseUrl}/clients`, dto, {
+    const res = await axios.post<ClientApi>(`${baseUrl}/clients`, dto, {
       headers: { ...headers, "Content-Type": "application/json" },
     });
     return normalizeClient(res.data);
@@ -102,12 +107,12 @@ export async function createClient(dto: CreateClientDto): Promise<Client> {
 
 export async function updateClient(
   id: string,
-  dto: UpdateClientDto,
+  dto: UpdateClientPayload,
 ): Promise<Client> {
   const { baseUrl, headers } = getBearerAuthContext();
 
   try {
-    const res = await axios.patch<Client>(`${baseUrl}/clients/${id}`, dto, {
+    const res = await axios.patch<ClientApi>(`${baseUrl}/clients/${id}`, dto, {
       headers: { ...headers, "Content-Type": "application/json" },
     });
     return normalizeClient(res.data);

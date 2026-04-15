@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import type { DashboardReminderRow } from "@/features/reminders/dashboardReminderNormalizer";
-import { isDashboardReminderEditable } from "@/features/reminders/reminderDashboardPatch";
 import { deleteReminder } from "@/features/reminders/remindersApi";
 import { formatReminderDueRelative } from "@/shared/lib/formatReminderDueRelative";
 import { ConfirmDialog } from "@/widgets/ConfirmDialog/ConfirmDialog";
@@ -119,7 +118,6 @@ export function DashboardRemindersSection({
             </thead>
             <tbody>
               {reminders.map((row) => {
-                const canEdit = isDashboardReminderEditable(row);
                 return (
                   <tr key={row.id} className="border-t border-slate-100">
                     <td
@@ -167,14 +165,9 @@ export function DashboardRemindersSection({
                         <button
                           type="button"
                           onClick={() => setEditingRow(row)}
-                          disabled={!canEdit}
-                          title={
-                            canEdit
-                              ? "Edit reminder"
-                              : "Sent reminders cannot be edited. Delete and create a new one."
-                          }
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
-                          aria-label={canEdit ? "Edit reminder" : "Edit unavailable for sent reminders"}
+                          title="Edit reminder"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                          aria-label="Edit reminder"
                         >
                           <Pencil className="h-4 w-4" aria-hidden />
                         </button>

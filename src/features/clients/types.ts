@@ -5,17 +5,22 @@ import type {
   BuildingCondition,
   KitchenType,
 } from "@/features/clients/clientEnums";
+import type {
+  ISODateString,
+  LockState,
+  UUID,
+} from "@/features/clients/clientApi.types";
 
 export type RelatedPerson = {
-  id: string;
-  clientId: string;
+  id: UUID;
+  clientId: UUID;
   name: string;
   phone: string | null;
   whatsapp: string | null;
   relationship: string | null;
   note: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
 };
 
 export type RelatedPersonInput = {
@@ -29,8 +34,8 @@ export type RelatedPersonInput = {
 export type ClientRelatedPersonInput = RelatedPersonInput;
 
 export type ClientRequirements = {
-  id: string;
-  clientId: string;
+  id: UUID;
+  clientId: UUID;
   minRooms: number | null;
   minBedrooms: number | null;
   minFloor: number | null;
@@ -52,20 +57,41 @@ export type ClientRequirements = {
   minBathrooms: number | null;
   parking: boolean | null;
   minRentalPeriod: number | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+  minRoomsLock?: LockState;
+  minBedroomsLock?: LockState;
+  minFloorLock?: LockState;
+  maxFloorLock?: LockState;
+  excludeLastFloorLock?: LockState;
+  renovationLock?: LockState;
+  buildingConditionLock?: LockState;
+  projectExcludeLock?: LockState;
+  minAreaLock?: LockState;
+  hasBalconyLock?: LockState;
+  balconyAreaMinLock?: LockState;
+  balconyAreaMaxLock?: LockState;
+  goodViewLock?: LockState;
+  elevatorLock?: LockState;
+  centralHeatingLock?: LockState;
+  airConditionerLock?: LockState;
+  kitchenTypeLock?: LockState;
+  furnishedLock?: LockState;
+  minBathroomsLock?: LockState;
+  parkingLock?: LockState;
+  minRentalPeriodLock?: LockState;
 };
 
 export type Comment = {
-  id: string;
-  clientId: string;
+  id: UUID;
+  clientId: UUID;
   text: string;
-  createdAt: string;
+  createdAt: ISODateString;
 };
 
 export type Client = {
-  id: string;
-  userId: string;
+  id: UUID;
+  userId: UUID;
   name: string;
   phones: string[];
   whatsapp: string | null;
@@ -77,13 +103,18 @@ export type Client = {
   districts: string[];
   addresses: string[];
   status: ClientStatus;
-  reminderDate: string | null;
-  reminderSentAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
+  reminderDate: ISODateString | null;
+  reminderSentAt: ISODateString | null;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+  deletedAt: ISODateString | null;
   requirements: ClientRequirements | null;
   relatedPersons: RelatedPerson[];
+  districtsLock?: LockState;
+  addressesLock?: LockState;
+  budgetMinLock?: LockState;
+  budgetMaxLock?: LockState;
+  petLock?: LockState;
 };
 
 export type ClientDetail = Client & {
@@ -99,52 +130,17 @@ export type ClientsListResponse = {
 };
 
 export type DeleteClientResponse = {
-  id: string;
+  id: UUID;
   deleted: true;
 };
 
 export type DeleteClientCommentResponse = {
-  id: string;
+  id: UUID;
   deleted: true;
 };
 
-export type CreateClientDto = {
-  name: string;
-  phones: string[];
-  whatsapp?: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  dealType: DealType;
-  description: string;
-  pet?: string;
-  districts: string[];
-  addresses: string[];
-  status?: ClientStatus;
-  reminderDate?: string;
-  relatedPersons?: RelatedPersonInput[];
-  minRooms?: number;
-  minBedrooms?: number;
-  minFloor?: number;
-  maxFloor?: number;
-  excludeLastFloor?: boolean;
-  renovation?: Renovation;
-  buildingCondition?: BuildingCondition;
-  projectExclude?: string[];
-  minArea?: number;
-  hasBalcony?: boolean;
-  balconyAreaMin?: number;
-  balconyAreaMax?: number;
-  goodView?: boolean;
-  elevator?: boolean;
-  centralHeating?: boolean;
-  airConditioner?: boolean;
-  kitchenType?: KitchenType;
-  furnished?: boolean;
-  minBathrooms?: number;
-  parking?: boolean;
-  minRentalPeriod?: number;
-};
-
-export type UpdateClientDto = Partial<Omit<CreateClientDto, "reminderDate">> & {
-  reminderDate?: string | null;
-};
+export type {
+  CreateClientPayload,
+  UpdateClientPayload,
+  CreateClientRelatedPersonPayload,
+} from "@/features/clients/clientApi.types";

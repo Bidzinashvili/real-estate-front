@@ -76,7 +76,8 @@ type PropertyListingCardProps = {
   property: Property;
   apiBaseUrl: string | null;
   onView: (propertyId: string) => void;
-  canManageListing?: boolean;
+  canChangeStatus?: boolean;
+  canSetReminders?: boolean;
   onListingChanged?: () => void;
 };
 
@@ -84,7 +85,8 @@ export function PropertyListingCard({
   property,
   apiBaseUrl,
   onView,
-  canManageListing = false,
+  canChangeStatus = false,
+  canSetReminders = false,
   onListingChanged,
 }: PropertyListingCardProps) {
   const addressLine = formatAddress(property);
@@ -108,10 +110,12 @@ export function PropertyListingCard({
             {formatPropertyStatusLabel(property.status)}
           </span>
         </div>
-        {canManageListing && onListingChanged ? (
+        {(canChangeStatus || canSetReminders) && onListingChanged ? (
           <PropertyListingCardManager
             property={property}
             onListingChanged={onListingChanged}
+            canChangeStatus={canChangeStatus}
+            canSetReminders={canSetReminders}
           />
         ) : null}
       </div>

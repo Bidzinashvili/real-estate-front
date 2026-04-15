@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { createClient } from "@/features/clients/api";
-import type { CreateClientDto, Client } from "@/features/clients/types";
+import type { CreateClientPayload, Client } from "@/features/clients/types";
 
 type UseCreateClientResult = {
-  create: (dto: CreateClientDto) => Promise<Client>;
+  create: (dto: CreateClientPayload) => Promise<Client>;
   isLoading: boolean;
   error: string | null;
 };
@@ -14,7 +14,7 @@ export function useCreateClient(): UseCreateClientResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const create = async (dto: CreateClientDto): Promise<Client> => {
+  const create = async (dto: CreateClientPayload): Promise<Client> => {
     setIsLoading(true);
     setError(null);
 

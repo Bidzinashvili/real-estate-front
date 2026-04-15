@@ -7,23 +7,25 @@ import {
 } from "@/features/reminders/dashboardReminderNormalizer";
 import type {
   GetRemindersQuery,
+  GetRemindersResponse,
+  ISODateString,
   PatchReminderBody,
+  UUID,
 } from "@/features/reminders/remindersApiTypes";
-import type { JsonValue } from "@/shared/lib/jsonValue";
 
 export type CreateRentalEndingReminderPayload = {
-  propertyId: string;
+  propertyId: UUID;
   kind: "RENTAL_PERIOD_ENDING";
-  notifyAt: string;
+  notifyAt: ISODateString;
   rentalDurationMonths: number;
-  rentalPeriodStartedAt: string;
-  rentalPeriodEndsAt: string;
+  rentalPeriodStartedAt: ISODateString;
+  rentalPeriodEndsAt: ISODateString;
 };
 
 export type CreateCustomPropertyReminderPayload = {
-  propertyId: string;
+  propertyId: UUID;
   kind: "CUSTOM";
-  notifyAt: string;
+  notifyAt: ISODateString;
   note?: string | null;
 };
 
@@ -94,7 +96,7 @@ export async function getReminders(
   const { baseUrl, headers } = getAuthContext();
 
   try {
-    const response = await axios.get<JsonValue>(`${baseUrl}/reminders`, {
+    const response = await axios.get<GetRemindersResponse>(`${baseUrl}/reminders`, {
       headers,
       params: toRemindersSearchParams(query),
     });

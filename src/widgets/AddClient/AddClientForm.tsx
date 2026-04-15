@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateClient } from "@/features/clients/useCreateClient";
-import { clientFormSchema } from "@/features/clients/clientFormSchema";
+import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
@@ -26,16 +26,8 @@ export function AddClientForm() {
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema) as Resolver<ClientFormValues>,
     defaultValues: {
-      name: "",
-      phones: [""],
-      whatsapp: "",
-      dealType: "SALE",
-      description: "",
-      pet: "",
-      districts: [],
-      addresses: [],
+      ...emptyClientFormDefaults,
       relatedPersons: [],
-      projectExclude: [],
     },
   });
 
@@ -69,6 +61,7 @@ export function AddClientForm() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
         <ClientCoreInfoSection
+          control={control}
           register={register}
           errors={errors}
           phoneFields={phoneFields}
@@ -77,11 +70,11 @@ export function AddClientForm() {
           showDefaultStatusOption
         />
 
-        <ClientLocationSection register={register} />
+        <ClientLocationSection control={control} />
 
-        <ClientBudgetSection register={register} errors={errors} />
+        <ClientBudgetSection control={control} errors={errors} />
 
-        <ClientRequirementsSection register={register} errors={errors} isRentDeal={isRentDeal} />
+        <ClientRequirementsSection control={control} errors={errors} isRentDeal={isRentDeal} />
 
         <ClientRelatedPersonsSection
           register={register}

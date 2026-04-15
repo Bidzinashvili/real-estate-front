@@ -1,6 +1,8 @@
 import type { JsonObject, JsonValue } from "@/shared/lib/jsonValue";
 import { asNumber, asString, isJsonObject } from "@/shared/lib/jsonValue";
 import type {
+  GetRemindersResponse,
+  ReminderItem,
   ReminderListVariant,
   ReminderScheduledKind,
 } from "@/features/reminders/remindersApiTypes";
@@ -395,9 +397,39 @@ function sortDashboardReminderRows(rows: DashboardReminderRow[]): DashboardRemin
     if (!leftValid && !rightValid) return 0;
     if (!leftValid) return 1;
     if (!rightValid) return -1;
-    return leftTime - rightTime;
+    return rightTime - leftTime;
   });
   return next;
+}
+
+function normalizeReminderFromTypedItem(item: ReminderItem): DashboardReminderRow | null {
+  const subjectType = item.targetType;
+  const subjectId =
+    subjectType === "PROPERTY"
+      ? (item.propertyId ?? item.property?.id ?? "")
+      : (item.clientId ?? item.client?.id ?? "");
+  if (!subjectId.trim()) {
+    return null;
+  }
+  const subjectTitle =
+    item.subjectTitle?.trim() ||
+    (subjectType === "PROPERTY" ? item.property?.address : item.client?.name) ||
+    "—";
+  return {
+    id: item.id,
+    dueAtIso: item.notifyAt,
+    sentAtIso: item.sentAt ?? null,
+    subjectType,
+    reminderVariant: item.variant,
+    reminderKindLabel: buildReminderKindLabel(item.variant, item.scheduledKind ?? null),
+    scheduledKind: item.scheduledKind ?? null,
+    subjectId,
+    subjectTitle,
+    note: item.note ?? null,
+    rentalDurationMonths: item.rentalDurationMonths ?? null,
+    rentalPeriodStartedAtIso: item.rentalPeriodStartedAt ?? null,
+    rentalPeriodEndsAtIso: item.rentalPeriodEndsAt ?? null,
+  };
 }
 
 function collectRowsFromArray(rawList: JsonValue[]): DashboardReminderRow[] {
@@ -407,6 +439,26 @@ function collectRowsFromArray(rawList: JsonValue[]): DashboardReminderRow[] {
     if (row) rows.push(row);
   }
   return sortDashboardReminderRows(rows);
+}
+
+function collectRowsFromTypedArray(items: ReminderItem[]): DashboardReminderRow[] {
+  const rows: DashboardReminderRow[] = [];
+  for (const item of items) {
+    const row = normalizeReminderFromTypedItem(item);
+    if (row) {
+      rows.push(row);
+    }
+  }
+  return sortDashboardReminderRows(rows);
+}
+
+function isGetRemindersResponse(
+  data: GetRemindersResponse | JsonValue,
+): data is GetRemindersResponse {
+  if (typeof data !== "object" || data === null || !("reminders" in data)) {
+    return false;
+  }
+  return Array.isArray(data.reminders);
 }
 
 function extractReminderArrayFromEnvelope(data: JsonObject): JsonValue[] | null {
@@ -444,7 +496,12 @@ function extractReminderArrayFromEnvelope(data: JsonObject): JsonValue[] | null 
   return null;
 }
 
-export function normalizeDashboardRemindersList(data: JsonValue): DashboardReminderRow[] {
+export function normalizeDashboardRemindersList(
+  data: GetRemindersResponse | JsonValue,
+): DashboardReminderRow[] {
+  if (isGetRemindersResponse(data)) {
+    return collectRowsFromTypedArray(data.reminders);
+  }
   if (Array.isArray(data)) {
     return collectRowsFromArray(data);
   }

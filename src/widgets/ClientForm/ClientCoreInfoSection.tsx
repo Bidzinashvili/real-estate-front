@@ -1,6 +1,6 @@
 "use client";
 
-import type { UseFormRegister, FieldErrors } from "react-hook-form";
+import { Controller, type Control, type UseFormRegister, type FieldErrors } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import {
@@ -10,8 +10,10 @@ import {
   CLIENT_STATUS_LABELS,
 } from "@/features/clients/clientEnums";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
+import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 
 type ClientCoreInfoSectionProps = {
+  control: Control<ClientFormValues>;
   register: UseFormRegister<ClientFormValues>;
   errors: FieldErrors<ClientFormValues>;
   phoneFields: Array<{ id: string }>;
@@ -25,9 +27,11 @@ type ClientCoreInfoSectionProps = {
   fieldDescriptions?: Record<string, string>;
   dealTypeSelectOptions?: EnumSelectOption[];
   clientStatusSelectOptions?: EnumSelectOption[];
+  showLockForPath?: (path: string) => boolean;
 };
 
 export function ClientCoreInfoSection({
+  control,
   register,
   errors,
   phoneFields,
@@ -41,6 +45,7 @@ export function ClientCoreInfoSection({
   fieldDescriptions,
   dealTypeSelectOptions,
   clientStatusSelectOptions,
+  showLockForPath = () => true,
 }: ClientCoreInfoSectionProps) {
   const dealOptions =
     dealTypeSelectOptions ??
@@ -135,12 +140,30 @@ export function ClientCoreInfoSection({
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-800">Pet</label>
-            <input
-              type="text"
-              {...register("pet")}
-              placeholder="e.g. dog, cat"
-              className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+            <div className="flex items-center gap-2">
+              <label className="block flex-1 text-sm font-medium text-slate-800">Pet</label>
+              {showLockForPath("pet") ? (
+                <Controller
+                  name="pet.lock"
+                  control={control}
+                  render={({ field }) => (
+                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  )}
+                />
+              ) : null}
+            </div>
+            <Controller
+              name="pet.value"
+              control={control}
+              render={({ field }) => (
+                <input
+                  type="text"
+                  placeholder="e.g. dog, cat"
+                  value={field.value ?? ""}
+                  onChange={(event) => field.onChange(event.target.value)}
+                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                />
+              )}
             />
             {fieldDescriptions?.pet ? (
               <p className="text-xs text-slate-500">{fieldDescriptions.pet}</p>

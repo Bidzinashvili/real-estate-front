@@ -38,20 +38,23 @@ function buildFormSchemaDescriptionMap(
   fields: ClientInviteFormSchemaField[],
 ): Record<string, string> {
   const map: Record<string, string> = {};
-
-  function walk(items: ClientInviteFormSchemaField[], prefix: string) {
-    for (const field of items) {
-      const path = prefix ? `${prefix}.${field.key}` : field.key;
-      if (field.description) {
-        map[path] = field.description;
-      }
-      if (field.nested && field.nested.length > 0) {
-        walk(field.nested, path);
-      }
+  for (const field of fields) {
+    const path = field.nested ? `${field.nested}.${field.key}` : field.key;
+    if (field.description) {
+      map[path] = field.description;
     }
   }
+  return map;
+}
 
-  walk(fields, "");
+function buildUsesLockShapeByFieldKey(
+  fields: ClientInviteFormSchemaField[],
+): Map<string, boolean | undefined> {
+  const map = new Map<string, boolean | undefined>();
+  for (const field of fields) {
+    const path = field.nested ? `${field.nested}.${field.key}` : field.key;
+    map.set(path, field.usesLockShape);
+  }
   return map;
 }
 
@@ -61,14 +64,31 @@ export type PublicInviteFormSchemaDerived = {
   renovationSelectOptions: EnumSelectOption[];
   buildingConditionSelectOptions: EnumSelectOption[];
   kitchenTypeSelectOptions: EnumSelectOption[];
+  showLockForPath: (path: string) => boolean;
 };
 
 export function buildPublicInviteFormSchemaDerived(
   formSchema: ClientInviteFormSchema | null,
 ): PublicInviteFormSchemaDerived {
   const enums = formSchema?.enums;
+  const usesLockShapeByKey = formSchema
+    ? buildUsesLockShapeByFieldKey(formSchema.fields)
+    : new Map<string, boolean | undefined>();
+
+  const showLockForPath = (path: string): boolean => {
+    if (!formSchema || formSchema.version !== "3") {
+      return true;
+    }
+    const flag = usesLockShapeByKey.get(path);
+    if (flag === false) {
+      return false;
+    }
+    return true;
+  };
+
   return {
     fieldDescriptions: formSchema ? buildFormSchemaDescriptionMap(formSchema.fields) : {},
+    showLockForPath,
     dealTypeSelectOptions: resolveEnumSelectOptions(
       enums?.DealType,
       DEAL_TYPES,
@@ -91,3 +111,4 @@ export function buildPublicInviteFormSchemaDerived(
     ),
   };
 }
+

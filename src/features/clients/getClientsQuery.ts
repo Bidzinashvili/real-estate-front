@@ -1,20 +1,16 @@
 import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
 import type { ClientsListResponse } from "@/features/clients/types";
+import type { JsonValue } from "@/shared/lib/jsonValue";
+import type {
+  GetClientsQuery,
+  ClientSortBy,
+  SortOrder,
+} from "@/features/clients/clientApi.types";
+import { DEFAULT_CLIENT_LIST_FILTER_LOCK } from "@/features/clients/clientApi.types";
 
-export type ClientSortBy = "createdAt" | "updatedAt" | "name";
-export type ClientSortOrder = "asc" | "desc";
+export type { GetClientsQuery, ClientSortBy, SortOrder };
 
-export type GetClientsQuery = {
-  district?: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  dealType?: DealType;
-  status?: ClientStatus;
-  sortBy?: ClientSortBy;
-  order?: ClientSortOrder;
-  page?: number;
-  limit?: number;
-};
+export type ClientSortOrder = SortOrder;
 
 export type ClientsListResult = ClientsListResponse;
 
@@ -22,8 +18,12 @@ export function isClientSortBy(value: string): value is ClientSortBy {
   return value === "createdAt" || value === "updatedAt" || value === "name";
 }
 
-export function isClientSortOrder(value: string): value is ClientSortOrder {
+export function isClientSortOrder(value: string): value is SortOrder {
   return value === "asc" || value === "desc";
+}
+
+function encodeJsonParam(value: JsonValue): string {
+  return encodeURIComponent(JSON.stringify(value));
 }
 
 export function toGetClientsSearchParams(
@@ -33,17 +33,26 @@ export function toGetClientsSearchParams(
 
   const out: Record<string, string> = {};
 
-  if (query.district?.trim()) out.district = query.district.trim();
-  if (query.dealType) out.dealType = query.dealType;
-  if (query.status) out.status = query.status;
-  if (query.sortBy) out.sortBy = query.sortBy;
-  if (query.order) out.order = query.order;
-
-  if (query.budgetMin !== undefined && Number.isFinite(query.budgetMin)) {
-    out.budgetMin = String(query.budgetMin);
+  if (query.district !== undefined) {
+    out.district = encodeJsonParam(query.district);
   }
-  if (query.budgetMax !== undefined && Number.isFinite(query.budgetMax)) {
-    out.budgetMax = String(query.budgetMax);
+  if (query.budgetMin !== undefined) {
+    out.budgetMin = encodeJsonParam(query.budgetMin);
+  }
+  if (query.budgetMax !== undefined) {
+    out.budgetMax = encodeJsonParam(query.budgetMax);
+  }
+  if (query.dealType) {
+    out.dealType = query.dealType;
+  }
+  if (query.status !== undefined) {
+    out.status = encodeJsonParam(query.status);
+  }
+  if (query.sortBy) {
+    out.sortBy = query.sortBy;
+  }
+  if (query.order) {
+    out.order = query.order;
   }
   if (query.page !== undefined && Number.isFinite(query.page)) {
     out.page = String(query.page);
@@ -53,4 +62,44 @@ export function toGetClientsSearchParams(
   }
 
   return out;
+}
+
+export function buildDistrictFilterParam(value: string): GetClientsQuery["district"] {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return {
+    value: trimmed,
+    lock: DEFAULT_CLIENT_LIST_FILTER_LOCK,
+  };
+}
+
+export function buildBudgetFilterParam(
+  raw: string,
+): GetClientsQuery["budgetMin"] | GetClientsQuery["budgetMax"] {
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    return undefined;
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+  return {
+    value: parsed,
+    lock: DEFAULT_CLIENT_LIST_FILTER_LOCK,
+  };
+}
+
+export function buildStatusFilterParam(
+  status: ClientStatus | "",
+): GetClientsQuery["status"] {
+  if (status === "") {
+    return undefined;
+  }
+  return {
+    value: status,
+    lock: DEFAULT_CLIENT_LIST_FILTER_LOCK,
+  };
 }

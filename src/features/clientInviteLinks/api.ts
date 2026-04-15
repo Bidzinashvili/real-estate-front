@@ -2,7 +2,8 @@ import axios from "axios";
 import { getBearerAuthContext, requireApiBaseUrl } from "@/shared/lib/auth";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
 import { normalizeClient } from "@/features/clients/normalizers";
-import type { Client, CreateClientDto } from "@/features/clients/types";
+import type { Client, CreateClientPayload } from "@/features/clients/types";
+import type { ClientApi } from "@/features/clients/clientApi.types";
 import { ClientInviteLinkRequestError } from "@/features/clientInviteLinks/clientInviteLinkRequestError";
 import type {
   ClientInviteCreatedResponse,
@@ -130,12 +131,12 @@ export async function getPublicClientInvite(
 
 export async function submitPublicClientInvite(
   token: string,
-  dto: CreateClientDto,
+  dto: CreateClientPayload,
 ): Promise<Client> {
   const baseUrl = requireApiBaseUrl();
 
   try {
-    const res = await axios.post<Client>(
+    const res = await axios.post<ClientApi>(
       `${baseUrl}/public/client-invite-links/${encodeURIComponent(token)}/submit`,
       dto,
       {

@@ -53,7 +53,7 @@ export function PropertiesView() {
     [router],
   );
 
-  const canManageListing = useCallback(
+  const canChangeListingStatus = useCallback(
     (listing: Property) => {
       if (!user) return false;
       if (user.role === "ADMIN") return true;
@@ -61,6 +61,7 @@ export function PropertiesView() {
     },
     [user],
   );
+  const canSetListingReminders = user !== null;
 
   const catalogPrefetchKey = useMemo(
     () =>
@@ -171,7 +172,8 @@ export function PropertiesView() {
                     property={property}
                     apiBaseUrl={apiBaseUrl}
                     onView={handleViewProperty}
-                    canManageListing={canManageListing(property)}
+                    canChangeStatus={canChangeListingStatus(property)}
+                    canSetReminders={canSetListingReminders}
                     onListingChanged={() => void refetch()}
                   />
                 ))}

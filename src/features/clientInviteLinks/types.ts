@@ -2,31 +2,30 @@ import type { ClientInviteLinkStatus } from "./clientInviteEnums";
 
 export type { ClientInviteLinkStatus };
 
-export type CreateClientInviteLinkDto = {
+export type ISODateString = string;
+export type UUID = string;
+
+export type CreateClientInviteLinkPayload = {
   expiresAt?: string;
   maxUses?: number;
 };
+export type CreateClientInviteLinkDto = CreateClientInviteLinkPayload;
 
-export type ClientInviteCreatedResponse = {
-  id: string;
-  token: string;
+export type ClientInviteLink = {
+  id: UUID;
+  token: UUID;
   inviteUrl: string | null;
-  expiresAt: string | null;
+  expiresAt: ISODateString | null;
   maxUses: number;
   status: ClientInviteLinkStatus;
-  createdAt: string;
+  createdAt: ISODateString;
 };
+export type ClientInviteCreatedResponse = ClientInviteLink;
 
-export type ClientInviteLinkListItem = {
-  id: string;
-  token: string;
-  expiresAt: string | null;
-  status: ClientInviteLinkStatus;
-  maxUses: number;
+export type ClientInviteLinkListItem = ClientInviteLink & {
+  agentId: UUID;
   useCount: number;
-  createdAt: string;
   effectiveStatus: ClientInviteLinkStatus;
-  inviteUrl: string | null;
 };
 
 export type ClientInviteLinksListResponse = {
@@ -38,13 +37,15 @@ export type ClientInviteLinksListResponse = {
 
 export type ClientInviteFormSchemaField = {
   key: string;
-  type: string;
+  type?: string;
+  valueType?: string;
   required: boolean;
   itemType?: string;
   description?: string;
   maxLength?: number;
   arrayMaxSize?: number;
-  nested?: ClientInviteFormSchemaField[];
+  nested?: string;
+  usesLockShape?: boolean;
 };
 
 export type ClientInviteFormSchemaEnums = {
@@ -56,16 +57,22 @@ export type ClientInviteFormSchemaEnums = {
 };
 
 export type ClientInviteFormSchema = {
-  version: "1";
+  version: string;
   dtoName: string;
-  enums: ClientInviteFormSchemaEnums;
+  enums: ClientInviteFormSchemaEnums | Record<string, string[]>;
   fields: ClientInviteFormSchemaField[];
+  lockShape?: {
+    valueKey: "value";
+    lockKey: "lock";
+    lockEnum: "LockState";
+    appliesToFieldsWithUsesLockShape: boolean;
+  };
 };
 
 export type PublicClientInviteGetResponse = {
-  token: string;
-  agentId: string;
-  expiresAt: string | null;
+  token: UUID;
+  agentId: UUID;
+  expiresAt: ISODateString | null;
   maxUses: number;
   useCount: number;
   status: ClientInviteLinkStatus;

@@ -1,5 +1,6 @@
 import { DEAL_TYPE_LABELS, CLIENT_STATUS_LABELS } from "@/features/clients/clientEnums";
 import type { ClientDetail } from "@/features/clients/types";
+import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
 import {
   formatClientDetailsDate,
   formatClientDetailsDateTime,
@@ -25,6 +26,13 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
           .join(" – ")
       : null;
 
+  const showAddressesBlock =
+    addresses.length > 0 ||
+    (client.addressesLock !== undefined && client.addressesLock !== "none");
+  const showPetBlock =
+    Boolean(client.pet) ||
+    (client.petLock !== undefined && client.petLock !== "none");
+
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-wrap items-start gap-3">
@@ -34,16 +42,33 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
-            {budgetRange && (
+            {(budgetRange ||
+              (client.budgetMinLock !== undefined && client.budgetMinLock !== "none") ||
+              (client.budgetMaxLock !== undefined && client.budgetMaxLock !== "none")) && (
               <>
                 <span className="text-slate-300">·</span>
-                <span>{budgetRange}</span>
+                <span className="inline-flex flex-wrap items-center gap-1.5">
+                  {budgetRange ? <span>{budgetRange}</span> : null}
+                  {client.budgetMinLock !== undefined ? (
+                    <ClientDetailsLockBadge lock={client.budgetMinLock} />
+                  ) : null}
+                  {client.budgetMaxLock !== undefined &&
+                  client.budgetMaxLock !== client.budgetMinLock ? (
+                    <ClientDetailsLockBadge lock={client.budgetMaxLock} />
+                  ) : null}
+                </span>
               </>
             )}
-            {districts.length > 0 && (
+            {(districts.length > 0 ||
+              (client.districtsLock !== undefined && client.districtsLock !== "none")) && (
               <>
                 <span className="text-slate-300">·</span>
-                <span>{districts.join(", ")}</span>
+                <span className="inline-flex flex-wrap items-center gap-1.5">
+                  {districts.length > 0 ? <span>{districts.join(", ")}</span> : null}
+                  {client.districtsLock !== undefined ? (
+                    <ClientDetailsLockBadge lock={client.districtsLock} />
+                  ) : null}
+                </span>
               </>
             )}
           </div>
@@ -80,10 +105,17 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
           </div>
         )}
 
-        {client.pet && (
+        {showPetBlock && (
           <div>
-            <p className="text-xs text-slate-500">Pet</p>
-            <p className="mt-1 text-sm font-medium text-slate-800">{client.pet}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="text-xs text-slate-500">Pet</p>
+              {client.petLock !== undefined ? (
+                <ClientDetailsLockBadge lock={client.petLock} />
+              ) : null}
+            </div>
+            <p className="mt-1 text-sm font-medium text-slate-800">
+              {client.pet ?? "—"}
+            </p>
           </div>
         )}
 
@@ -104,15 +136,24 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
         </div>
       )}
 
-      {addresses.length > 0 && (
+      {showAddressesBlock && (
         <div className="mt-4 border-t border-slate-100 pt-4">
-          <p className="text-xs text-slate-500">Addresses</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-xs text-slate-500">Addresses</p>
+            {client.addressesLock !== undefined ? (
+              <ClientDetailsLockBadge lock={client.addressesLock} />
+            ) : null}
+          </div>
           <div className="mt-1 space-y-0.5">
-            {addresses.map((address, addressIndex) => (
-              <p key={addressIndex} className="text-sm text-slate-800">
-                {address}
-              </p>
-            ))}
+            {addresses.length > 0 ? (
+              addresses.map((address, addressIndex) => (
+                <p key={addressIndex} className="text-sm text-slate-800">
+                  {address}
+                </p>
+              ))
+            ) : (
+              <p className="text-sm text-slate-600">—</p>
+            )}
           </div>
         </div>
       )}
