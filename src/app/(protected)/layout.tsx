@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { AppHeader } from "@/widgets/AppHeader/AppHeader";
+import { AppHeader } from "@/widgets/appHeader/AppHeader";
 import { UserBootstrap } from "@/widgets/userBootstrap/UserBootstrap";
 import { ReminderAlertCenter } from "@/widgets/ReminderAlertCenter/ReminderAlertCenter";
 
