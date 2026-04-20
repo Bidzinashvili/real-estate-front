@@ -11,14 +11,13 @@ const REMINDER_ALERTS_QUERY: GetRemindersQuery = {
   limit: 500,
   page: 1,
 };
-
 const REMINDER_ALERTS_POLL_INTERVAL_MS = 15_000;
 
 export function ReminderAlertCenter() {
   const user = useUserStore((state) => state.user);
   const isEnabled = user !== null;
 
-  const { reminders, refetch } = useRemindersList({
+  const { reminders } = useRemindersList({
     enabled: isEnabled,
     query: REMINDER_ALERTS_QUERY,
     pollIntervalMs: REMINDER_ALERTS_POLL_INTERVAL_MS,
@@ -26,7 +25,6 @@ export function ReminderAlertCenter() {
 
   const reminderCallAlerts = useReminderCallAlerts({
     reminders,
-    onReminderSnoozed: () => void refetch(),
   });
 
   if (!reminderCallAlerts.activeReminder) {
@@ -36,9 +34,10 @@ export function ReminderAlertCenter() {
   return (
     <ReminderCallNotification
       reminder={reminderCallAlerts.activeReminder}
+      isDismissing={reminderCallAlerts.isDismissing}
       isSnoozing={reminderCallAlerts.isSnoozing}
       error={reminderCallAlerts.error}
-      onDismiss={reminderCallAlerts.dismissActiveReminder}
+      onDismiss={() => void reminderCallAlerts.dismissActiveReminder()}
       onSnooze={(minutes) => void reminderCallAlerts.snoozeActiveReminder(minutes)}
       onClearError={reminderCallAlerts.clearError}
     />

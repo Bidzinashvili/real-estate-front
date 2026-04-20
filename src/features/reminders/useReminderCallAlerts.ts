@@ -6,19 +6,22 @@ import { patchReminder } from "@/features/reminders/remindersApi";
 
 type UseReminderCallAlertsOptions = {
   reminders: DashboardReminderRow[];
-  onReminderSnoozed?: () => void;
 };
 
 type UseReminderCallAlertsResult = {
   activeReminder: DashboardReminderRow | null;
+  isDismissing: boolean;
   isSnoozing: boolean;
   error: string | null;
-  dismissActiveReminder: () => void;
+  dismissActiveReminder: () => Promise<void>;
   snoozeActiveReminder: (minutes: number) => Promise<void>;
   clearError: () => void;
 };
 
 function isReminderDuePending(reminder: DashboardReminderRow): boolean {
+  if (reminder.dismissedAtIso) {
+    return false;
+  }
   const dueAtTime = new Date(reminder.dueAtIso).getTime();
   if (!Number.isFinite(dueAtTime)) {
     return false;
@@ -37,9 +40,9 @@ function sortByMostRecentDue(left: DashboardReminderRow, right: DashboardReminde
 
 export function useReminderCallAlerts({
   reminders,
-  onReminderSnoozed,
 }: UseReminderCallAlertsOptions): UseReminderCallAlertsResult {
   const [activeReminderId, setActiveReminderId] = useState<string | null>(null);
+  const [isDismissing, setIsDismissing] = useState(false);
   const [isSnoozing, setIsSnoozing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dismissedReminderIdsRef = useRef<Set<string>>(new Set());
@@ -64,14 +67,31 @@ export function useReminderCallAlerts({
     setActiveReminderId(nextReminder?.id ?? null);
   }, [activeReminder, dueReminders]);
 
-  const dismissActiveReminder = useCallback(() => {
-    if (!activeReminderId) {
+  const dismissActiveReminder = useCallback(async () => {
+    if (!activeReminder || isDismissing) {
       return;
     }
-    dismissedReminderIdsRef.current.add(activeReminderId);
+
+    const reminderId = activeReminder.id;
+    dismissedReminderIdsRef.current.add(reminderId);
     setActiveReminderId(null);
     setError(null);
-  }, [activeReminderId]);
+    setIsDismissing(true);
+
+    try {
+      await patchReminder(reminderId, { dismissedAt: new Date().toISOString() });
+    } catch (errorUnknown) {
+      dismissedReminderIdsRef.current.delete(reminderId);
+      setActiveReminderId(reminderId);
+      const message =
+        errorUnknown instanceof Error
+          ? errorUnknown.message
+          : "Could not dismiss this reminder right now.";
+      setError(message);
+    } finally {
+      setIsDismissing(false);
+    }
+  }, [activeReminder, isDismissing]);
 
   const snoozeActiveReminder = useCallback(
     async (minutes: number) => {
@@ -88,7 +108,6 @@ export function useReminderCallAlerts({
         const notifyAtIso = new Date(Date.now() + minutes * 60_000).toISOString();
         await patchReminder(activeReminder.id, { notifyAt: notifyAtIso });
         setActiveReminderId(null);
-        onReminderSnoozed?.();
       } catch (errorUnknown) {
         const message =
           errorUnknown instanceof Error
@@ -99,11 +118,12 @@ export function useReminderCallAlerts({
         setIsSnoozing(false);
       }
     },
-    [activeReminder, isSnoozing, onReminderSnoozed],
+    [activeReminder, isSnoozing],
   );
 
   return {
     activeReminder,
+    isDismissing,
     isSnoozing,
     error,
     dismissActiveReminder,

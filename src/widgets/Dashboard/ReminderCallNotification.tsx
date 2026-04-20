@@ -6,6 +6,7 @@ import type { DashboardReminderRow } from "@/features/reminders/dashboardReminde
 
 type ReminderCallNotificationProps = {
   reminder: DashboardReminderRow;
+  isDismissing: boolean;
   isSnoozing: boolean;
   error: string | null;
   onDismiss: () => void;
@@ -41,6 +42,7 @@ async function playTone(audioContext: AudioContext): Promise<void> {
 
 export function ReminderCallNotification({
   reminder,
+  isDismissing,
   isSnoozing,
   error,
   onDismiss,
@@ -103,6 +105,7 @@ export function ReminderCallNotification({
         <button
           type="button"
           onClick={onDismiss}
+          disabled={isDismissing || isSnoozing}
           className="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
           aria-label="Dismiss reminder alert"
         >
@@ -147,7 +150,7 @@ export function ReminderCallNotification({
               key={minutes}
               type="button"
               onClick={() => onSnooze(minutes)}
-              disabled={isSnoozing}
+              disabled={isSnoozing || isDismissing}
               className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSnoozing ? "Working…" : `${minutes} min`}
@@ -156,10 +159,10 @@ export function ReminderCallNotification({
           <button
             type="button"
             onClick={onDismiss}
-            disabled={isSnoozing}
+            disabled={isSnoozing || isDismissing}
             className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Dismiss
+            {isDismissing ? "Dismissing…" : "Dismiss"}
           </button>
         </div>
       </div>

@@ -15,6 +15,7 @@ export type DashboardReminderRow = {
   id: string;
   dueAtIso: string;
   sentAtIso: string | null;
+  dismissedAtIso: string | null;
   subjectType: ReminderSubjectType;
   reminderVariant: DashboardReminderVariant;
   reminderKindLabel: string;
@@ -350,6 +351,9 @@ function normalizeReminderRow(value: JsonValue): DashboardReminderRow | null {
   const sentAtIso =
     asNullableTrimmedString(record.sentAt) ??
     asNullableTrimmedString(record.sent_at);
+  const dismissedAtIso =
+    asNullableTrimmedString(record.dismissedAt) ??
+    asNullableTrimmedString(record.dismissed_at);
 
   const reminderKindLabel = buildReminderKindLabel(reminderVariant, scheduledKind);
 
@@ -374,6 +378,7 @@ function normalizeReminderRow(value: JsonValue): DashboardReminderRow | null {
     id,
     dueAtIso,
     sentAtIso,
+    dismissedAtIso,
     subjectType,
     reminderVariant,
     reminderKindLabel,
@@ -419,6 +424,7 @@ function normalizeReminderFromTypedItem(item: ReminderItem): DashboardReminderRo
     id: item.id,
     dueAtIso: item.notifyAt,
     sentAtIso: item.sentAt ?? null,
+    dismissedAtIso: item.dismissedAt ?? null,
     subjectType,
     reminderVariant: item.variant,
     reminderKindLabel: buildReminderKindLabel(item.variant, item.scheduledKind ?? null),

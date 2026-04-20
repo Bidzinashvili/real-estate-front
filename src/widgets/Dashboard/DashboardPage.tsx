@@ -42,6 +42,7 @@ export function DashboardPage() {
     query: DASHBOARD_REMINDERS_QUERY,
     pollIntervalMs: DASHBOARD_REMINDERS_POLL_INTERVAL_MS,
   });
+
   if (!user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">

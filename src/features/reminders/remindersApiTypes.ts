@@ -28,6 +28,7 @@ export type ReminderItem = {
   id: string;
   notifyAt: ISODateString;
   sentAt?: ISODateString | null;
+  dismissedAt?: ISODateString | null;
   variant: ReminderVariant;
   targetType: ReminderTargetType;
   property?: {
@@ -73,6 +74,7 @@ export type PatchScheduledRentalEndingReminderBody = {
 
 export type PatchListingOrClientReminderBody = {
   notifyAt?: ISODateString;
+  dismissedAt?: ISODateString | null;
 };
 
 export type PatchReminderBody =

@@ -6,6 +6,7 @@ import {
   type GetRemindersQuery,
 } from "@/features/reminders/remindersApi";
 import type { DashboardReminderRow } from "@/features/reminders/dashboardReminderNormalizer";
+import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
 
 type UseRemindersListOptions = {
   enabled: boolean;
@@ -68,6 +69,22 @@ export function useRemindersList({
     }
     void refetch();
   }, [enabled, query, refetch]);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const handleRemindersChanged = () => {
+      void fetchRows(false);
+    };
+
+    window.addEventListener(remindersChangedEventName, handleRemindersChanged);
+
+    return () => {
+      window.removeEventListener(remindersChangedEventName, handleRemindersChanged);
+    };
+  }, [enabled, fetchRows]);
 
   useEffect(() => {
     if (!enabled || !pollIntervalMs || pollIntervalMs <= 0) {

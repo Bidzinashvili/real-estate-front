@@ -5,6 +5,7 @@ import {
   normalizeDashboardRemindersList,
   type DashboardReminderRow,
 } from "@/features/reminders/dashboardReminderNormalizer";
+import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 import type {
   GetRemindersQuery,
   GetRemindersResponse,
@@ -128,6 +129,7 @@ export async function createReminder(
         "Content-Type": "application/json",
       },
     });
+    emitRemindersChangedEvent();
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "Could not schedule this reminder right now.";
@@ -157,6 +159,7 @@ export async function patchReminder(
         "Content-Type": "application/json",
       },
     });
+    emitRemindersChangedEvent();
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "Could not update this reminder right now.";
@@ -180,6 +183,7 @@ export async function deleteReminder(reminderId: string): Promise<void> {
     await axios.delete(`${baseUrl}/reminders/${encodedId}`, {
       headers,
     });
+    emitRemindersChangedEvent();
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "Could not remove this reminder right now.";
@@ -194,3 +198,4 @@ export async function deleteReminder(reminderId: string): Promise<void> {
     throw error;
   }
 }
+
