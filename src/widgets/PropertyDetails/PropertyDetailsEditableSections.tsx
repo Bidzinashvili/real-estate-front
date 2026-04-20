@@ -1,5 +1,7 @@
 "use client";
 
+import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
+import type { LabelSelection } from "@/features/labels/labelTypes";
 import type {
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
@@ -51,6 +53,7 @@ type PropertyDetailsEditableSectionsProps = {
     field: "pricePublic" | "priceInternal",
     value: number | undefined,
   ) => void;
+  onLabelsChange: (value: LabelSelection[]) => void;
   onDescriptionChange: (value: string) => void;
   setApartment: (patch: PropertyApartmentUpdate) => void;
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
@@ -67,6 +70,7 @@ export function PropertyDetailsEditableSections({
   onHotelScopeChange,
   onFieldChange,
   onPriceChange,
+  onLabelsChange,
   onDescriptionChange,
   setApartment,
   setPrivateHouse,
@@ -148,6 +152,17 @@ export function PropertyDetailsEditableSections({
             inputMode="decimal"
           />
         )}
+      </div>
+
+      <div className="space-y-1.5">
+        <LabelAutocompleteChipsInput
+          id="propertyLabels"
+          label="Labels"
+          selectedLabels={values.labels}
+          onChange={onLabelsChange}
+          allowFreeText
+          placeholder="Type to search or add labels"
+        />
       </div>
 
       <div className="space-y-1.5">

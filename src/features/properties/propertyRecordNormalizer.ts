@@ -1,4 +1,5 @@
 import { parseDealType } from "@/features/properties/dealType";
+import type { LabelDto, LabelType } from "@/features/labels/labelTypes";
 import { parsePropertyStatus } from "@/features/properties/propertyStatus";
 import {
   isBuildingCondition,
@@ -83,13 +84,47 @@ function asNullableNumber(value: JsonValue | undefined): number | null {
   return null;
 }
 
+function parseLabelType(value: JsonValue | undefined): LabelType | null {
+  if (value !== "STREET" && value !== "CUSTOM") {
+    return null;
+  }
+
+  return value;
+}
+
+function normalizeLabels(value: unknown): LabelDto[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const labels = value
+    .map((item): LabelDto | null => {
+      if (!isJsonObject(item)) {
+        return null;
+      }
+
+      const id = asString(item.id).trim();
+      const name = asString(item.name).trim();
+      const type = parseLabelType(item.type);
+
+      if (id === "" || name === "" || type === null) {
+        return null;
+      }
+
+      return { id, name, type };
+    })
+    .filter((item): item is LabelDto => item !== null);
+
+  return labels.length > 0 ? labels : undefined;
+}
+
 function legacyImageIdFromUrl(url: string): string {
   const pathOnly = url.split("?")[0] ?? url;
   const segment = pathOnly.split("/").pop();
   return segment && segment.length > 0 ? segment : url;
 }
 
-function normalizeImages(value: JsonValue | undefined): PropertyListingImage[] {
+function normalizeImages(value: unknown): PropertyListingImage[] {
   if (!Array.isArray(value)) return [];
 
   return value
@@ -118,8 +153,7 @@ function normalizeImages(value: JsonValue | undefined): PropertyListingImage[] {
     .filter((item): item is PropertyListingImage => item !== null);
 }
 
-function normalizeApartment(value: JsonValue | undefined): PropertyApartment | null {
-  if (value === undefined) return null;
+function normalizeApartment(value: unknown): PropertyApartment | null {
   if (!isJsonObject(value)) return null;
 
   return {
@@ -146,9 +180,8 @@ function normalizeApartment(value: JsonValue | undefined): PropertyApartment | n
 }
 
 function normalizePrivateHouse(
-  value: JsonValue | undefined,
+  value: unknown,
 ): PropertyPrivateHouse | null {
-  if (value === undefined) return null;
   if (!isJsonObject(value)) return null;
 
   return {
@@ -177,8 +210,7 @@ function normalizePrivateHouse(
   };
 }
 
-function normalizeLandPlot(value: JsonValue | undefined): PropertyLandPlot | null {
-  if (value === undefined) return null;
+function normalizeLandPlot(value: unknown): PropertyLandPlot | null {
   if (!isJsonObject(value)) return null;
 
   return {
@@ -199,8 +231,7 @@ function normalizeLandPlot(value: JsonValue | undefined): PropertyLandPlot | nul
   };
 }
 
-function normalizeCommercial(value: JsonValue | undefined): PropertyCommercial | null {
-  if (value === undefined) return null;
+function normalizeCommercial(value: unknown): PropertyCommercial | null {
   if (!isJsonObject(value)) return null;
 
   return {
@@ -221,8 +252,10 @@ function normalizeCommercial(value: JsonValue | undefined): PropertyCommercial |
   };
 }
 
-export function normalizeProperty(value: JsonValue): Property | null {
-  if (!isJsonObject(value)) return null;
+export function normalizeProperty(value: unknown): Property | null {
+  if (!isJsonObject(value)) {
+    return null;
+  }
 
   const images = normalizeImages(value.images);
 
@@ -265,6 +298,7 @@ export function normalizeProperty(value: JsonValue): Property | null {
       value.rentalDurationMonths === undefined || value.rentalDurationMonths === null
         ? null
         : asNullableNumber(value.rentalDurationMonths),
+    labels: normalizeLabels(value.labels),
     images,
     createdAt: asNullableString(value.createdAt) ?? "",
     updatedAt: asNullableString(value.updatedAt) ?? "",

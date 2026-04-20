@@ -44,7 +44,30 @@ export type PropertyDetailsCardProps =
   | PropertyDetailsCardEditProps
   | PropertyDetailsCardViewProps;
 
-type FormValues = PropertyFormValues;
+const propertyLabelsOwnerErrorMessage = "You can only edit labels on your own properties.";
+
+function getSaveErrorMessage(saveError: string | null): string | null {
+  if (!saveError) {
+    return null;
+  }
+
+  if (saveError.includes(propertyLabelsOwnerErrorMessage)) {
+    return propertyLabelsOwnerErrorMessage;
+  }
+
+  return saveError;
+}
+
+function getMinRentalPeriodErrorMessage(months: number | undefined): string | null {
+  if (months === undefined || Number.isNaN(months)) {
+    return "Min Rental Period (months) is required.";
+  }
+  if (!Number.isInteger(months) || months < 1) {
+    return "Min Rental Period must be a whole number of at least 1 month.";
+  }
+
+  return null;
+}
 
 export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   const { property, canViewPrivateFields, presentation } = props;
@@ -55,7 +78,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   const onImagesChanged = presentation === "edit" ? props.onImagesChanged : undefined;
 
   const apiBaseUrl = getApiBaseUrl();
-  const initialValues = useMemo<FormValues>(() => {
+  const initialValues = useMemo<PropertyFormValues>(() => {
     return {
       propertyType: property.propertyType,
       hotelScope: property.hotelScope ?? null,
@@ -67,6 +90,11 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       pricePublic: property.pricePublic,
       priceInternal: property.priceInternal ?? undefined,
       description: property.description ?? "",
+      labels: (property.labels ?? []).map((label) => ({
+        id: label.id,
+        name: label.name,
+        type: label.type,
+      })),
       apartment: property.apartment
         ? {
             totalArea: property.apartment.totalArea,
@@ -111,7 +139,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     };
   }, [property]);
 
-  const [values, setValues] = useState<FormValues>(initialValues);
+  const [values, setValues] = useState<PropertyFormValues>(initialValues);
   const [clientError, setClientError] = useState<string | null>(null);
   useEffect(() => {
     setValues(initialValues);
@@ -154,7 +182,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   };
 
   const handleFieldChange = (
-    field: keyof Pick<FormValues, "city" | "district" | "address">,
+    field: keyof Pick<PropertyFormValues, "city" | "district" | "address">,
     value: string,
     addressChangeMeta?: { selectedStreetId: string | null },
   ) => {
@@ -195,38 +223,33 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     }
 
     if (values.dealType === "RENT") {
-      const rentMinMessage = (months: number | undefined): string | null => {
-        if (months === undefined || Number.isNaN(months)) {
-          return "Min Rental Period (months) is required.";
-        }
-        if (!Number.isInteger(months) || months < 1) {
-          return "Min Rental Period must be a whole number of at least 1 month.";
-        }
-        return null;
-      };
       if (values.apartment) {
-        const message = rentMinMessage(values.apartment.minRentalPeriod ?? undefined);
+        const message = getMinRentalPeriodErrorMessage(values.apartment.minRentalPeriod ?? undefined);
         if (message) {
           setClientError(message);
           return;
         }
       }
       if (values.privateHouse) {
-        const message = rentMinMessage(values.privateHouse.minRentalPeriod ?? undefined);
+        const message = getMinRentalPeriodErrorMessage(
+          values.privateHouse.minRentalPeriod ?? undefined,
+        );
         if (message) {
           setClientError(message);
           return;
         }
       }
       if (values.landPlot) {
-        const message = rentMinMessage(values.landPlot.minRentalPeriod ?? undefined);
+        const message = getMinRentalPeriodErrorMessage(values.landPlot.minRentalPeriod ?? undefined);
         if (message) {
           setClientError(message);
           return;
         }
       }
       if (values.commercial) {
-        const message = rentMinMessage(values.commercial.minRentalPeriod ?? undefined);
+        const message = getMinRentalPeriodErrorMessage(
+          values.commercial.minRentalPeriod ?? undefined,
+        );
         if (message) {
           setClientError(message);
           return;
@@ -247,30 +270,40 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     void onSubmit(payload);
   };
 
-  const setNested = <T extends Record<string, unknown>>(
-    key: "apartment" | "privateHouse" | "landPlot" | "commercial",
-    patch: T,
-  ) => {
-    setValues((prev) => ({
-      ...prev,
-      [key]: prev[key] ? { ...(prev[key] as T), ...patch } : patch,
+  const setApartment = (patch: PropertyApartmentUpdate) => {
+    setValues((previousValues) => ({
+      ...previousValues,
+      apartment: previousValues.apartment
+        ? { ...previousValues.apartment, ...patch }
+        : previousValues.apartment,
     }));
   };
 
-  const setApartment = (patch: PropertyApartmentUpdate) => {
-    setNested("apartment", patch);
-  };
-
   const setPrivateHouse = (patch: PropertyPrivateHouseUpdate) => {
-    setNested("privateHouse", patch);
+    setValues((previousValues) => ({
+      ...previousValues,
+      privateHouse: previousValues.privateHouse
+        ? { ...previousValues.privateHouse, ...patch }
+        : previousValues.privateHouse,
+    }));
   };
 
   const setLandPlot = (patch: Partial<PropertyFormLandPlot>) => {
-    setNested("landPlot", patch);
+    setValues((previousValues) => ({
+      ...previousValues,
+      landPlot: previousValues.landPlot
+        ? { ...previousValues.landPlot, ...patch }
+        : previousValues.landPlot,
+    }));
   };
 
   const setCommercial = (patch: PropertyCommercialUpdate) => {
-    setNested("commercial", patch);
+    setValues((previousValues) => ({
+      ...previousValues,
+      commercial: previousValues.commercial
+        ? { ...previousValues.commercial, ...patch }
+        : previousValues.commercial,
+    }));
   };
 
   const detailsBody = (
@@ -281,7 +314,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           images={property.images}
           apiBaseUrl={apiBaseUrl}
           canDelete={presentation === "edit" && canEdit}
-          onDeleted={onImagesChanged ?? (async () => {})}
+          onDeleted={onImagesChanged ?? (() => Promise.resolve())}
         />
       </div>
 
@@ -301,6 +334,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             onHotelScopeChange={() => {}}
             onFieldChange={handleFieldChange}
             onPriceChange={handlePriceChange}
+            onLabelsChange={() => {}}
             onDescriptionChange={() => {}}
             setApartment={setApartment}
             setPrivateHouse={setPrivateHouse}
@@ -339,6 +373,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             }}
             onFieldChange={handleFieldChange}
             onPriceChange={handlePriceChange}
+            onLabelsChange={(value) => setValues((prev) => ({ ...prev, labels: value }))}
             onDescriptionChange={(value) =>
               setValues((prev) => ({ ...prev, description: value }))
             }
@@ -353,9 +388,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             showPrivateNotes={canViewPrivateFields}
           />
 
-          {(clientError || saveError) && (
+          {(clientError || getSaveErrorMessage(saveError)) && (
             <p className="text-sm text-red-600" role="alert">
-              {clientError ?? saveError}
+              {clientError ?? getSaveErrorMessage(saveError)}
             </p>
           )}
 

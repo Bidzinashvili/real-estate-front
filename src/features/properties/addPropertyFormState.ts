@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { LabelSelection } from "@/features/labels/labelTypes";
 import type {
   BuildingCondition,
   CommercialStatus,
@@ -26,6 +27,7 @@ export type FormState = {
   district: string;
   address: string;
   selectedStreetId: string | null;
+  labels: LabelSelection[];
   pricePublic: string;
   ownerName: string;
   ownerPhone: string;
@@ -117,6 +119,7 @@ export function initialFormState(): FormState {
     district: "",
     address: "",
     selectedStreetId: null,
+    labels: [],
     pricePublic: "",
     ownerName: "",
     ownerPhone: "",

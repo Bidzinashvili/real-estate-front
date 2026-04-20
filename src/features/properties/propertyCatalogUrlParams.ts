@@ -21,6 +21,8 @@ export const CATALOG_LIMIT_OPTIONS = [10, 20, 50] as const;
 export type PropertyCatalogUrlState = {
   searchInput: string;
   showMyProperties: boolean;
+  selectedLabelIds: string[];
+  selectedLabelNames: string[];
   dealType: DealType | "";
   lifecycleStatus: PropertyStatus | "";
   propertyType: PropertyType | "";
@@ -85,6 +87,8 @@ export function pickCatalogDebouncedTextState(
 export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   searchInput: "",
   showMyProperties: false,
+  selectedLabelIds: [],
+  selectedLabelNames: [],
   dealType: "",
   lifecycleStatus: "",
   propertyType: "",
@@ -109,8 +113,8 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
 
 function parsePositiveInt(raw: string | null, fallback: number): number {
   if (raw === null || raw === "") return fallback;
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) && n > 0 ? n : fallback;
+  const parsedInt = Number.parseInt(raw, 10);
+  return Number.isFinite(parsedInt) && parsedInt > 0 ? parsedInt : fallback;
 }
 
 export function parsePropertyCatalogUrl(
@@ -124,6 +128,22 @@ export function parsePropertyCatalogUrl(
   const myPropertiesRaw = searchParams.get("myProperties");
   if (myPropertiesRaw === "true" || myPropertiesRaw === "1") {
     next.showMyProperties = true;
+  }
+
+  const labelIds = searchParams
+    .getAll("labelIds")
+    .map((labelId) => labelId.trim())
+    .filter(Boolean);
+  if (labelIds.length > 0) {
+    next.selectedLabelIds = labelIds;
+  }
+
+  const labelNames = searchParams
+    .getAll("labelNames")
+    .map((labelName) => labelName.trim())
+    .filter(Boolean);
+  if (labelNames.length > 0) {
+    next.selectedLabelNames = labelNames;
   }
 
   const type = searchParams.get("type");
@@ -182,9 +202,8 @@ export function parsePropertyCatalogUrl(
 export function propertyCatalogUrlStateToSearchParams(
   state: PropertyCatalogUrlState,
 ): URLSearchParams {
-  const q = catalogStateToApiQuery(state);
-  const record = toGetPropertiesSearchParams(q);
-  const flat = new URLSearchParams(record);
+  const apiQuery = catalogStateToApiQuery(state);
+  const flat = toGetPropertiesSearchParams(apiQuery);
 
   if (state.sortBy === DEFAULT_CATALOG_URL_STATE.sortBy) {
     flat.delete("sortBy");
@@ -209,25 +228,27 @@ export function catalogStateToApiQuery(
   state: PropertyCatalogUrlState,
   debouncedText?: CatalogDebouncedTextState,
 ): GetPropertiesQuery {
-  const t = debouncedText ?? pickCatalogDebouncedTextState(state);
+  const textFilters = debouncedText ?? pickCatalogDebouncedTextState(state);
   return {
-    search: t.searchInput.trim() || undefined,
+    search: textFilters.searchInput.trim() || undefined,
     type: state.propertyType || undefined,
     dealType: state.dealType || undefined,
     status: state.lifecycleStatus || undefined,
-    city: t.city.trim() || undefined,
-    district: t.district.trim() || undefined,
-    minPrice: parseDecimalInput(t.minPrice),
-    maxPrice: parseDecimalInput(t.maxPrice),
-    minArea: parseDecimalInput(t.minArea),
-    maxArea: parseDecimalInput(t.maxArea),
-    rooms: parseIntegerInput(t.rooms),
-    bedrooms: parseIntegerInput(t.bedrooms),
-    floor: parseIntegerInput(t.floor),
-    yardArea: parseDecimalInput(t.yardArea),
-    houseArea: parseDecimalInput(t.houseArea),
-    landArea: parseDecimalInput(t.landArea),
-    area: parseDecimalInput(t.commercialArea),
+    labelIds: state.selectedLabelIds.length > 0 ? state.selectedLabelIds : undefined,
+    labelNames: state.selectedLabelNames.length > 0 ? state.selectedLabelNames : undefined,
+    city: textFilters.city.trim() || undefined,
+    district: textFilters.district.trim() || undefined,
+    minPrice: parseDecimalInput(textFilters.minPrice),
+    maxPrice: parseDecimalInput(textFilters.maxPrice),
+    minArea: parseDecimalInput(textFilters.minArea),
+    maxArea: parseDecimalInput(textFilters.maxArea),
+    rooms: parseIntegerInput(textFilters.rooms),
+    bedrooms: parseIntegerInput(textFilters.bedrooms),
+    floor: parseIntegerInput(textFilters.floor),
+    yardArea: parseDecimalInput(textFilters.yardArea),
+    houseArea: parseDecimalInput(textFilters.houseArea),
+    landArea: parseDecimalInput(textFilters.landArea),
+    area: parseDecimalInput(textFilters.commercialArea),
     sortBy: state.sortBy,
     order: state.order,
     page: state.page,

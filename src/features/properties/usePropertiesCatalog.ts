@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { LabelSelection } from "@/features/labels/labelTypes";
 import { getProperties } from "@/features/properties/api";
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
@@ -55,12 +56,76 @@ function areCatalogDebouncedTextFiltersEqual(
   );
 }
 
-function urlStateSignature(s: PropertyCatalogUrlState): string {
-  return propertyCatalogUrlStateToSearchParams(s).toString();
+function urlStateSignature(state: PropertyCatalogUrlState): string {
+  return propertyCatalogUrlStateToSearchParams(state).toString();
 }
 
 function isCanceledRequestError(error: unknown): boolean {
   return axios.isAxiosError(error) && error.code === "ERR_CANCELED";
+}
+
+function getLabelSelectionKey(label: LabelSelection): string {
+  if (label.id) {
+    return `id:${label.id}`;
+  }
+
+  return `name:${label.name.toLocaleLowerCase()}`;
+}
+
+function syncSelectedLabelsFromUrlState(
+  state: PropertyCatalogUrlState,
+  previousLabels: LabelSelection[],
+): LabelSelection[] {
+  const previousLabelsById = new Map<string, LabelSelection>();
+  const previousLabelsByName = new Map<string, LabelSelection>();
+
+  for (const previousLabel of previousLabels) {
+    if (previousLabel.id) {
+      previousLabelsById.set(previousLabel.id, previousLabel);
+    }
+
+    previousLabelsByName.set(previousLabel.name.toLocaleLowerCase(), previousLabel);
+  }
+
+  const nextLabels: LabelSelection[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const labelId of state.selectedLabelIds) {
+    const previousLabel = previousLabelsById.get(labelId);
+    const nextLabel =
+      previousLabel ??
+      ({
+        id: labelId,
+        name: labelId,
+        type: null,
+      } satisfies LabelSelection);
+    const selectionKey = getLabelSelectionKey(nextLabel);
+
+    if (!seenKeys.has(selectionKey)) {
+      seenKeys.add(selectionKey);
+      nextLabels.push(nextLabel);
+    }
+  }
+
+  for (const labelName of state.selectedLabelNames) {
+    const previousLabel = previousLabelsByName.get(labelName.toLocaleLowerCase());
+    const nextLabel =
+      previousLabel && previousLabel.id === null
+        ? previousLabel
+        : ({
+            id: null,
+            name: labelName,
+            type: "CUSTOM",
+          } satisfies LabelSelection);
+    const selectionKey = getLabelSelectionKey(nextLabel);
+
+    if (!seenKeys.has(selectionKey)) {
+      seenKeys.add(selectionKey);
+      nextLabels.push(nextLabel);
+    }
+  }
+
+  return nextLabels;
 }
 
 export type UsePropertiesCatalogResult = {
@@ -73,8 +138,10 @@ export type UsePropertiesCatalogResult = {
   error: string | null;
   refetch: () => Promise<void>;
   state: PropertyCatalogUrlState;
+  selectedLabels: LabelSelection[];
   debouncedTextFilters: CatalogDebouncedTextState;
   setSearchInput: (value: string) => void;
+  setSelectedLabels: (value: LabelSelection[]) => void;
   setDealType: (value: DealType | "") => void;
   setLifecycleStatus: (value: PropertyStatus | "") => void;
   setPropertyType: (value: PropertyType | "") => void;
@@ -117,6 +184,7 @@ export function usePropertiesCatalog(
     useState<CatalogDebouncedTextState>(() =>
       pickCatalogDebouncedTextState(DEFAULT_CATALOG_URL_STATE),
     );
+  const [selectedLabels, setSelectedLabelsState] = useState<LabelSelection[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -141,6 +209,9 @@ export function usePropertiesCatalog(
       }
       return parsed;
     });
+    setSelectedLabelsState((previousLabels) =>
+      syncSelectedLabelsFromUrlState(parsed, previousLabels),
+    );
     if (!fromOurReplace) {
       setDebouncedTextFilters((previousDebounced) => {
         const nextDebounced = pickCatalogDebouncedTextState(parsed);
@@ -210,6 +281,8 @@ export function usePropertiesCatalog(
       state.dealType,
       state.lifecycleStatus,
       state.propertyType,
+      state.selectedLabelIds,
+      state.selectedLabelNames,
       state.sortBy,
       state.order,
       state.page,
@@ -289,7 +362,7 @@ export function usePropertiesCatalog(
   }, []);
 
   const bumpPage = useCallback((patch: Partial<PropertyCatalogUrlState>) => {
-    setState((s) => ({ ...s, ...patch, page: 1 }));
+    setState((previousState) => ({ ...previousState, ...patch, page: 1 }));
   }, []);
 
   const resetDebouncedTextFilters = useCallback(() => {
@@ -305,6 +378,21 @@ export function usePropertiesCatalog(
       }),
     [bumpPage, resetDebouncedTextFilters],
   );
+
+  const setSelectedLabels = useCallback((value: LabelSelection[]) => {
+    setSelectedLabelsState(value);
+    setters.setSelectedLabelIds(
+      value
+        .map((label) => label.id)
+        .filter((labelId): labelId is string => typeof labelId === "string" && labelId !== ""),
+    );
+    setters.setSelectedLabelNames(
+      value
+        .filter((label) => label.id === null)
+        .map((label) => label.name.trim())
+        .filter((labelName) => labelName !== ""),
+    );
+  }, [setters]);
 
   const activeFilterCount = useMemo(
     () => countActiveCatalogFilters(state),
@@ -325,8 +413,10 @@ export function usePropertiesCatalog(
     error,
     refetch,
     state,
+    selectedLabels,
     debouncedTextFilters,
     ...setters,
+    setSelectedLabels,
     activeFilterCount,
   };
 }

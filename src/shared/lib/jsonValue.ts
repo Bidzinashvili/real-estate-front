@@ -6,7 +6,7 @@ export interface JsonObject {
   readonly [key: string]: JsonValue | undefined;
 }
 
-export function isJsonObject(value: JsonValue): value is JsonObject {
+export function isJsonObject(value: unknown): value is JsonObject {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 

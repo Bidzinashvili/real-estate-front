@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
   BuildingCondition,
@@ -8,17 +9,6 @@ import type {
   LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
-
-export type {
-  BuildingCondition,
-  CommercialStatus,
-  HotelScope,
-  KitchenType,
-  LandCategory,
-  PropertyType,
-};
-export type { DealType };
-export type { PropertyStatus };
 
 export type PropertySortBy = "createdAt" | "pricePublic";
 
@@ -46,6 +36,8 @@ export type GetPropertiesQueryApi = {
   order?: SortOrder;
   page?: number;
   limit?: number;
+  labelIds?: string[];
+  labelNames?: string[];
 };
 
 export type PropertyImageEntry = {
@@ -166,6 +158,7 @@ export type PropertyApi = {
   commentDate: string | null;
   tenantClientId?: string | null;
   rentalDurationMonths?: number | null;
+  labels?: LabelDto[];
   images: PropertyImageEntry[];
   createdAt: string;
   updatedAt: string;
@@ -201,6 +194,7 @@ export type CreatePropertyBase = {
   myHomeId?: string;
   ssGeId?: string;
   description?: string;
+  labels?: string[];
   images?: PropertyImageInputWire[];
 };
 
@@ -312,6 +306,8 @@ export type UpdatePropertyRequestBody = {
   pricePublic?: number;
   priceInternal?: number;
   description?: string;
+  addLabels?: string[];
+  removeLabelIds?: string[];
   images?: PropertyImageInputWire[];
   apartment?: {
     totalArea?: number;

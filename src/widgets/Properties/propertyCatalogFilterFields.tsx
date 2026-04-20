@@ -1,5 +1,6 @@
 "use client";
 
+import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import {
   DEAL_TYPE_OPTIONS,
   isDealType,
@@ -76,13 +77,15 @@ export function PropertyCatalogFilterFields({
           <select
             aria-label="Filter by deal type"
             value={state.dealType}
-            onChange={(e) => catalog.setDealType(parseDealTypeSelectValue(e.target.value))}
+            onChange={(event) =>
+              catalog.setDealType(parseDealTypeSelectValue(event.target.value))
+            }
             className={SELECT_CLASS}
           >
             <option value="">All deals</option>
-            {DEAL_TYPE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+            {DEAL_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -117,27 +120,35 @@ export function PropertyCatalogFilterFields({
           <select
             aria-label="Filter by property type"
             value={state.propertyType}
-            onChange={(e) =>
-              catalog.setPropertyType(parsePropertyTypeSelectValue(e.target.value))
+            onChange={(event) =>
+              catalog.setPropertyType(parsePropertyTypeSelectValue(event.target.value))
             }
             className={SELECT_CLASS}
           >
             <option value="">All types</option>
-            {PROPERTY_TYPE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+            {PROPERTY_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
         </NativeSelectSurface>
       </div>
 
+      <LabelAutocompleteChipsInput
+        id="catalogLabels"
+        label="Labels"
+        selectedLabels={catalog.selectedLabels}
+        onChange={catalog.setSelectedLabels}
+        placeholder="Type to search labels"
+      />
+
       <div>
         <span className={LABEL_CLASS}>City</span>
         <input
           type="text"
           value={state.city}
-          onChange={(e) => catalog.setCity(e.target.value)}
+          onChange={(event) => catalog.setCity(event.target.value)}
           className={INPUT_CLASS}
           placeholder="City contains…"
           autoComplete="address-level2"
@@ -149,7 +160,7 @@ export function PropertyCatalogFilterFields({
         <input
           type="text"
           value={state.district}
-          onChange={(e) => catalog.setDistrict(e.target.value)}
+          onChange={(event) => catalog.setDistrict(event.target.value)}
           className={INPUT_CLASS}
           placeholder="District contains…"
         />
@@ -162,7 +173,7 @@ export function PropertyCatalogFilterFields({
             type="text"
             inputMode="decimal"
             value={state.minPrice}
-            onChange={(e) => catalog.setMinPrice(e.target.value)}
+            onChange={(event) => catalog.setMinPrice(event.target.value)}
             className={INPUT_CLASS}
             placeholder="Min"
           />
@@ -173,7 +184,7 @@ export function PropertyCatalogFilterFields({
             type="text"
             inputMode="decimal"
             value={state.maxPrice}
-            onChange={(e) => catalog.setMaxPrice(e.target.value)}
+            onChange={(event) => catalog.setMaxPrice(event.target.value)}
             className={INPUT_CLASS}
             placeholder="Max"
           />
@@ -187,7 +198,7 @@ export function PropertyCatalogFilterFields({
             type="text"
             inputMode="decimal"
             value={state.minArea}
-            onChange={(e) => catalog.setMinArea(e.target.value)}
+            onChange={(event) => catalog.setMinArea(event.target.value)}
             className={INPUT_CLASS}
             placeholder="Min"
           />
@@ -198,7 +209,7 @@ export function PropertyCatalogFilterFields({
             type="text"
             inputMode="decimal"
             value={state.maxArea}
-            onChange={(e) => catalog.setMaxArea(e.target.value)}
+            onChange={(event) => catalog.setMaxArea(event.target.value)}
             className={INPUT_CLASS}
             placeholder="Max"
           />
@@ -213,8 +224,8 @@ export function PropertyCatalogFilterFields({
           <InlineSelect
             aria-label="Sort listings by"
             value={state.sortBy}
-            onChange={(v) => {
-              if (isPropertySortBy(v)) catalog.setSortBy(v);
+            onChange={(selectedValue) => {
+              if (isPropertySortBy(selectedValue)) catalog.setSortBy(selectedValue);
             }}
             options={SORT_OPTIONS}
             className="min-w-0 flex-1 text-sm"
@@ -223,8 +234,8 @@ export function PropertyCatalogFilterFields({
           <InlineSelect
             aria-label="Sort direction"
             value={state.order}
-            onChange={(v) => {
-              if (isPropertyListSortOrder(v)) catalog.setOrder(v);
+            onChange={(selectedValue) => {
+              if (isPropertyListSortOrder(selectedValue)) catalog.setOrder(selectedValue);
             }}
             options={ORDER_OPTIONS}
             className="min-w-0 flex-1 text-sm"
@@ -238,12 +249,12 @@ export function PropertyCatalogFilterFields({
           <select
             aria-label="Results per page"
             value={String(state.limit)}
-            onChange={(e) => catalog.setLimit(Number(e.target.value))}
+            onChange={(event) => catalog.setLimit(Number(event.target.value))}
             className={SELECT_CLASS}
           >
-            {CATALOG_LIMIT_OPTIONS.map((n) => (
-              <option key={n} value={n}>
-                {n} listings
+            {CATALOG_LIMIT_OPTIONS.map((limitOption) => (
+              <option key={limitOption} value={limitOption}>
+                {limitOption} listings
               </option>
             ))}
           </select>

@@ -1,6 +1,7 @@
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
+import type { LabelDto } from "@/features/labels/labelTypes";
 import type {
   BuildingCondition,
   CommercialStatus,
@@ -11,6 +12,7 @@ import type {
 } from "@/features/properties/propertyModelTypes";
 
 export type PropertyUpdatePayload = UpdatePropertyRequestBody;
+export type { LabelDto };
 
 export type PropertyApartmentUpdate = NonNullable<
   UpdatePropertyRequestBody["apartment"]
@@ -127,6 +129,7 @@ export type CreatePropertyDto = {
   myHomeId?: string;
   ssGeId?: string;
   description?: string;
+  labels?: string[];
   images?: PropertyImageInput[];
   apartment?: PropertyApartmentCreate;
   privateHouse?: PropertyPrivateHouseCreate;

@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
 
@@ -210,6 +211,7 @@ export type Property = {
   commentDate: string | null;
   tenantClientId: string | null;
   rentalDurationMonths: number | null;
+  labels?: LabelDto[];
   images: PropertyListingImage[];
   createdAt: string;
   updatedAt: string;

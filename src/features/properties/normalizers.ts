@@ -6,13 +6,12 @@ import type {
 import { normalizeProperty } from "@/features/properties/propertyRecordNormalizer";
 import type { Property } from "@/features/properties/types";
 import { asNumber } from "@/shared/lib/jsonValue";
-import type { JsonValue } from "@/shared/lib/jsonValue";
 
 export function normalizePropertiesListResponse(
   data: PropertyListResponse,
 ): PropertiesListResult {
   const properties = data.properties
-    .map((item) => normalizeProperty(item as JsonValue))
+    .map((item) => normalizeProperty(item))
     .filter((item): item is Property => item !== null);
 
   const total = asNumber(data.total, properties.length);
@@ -38,5 +37,5 @@ export function normalizeCreatePropertyResponse(
     return null;
   }
 
-  return normalizeProperty(data as JsonValue);
+  return normalizeProperty(data);
 }

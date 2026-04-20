@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { LabelSelection } from "@/features/labels/labelTypes";
 import type {
   CommercialStatus,
   HotelScope,
@@ -31,6 +32,7 @@ export type PropertyFormValues = {
   pricePublic: number | undefined;
   priceInternal: number | undefined;
   description: string;
+  labels: LabelSelection[];
   apartment: PropertyApartmentUpdate | null;
   privateHouse: PropertyPrivateHouseUpdate | null;
   landPlot: PropertyFormLandPlot | null;
@@ -119,6 +121,50 @@ function buildLandPlotPatch(
   return Object.keys(patch).length > 0 ? patch : undefined;
 }
 
+function normalizeLabelName(labelName: string): string {
+  return labelName.trim().replace(/\s+/g, " ");
+}
+
+function buildLabelUpdatePayload(
+  initialLabels: LabelSelection[],
+  currentLabels: LabelSelection[],
+): Pick<PropertyUpdatePayload, "addLabels" | "removeLabelIds"> {
+  const initialLabelIds = new Set(
+    initialLabels
+      .map((label) => label.id)
+      .filter((labelId): labelId is string => typeof labelId === "string" && labelId !== ""),
+  );
+
+  const currentLabelIds = new Set(
+    currentLabels
+      .map((label) => label.id)
+      .filter((labelId): labelId is string => typeof labelId === "string" && labelId !== ""),
+  );
+
+  const removeLabelIds = initialLabels
+    .map((label) => label.id)
+    .filter((labelId): labelId is string => typeof labelId === "string" && !currentLabelIds.has(labelId));
+
+  const addLabelsMap = new Map<string, string>();
+  for (const label of currentLabels) {
+    const normalizedName = normalizeLabelName(label.name);
+    if (normalizedName === "") {
+      continue;
+    }
+
+    if (label.id !== null && initialLabelIds.has(label.id)) {
+      continue;
+    }
+
+    addLabelsMap.set(normalizedName.toLocaleLowerCase(), normalizedName);
+  }
+
+  return {
+    addLabels: addLabelsMap.size > 0 ? Array.from(addLabelsMap.values()) : undefined,
+    removeLabelIds: removeLabelIds.length > 0 ? removeLabelIds : undefined,
+  };
+}
+
 export function buildPropertyUpdatePayload(
   initial: PropertyFormValues,
   current: PropertyFormValues,
@@ -152,6 +198,14 @@ export function buildPropertyUpdatePayload(
     }
   }
   if (initial.description !== current.description) payload.description = current.description;
+
+  const labelPatch = buildLabelUpdatePayload(initial.labels, current.labels);
+  if (labelPatch.addLabels) {
+    payload.addLabels = labelPatch.addLabels;
+  }
+  if (labelPatch.removeLabelIds) {
+    payload.removeLabelIds = labelPatch.removeLabelIds;
+  }
 
   const apartmentPatch = mergeMinRentalPeriodIntoPatch(
     initial.apartment,

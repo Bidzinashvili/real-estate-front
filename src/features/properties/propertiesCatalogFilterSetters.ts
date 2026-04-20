@@ -20,8 +20,10 @@ export function createPropertiesCatalogFilterSetters(args: {
 
   return {
     setSearchInput: (value: string) => {
-      setState((s) => ({ ...s, searchInput: value, page: 1 }));
+      setState((previousState) => ({ ...previousState, searchInput: value, page: 1 }));
     },
+    setSelectedLabelIds: (value: string[]) => bumpPage({ selectedLabelIds: value }),
+    setSelectedLabelNames: (value: string[]) => bumpPage({ selectedLabelNames: value }),
     setDealType: (value: DealType | "") => bumpPage({ dealType: value }),
     setLifecycleStatus: (value: PropertyStatus | "") =>
       bumpPage({ lifecycleStatus: value }),
@@ -45,10 +47,10 @@ export function createPropertiesCatalogFilterSetters(args: {
     setSortBy: (value: PropertySortBy) => bumpPage({ sortBy: value }),
     setOrder: (value: PropertyListSortOrder) => bumpPage({ order: value }),
     setPage: (value: number) => {
-      setState((s) => ({ ...s, page: Math.max(1, value) }));
+      setState((previousState) => ({ ...previousState, page: Math.max(1, value) }));
     },
     setLimit: (value: number) => {
-      setState((s) => ({ ...s, limit: value, page: 1 }));
+      setState((previousState) => ({ ...previousState, limit: value, page: 1 }));
     },
     resetFilters: () => {
       setState({ ...DEFAULT_CATALOG_URL_STATE });
@@ -60,24 +62,25 @@ export function createPropertiesCatalogFilterSetters(args: {
 export function countActiveCatalogFilters(
   state: PropertyCatalogUrlState,
 ): number {
-  let n = 0;
-  if (state.searchInput.trim()) n += 1;
-  if (state.dealType) n += 1;
-  if (state.lifecycleStatus) n += 1;
-  if (state.propertyType) n += 1;
-  if (state.city.trim()) n += 1;
-  if (state.district.trim()) n += 1;
-  if (state.minPrice.trim()) n += 1;
-  if (state.maxPrice.trim()) n += 1;
-  if (state.minArea.trim()) n += 1;
-  if (state.maxArea.trim()) n += 1;
-  if (state.rooms.trim()) n += 1;
-  if (state.bedrooms.trim()) n += 1;
-  if (state.floor.trim()) n += 1;
-  if (state.yardArea.trim()) n += 1;
-  if (state.houseArea.trim()) n += 1;
-  if (state.landArea.trim()) n += 1;
-  if (state.commercialArea.trim()) n += 1;
-  if (state.showMyProperties) n += 1;
-  return n;
+  let activeFilterCount = 0;
+  if (state.searchInput.trim()) activeFilterCount += 1;
+  if (state.selectedLabelIds.length > 0 || state.selectedLabelNames.length > 0) activeFilterCount += 1;
+  if (state.dealType) activeFilterCount += 1;
+  if (state.lifecycleStatus) activeFilterCount += 1;
+  if (state.propertyType) activeFilterCount += 1;
+  if (state.city.trim()) activeFilterCount += 1;
+  if (state.district.trim()) activeFilterCount += 1;
+  if (state.minPrice.trim()) activeFilterCount += 1;
+  if (state.maxPrice.trim()) activeFilterCount += 1;
+  if (state.minArea.trim()) activeFilterCount += 1;
+  if (state.maxArea.trim()) activeFilterCount += 1;
+  if (state.rooms.trim()) activeFilterCount += 1;
+  if (state.bedrooms.trim()) activeFilterCount += 1;
+  if (state.floor.trim()) activeFilterCount += 1;
+  if (state.yardArea.trim()) activeFilterCount += 1;
+  if (state.houseArea.trim()) activeFilterCount += 1;
+  if (state.landArea.trim()) activeFilterCount += 1;
+  if (state.commercialArea.trim()) activeFilterCount += 1;
+  if (state.showMyProperties) activeFilterCount += 1;
+  return activeFilterCount;
 }

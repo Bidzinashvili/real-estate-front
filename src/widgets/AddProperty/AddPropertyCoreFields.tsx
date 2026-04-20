@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
 import {
   HOTEL_SCOPE_FORM_OPTIONS,
@@ -173,6 +174,16 @@ export function AddPropertyCoreFields({
           required
           error={fieldErrors.address}
           inputClassName={addPropertyInputClassName()}
+        />
+      </div>
+      <div className="sm:col-span-2">
+        <LabelAutocompleteChipsInput
+          id="labels"
+          label="Labels"
+          selectedLabels={form.labels}
+          onChange={(value) => updateForm("labels", value)}
+          allowFreeText
+          placeholder="Type to search or add labels"
         />
       </div>
       <TextField

@@ -1,3 +1,4 @@
+import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { CreatePropertyDto } from "@/features/properties/types";
 import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
 import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
@@ -5,6 +6,21 @@ import type {
   AddPropertyActiveSubtype,
   FormState,
 } from "@/features/properties/addPropertyFormState";
+
+function normalizeLabels(labels: LabelSelection[]): string[] {
+  const uniqueLabels = new Map<string, string>();
+
+  for (const labelSelection of labels) {
+    const normalizedName = labelSelection.name.trim().replace(/\s+/g, " ");
+    if (normalizedName === "") {
+      continue;
+    }
+
+    uniqueLabels.set(normalizedName.toLocaleLowerCase(), normalizedName);
+  }
+
+  return Array.from(uniqueLabels.values());
+}
 
 function parseNumber(value: string, field: string, errors: string[]): number {
   const trimmed = value.trim();
@@ -66,12 +82,14 @@ export function buildCreatePropertyPayload(
     ownerName,
     ownerPhone,
   };
+  const labels = normalizeLabels(form.labels);
 
   if (form.cadastralCode.trim()) payload.cadastralCode = form.cadastralCode.trim();
   if (form.ownerWhatsapp.trim()) payload.ownerWhatsapp = form.ownerWhatsapp.trim();
   if (form.myHomeId.trim()) payload.myHomeId = form.myHomeId.trim();
   if (form.ssGeId.trim()) payload.ssGeId = form.ssGeId.trim();
   if (form.description.trim()) payload.description = form.description.trim();
+  if (labels.length > 0) payload.labels = labels;
 
   if (form.listingLifecycleStatus) {
     payload.status = form.listingLifecycleStatus;

@@ -36,6 +36,8 @@ export type GetPropertiesQuery = {
   page?: number;
   limit?: number;
   myProperties?: boolean;
+  labelIds?: string[];
+  labelNames?: string[];
 };
 
 export function isPropertySortBy(s: string): s is PropertySortBy {
@@ -65,43 +67,62 @@ const INT_FIELDS = [
 type IntFieldKey = (typeof INT_FIELDS)[number];
 
 function appendString(
-  out: Record<string, string>,
+  out: URLSearchParams,
   key: string,
   value: string | undefined,
 ) {
   const trimmed = typeof value === "string" ? value.trim() : "";
   if (trimmed === "") return;
-  out[key] = trimmed;
+  out.set(key, trimmed);
 }
 
 function appendNumber(
-  out: Record<string, string>,
+  out: URLSearchParams,
   key: string,
   value: number | undefined,
 ) {
   if (value === undefined || !Number.isFinite(value)) return;
-  out[key] = String(value);
+  out.set(key, String(value));
 }
 
 function appendNumericQueryField(
-  out: Record<string, string>,
+  out: URLSearchParams,
   query: GetPropertiesQuery,
   key: IntFieldKey,
 ) {
   appendNumber(out, key, query[key]);
 }
 
+function appendArray(
+  out: URLSearchParams,
+  key: string,
+  values: string[] | undefined,
+) {
+  if (!Array.isArray(values)) {
+    return;
+  }
+
+  for (const rawValue of values) {
+    const trimmedValue = typeof rawValue === "string" ? rawValue.trim() : "";
+    if (trimmedValue === "") {
+      continue;
+    }
+
+    out.append(key, trimmedValue);
+  }
+}
+
 export function toGetPropertiesSearchParams(
   query: GetPropertiesQuery | undefined,
-): Record<string, string> {
-  if (!query) return {};
+): URLSearchParams {
+  if (!query) return new URLSearchParams();
 
-  const out: Record<string, string> = {};
+  const out = new URLSearchParams();
 
   appendString(out, "search", query.search);
-  if (query.type) out.type = query.type;
-  if (query.dealType) out.dealType = query.dealType;
-  if (query.status) out.status = query.status;
+  if (query.type) out.set("type", query.type);
+  if (query.dealType) out.set("dealType", query.dealType);
+  if (query.status) out.set("status", query.status);
   appendString(out, "city", query.city);
   appendString(out, "district", query.district);
 
@@ -109,9 +130,11 @@ export function toGetPropertiesSearchParams(
     appendNumericQueryField(out, query, key);
   }
 
-  if (query.sortBy) out.sortBy = query.sortBy;
-  if (query.order) out.order = query.order;
-  if (query.myProperties === true) out.myProperties = "true";
+  if (query.sortBy) out.set("sortBy", query.sortBy);
+  if (query.order) out.set("order", query.order);
+  if (query.myProperties === true) out.set("myProperties", "true");
+  appendArray(out, "labelIds", query.labelIds);
+  appendArray(out, "labelNames", query.labelNames);
 
   return out;
 }
