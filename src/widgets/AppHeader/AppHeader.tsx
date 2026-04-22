@@ -54,6 +54,16 @@ export function AppHeader() {
           </Link>
         )}
         <Link
+          href="/clients"
+          className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+            pathname?.startsWith("/clients")
+              ? "bg-white text-slate-900 shadow-sm"
+              : "hover:text-slate-900"
+          }`}
+        >
+          Clients
+        </Link>
+        <Link
           href="/properties"
           className={`inline-flex items-center rounded-full px-3 py-1 transition ${
             pathname?.startsWith("/properties")
