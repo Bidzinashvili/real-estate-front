@@ -102,41 +102,44 @@ export function ClientCoreInfoSection({
             Phones <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
-            {phoneFields.map((field, phoneIndex) => {
-              const phoneRegistration =
-                phoneIndex === 0 ? firstPhoneRegistration : register(`phones.${phoneIndex}`);
+            <div className="flex items-center gap-2">
+              <input
+                type="tel"
+                {...firstPhoneRegistration}
+                {...{
+                  onChange: (event) => {
+                    firstPhoneRegistration.onChange(event);
+                    if (!isWhatsappManuallyEdited) {
+                      setValue("whatsapp", event.target.value, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      });
+                    }
+                  },
+                }}
+                className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+              />
+            </div>
+
+            {phoneFields.slice(1).map((field, phoneIndex) => {
+              const actualPhoneIndex = phoneIndex + 1;
 
               return (
                 <div key={field.id} className="flex items-center gap-2">
                   <input
                     type="tel"
-                    {...phoneRegistration}
-                    {...(phoneIndex === 0
-                      ? {
-                          onChange: (event) => {
-                            phoneRegistration.onChange(event);
-                            if (!isWhatsappManuallyEdited) {
-                              setValue("whatsapp", event.target.value, {
-                                shouldDirty: true,
-                                shouldTouch: true,
-                                shouldValidate: true,
-                              });
-                            }
-                          },
-                        }
-                      : {})}
+                    {...register(`phones.${actualPhoneIndex}`)}
                     className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
                   />
-                  {phoneFields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removePhone(phoneIndex)}
-                      className="flex-none text-slate-400 transition hover:text-red-600"
-                      aria-label="Remove phone"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => removePhone(actualPhoneIndex)}
+                    className="flex-none text-slate-400 transition hover:text-red-600"
+                    aria-label="Remove phone"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </div>
               );
             })}
