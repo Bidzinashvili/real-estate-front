@@ -1,31 +1,39 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, type Resolver } from "react-hook-form";
+import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateClient } from "@/features/clients/useCreateClient";
 import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
+import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
 import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSection";
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
 import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequirementsSection";
 import { ClientRelatedPersonsSection } from "@/widgets/ClientForm/ClientRelatedPersonsSection";
 
+const addClientDraftStorageKey = "draft:client:new";
+
 export function AddClientForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateClient();
+  const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<ClientFormValues>(
+    addClientDraftStorageKey,
+  );
 
   const {
     register,
     handleSubmit,
     control,
     watch,
+    reset,
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema) as Resolver<ClientFormValues>,
-    defaultValues: {
+    defaultValues: restoredDraft ?? {
       ...emptyClientFormDefaults,
       relatedPersons: [],
     },
@@ -43,12 +51,24 @@ export function AddClientForm() {
     remove: removePerson,
   } = useFieldArray({ control, name: "relatedPersons" });
 
+  const watchedFormValues = watch();
   const selectedDealType = watch("dealType");
   const isRentDeal = selectedDealType === "RENT" || selectedDealType === "DAILY_RENT";
 
+  useEffect(() => {
+    if (restoredDraft) {
+      reset(restoredDraft);
+    }
+  }, [reset, restoredDraft]);
+
+  useEffect(() => {
+    saveDraft(watchedFormValues);
+  }, [saveDraft, watchedFormValues]);
+
   const onSubmit = async (values: ClientFormValues) => {
-    const dto = buildCreateClientDto(values);
-    const created = await create(dto);
+    const clientCreatePayload = buildCreateClientDto(values);
+    const created = await create(clientCreatePayload);
+    clearDraft();
     router.push(`/clients/${created.id}`);
   };
 
@@ -92,7 +112,10 @@ export function AddClientForm() {
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={() => router.push("/clients")}
+            onClick={() => {
+              clearDraft();
+              router.push("/clients");
+            }}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             Cancel

@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCreateAgent } from "@/features/agents/useCreateAgent";
+import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
 
 const formSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -14,25 +16,45 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const addAgentDraftStorageKey = "draft:agent:new";
+
 export function AddAgentForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateAgent();
+  const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<FormValues>(
+    addAgentDraftStorageKey,
+  );
 
   const {
     register,
     handleSubmit,
+    watch,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: restoredDraft ?? {
       fullName: "",
       email: "",
       phone: "",
     },
   });
 
+  const watchedFormValues = watch();
+
+  useEffect(() => {
+    if (restoredDraft) {
+      reset(restoredDraft);
+    }
+  }, [reset, restoredDraft]);
+
+  useEffect(() => {
+    saveDraft(watchedFormValues);
+  }, [saveDraft, watchedFormValues]);
+
   const onSubmit = async (values: FormValues) => {
     await create(values);
+    clearDraft();
     router.push("/dashboard");
   };
 
@@ -118,7 +140,10 @@ export function AddAgentForm() {
           <div className="mt-4 flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => {
+                clearDraft();
+                router.push("/dashboard");
+              }}
               className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
               Cancel

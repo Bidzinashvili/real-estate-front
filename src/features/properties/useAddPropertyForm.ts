@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buildCreatePropertyPayload } from "@/features/properties/addPropertyFormPayload";
 import {
@@ -14,11 +14,17 @@ import {
   validateFormInputs,
 } from "@/features/properties/addPropertyFormValidation";
 import { useCreateProperty } from "@/features/properties/useCreateProperty";
+import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
+
+const addPropertyDraftStorageKey = "draft:property:new";
 
 export function useAddPropertyForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateProperty();
-  const [form, setForm] = useState<FormState>(() => initialFormState());
+  const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<FormState>(
+    addPropertyDraftStorageKey,
+  );
+  const [form, setForm] = useState<FormState>(() => restoredDraft ?? initialFormState());
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
@@ -27,6 +33,10 @@ export function useAddPropertyForm() {
     () => subtypeFromPropertyType(form.propertyType),
     [form.propertyType],
   );
+
+  useEffect(() => {
+    saveDraft(form);
+  }, [form, saveDraft]);
 
   const updateForm = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     if (key === "propertyType") {
@@ -195,19 +205,22 @@ export function useAddPropertyForm() {
       try {
         const created = await create(payload, images);
         if (created?.id) {
+          clearDraft();
           router.push(`/properties/${created.id}/edit`);
           return;
         }
+        clearDraft();
         router.push("/properties");
       } catch {
       }
     },
-    [activeSubtype, create, form, images, router],
+    [activeSubtype, clearDraft, create, form, images, router],
   );
 
   const cancel = useCallback(() => {
+    clearDraft();
     router.push("/properties");
-  }, [router]);
+  }, [clearDraft, router]);
 
   return {
     form,
