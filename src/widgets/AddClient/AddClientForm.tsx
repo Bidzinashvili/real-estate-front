@@ -30,6 +30,7 @@ export function AddClientForm() {
     handleSubmit,
     control,
     watch,
+    setValue,
     reset,
     formState: { errors },
   } = useForm<ClientFormValues>({
@@ -94,6 +95,7 @@ export function AddClientForm() {
         <ClientCoreInfoSection
           control={control}
           register={register}
+          setValue={setValue}
           errors={errors}
           phoneFields={phoneFields}
           appendPhone={appendPhone}

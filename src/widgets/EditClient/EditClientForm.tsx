@@ -37,6 +37,7 @@ function EditClientFormInner({
     handleSubmit,
     control,
     watch,
+    setValue,
     reset,
     formState: { errors },
   } = useForm<ClientFormValues>({
@@ -89,6 +90,7 @@ function EditClientFormInner({
         <ClientCoreInfoSection
           control={control}
           register={register}
+          setValue={setValue}
           errors={errors}
           phoneFields={phoneFields}
           appendPhone={appendPhone}

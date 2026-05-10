@@ -30,6 +30,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
     handleSubmit,
     control,
     watch,
+    setValue,
     setError,
     clearErrors,
     formState: { errors },
@@ -140,6 +141,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
         <ClientCoreInfoSection
           control={control}
           register={register}
+          setValue={setValue}
           errors={errors}
           phoneFields={phoneFields}
           appendPhone={appendPhone}

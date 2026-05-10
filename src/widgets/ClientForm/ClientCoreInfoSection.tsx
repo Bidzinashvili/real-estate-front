@@ -1,6 +1,13 @@
 "use client";
 
-import { Controller, type Control, type UseFormRegister, type FieldErrors } from "react-hook-form";
+import { useState } from "react";
+import {
+  Controller,
+  type Control,
+  type FieldErrors,
+  type UseFormRegister,
+  type UseFormSetValue,
+} from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import {
@@ -15,6 +22,7 @@ import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton"
 type ClientCoreInfoSectionProps = {
   control: Control<ClientFormValues>;
   register: UseFormRegister<ClientFormValues>;
+  setValue: UseFormSetValue<ClientFormValues>;
   errors: FieldErrors<ClientFormValues>;
   phoneFields: Array<{ id: string }>;
   appendPhone: (value: string) => void;
@@ -34,6 +42,7 @@ type ClientCoreInfoSectionProps = {
 export function ClientCoreInfoSection({
   control,
   register,
+  setValue,
   errors,
   phoneFields,
   appendPhone,
@@ -49,6 +58,7 @@ export function ClientCoreInfoSection({
   clientStatusSelectOptions,
   showLockForPath = () => true,
 }: ClientCoreInfoSectionProps) {
+  const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
   const dealOptions =
     dealTypeSelectOptions ??
     DEAL_TYPES.map((dealType) => ({
@@ -61,6 +71,8 @@ export function ClientCoreInfoSection({
       value: clientStatus,
       label: CLIENT_STATUS_LABELS[clientStatus],
     }));
+  const firstPhoneRegistration = register("phones.0");
+  const whatsappRegistration = register("whatsapp");
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -90,25 +102,44 @@ export function ClientCoreInfoSection({
             Phones <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
-            {phoneFields.map((field, phoneIndex) => (
-              <div key={field.id} className="flex items-center gap-2">
-                <input
-                  type="tel"
-                  {...register(`phones.${phoneIndex}`)}
-                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
-                />
-                {phoneFields.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removePhone(phoneIndex)}
-                    className="flex-none text-slate-400 transition hover:text-red-600"
-                    aria-label="Remove phone"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-            ))}
+            {phoneFields.map((field, phoneIndex) => {
+              const phoneRegistration =
+                phoneIndex === 0 ? firstPhoneRegistration : register(`phones.${phoneIndex}`);
+
+              return (
+                <div key={field.id} className="flex items-center gap-2">
+                  <input
+                    type="tel"
+                    {...phoneRegistration}
+                    {...(phoneIndex === 0
+                      ? {
+                          onChange: (event) => {
+                            phoneRegistration.onChange(event);
+                            if (!isWhatsappManuallyEdited) {
+                              setValue("whatsapp", event.target.value, {
+                                shouldDirty: true,
+                                shouldTouch: true,
+                                shouldValidate: true,
+                              });
+                            }
+                          },
+                        }
+                      : {})}
+                    className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                  />
+                  {phoneFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removePhone(phoneIndex)}
+                      className="flex-none text-slate-400 transition hover:text-red-600"
+                      aria-label="Remove phone"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
             <button
               type="button"
               onClick={() => appendPhone("")}
@@ -133,7 +164,17 @@ export function ClientCoreInfoSection({
             <label className="block text-sm font-medium text-slate-800">WhatsApp</label>
             <input
               type="tel"
-              {...register("whatsapp")}
+              {...whatsappRegistration}
+              {...{
+                onChange: (event) => {
+                  whatsappRegistration.onChange(event);
+                  if (event.target.value.trim() === "") {
+                    setIsWhatsappManuallyEdited(false);
+                    return;
+                  }
+                  setIsWhatsappManuallyEdited(true);
+                },
+              }}
               className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
             />
             {fieldDescriptions?.whatsapp ? (
