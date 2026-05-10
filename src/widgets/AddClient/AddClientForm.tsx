@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,9 +20,10 @@ const addClientDraftStorageKey = "draft:client:new";
 export function AddClientForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateClient();
-  const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<ClientFormValues>(
+  const { restoredDraft, isDraftReady, saveDraft, clearDraft } = useSessionDraft<ClientFormValues>(
     addClientDraftStorageKey,
   );
+  const [isDraftApplied, setIsDraftApplied] = useState(false);
 
   const {
     register,
@@ -33,7 +34,7 @@ export function AddClientForm() {
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema) as Resolver<ClientFormValues>,
-    defaultValues: restoredDraft ?? {
+    defaultValues: {
       ...emptyClientFormDefaults,
       relatedPersons: [],
     },
@@ -56,14 +57,24 @@ export function AddClientForm() {
   const isRentDeal = selectedDealType === "RENT" || selectedDealType === "DAILY_RENT";
 
   useEffect(() => {
+    if (!isDraftReady) {
+      return;
+    }
+
     if (restoredDraft) {
       reset(restoredDraft);
     }
-  }, [reset, restoredDraft]);
+
+    setIsDraftApplied(true);
+  }, [reset, isDraftReady, restoredDraft]);
 
   useEffect(() => {
+    if (!isDraftReady || !isDraftApplied) {
+      return;
+    }
+
     saveDraft(watchedFormValues);
-  }, [saveDraft, watchedFormValues]);
+  }, [isDraftApplied, isDraftReady, saveDraft, watchedFormValues]);
 
   const onSubmit = async (values: ClientFormValues) => {
     const clientCreatePayload = buildCreateClientDto(values);
@@ -87,6 +98,7 @@ export function AddClientForm() {
           phoneFields={phoneFields}
           appendPhone={appendPhone}
           removePhone={removePhone}
+          isRentDeal={isRentDeal}
           showDefaultStatusOption
         />
 

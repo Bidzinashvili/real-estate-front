@@ -144,6 +144,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
           phoneFields={phoneFields}
           appendPhone={appendPhone}
           removePhone={removePhone}
+          isRentDeal={isRentDeal}
           showClientStatusField={false}
           showReminderDateField={false}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 type UseSessionDraftResult<TDraft> = {
   restoredDraft: TDraft | null;
+  isDraftReady: boolean;
   saveDraft: (draftValue: TDraft) => void;
   clearDraft: () => void;
 };
@@ -47,7 +48,8 @@ function getInitialDraft<TDraft>(storageKey: string): TDraft | null {
 export function useSessionDraft<TDraft>(
   storageKey: string,
 ): UseSessionDraftResult<TDraft> {
-  const [restoredDraft] = useState<TDraft | null>(() => getInitialDraft<TDraft>(storageKey));
+  const [restoredDraft, setRestoredDraft] = useState<TDraft | null>(null);
+  const [isDraftReady, setIsDraftReady] = useState(false);
 
   const saveDraft = useCallback(
     (draftValue: TDraft) => {
@@ -72,6 +74,10 @@ export function useSessionDraft<TDraft>(
     if (typeof window === "undefined") {
       return;
     }
+
+    const initialDraft = getInitialDraft<TDraft>(storageKey);
+    setRestoredDraft(initialDraft);
+    setIsDraftReady(true);
 
     const currentPathname = window.location.pathname;
     const originalPushState = window.history.pushState.bind(window.history);
@@ -116,6 +122,7 @@ export function useSessionDraft<TDraft>(
 
   return {
     restoredDraft,
+    isDraftReady,
     saveDraft,
     clearDraft,
   };

@@ -93,6 +93,7 @@ function EditClientFormInner({
           phoneFields={phoneFields}
           appendPhone={appendPhone}
           removePhone={removePhone}
+          isRentDeal={isRentDeal}
           showReminderHint
         />
 

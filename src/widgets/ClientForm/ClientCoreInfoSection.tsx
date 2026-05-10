@@ -19,6 +19,7 @@ type ClientCoreInfoSectionProps = {
   phoneFields: Array<{ id: string }>;
   appendPhone: (value: string) => void;
   removePhone: (index: number) => void;
+  isRentDeal?: boolean;
   showDefaultStatusOption?: boolean;
   optionalStatusChoice?: boolean;
   showClientStatusField?: boolean;
@@ -37,6 +38,7 @@ export function ClientCoreInfoSection({
   phoneFields,
   appendPhone,
   removePhone,
+  isRentDeal = false,
   showDefaultStatusOption = false,
   optionalStatusChoice = false,
   showClientStatusField = true,
@@ -139,36 +141,38 @@ export function ClientCoreInfoSection({
             ) : null}
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <label className="block flex-1 text-sm font-medium text-slate-800">Pet</label>
-              {showLockForPath("pet") ? (
-                <Controller
-                  name="pet.lock"
-                  control={control}
-                  render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
-                  )}
-                />
+          {isRentDeal ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <label className="block flex-1 text-sm font-medium text-slate-800">Pet</label>
+                {showLockForPath("pet") ? (
+                  <Controller
+                    name="pet.lock"
+                    control={control}
+                    render={({ field }) => (
+                      <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                ) : null}
+              </div>
+              <Controller
+                name="pet.value"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    type="text"
+                    placeholder="e.g. dog, cat"
+                    value={field.value ?? ""}
+                    onChange={(event) => field.onChange(event.target.value)}
+                    className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                  />
+                )}
+              />
+              {fieldDescriptions?.pet ? (
+                <p className="text-xs text-slate-500">{fieldDescriptions.pet}</p>
               ) : null}
             </div>
-            <Controller
-              name="pet.value"
-              control={control}
-              render={({ field }) => (
-                <input
-                  type="text"
-                  placeholder="e.g. dog, cat"
-                  value={field.value ?? ""}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
-                />
-              )}
-            />
-            {fieldDescriptions?.pet ? (
-              <p className="text-xs text-slate-500">{fieldDescriptions.pet}</p>
-            ) : null}
-          </div>
+          ) : null}
         </div>
 
         <div
