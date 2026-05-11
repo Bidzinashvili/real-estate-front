@@ -28,7 +28,7 @@ const optionalNumberNaNToUndefined = z.preprocess((input) => {
 }, z.number().optional());
 
 const lockedStringArrayFieldSchema = z.object({
-  value: z.array(z.string().min(1)).max(100),
+  value: z.array(z.string().max(200)).max(100),
   lock: lockStateSchema,
 });
 
@@ -103,6 +103,7 @@ export const clientFormSchema = z
     pet: lockedPartialStringFieldSchema,
     districts: lockedStringArrayFieldSchema,
     addresses: lockedStringArrayFieldSchema,
+    labels: lockedStringArrayFieldSchema,
     status: z.union([z.enum(CLIENT_STATUSES), z.literal("")]).optional(),
     reminderDate: z.string().optional().or(z.literal("")),
     relatedPersons: z.array(relatedPersonSchema).max(100).optional().default([]),
@@ -200,6 +201,7 @@ export const emptyClientFormDefaults: ClientFormValues = {
   pet: { value: "", lock: "none" },
   districts: { value: [], lock: "none" },
   addresses: { value: [], lock: "none" },
+  labels: { value: [], lock: "none" },
   relatedPersons: [],
   minRooms: { value: undefined, lock: "none" },
   minBedrooms: { value: undefined, lock: "none" },

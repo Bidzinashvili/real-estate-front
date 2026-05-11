@@ -15,6 +15,7 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
   const phones = client.phones ?? [];
   const districts = client.districts ?? [];
   const addresses = client.addresses ?? [];
+  const labels = client.labels ?? [];
   const showDistrictsBlock =
     districts.length > 0 ||
     (client.districtsLock !== undefined && client.districtsLock !== "none");
@@ -32,6 +33,8 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
   const showAddressesBlock =
     addresses.length > 0 ||
     (client.addressesLock !== undefined && client.addressesLock !== "none");
+  const showLabelsBlock =
+    labels.length > 0 || (client.labelsLock !== undefined && client.labelsLock !== "none");
   const showPetBlock =
     Boolean(client.pet) ||
     (client.petLock !== undefined && client.petLock !== "none");
@@ -140,6 +143,26 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
               addresses.map((address, addressIndex) => (
                 <p key={addressIndex} className="text-sm text-slate-800">
                   {address}
+                </p>
+              ))
+            ) : (
+              <p className="text-sm text-slate-600">—</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showLabelsBlock && (
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-xs text-slate-500">Labels</p>
+            {client.labelsLock !== undefined ? <ClientDetailsLockBadge lock={client.labelsLock} /> : null}
+          </div>
+          <div className="mt-1 space-y-0.5">
+            {labels.length > 0 ? (
+              labels.map((label, labelIndex) => (
+                <p key={labelIndex} className="text-sm text-slate-800">
+                  {label}
                 </p>
               ))
             ) : (

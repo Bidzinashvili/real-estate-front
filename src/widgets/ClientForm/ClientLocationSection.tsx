@@ -1,24 +1,26 @@
 "use client";
 
-import { Controller, useFieldArray, type Control } from "react-hook-form";
+import {
+  Controller,
+  useFieldArray,
+  useWatch,
+  type Control,
+  type UseFormSetValue,
+} from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 
-const splitLines = (value: string) =>
-  value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
 type ClientLocationSectionProps = {
   control: Control<ClientFormValues>;
+  setValue: UseFormSetValue<ClientFormValues>;
   fieldDescriptions?: Record<string, string>;
   showLockForPath?: (path: string) => boolean;
 };
 
 export function ClientLocationSection({
   control,
+  setValue,
   fieldDescriptions,
   showLockForPath = () => true,
 }: ClientLocationSectionProps) {
@@ -30,6 +32,55 @@ export function ClientLocationSection({
     control,
     name: "districts.value" as never,
   });
+  const {
+    fields: addressFields,
+    append: appendAddress,
+    remove: removeAddress,
+  } = useFieldArray({
+    control,
+    name: "addresses.value" as never,
+  });
+  const {
+    fields: labelFields,
+    append: appendLabel,
+    remove: removeLabel,
+  } = useFieldArray({
+    control,
+    name: "labels.value" as never,
+  });
+  const currentLabels = (useWatch({ control, name: "labels.value" as never }) ?? []) as string[];
+
+  const syncLabelEntry = (labelIndex: number, nextValue: string) => {
+    const nextLabels = [...currentLabels];
+    nextLabels[labelIndex] = nextValue;
+    setValue("labels.value" as never, nextLabels, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  };
+
+  const addAddressEntry = () => {
+    appendAddress("");
+    appendLabel("");
+  };
+
+  const removeAddressEntry = (addressIndex: number) => {
+    removeAddress(addressIndex);
+    const nextLabels = [...currentLabels];
+    nextLabels.splice(addressIndex, 1);
+    setValue("labels.value" as never, nextLabels, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  };
+
+  const addLabelEntry = () => {
+    appendLabel("");
+  };
+
+  const removeLabelEntry = (labelIndex: number) => {
+    removeLabel(labelIndex);
+  };
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -100,7 +151,7 @@ export function ClientLocationSection({
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
             <label className="block flex-1 text-sm font-medium text-slate-800">
-              Addresses (one per line)
+              Addresses
             </label>
             {showLockForPath("addresses") ? (
               <Controller
@@ -113,21 +164,111 @@ export function ClientLocationSection({
             ) : null}
           </div>
           <Controller
-            name="addresses.value"
+            name={"addresses.value" as never}
             control={control}
             render={({ field }) => (
-              <textarea
-                rows={3}
-                value={field.value.join("\n")}
-                onChange={(event) => {
-                  field.onChange(splitLines(event.target.value));
-                }}
-                className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
-              />
+              <div className="space-y-2">
+                {addressFields.length > 0 ? (
+                  addressFields.map((addressField, addressIndex) => (
+                    <div key={addressField.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={field.value?.[addressIndex] ?? ""}
+                        onChange={(event) => {
+                          const nextAddresses = [...(field.value ?? [])];
+                          const nextAddressValue = event.target.value;
+                          nextAddresses[addressIndex] = nextAddressValue;
+                          field.onChange(nextAddresses);
+                          syncLabelEntry(addressIndex, nextAddressValue);
+                        }}
+                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeAddressEntry(addressIndex)}
+                        className="flex-none text-slate-400 transition hover:text-red-600"
+                        aria-label="Remove address"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-500">Add an address to get started.</p>
+                )}
+                <button
+                  type="button"
+                  onClick={addAddressEntry}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                  Add address
+                </button>
+              </div>
             )}
           />
           {fieldDescriptions?.addresses ? (
             <p className="text-xs text-slate-500">{fieldDescriptions.addresses}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-start gap-2">
+            <label className="block flex-1 text-sm font-medium text-slate-800">Labels</label>
+            {showLockForPath("labels") ? (
+              <Controller
+                name="labels.lock"
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
+            ) : null}
+          </div>
+          <Controller
+            name={"labels.value" as never}
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-2">
+                {labelFields.length > 0 ? (
+                  labelFields.map((labelField, labelIndex) => (
+                    <div key={labelField.id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={field.value?.[labelIndex] ?? ""}
+                        onChange={(event) => {
+                          const nextLabels = [...(field.value ?? [])];
+                          nextLabels[labelIndex] = event.target.value;
+                          field.onChange(nextLabels);
+                        }}
+                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeLabelEntry(labelIndex)}
+                        className="flex-none text-slate-400 transition hover:text-red-600"
+                        aria-label="Remove label"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-500">Add a label to get started.</p>
+                )}
+                <button
+                  type="button"
+                  onClick={addLabelEntry}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                  Add label
+                </button>
+              </div>
+            )}
+          />
+          {fieldDescriptions?.labels ? (
+            <p className="text-xs text-slate-500">{fieldDescriptions.labels}</p>
           ) : null}
         </div>
       </div>

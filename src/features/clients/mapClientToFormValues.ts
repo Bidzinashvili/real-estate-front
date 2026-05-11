@@ -53,6 +53,7 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     pet: { value: client.pet ?? "", lock: client.petLock ?? "none" },
     districts: { value: client.districts, lock: client.districtsLock ?? "none" },
     addresses: { value: client.addresses, lock: client.addressesLock ?? "none" },
+    labels: { value: client.labels, lock: client.labelsLock ?? "none" },
     status: client.status,
     reminderDate: isoToDatetimeLocal(client.reminderDate),
     relatedPersons: client.relatedPersons.map((person) => ({

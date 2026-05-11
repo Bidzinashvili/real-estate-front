@@ -46,6 +46,7 @@ export interface CreateClientPayload {
   budgetMax?: LockedPartial<number>;
   districts: Locked<string[]>;
   addresses: Locked<string[]>;
+  labels?: Locked<string[]>;
   pet?: LockedPartial<string>;
   minRooms?: Locked<number>;
   minBedrooms?: Locked<number>;
@@ -150,6 +151,7 @@ export type ClientApi = {
   pet: Locked<string | null>;
   districts: Locked<string[]>;
   addresses: Locked<string[]>;
+  labels?: Locked<string[]>;
   status: ClientStatus;
   reminderDate: ISODateString | null;
   reminderSentAt: ISODateString | null;

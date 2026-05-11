@@ -22,6 +22,7 @@ export function useCreateClient(): UseCreateClientResult {
       const result = await createClient(dto);
       return result;
     } catch (err) {
+      console.error("Failed to create client", err);
       const message =
         err instanceof Error
           ? err.message

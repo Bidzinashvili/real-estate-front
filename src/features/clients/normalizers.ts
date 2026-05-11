@@ -151,6 +151,10 @@ export function normalizeClient(client: ClientApi): Client {
     districtsLock: coalesceLock(client.districts.lock, readParallelLock(record, "districts")),
     addresses: client.addresses.value ?? [],
     addressesLock: coalesceLock(client.addresses.lock, readParallelLock(record, "addresses")),
+    labels: client.labels?.value ?? [],
+    labelsLock: client.labels
+      ? coalesceLock(client.labels.lock, readParallelLock(record, "labels"))
+      : undefined,
     budgetMin: client.budgetMin.value,
     budgetMinLock: coalesceLock(client.budgetMin.lock, readParallelLock(record, "budgetMin")),
     budgetMax: client.budgetMax.value,

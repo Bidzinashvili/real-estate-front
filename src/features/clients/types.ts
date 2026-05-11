@@ -102,6 +102,7 @@ export type Client = {
   pet: string | null;
   districts: string[];
   addresses: string[];
+  labels: string[];
   status: ClientStatus;
   reminderDate: ISODateString | null;
   reminderSentAt: ISODateString | null;
@@ -112,6 +113,7 @@ export type Client = {
   relatedPersons: RelatedPerson[];
   districtsLock?: LockState;
   addressesLock?: LockState;
+  labelsLock?: LockState;
   budgetMinLock?: LockState;
   budgetMaxLock?: LockState;
   petLock?: LockState;

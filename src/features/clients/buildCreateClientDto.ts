@@ -174,14 +174,19 @@ function appendProjectExclude(
   dto.projectExclude = payload;
 }
 
+function filterStringList(values: string[]): string[] {
+  return values.map((value) => value.trim()).filter((value) => value.length > 0);
+}
+
 export function buildCreateClientDto(values: ClientFormValues): CreateClientPayload {
   const dto: CreateClientPayload = {
     name: values.name,
     phones: values.phones,
     dealType: values.dealType,
     description: values.description,
-    districts: { value: values.districts.value, lock: values.districts.lock },
-    addresses: { value: values.addresses.value, lock: values.addresses.lock },
+    districts: { value: filterStringList(values.districts.value), lock: values.districts.lock },
+    addresses: { value: filterStringList(values.addresses.value), lock: values.addresses.lock },
+    labels: { value: filterStringList(values.labels.value), lock: values.labels.lock },
   };
 
   if (values.whatsapp?.trim()) {

@@ -63,7 +63,11 @@ export function AddClientForm() {
     }
 
     if (restoredDraft) {
-      reset(restoredDraft);
+      reset({
+        ...emptyClientFormDefaults,
+        ...restoredDraft,
+        relatedPersons: restoredDraft.relatedPersons ?? [],
+      });
     }
 
     setIsDraftApplied(true);
@@ -78,10 +82,18 @@ export function AddClientForm() {
   }, [isDraftApplied, isDraftReady, saveDraft, watchedFormValues]);
 
   const onSubmit = async (values: ClientFormValues) => {
-    const clientCreatePayload = buildCreateClientDto(values);
-    const created = await create(clientCreatePayload);
-    clearDraft();
-    router.push(`/clients/${created.id}`);
+    try {
+      const clientCreatePayload = buildCreateClientDto(values);
+      const created = await create(clientCreatePayload);
+      clearDraft();
+      router.push(`/clients/${created.id}`);
+    } catch (error) {
+      console.error("Add client submit failed", error);
+    }
+  };
+
+  const onInvalidSubmit = (formErrors: typeof errors) => {
+    console.error("Add client form validation failed", formErrors);
   };
 
   return (
@@ -91,7 +103,7 @@ export function AddClientForm() {
         <p className="text-sm text-slate-600">Fill in the details below to create a new lead.</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} className="space-y-8" noValidate>
         <ClientCoreInfoSection
           control={control}
           register={register}
@@ -104,7 +116,7 @@ export function AddClientForm() {
           showDefaultStatusOption
         />
 
-        <ClientLocationSection control={control} />
+        <ClientLocationSection control={control} setValue={setValue} />
 
         <ClientBudgetSection control={control} errors={errors} />
 
