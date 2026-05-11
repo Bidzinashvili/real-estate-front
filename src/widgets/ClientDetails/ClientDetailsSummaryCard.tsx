@@ -15,6 +15,9 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
   const phones = client.phones ?? [];
   const districts = client.districts ?? [];
   const addresses = client.addresses ?? [];
+  const showDistrictsBlock =
+    districts.length > 0 ||
+    (client.districtsLock !== undefined && client.districtsLock !== "none");
 
   const budgetRange =
     client.budgetMin !== null || client.budgetMax !== null
@@ -55,18 +58,6 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
                   {client.budgetMaxLock !== undefined &&
                   client.budgetMaxLock !== client.budgetMinLock ? (
                     <ClientDetailsLockBadge lock={client.budgetMaxLock} />
-                  ) : null}
-                </span>
-              </>
-            )}
-            {(districts.length > 0 ||
-              (client.districtsLock !== undefined && client.districtsLock !== "none")) && (
-              <>
-                <span className="text-slate-300">·</span>
-                <span className="inline-flex flex-wrap items-center gap-1.5">
-                  {districts.length > 0 ? <span>{districts.join(", ")}</span> : null}
-                  {client.districtsLock !== undefined ? (
-                    <ClientDetailsLockBadge lock={client.districtsLock} />
                   ) : null}
                 </span>
               </>
@@ -149,6 +140,28 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
               addresses.map((address, addressIndex) => (
                 <p key={addressIndex} className="text-sm text-slate-800">
                   {address}
+                </p>
+              ))
+            ) : (
+              <p className="text-sm text-slate-600">—</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showDistrictsBlock && (
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-xs text-slate-500">Districts</p>
+            {client.districtsLock !== undefined ? (
+              <ClientDetailsLockBadge lock={client.districtsLock} />
+            ) : null}
+          </div>
+          <div className="mt-1 space-y-0.5">
+            {districts.length > 0 ? (
+              districts.map((district, districtIndex) => (
+                <p key={districtIndex} className="text-sm text-slate-800">
+                  {district}
                 </p>
               ))
             ) : (
