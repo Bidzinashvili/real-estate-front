@@ -120,7 +120,12 @@ export function AddClientForm() {
 
         <ClientBudgetSection control={control} errors={errors} />
 
-        <ClientRequirementsSection control={control} errors={errors} isRentDeal={isRentDeal} />
+        <ClientRequirementsSection
+          control={control}
+          errors={errors}
+          setValue={setValue}
+          isRentDeal={isRentDeal}
+        />
 
         <ClientRelatedPersonsSection
           register={register}

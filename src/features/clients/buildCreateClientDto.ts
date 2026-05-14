@@ -47,13 +47,17 @@ function appendLockedNumber(
   dto: CreateClientPayload,
   key:
     | "minRooms"
+    | "maxRooms"
     | "minBedrooms"
+    | "maxBedrooms"
     | "minFloor"
     | "maxFloor"
     | "minArea"
+    | "maxArea"
     | "balconyAreaMin"
     | "balconyAreaMax"
-    | "minBathrooms",
+    | "minBathrooms"
+    | "maxBathrooms",
   field: ClientFormValues[typeof key],
 ): void {
   const hasValue = field.value !== undefined && !Number.isNaN(field.value);
@@ -210,7 +214,9 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
   }
 
   appendLockedNumber(dto, "minRooms", values.minRooms);
+  appendLockedNumber(dto, "maxRooms", values.maxRooms);
   appendLockedNumber(dto, "minBedrooms", values.minBedrooms);
+  appendLockedNumber(dto, "maxBedrooms", values.maxBedrooms);
   appendLockedNumber(dto, "minFloor", values.minFloor);
   appendLockedNumber(dto, "maxFloor", values.maxFloor);
   appendLockedBoolean(dto, "excludeLastFloor", values.excludeLastFloor);
@@ -222,6 +228,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
   appendProjectExclude(dto, values.projectExclude);
 
   appendLockedNumber(dto, "minArea", values.minArea);
+  appendLockedNumber(dto, "maxArea", values.maxArea);
   appendLockedBoolean(dto, "hasBalcony", values.hasBalcony);
   appendLockedNumber(dto, "balconyAreaMin", values.balconyAreaMin);
   appendLockedNumber(dto, "balconyAreaMax", values.balconyAreaMax);
@@ -231,6 +238,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
   appendLockedBoolean(dto, "airConditioner", values.airConditioner);
   appendLockedBoolean(dto, "furnished", values.furnished);
   appendLockedNumber(dto, "minBathrooms", values.minBathrooms);
+  appendLockedNumber(dto, "maxBathrooms", values.maxBathrooms);
   appendLockedBoolean(dto, "parking", values.parking);
   appendLockedPartialNumber(dto, "minRentalPeriod", values.minRentalPeriod);
 

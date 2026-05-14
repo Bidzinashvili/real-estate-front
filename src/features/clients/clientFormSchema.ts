@@ -12,6 +12,15 @@ const LOCK_STATES: [LockState, LockState, LockState] = ["none", "locked", "froze
 
 export const lockStateSchema = z.enum(LOCK_STATES);
 
+const lockStateFieldSchema = z.preprocess((candidate): LockState => {
+  if (typeof candidate === "string") {
+    if (candidate === "none" || candidate === "locked" || candidate === "frozen") {
+      return candidate;
+    }
+  }
+  return "none";
+}, lockStateSchema);
+
 const relatedPersonSchema = z.object({
   name: z.string().max(500).optional().default(""),
   phone: z.string().max(64).optional().default(""),
@@ -29,22 +38,22 @@ const optionalNumberNaNToUndefined = z.preprocess((input) => {
 
 const lockedStringArrayFieldSchema = z.object({
   value: z.array(z.string().max(200)).max(100),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedPartialNumberFieldSchema = z.object({
   value: optionalNumberNaNToUndefined,
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedPartialStringFieldSchema = z.object({
   value: z.union([z.string().max(200), z.literal("")]).optional(),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedNumberFieldSchema = z.object({
   value: optionalNumberNaNToUndefined,
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedIntNonNegFieldSchema = z.object({
@@ -52,7 +61,7 @@ const lockedIntNonNegFieldSchema = z.object({
     (input) => (typeof input === "number" && Number.isNaN(input) ? undefined : input),
     z.number().int().min(0).optional(),
   ),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedIntFieldSchema = z.object({
@@ -60,32 +69,32 @@ const lockedIntFieldSchema = z.object({
     (input) => (typeof input === "number" && Number.isNaN(input) ? undefined : input),
     z.number().int().optional(),
   ),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedBooleanFieldSchema = z.object({
   value: z.boolean().optional(),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedPartialRenovationFieldSchema = z.object({
   value: z.union([z.enum(RENOVATION_VALUES), z.literal("")]).optional(),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedPartialBuildingConditionFieldSchema = z.object({
   value: z.union([z.enum(BUILDING_CONDITIONS), z.literal("")]).optional(),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedPartialKitchenTypeFieldSchema = z.object({
   value: z.union([z.enum(KITCHEN_TYPES), z.literal("")]).optional(),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 const lockedStringArrayListFieldSchema = z.object({
   value: z.array(z.string()).max(100).default([]),
-  lock: lockStateSchema,
+  lock: lockStateFieldSchema,
 });
 
 export const clientFormSchema = z
@@ -108,7 +117,9 @@ export const clientFormSchema = z
     reminderDate: z.string().optional().or(z.literal("")),
     relatedPersons: z.array(relatedPersonSchema).max(100).optional().default([]),
     minRooms: lockedIntNonNegFieldSchema,
+    maxRooms: lockedIntNonNegFieldSchema,
     minBedrooms: lockedIntNonNegFieldSchema,
+    maxBedrooms: lockedIntNonNegFieldSchema,
     minFloor: lockedIntFieldSchema,
     maxFloor: lockedIntFieldSchema,
     excludeLastFloor: lockedBooleanFieldSchema,
@@ -116,6 +127,7 @@ export const clientFormSchema = z
     buildingCondition: lockedPartialBuildingConditionFieldSchema,
     projectExclude: lockedStringArrayListFieldSchema,
     minArea: lockedNumberFieldSchema,
+    maxArea: lockedNumberFieldSchema,
     hasBalcony: lockedBooleanFieldSchema,
     balconyAreaMin: lockedNumberFieldSchema,
     balconyAreaMax: lockedNumberFieldSchema,
@@ -126,6 +138,7 @@ export const clientFormSchema = z
     kitchenType: lockedPartialKitchenTypeFieldSchema,
     furnished: lockedBooleanFieldSchema,
     minBathrooms: lockedIntNonNegFieldSchema,
+    maxBathrooms: lockedIntNonNegFieldSchema,
     parking: lockedBooleanFieldSchema,
     minRentalPeriod: lockedPartialNumberFieldSchema,
   })
@@ -144,6 +157,30 @@ export const clientFormSchema = z
       });
     }
 
+    const roomsMinVal = data.minRooms.value;
+    const roomsMaxVal = data.maxRooms?.value;
+    if (roomsMinVal !== undefined && roomsMaxVal !== undefined && roomsMinVal > roomsMaxVal) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Rooms from must be less than or equal to rooms to",
+        path: ["minRooms", "value"],
+      });
+    }
+
+    const bedroomsMinVal = data.minBedrooms.value;
+    const bedroomsMaxVal = data.maxBedrooms?.value;
+    if (
+      bedroomsMinVal !== undefined &&
+      bedroomsMaxVal !== undefined &&
+      bedroomsMinVal > bedroomsMaxVal
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Bedrooms from must be less than or equal to bedrooms to",
+        path: ["minBedrooms", "value"],
+      });
+    }
+
     const minFloorVal = data.minFloor.value;
     const maxFloorVal = data.maxFloor.value;
     if (
@@ -155,6 +192,30 @@ export const clientFormSchema = z
         code: z.ZodIssueCode.custom,
         message: "Min floor must be less than or equal to max floor",
         path: ["minFloor", "value"],
+      });
+    }
+
+    const bathroomsMinVal = data.minBathrooms.value;
+    const bathroomsMaxVal = data.maxBathrooms?.value;
+    if (
+      bathroomsMinVal !== undefined &&
+      bathroomsMaxVal !== undefined &&
+      bathroomsMinVal > bathroomsMaxVal
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Bathrooms from must be less than or equal to bathrooms to",
+        path: ["minBathrooms", "value"],
+      });
+    }
+
+    const areaMinVal = data.minArea.value;
+    const areaMaxVal = data.maxArea?.value;
+    if (areaMinVal !== undefined && areaMaxVal !== undefined && areaMinVal > areaMaxVal) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Area from must be less than or equal to area to",
+        path: ["minArea", "value"],
       });
     }
 
@@ -204,7 +265,9 @@ export const emptyClientFormDefaults: ClientFormValues = {
   labels: { value: [], lock: "none" },
   relatedPersons: [],
   minRooms: { value: undefined, lock: "none" },
+  maxRooms: { value: undefined, lock: "none" },
   minBedrooms: { value: undefined, lock: "none" },
+  maxBedrooms: { value: undefined, lock: "none" },
   minFloor: { value: undefined, lock: "none" },
   maxFloor: { value: undefined, lock: "none" },
   excludeLastFloor: { value: undefined, lock: "none" },
@@ -212,6 +275,7 @@ export const emptyClientFormDefaults: ClientFormValues = {
   buildingCondition: { value: "", lock: "none" },
   projectExclude: { value: [], lock: "none" },
   minArea: { value: undefined, lock: "none" },
+  maxArea: { value: undefined, lock: "none" },
   hasBalcony: { value: undefined, lock: "none" },
   balconyAreaMin: { value: undefined, lock: "none" },
   balconyAreaMax: { value: undefined, lock: "none" },
@@ -222,6 +286,7 @@ export const emptyClientFormDefaults: ClientFormValues = {
   kitchenType: { value: "", lock: "none" },
   furnished: { value: undefined, lock: "none" },
   minBathrooms: { value: undefined, lock: "none" },
+  maxBathrooms: { value: undefined, lock: "none" },
   parking: { value: undefined, lock: "none" },
   minRentalPeriod: { value: undefined, lock: "none" },
 };

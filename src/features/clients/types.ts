@@ -37,7 +37,9 @@ export type ClientRequirements = {
   id: UUID;
   clientId: UUID;
   minRooms: number | null;
+  maxRooms: number | null;
   minBedrooms: number | null;
+  maxBedrooms: number | null;
   minFloor: number | null;
   maxFloor: number | null;
   excludeLastFloor: boolean;
@@ -45,6 +47,7 @@ export type ClientRequirements = {
   buildingCondition: BuildingCondition | null;
   projectExclude: string[];
   minArea: number | null;
+  maxArea: number | null;
   hasBalcony: boolean | null;
   balconyAreaMin: number | null;
   balconyAreaMax: number | null;
@@ -55,12 +58,15 @@ export type ClientRequirements = {
   kitchenType: KitchenType | null;
   furnished: boolean | null;
   minBathrooms: number | null;
+  maxBathrooms: number | null;
   parking: boolean | null;
   minRentalPeriod: number | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   minRoomsLock?: LockState;
+  maxRoomsLock?: LockState;
   minBedroomsLock?: LockState;
+  maxBedroomsLock?: LockState;
   minFloorLock?: LockState;
   maxFloorLock?: LockState;
   excludeLastFloorLock?: LockState;
@@ -68,6 +74,7 @@ export type ClientRequirements = {
   buildingConditionLock?: LockState;
   projectExcludeLock?: LockState;
   minAreaLock?: LockState;
+  maxAreaLock?: LockState;
   hasBalconyLock?: LockState;
   balconyAreaMinLock?: LockState;
   balconyAreaMaxLock?: LockState;
@@ -78,6 +85,7 @@ export type ClientRequirements = {
   kitchenTypeLock?: LockState;
   furnishedLock?: LockState;
   minBathroomsLock?: LockState;
+  maxBathroomsLock?: LockState;
   parkingLock?: LockState;
   minRentalPeriodLock?: LockState;
 };

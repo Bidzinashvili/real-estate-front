@@ -49,7 +49,9 @@ export interface CreateClientPayload {
   labels?: Locked<string[]>;
   pet?: LockedPartial<string>;
   minRooms?: Locked<number>;
+  maxRooms?: Locked<number>;
   minBedrooms?: Locked<number>;
+  maxBedrooms?: Locked<number>;
   minFloor?: Locked<number>;
   maxFloor?: Locked<number>;
   excludeLastFloor?: Locked<boolean>;
@@ -57,6 +59,7 @@ export interface CreateClientPayload {
   buildingCondition?: LockedPartial<BuildingCondition>;
   projectExclude?: LockedPartial<string[]>;
   minArea?: Locked<number>;
+  maxArea?: Locked<number>;
   hasBalcony?: Locked<boolean>;
   balconyAreaMin?: Locked<number>;
   balconyAreaMax?: Locked<number>;
@@ -67,6 +70,7 @@ export interface CreateClientPayload {
   kitchenType?: LockedPartial<KitchenType>;
   furnished?: Locked<boolean>;
   minBathrooms?: Locked<number>;
+  maxBathrooms?: Locked<number>;
   parking?: Locked<boolean>;
   minRentalPeriod?: LockedPartial<number>;
 }
@@ -95,7 +99,9 @@ export type ClientRequirementsApi = {
   id: UUID;
   clientId: UUID;
   minRooms: Locked<number | null>;
+  maxRooms?: Locked<number | null>;
   minBedrooms: Locked<number | null>;
+  maxBedrooms?: Locked<number | null>;
   minFloor: Locked<number | null>;
   maxFloor: Locked<number | null>;
   excludeLastFloor: Locked<boolean | null>;
@@ -103,6 +109,7 @@ export type ClientRequirementsApi = {
   buildingCondition: Locked<BuildingCondition | null>;
   projectExclude: Locked<string[] | null>;
   minArea: Locked<number | null>;
+  maxArea?: Locked<number | null>;
   hasBalcony: Locked<boolean | null>;
   balconyAreaMin: Locked<number | null>;
   balconyAreaMax: Locked<number | null>;
@@ -113,6 +120,7 @@ export type ClientRequirementsApi = {
   kitchenType: Locked<KitchenType | null>;
   furnished: Locked<boolean | null>;
   minBathrooms: Locked<number | null>;
+  maxBathrooms?: Locked<number | null>;
   parking: Locked<boolean | null>;
   minRentalPeriod: Locked<number | null>;
   createdAt: ISODateString;

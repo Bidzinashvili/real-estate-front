@@ -24,14 +24,29 @@ export function ClientDetailsRequirementsSection({
           lock={req.minRoomsLock}
         />
         <ClientDetailsRequirementRow
+          label="Max rooms"
+          value={req.maxRooms}
+          lock={req.maxRoomsLock}
+        />
+        <ClientDetailsRequirementRow
           label="Min bedrooms"
           value={req.minBedrooms}
           lock={req.minBedroomsLock}
         />
         <ClientDetailsRequirementRow
+          label="Max bedrooms"
+          value={req.maxBedrooms}
+          lock={req.maxBedroomsLock}
+        />
+        <ClientDetailsRequirementRow
           label="Min bathrooms"
           value={req.minBathrooms}
           lock={req.minBathroomsLock}
+        />
+        <ClientDetailsRequirementRow
+          label="Max bathrooms"
+          value={req.maxBathrooms}
+          lock={req.maxBathroomsLock}
         />
         <ClientDetailsRequirementRow
           label="Min floor"
@@ -52,6 +67,11 @@ export function ClientDetailsRequirementsSection({
           label="Min area"
           value={req.minArea !== null ? `${req.minArea} m²` : null}
           lock={req.minAreaLock}
+        />
+        <ClientDetailsRequirementRow
+          label="Max area"
+          value={req.maxArea !== null ? `${req.maxArea} m²` : null}
+          lock={req.maxAreaLock}
         />
         <ClientDetailsRequirementRow
           label="Renovation"

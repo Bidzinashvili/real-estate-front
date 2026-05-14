@@ -64,7 +64,9 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
       note: person.note ?? "",
     })),
     minRooms: wrapLockedNumber(req?.minRooms, req?.minRoomsLock),
+    maxRooms: wrapLockedNumber(req?.maxRooms, req?.maxRoomsLock),
     minBedrooms: wrapLockedNumber(req?.minBedrooms, req?.minBedroomsLock),
+    maxBedrooms: wrapLockedNumber(req?.maxBedrooms, req?.maxBedroomsLock),
     minFloor: wrapLockedNumber(req?.minFloor, req?.minFloorLock),
     maxFloor: wrapLockedNumber(req?.maxFloor, req?.maxFloorLock),
     excludeLastFloor: req
@@ -83,6 +85,7 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
       lock: req?.projectExcludeLock ?? "none",
     },
     minArea: wrapLockedNumber(req?.minArea, req?.minAreaLock),
+    maxArea: wrapLockedNumber(req?.maxArea, req?.maxAreaLock),
     hasBalcony: wrapLockedBoolean(req?.hasBalcony ?? undefined, req?.hasBalconyLock),
     balconyAreaMin: wrapLockedNumber(req?.balconyAreaMin, req?.balconyAreaMinLock),
     balconyAreaMax: wrapLockedNumber(req?.balconyAreaMax, req?.balconyAreaMaxLock),
@@ -96,6 +99,7 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     },
     furnished: wrapLockedBoolean(req?.furnished ?? undefined, req?.furnishedLock),
     minBathrooms: wrapLockedNumber(req?.minBathrooms, req?.minBathroomsLock),
+    maxBathrooms: wrapLockedNumber(req?.maxBathrooms, req?.maxBathroomsLock),
     parking: wrapLockedBoolean(req?.parking ?? undefined, req?.parkingLock),
     minRentalPeriod: {
       value: req?.minRentalPeriod ?? undefined,
