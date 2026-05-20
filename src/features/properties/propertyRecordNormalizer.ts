@@ -20,6 +20,7 @@ import type {
   PropertyCommercial,
   PropertyLandPlot,
   PropertyListingImage,
+  PropertyExternalId,
   PropertyPrivateHouse,
 } from "@/features/properties/propertyModelTypes";
 import {
@@ -66,6 +67,16 @@ function asBalconyCount(value: JsonValue | undefined): number {
   }
   const parsed = asNumber(value, 0);
   return Math.max(0, Math.trunc(parsed));
+}
+
+function asStringArray(value: JsonValue | undefined): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item !== "");
 }
 
 function asNullableBoolean(value: JsonValue | undefined): boolean | null {
@@ -153,6 +164,34 @@ function normalizeImages(value: unknown): PropertyListingImage[] {
     .filter((item): item is PropertyListingImage => item !== null);
 }
 
+function normalizeExternalIds(value: unknown): PropertyExternalId[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): PropertyExternalId | null => {
+      if (!isJsonObject(item)) return null;
+
+      const platform = item.platform === "MYHOME" || item.platform === "SSGE"
+        ? item.platform
+        : null;
+      const id = asString(item.id).trim();
+      const externalValue = asString(item.value).trim();
+
+      if (!platform || id === "" || externalValue === "") {
+        return null;
+      }
+
+      return {
+        id,
+        platform,
+        value: externalValue,
+        enteredAt: asNullableString(item.enteredAt) ?? "",
+        archivedAt: asNullableString(item.archivedAt),
+      };
+    })
+    .filter((item): item is PropertyExternalId => item !== null);
+}
+
 function normalizeApartment(value: unknown): PropertyApartment | null {
   if (!isJsonObject(value)) return null;
 
@@ -168,13 +207,15 @@ function normalizeApartment(value: unknown): PropertyApartment | null {
     bedrooms: asNumber(value.bedrooms),
     floor: asNumber(value.floor),
     totalFloors: asNumber(value.totalFloors),
-    balcony: asBalconyCount(value.balcony),
+    ceilingHeight: asNullableNumber(value.ceilingHeight),
+    balconyArea: asNullableNumber(value.balconyArea ?? value.balcony),
+    needsVerification: asStringArray(value.needsVerification),
     elevator: asBoolean(value.elevator),
     centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
     kitchenType: parseKitchenType(value.kitchenType),
     furnished: asBoolean(value.furnished),
-    parking: asBoolean(value.parking),
+    parkingSpaces: asNullableNumber(value.parkingSpaces),
     petsAllowed: asNullableBoolean(value.petsAllowed),
     minRentalPeriod: asNullableNumber(value.minRentalPeriod),
   };
@@ -195,11 +236,12 @@ function normalizePrivateHouse(
     renovation: asNullableString(value.renovation),
     rooms: asNumber(value.rooms),
     bedrooms: asNumber(value.bedrooms),
-    balcony: asBalconyCount(value.balcony),
+    balconyArea: asNullableNumber(value.balconyArea ?? value.balcony),
+    needsVerification: asStringArray(value.needsVerification),
     centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
     furnished: asBoolean(value.furnished),
-    parking: asBoolean(value.parking),
+    parkingSpaces: asNullableNumber(value.parkingSpaces),
     pool: asBoolean(value.pool),
     fruitTrees: asBoolean(value.fruitTrees),
     electricity: asBoolean(value.electricity),
@@ -241,10 +283,13 @@ function normalizeCommercial(value: unknown): PropertyCommercial | null {
     area: asNumber(value.area),
     status: parseCommercialStatus(value.status),
     floor: asNumber(value.floor),
+    totalFloors: asNullableNumber(value.totalFloors),
+    ceilingHeight: asNullableNumber(value.ceilingHeight),
     renovation: asNullableString(value.renovation),
+    needsVerification: asStringArray(value.needsVerification),
     centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
-    parking: asBoolean(value.parking),
+    parkingSpaces: asNullableNumber(value.parkingSpaces),
     electricity: asBoolean(value.electricity),
     water: asBoolean(value.water),
     gas: asBoolean(value.gas),
@@ -286,9 +331,13 @@ export function normalizeProperty(value: unknown): Property | null {
     ourSiteId: asNullableString(value.ourSiteId),
     myHomeId: asNullableString(value.myHomeId),
     ssGeId: asNullableString(value.ssGeId),
-    description: asNullableString(value.description),
-    comment: asNullableString(value.comment),
-    internalComment: asNullableString(value.internalComment),
+    externalIds: normalizeExternalIds(value.externalIds),
+    description: asNullableString(value.description ?? value.publicComment),
+    publicComment: asNullableString(value.publicComment ?? value.description),
+    privateComment: asNullableString(value.privateComment ?? value.comment),
+    internalText: asNullableString(value.internalText ?? value.internalComment),
+    comment: asNullableString(value.comment ?? value.privateComment),
+    internalComment: asNullableString(value.internalComment ?? value.internalText),
     reminderDate: asNullableString(value.reminderDate),
     commentDate: asNullableString(value.commentDate),
     tenantClientId:

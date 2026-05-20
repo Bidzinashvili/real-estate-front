@@ -18,16 +18,31 @@ import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
 
 const addPropertyDraftStorageKey = "draft:property:new";
 
+function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
+  const initialState = initialFormState();
+  if (!restoredDraft) {
+    return initialState;
+  }
+
+  return {
+    ...initialState,
+    ...restoredDraft,
+    apartment: { ...initialState.apartment, ...restoredDraft.apartment },
+    privateHouse: { ...initialState.privateHouse, ...restoredDraft.privateHouse },
+    landPlot: { ...initialState.landPlot, ...restoredDraft.landPlot },
+    commercial: { ...initialState.commercial, ...restoredDraft.commercial },
+  };
+}
+
 export function useAddPropertyForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateProperty();
   const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<FormState>(
     addPropertyDraftStorageKey,
   );
-  const [form, setForm] = useState<FormState>(() => ({
-    ...initialFormState(),
-    ...(restoredDraft ?? {}),
-  }));
+  const [form, setForm] = useState<FormState>(() =>
+    mergeFormStateDraft(restoredDraft),
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);

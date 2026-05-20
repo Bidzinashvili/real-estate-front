@@ -113,6 +113,21 @@ export function validateFormInputs(
       form.apartment.totalFloors,
       "Apartment total floors",
     );
+    optionalNumber(
+      "apartment.ceilingHeight",
+      form.apartment.ceilingHeight,
+      "Apartment ceiling height",
+    );
+    optionalNumber(
+      "apartment.balconyArea",
+      form.apartment.balconyArea,
+      "Apartment balcony area",
+    );
+    optionalNumber(
+      "apartment.parkingSpaces",
+      form.apartment.parkingSpaces,
+      "Apartment parking spaces",
+    );
     if (form.dealType === "RENT") {
       requireMinRentalPeriodMonths(
         "apartment.minRentalPeriod",
@@ -130,6 +145,16 @@ export function validateFormInputs(
       "privateHouse.bedrooms",
       form.privateHouse.bedrooms,
       "Private house bedrooms",
+    );
+    optionalNumber(
+      "privateHouse.balconyArea",
+      form.privateHouse.balconyArea,
+      "Private house balcony area",
+    );
+    optionalNumber(
+      "privateHouse.parkingSpaces",
+      form.privateHouse.parkingSpaces,
+      "Private house parking spaces",
     );
     if (form.dealType === "RENT") {
       requireMinRentalPeriodMonths(
@@ -158,6 +183,21 @@ export function validateFormInputs(
   if (activeSubtype === "commercial") {
     requireNumber("commercial.area", form.commercial.area, "Commercial area");
     requireNumber("commercial.floor", form.commercial.floor, "Commercial floor");
+    requireIntegerAtLeastOne(
+      "commercial.totalFloors",
+      form.commercial.totalFloors,
+      "Commercial total floors",
+    );
+    optionalNumber(
+      "commercial.ceilingHeight",
+      form.commercial.ceilingHeight,
+      "Commercial ceiling height",
+    );
+    optionalNumber(
+      "commercial.parkingSpaces",
+      form.commercial.parkingSpaces,
+      "Commercial parking spaces",
+    );
     if (form.dealType === "RENT") {
       requireMinRentalPeriodMonths(
         "commercial.minRentalPeriod",

@@ -59,6 +59,24 @@ function parseIntegerAtLeastOne(
   return parsed;
 }
 
+function parseOptionalNumber(value: string, field: string, errors: string[]): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) {
+    errors.push(`${field} must be a valid number.`);
+    return undefined;
+  }
+  if (parsed < 0) {
+    errors.push(`${field} must be at least 0.`);
+    return undefined;
+  }
+  return parsed;
+}
+
 function parseMinRentalPeriodForPayload(value: string, field: string, errors: string[]): number {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -112,9 +130,26 @@ export function buildCreatePropertyPayload(
 
   if (form.cadastralCode.trim()) payload.cadastralCode = form.cadastralCode.trim();
   if (form.ownerWhatsapp.trim()) payload.ownerWhatsapp = form.ownerWhatsapp.trim();
-  if (form.myHomeId.trim()) payload.myHomeId = form.myHomeId.trim();
-  if (form.ssGeId.trim()) payload.ssGeId = form.ssGeId.trim();
-  if (form.description.trim()) payload.description = form.description.trim();
+  const externalIds = form.externalIds
+    .filter((externalId) => externalId.archivedAt === null && externalId.value.trim() !== "")
+    .map((externalId) => ({
+      platform: externalId.platform,
+      value: externalId.value.trim(),
+      enteredAt: externalId.enteredAt,
+    }));
+  const myHomeId =
+    externalIds.find((externalId) => externalId.platform === "MYHOME")?.value ??
+    form.myHomeId.trim();
+  const ssGeId =
+    externalIds.find((externalId) => externalId.platform === "SSGE")?.value ??
+    form.ssGeId.trim();
+
+  if (myHomeId) payload.myHomeId = myHomeId;
+  if (ssGeId) payload.ssGeId = ssGeId;
+  if (externalIds.length > 0) payload.externalIds = externalIds;
+  if (form.publicComment.trim()) payload.publicComment = form.publicComment.trim();
+  if (form.privateComment.trim()) payload.privateComment = form.privateComment.trim();
+  if (form.internalText.trim()) payload.internalText = form.internalText.trim();
   if (labels.length > 0) payload.labels = labels;
 
   if (form.listingLifecycleStatus) {
@@ -144,13 +179,27 @@ export function buildCreatePropertyPayload(
         "Apartment total floors",
         errors,
       ),
-      balcony: apartment.balcony,
+      ceilingHeight: parseOptionalNumber(
+        apartment.ceilingHeight,
+        "Apartment ceiling height",
+        errors,
+      ),
+      balconyArea: parseOptionalNumber(
+        apartment.balconyArea,
+        "Apartment balcony area",
+        errors,
+      ),
+      needsVerification: apartment.needsVerification,
       elevator: apartment.elevator,
       centralHeating: apartment.centralHeating,
       airConditioner: apartment.airConditioner,
       kitchenType: apartment.kitchenType,
       furnished: apartment.furnished,
-      parking: apartment.parking,
+      parkingSpaces: parseOptionalNumber(
+        apartment.parkingSpaces,
+        "Apartment parking spaces",
+        errors,
+      ),
     };
     if (apartment.buildingNumber.trim()) {
       payload.apartment.buildingNumber = apartment.buildingNumber.trim();
@@ -176,11 +225,20 @@ export function buildCreatePropertyPayload(
       totalArea: parseNumber(privateHouse.totalArea, "Total area", errors),
       rooms: parseNumber(privateHouse.rooms, "Private house rooms", errors),
       bedrooms: parseNumber(privateHouse.bedrooms, "Private house bedrooms", errors),
-      balcony: privateHouse.balcony,
+      balconyArea: parseOptionalNumber(
+        privateHouse.balconyArea,
+        "Private house balcony area",
+        errors,
+      ),
+      needsVerification: privateHouse.needsVerification,
       centralHeating: privateHouse.centralHeating,
       airConditioner: privateHouse.airConditioner,
       furnished: privateHouse.furnished,
-      parking: privateHouse.parking,
+      parkingSpaces: parseOptionalNumber(
+        privateHouse.parkingSpaces,
+        "Private house parking spaces",
+        errors,
+      ),
       pool: privateHouse.pool,
       fruitTrees: privateHouse.fruitTrees,
       electricity: privateHouse.electricity,
@@ -235,9 +293,24 @@ export function buildCreatePropertyPayload(
       area: parseNumber(commercial.area, "Commercial area", errors),
       status: commercial.status,
       floor: parseNumber(commercial.floor, "Commercial floor", errors),
+      totalFloors: parseIntegerAtLeastOne(
+        commercial.totalFloors,
+        "Commercial total floors",
+        errors,
+      ),
+      ceilingHeight: parseOptionalNumber(
+        commercial.ceilingHeight,
+        "Commercial ceiling height",
+        errors,
+      ),
       centralHeating: commercial.centralHeating,
       airConditioner: commercial.airConditioner,
-      parking: commercial.parking,
+      parkingSpaces: parseOptionalNumber(
+        commercial.parkingSpaces,
+        "Commercial parking spaces",
+        errors,
+      ),
+      needsVerification: commercial.needsVerification,
       electricity: commercial.electricity,
       water: commercial.water,
       gas: commercial.gas,

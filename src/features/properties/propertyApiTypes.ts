@@ -46,6 +46,14 @@ export type PropertyImageEntry = {
   originalName: string;
 };
 
+export type PropertyExternalIdApi = {
+  id: string;
+  platform: "MYHOME" | "SSGE";
+  value: string;
+  enteredAt: string;
+  archivedAt: string | null;
+};
+
 export type PropertyImageInputWire =
   | string
   | { id?: string; url: string; originalName?: string };
@@ -62,13 +70,15 @@ export type ApartmentApi = {
   bedrooms: number;
   floor: number;
   totalFloors: number;
-  balcony: number;
+  ceilingHeight: number | null;
+  balconyArea: number | null;
+  needsVerification: string[];
   elevator: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
   furnished: boolean;
-  parking: boolean;
+  parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
 };
@@ -83,11 +93,12 @@ export type PrivateHouseApi = {
   renovation: string | null;
   rooms: number;
   bedrooms: number;
-  balcony: number;
+  balconyArea: number | null;
+  needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
-  parking: boolean;
+  parkingSpaces: number | null;
   pool: boolean;
   fruitTrees: boolean;
   electricity: boolean;
@@ -121,10 +132,13 @@ export type CommercialApi = {
   area: number;
   status: CommercialStatus;
   floor: number;
+  totalFloors: number | null;
+  ceilingHeight: number | null;
   renovation: string | null;
+  needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
-  parking: boolean;
+  parkingSpaces: number | null;
   electricity: boolean;
   water: boolean;
   gas: boolean;
@@ -152,7 +166,11 @@ export type PropertyApi = {
   ourSiteId: string | null;
   myHomeId: string | null;
   ssGeId: string | null;
+  externalIds: PropertyExternalIdApi[];
   description: string | null;
+  publicComment: string | null;
+  privateComment: string | null;
+  internalText: string | null;
   comment: string | null;
   internalComment: string | null;
   reminderDate: string | null;
@@ -194,7 +212,14 @@ export type CreatePropertyBase = {
   ownerWhatsapp?: string;
   myHomeId?: string;
   ssGeId?: string;
-  description?: string;
+  externalIds?: Array<{
+    platform: "MYHOME" | "SSGE";
+    value: string;
+    enteredAt?: string;
+  }>;
+  publicComment?: string;
+  privateComment?: string;
+  internalText?: string;
   labels?: string[];
   images?: PropertyImageInputWire[];
 };
@@ -209,13 +234,15 @@ export type CreateApartmentPayload = {
   bedrooms: number;
   floor: number;
   totalFloors: number;
-  balcony: number;
+  ceilingHeight?: number;
+  balconyArea?: number;
+  needsVerification?: string[];
   elevator: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
   furnished: boolean;
-  parking: boolean;
+  parkingSpaces?: number;
   petsAllowed?: boolean;
   minRentalPeriod?: number;
 };
@@ -228,11 +255,12 @@ export type CreatePrivateHousePayload = {
   renovation?: string;
   rooms: number;
   bedrooms: number;
-  balcony: number;
+  balconyArea?: number;
+  needsVerification?: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
-  parking: boolean;
+  parkingSpaces?: number;
   pool: boolean;
   fruitTrees: boolean;
   electricity: boolean;
@@ -262,10 +290,13 @@ export type CreateCommercialPayload = {
   area: number;
   status: CommercialStatus;
   floor: number;
+  totalFloors: number;
+  ceilingHeight?: number;
   renovation?: string;
+  needsVerification?: string[];
   centralHeating: boolean;
   airConditioner: boolean;
-  parking: boolean;
+  parkingSpaces?: number;
   electricity: boolean;
   water: boolean;
   gas: boolean;
@@ -307,22 +338,32 @@ export type UpdatePropertyRequestBody = {
   address?: string;
   pricePublic?: number;
   priceInternal?: number;
-  description?: string;
+  publicComment?: string;
+  privateComment?: string;
+  internalText?: string;
   addLabels?: string[];
   removeLabelIds?: string[];
   images?: PropertyImageInputWire[];
   apartment?: {
+    project?: string;
     totalArea?: number;
     rooms?: number;
-    balcony?: number;
+    totalFloors?: number;
+    ceilingHeight?: number;
+    balconyArea?: number | null;
+    needsVerification?: string[];
     floor?: number;
     renovation?: string;
     furnished?: boolean;
+    parkingSpaces?: number | null;
     minRentalPeriod?: number | null;
   };
   privateHouse?: {
     houseArea?: number;
     yardArea?: number;
+    balconyArea?: number | null;
+    parkingSpaces?: number | null;
+    needsVerification?: string[];
     pool?: boolean;
     fruitTrees?: boolean;
     renovation?: string;
@@ -339,7 +380,10 @@ export type UpdatePropertyRequestBody = {
   };
   commercial?: {
     area?: number;
-    parking?: boolean;
+    totalFloors?: number;
+    ceilingHeight?: number;
+    parkingSpaces?: number | null;
+    needsVerification?: string[];
     airConditioner?: boolean;
     renovation?: string;
     minRentalPeriod?: number | null;

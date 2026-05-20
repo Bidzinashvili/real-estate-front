@@ -21,6 +21,8 @@ import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 import { ImageUploadField } from "@/widgets/AddProperty/ImageUploadField";
+import { ExternalIdList } from "@/shared/components/ExternalIdList";
+import { formatNoteDate } from "@/shared/lib/formatDate";
 
 const publicPriceMarkupRatio = 1.03;
 const publicPriceRoundingInterval = 500;
@@ -143,6 +145,18 @@ export function AddPropertyCoreFields({
     }
     updateForm("ownerWhatsapp", value);
     setIsWhatsappManuallyEdited(true);
+  }
+
+  function handleAddPrivateComment() {
+    const trimmedComment = form.privateComment.trim();
+    if (trimmedComment.startsWith(formatNoteDate(new Date()))) {
+      return;
+    }
+    if (trimmedComment === "") {
+      updateForm("privateComment", `${formatNoteDate(new Date())} `);
+      return;
+    }
+    updateForm("privateComment", `${formatNoteDate(new Date())} ${trimmedComment}`);
   }
 
   return (
@@ -343,27 +357,55 @@ export function AddPropertyCoreFields({
         value={form.cadastralCode}
         onChange={(value) => updateForm("cadastralCode", value)}
       />
-      <TextField
-        id="myHomeId"
-        label="MyHome ID"
-        value={form.myHomeId}
-        onChange={(value) => updateForm("myHomeId", value)}
-      />
-      <TextField
-        id="ssGeId"
-        label="SS.ge ID"
-        value={form.ssGeId}
-        onChange={(value) => updateForm("ssGeId", value)}
+      <ExternalIdList
+        ids={form.externalIds}
+        onChange={(nextIds) => updateForm("externalIds", nextIds)}
       />
       <div className="space-y-1.5 sm:col-span-2">
-        <label htmlFor="description" className="block text-sm font-medium text-slate-800">
-          Description
+        <label htmlFor="publicComment" className="block text-sm font-medium text-slate-800">
+          Public comment
         </label>
         <textarea
-          id="description"
+          id="publicComment"
           rows={3}
-          value={form.description}
-          onChange={(event) => updateForm("description", event.target.value)}
+          value={form.publicComment}
+          onChange={(event) => updateForm("publicComment", event.target.value)}
+          className={addPropertyInputClassName()}
+        />
+      </div>
+      <div className="space-y-1.5 sm:col-span-2">
+        <label htmlFor="internalText" className="block text-sm font-medium text-slate-800">
+          Internal text
+        </label>
+        <textarea
+          id="internalText"
+          rows={3}
+          value={form.internalText}
+          onChange={(event) => updateForm("internalText", event.target.value)}
+          className={addPropertyInputClassName()}
+        />
+      </div>
+      <div className="space-y-1.5 sm:col-span-2">
+        <div className="flex items-center justify-between gap-3">
+          <label
+            htmlFor="privateComment"
+            className="block text-sm font-medium text-slate-800"
+          >
+            Personal comment
+          </label>
+          <button
+            type="button"
+            onClick={handleAddPrivateComment}
+            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+          >
+            Add date
+          </button>
+        </div>
+        <textarea
+          id="privateComment"
+          rows={4}
+          value={form.privateComment}
+          onChange={(event) => updateForm("privateComment", event.target.value)}
           className={addPropertyInputClassName()}
         />
       </div>

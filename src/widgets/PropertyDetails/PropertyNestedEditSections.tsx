@@ -18,16 +18,14 @@ import type {
   PropertyFormLandPlot,
   PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
-import { NonNegativeCounterField, SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
+import { SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
   EditableNumericTextInput,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import { MinRentalPeriodEditField } from "@/widgets/PropertyDetails/MinRentalPeriodEditField";
-import {
-  parseDecimalInput,
-  parseIntegerInput,
-} from "@/shared/lib/parseNumericInput";
+import { parseDecimalInput, parseIntegerInput } from "@/shared/lib/parseNumericInput";
+import { HashtagPicker } from "@/shared/components/HashtagPicker";
 
 type ApartmentProps = {
   dealType: DealType;
@@ -40,16 +38,6 @@ export function ApartmentEditSection({
   apartment,
   setApartment,
 }: ApartmentProps) {
-  const balconyCount = apartment.balcony ?? 0;
-
-  function handleDecreaseBalcony() {
-    setApartment({ balcony: Math.max(0, balconyCount - 1) });
-  }
-
-  function handleIncreaseBalcony() {
-    setApartment({ balcony: balconyCount + 1 });
-  }
-
   return (
     <fieldset className="space-y-3">
       <legend className="text-sm font-semibold text-slate-800">Apartment</legend>
@@ -76,12 +64,39 @@ export function ApartmentEditSection({
           parse={parseIntegerInput}
           inputMode="numeric"
         />
-        <NonNegativeCounterField
-          id="editAptBalcony"
-          label="Balcony"
-          value={balconyCount}
-          onDecrease={handleDecreaseBalcony}
-          onIncrease={handleIncreaseBalcony}
+        <EditableNumericTextInput
+          label="Total floors"
+          value={apartment.totalFloors}
+          onValueChange={(next) => setApartment({ totalFloors: next })}
+          parse={parseIntegerInput}
+          inputMode="numeric"
+        />
+        <EditableNumericTextInput
+          label="Ceiling height"
+          value={apartment.ceilingHeight ?? undefined}
+          onValueChange={(next) => setApartment({ ceilingHeight: next })}
+          parse={parseDecimalInput}
+          inputMode="decimal"
+        />
+        <EditableNumericTextInput
+          label="Balcony area"
+          value={apartment.balconyArea ?? undefined}
+          onValueChange={(next) => setApartment({ balconyArea: next })}
+          parse={parseDecimalInput}
+          inputMode="decimal"
+        />
+        <EditableNumericTextInput
+          label="Parking spaces"
+          value={apartment.parkingSpaces ?? undefined}
+          onValueChange={(next) => setApartment({ parkingSpaces: next })}
+          parse={parseIntegerInput}
+          inputMode="numeric"
+        />
+        <HashtagPicker
+          id="editAptProject"
+          label="Project"
+          value={apartment.project ?? ""}
+          onChange={(next) => setApartment({ project: next })}
         />
         <SelectField
           id="editAptRenovation"
@@ -135,6 +150,20 @@ export function PrivateHouseEditSection({
           onValueChange={(next) => setPrivateHouse({ yardArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+        />
+        <EditableNumericTextInput
+          label="Balcony area"
+          value={privateHouse.balconyArea ?? undefined}
+          onValueChange={(next) => setPrivateHouse({ balconyArea: next })}
+          parse={parseDecimalInput}
+          inputMode="decimal"
+        />
+        <EditableNumericTextInput
+          label="Parking spaces"
+          value={privateHouse.parkingSpaces ?? undefined}
+          onValueChange={(next) => setPrivateHouse({ parkingSpaces: next })}
+          parse={parseIntegerInput}
+          inputMode="numeric"
         />
         <EditableCheckbox
           label="Furnished"
@@ -260,10 +289,26 @@ export function CommercialEditSection({
           parse={parseDecimalInput}
           inputMode="decimal"
         />
-        <EditableCheckbox
-          label="Parking"
-          checked={Boolean(commercial.parking)}
-          onChange={(checked) => setCommercial({ parking: checked })}
+        <EditableNumericTextInput
+          label="Total floors"
+          value={commercial.totalFloors}
+          onValueChange={(next) => setCommercial({ totalFloors: next })}
+          parse={parseIntegerInput}
+          inputMode="numeric"
+        />
+        <EditableNumericTextInput
+          label="Ceiling height"
+          value={commercial.ceilingHeight ?? undefined}
+          onValueChange={(next) => setCommercial({ ceilingHeight: next })}
+          parse={parseDecimalInput}
+          inputMode="decimal"
+        />
+        <EditableNumericTextInput
+          label="Parking spaces"
+          value={commercial.parkingSpaces ?? undefined}
+          onValueChange={(next) => setCommercial({ parkingSpaces: next })}
+          parse={parseIntegerInput}
+          inputMode="numeric"
         />
         <EditableCheckbox
           label="Air conditioner"

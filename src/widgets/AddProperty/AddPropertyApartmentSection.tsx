@@ -9,7 +9,6 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import {
   CheckboxField,
-  NonNegativeCounterField,
   SelectField,
   TextField,
 } from "@/widgets/AddProperty/addPropertyFormFields";
@@ -20,6 +19,9 @@ import {
   normalizeManualBedroomsString,
   syncedBedroomsStringFromRoomsRaw,
 } from "@/widgets/AddProperty/roomsBedroomsSyncHelpers";
+import { FloorInput } from "@/shared/components/FloorInput";
+import { HashtagPicker } from "@/shared/components/HashtagPicker";
+import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
 
 type Props = {
   dealType: DealType;
@@ -55,14 +57,6 @@ export function AddPropertyApartmentSection({
     }
     setIsBedroomsManuallyEdited(true);
     patchApartment({ bedrooms: normalizeManualBedroomsString(value) });
-  }
-
-  function handleDecreaseBalcony() {
-    patchApartment({ balcony: Math.max(0, apartment.balcony - 1) });
-  }
-
-  function handleIncreaseBalcony() {
-    patchApartment({ balcony: apartment.balcony + 1 });
   }
 
   return (
@@ -110,25 +104,26 @@ export function AddPropertyApartmentSection({
           required
           error={fieldErrors["apartment.bedrooms"]}
         />
-        <TextField
-          id="aptFloor"
-          label="Floor"
-          type="number"
-          value={apartment.floor}
-          onChange={(value) => patchApartment({ floor: value })}
+        <FloorInput
+          floorId="aptFloor"
+          totalFloorsId="aptTotalFloors"
+          floorValue={apartment.floor}
+          totalFloorsValue={apartment.totalFloors}
+          onFloorChange={(value) => patchApartment({ floor: value })}
+          onTotalFloorsChange={(value) => patchApartment({ totalFloors: value })}
+          floorError={fieldErrors["apartment.floor"]}
+          totalFloorsError={fieldErrors["apartment.totalFloors"]}
           required
-          error={fieldErrors["apartment.floor"]}
         />
         <TextField
-          id="aptTotalFloors"
-          label="Total floors"
+          id="aptCeilingHeight"
+          label="Ceiling height"
           type="number"
-          value={apartment.totalFloors}
-          onChange={(value) => patchApartment({ totalFloors: value })}
-          required
-          error={fieldErrors["apartment.totalFloors"]}
+          value={apartment.ceilingHeight}
+          onChange={(value) => patchApartment({ ceilingHeight: value })}
+          error={fieldErrors["apartment.ceilingHeight"]}
         />
-        <TextField
+        <HashtagPicker
           id="aptProject"
           label="Project"
           value={apartment.project}
@@ -149,42 +144,69 @@ export function AddPropertyApartmentSection({
             error={fieldErrors["apartment.minRentalPeriod"]}
           />
         )}
-        <NonNegativeCounterField
-          id="aptBalcony"
-          label="Balcony"
-          value={apartment.balcony}
-          onDecrease={handleDecreaseBalcony}
-          onIncrease={handleIncreaseBalcony}
+        <TextField
+          id="aptBalconyArea"
+          label="Total balcony area (m²)"
+          type="number"
+          value={apartment.balconyArea}
+          onChange={(value) => patchApartment({ balconyArea: value })}
+          error={fieldErrors["apartment.balconyArea"]}
         />
-        <CheckboxField
-          id="aptElevator"
-          label="Elevator"
-          checked={apartment.elevator}
-          onChange={(checked) => patchApartment({ elevator: checked })}
-        />
-        <CheckboxField
-          id="aptCentralHeating"
-          label="Central heating"
-          checked={apartment.centralHeating}
-          onChange={(checked) => patchApartment({ centralHeating: checked })}
-        />
-        <CheckboxField
-          id="aptAirConditioner"
-          label="Air conditioner"
-          checked={apartment.airConditioner}
-          onChange={(checked) => patchApartment({ airConditioner: checked })}
-        />
-        <CheckboxField
-          id="aptFurnished"
-          label="Furnished"
-          checked={apartment.furnished}
-          onChange={(checked) => patchApartment({ furnished: checked })}
-        />
-        <CheckboxField
+        {[
+          {
+            id: "aptElevator",
+            label: "Elevator",
+            key: "elevator",
+            checked: apartment.elevator,
+            onChange: (checked: boolean) => patchApartment({ elevator: checked }),
+          },
+          {
+            id: "aptCentralHeating",
+            label: "Central heating",
+            key: "centralHeating",
+            checked: apartment.centralHeating,
+            onChange: (checked: boolean) => patchApartment({ centralHeating: checked }),
+          },
+          {
+            id: "aptAirConditioner",
+            label: "Air conditioner",
+            key: "airConditioner",
+            checked: apartment.airConditioner,
+            onChange: (checked: boolean) => patchApartment({ airConditioner: checked }),
+          },
+          {
+            id: "aptFurnished",
+            label: "Furnished",
+            key: "furnished",
+            checked: apartment.furnished,
+            onChange: (checked: boolean) => patchApartment({ furnished: checked }),
+          },
+        ].map((field) => (
+          <div key={field.key} className="flex items-center gap-2">
+            <div className="flex-1">
+              <CheckboxField
+                id={field.id}
+                label={field.label}
+                checked={field.checked}
+                onChange={field.onChange}
+              />
+            </div>
+            <NeedsVerificationToggle
+              fieldKey={field.key}
+              activeFields={apartment.needsVerification}
+              onChange={(nextFields) =>
+                patchApartment({ needsVerification: nextFields })
+              }
+            />
+          </div>
+        ))}
+        <TextField
           id="aptParking"
-          label="Parking"
-          checked={apartment.parking}
-          onChange={(checked) => patchApartment({ parking: checked })}
+          label="Parking spaces"
+          type="number"
+          value={apartment.parkingSpaces}
+          onChange={(value) => patchApartment({ parkingSpaces: value })}
+          error={fieldErrors["apartment.parkingSpaces"]}
         />
         {dealType === "RENT" && (
           <CheckboxField

@@ -17,7 +17,7 @@ import {
 type PropertyListingFieldsViewProps = {
   values: PropertyFormValues;
   showInternalPrice: boolean;
-  readOnlyPrivateHouseBalcony?: number;
+  readOnlyPrivateHouseBalcony?: number | null;
 };
 
 export function PropertyListingFieldsView({
@@ -25,6 +25,21 @@ export function PropertyListingFieldsView({
   showInternalPrice,
   readOnlyPrivateHouseBalcony,
 }: PropertyListingFieldsViewProps) {
+  const privateHouseTotalArea =
+    values.privateHouse?.houseArea !== undefined &&
+    values.privateHouse.yardArea !== undefined
+      ? values.privateHouse.houseArea + values.privateHouse.yardArea
+      : undefined;
+  const areaSquareMeters =
+    values.apartment?.totalArea ??
+    privateHouseTotalArea ??
+    values.landPlot?.landArea ??
+    values.commercial?.area;
+  const pricePerSquareMeter =
+    values.pricePublic !== undefined && areaSquareMeters && areaSquareMeters > 0
+      ? Math.round(values.pricePublic / areaSquareMeters)
+      : null;
+
   return (
     <>
       <section className="space-y-4" aria-labelledby="listing-core-heading">
@@ -67,9 +82,20 @@ export function PropertyListingFieldsView({
               suffix="₾"
             />
           )}
+          <DetailNumber
+            label="Price per m²"
+            value={pricePerSquareMeter}
+            suffix="₾"
+          />
         </div>
 
-        <DetailMultiline label="Description" value={values.description} />
+        <DetailMultiline label="Public comment" value={values.publicComment} />
+        {showInternalPrice ? (
+          <>
+            <DetailMultiline label="Personal comment" value={values.privateComment} />
+            <DetailMultiline label="Internal text" value={values.internalText} />
+          </>
+        ) : null}
       </section>
 
       {values.apartment && (
@@ -85,7 +111,24 @@ export function PropertyListingFieldsView({
             />
             <DetailNumber label="Rooms" value={values.apartment.rooms} />
             <DetailNumber label="Floor" value={values.apartment.floor} />
-            <DetailNumber label="Balcony" value={values.apartment.balcony} />
+            <DetailNumber
+              label="Total floors"
+              value={values.apartment.totalFloors}
+            />
+            <DetailNumber
+              label="Ceiling height"
+              value={values.apartment.ceilingHeight}
+              suffix="m"
+            />
+            <DetailNumber
+              label="Balcony area"
+              value={values.apartment.balconyArea}
+              suffix="m²"
+            />
+            <DetailNumber
+              label="Parking spaces"
+              value={values.apartment.parkingSpaces}
+            />
             <DetailYesNo
               label="Furnished"
               value={Boolean(values.apartment.furnished)}
@@ -117,11 +160,12 @@ export function PropertyListingFieldsView({
               suffix="m²"
             />
             {readOnlyPrivateHouseBalcony !== undefined ? (
-              <DetailNumber
-                label="Balcony"
-                value={readOnlyPrivateHouseBalcony}
-              />
+              <DetailNumber label="Balcony area" value={readOnlyPrivateHouseBalcony} />
             ) : null}
+            <DetailNumber
+              label="Parking spaces"
+              value={values.privateHouse.parkingSpaces}
+            />
             <DetailYesNo
               label="Furnished"
               value={Boolean(values.privateHouse.furnished)}
@@ -189,9 +233,18 @@ export function PropertyListingFieldsView({
               value={values.commercial.area}
               suffix="m²"
             />
-            <DetailYesNo
-              label="Parking"
-              value={Boolean(values.commercial.parking)}
+            <DetailNumber
+              label="Total floors"
+              value={values.commercial.totalFloors}
+            />
+            <DetailNumber
+              label="Ceiling height"
+              value={values.commercial.ceilingHeight}
+              suffix="m"
+            />
+            <DetailNumber
+              label="Parking spaces"
+              value={values.commercial.parkingSpaces}
             />
             <DetailYesNo
               label="Air conditioner"

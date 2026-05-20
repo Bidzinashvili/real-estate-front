@@ -154,6 +154,45 @@ export async function updateProperty(
   }
 }
 
+export async function addPropertyExternalId(
+  propertyId: string,
+  payload: { platform: "MYHOME" | "SSGE"; value: string; enteredAt?: string },
+): Promise<void> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  await axios.post(`${baseUrl}/properties/${propertyId}/external-ids`, payload, {
+    headers: {
+      ...headers,
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+export async function archivePropertyExternalId(
+  propertyId: string,
+  externalId: string,
+): Promise<void> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  await axios.patch(
+    `${baseUrl}/properties/${propertyId}/external-ids/${externalId}/archive`,
+    {},
+    { headers },
+  );
+}
+
+export async function deletePropertyExternalId(
+  propertyId: string,
+  externalId: string,
+): Promise<void> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  await axios.delete(
+    `${baseUrl}/properties/${propertyId}/external-ids/${externalId}`,
+    { headers },
+  );
+}
+
 export async function deletePropertyImage(
   propertyId: string,
   imageId: string,

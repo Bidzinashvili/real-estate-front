@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { useMemo } from "react";
+import { Archive, ArrowLeft, Bell, Tags } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { PropertyDetailsCard } from "@/widgets/PropertyDetails/PropertyDetailsCard";
 import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
+import { updateProperty } from "@/features/properties/api";
+import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
+import { calculateMatchScore } from "@/features/properties/matchScore";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
@@ -22,7 +25,10 @@ export function PropertyDetailsReadOnlyBody({
 }: PropertyDetailsReadOnlyBodyProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
-  const { property, isLoading, error } = usePropertyDetails(propertyId);
+  const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
+  const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   const canEdit = useMemo(() => {
     if (!user || !property) return false;
@@ -38,6 +44,94 @@ export function PropertyDetailsReadOnlyBody({
   const handleGoBack = () => {
     router.push("/properties");
   };
+
+  const matchScore = useMemo(() => {
+    if (!property) {
+      return { percentage: null, matched: 0, total: 0 };
+    }
+
+    if (property.apartment) {
+      return calculateMatchScore(
+        [
+          { key: "elevator", label: "Elevator", value: property.apartment.elevator },
+          {
+            key: "centralHeating",
+            label: "Central heating",
+            value: property.apartment.centralHeating,
+          },
+          {
+            key: "airConditioner",
+            label: "Air conditioner",
+            value: property.apartment.airConditioner,
+          },
+          { key: "furnished", label: "Furnished", value: property.apartment.furnished },
+        ],
+        property.apartment.needsVerification,
+      );
+    }
+
+    if (property.privateHouse) {
+      return calculateMatchScore(
+        [
+          {
+            key: "centralHeating",
+            label: "Central heating",
+            value: property.privateHouse.centralHeating,
+          },
+          {
+            key: "airConditioner",
+            label: "Air conditioner",
+            value: property.privateHouse.airConditioner,
+          },
+          {
+            key: "furnished",
+            label: "Furnished",
+            value: property.privateHouse.furnished,
+          },
+        ],
+        property.privateHouse.needsVerification,
+      );
+    }
+
+    if (property.commercial) {
+      return calculateMatchScore(
+        [
+          {
+            key: "centralHeating",
+            label: "Central heating",
+            value: property.commercial.centralHeating,
+          },
+          {
+            key: "airConditioner",
+            label: "Air conditioner",
+            value: property.commercial.airConditioner,
+          },
+        ],
+        property.commercial.needsVerification,
+      );
+    }
+
+    return { percentage: null, matched: 0, total: 0 };
+  }, [property]);
+
+  async function handleArchiveProperty() {
+    if (!property || !canEdit) {
+      return;
+    }
+
+    setIsArchiving(true);
+    setArchiveError(null);
+    try {
+      await updateProperty(property.id, { status: "ARCHIVED" });
+      await refetch();
+    } catch (error) {
+      setArchiveError(
+        error instanceof Error ? error.message : "Could not archive property.",
+      );
+    } finally {
+      setIsArchiving(false);
+    }
+  }
 
   const loadingBlock = (
     <div
@@ -114,6 +208,59 @@ export function PropertyDetailsReadOnlyBody({
         property={property}
         presentation="view"
         canViewPrivateFields={canViewPrivateFields}
+      />
+      {layout === "page" ? (
+        <div className="sticky bottom-4 z-30 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsRemindersOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+              Reminder
+            </button>
+            {canEdit ? (
+              <Link
+                href={`/properties/${property.id}/edit`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <Tags className="h-3.5 w-3.5" aria-hidden="true" />
+                Color tags
+              </Link>
+            ) : null}
+            {canEdit ? (
+              <button
+                type="button"
+                disabled={isArchiving || property.status === "ARCHIVED"}
+                onClick={handleArchiveProperty}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                {isArchiving ? "Archiving..." : "Archive"}
+              </button>
+            ) : null}
+            <span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-800">
+              Match: {matchScore.percentage ?? "N/A"}%
+            </span>
+            <span className="rounded-full bg-purple-100 px-3 py-2 text-xs font-semibold text-purple-800">
+              My data: pending
+            </span>
+          </div>
+          {archiveError ? (
+            <p className="mt-2 text-xs text-red-600" role="alert">
+              {archiveError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      <PropertyListingRemindersModal
+        open={isRemindersOpen}
+        property={property}
+        onClose={() => setIsRemindersOpen(false)}
+        onScheduled={() => {
+          void refetch();
+        }}
       />
     </div>
   );

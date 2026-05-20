@@ -8,7 +8,6 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import {
   CheckboxField,
-  NonNegativeCounterField,
   SelectField,
   TextField,
 } from "@/widgets/AddProperty/addPropertyFormFields";
@@ -19,6 +18,7 @@ import {
   normalizeManualBedroomsString,
   syncedBedroomsStringFromRoomsRaw,
 } from "@/widgets/AddProperty/roomsBedroomsSyncHelpers";
+import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
 
 function parseAreaNumber(rawInput: string): number {
   const trimmedInput = rawInput.trim();
@@ -104,14 +104,6 @@ export function AddPropertyPrivateHouseSection({
     patchPrivateHouse,
   ]);
 
-  function handleDecreaseBalcony() {
-    patchPrivateHouse({ balcony: Math.max(0, privateHouse.balcony - 1) });
-  }
-
-  function handleIncreaseBalcony() {
-    patchPrivateHouse({ balcony: privateHouse.balcony + 1 });
-  }
-
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h2 className="text-sm font-semibold text-slate-800">Private house details</h2>
@@ -184,36 +176,64 @@ export function AddPropertyPrivateHouseSection({
             error={fieldErrors["privateHouse.minRentalPeriod"]}
           />
         )}
-        <NonNegativeCounterField
-          id="phBalcony"
-          label="Balcony"
-          value={privateHouse.balcony}
-          onDecrease={handleDecreaseBalcony}
-          onIncrease={handleIncreaseBalcony}
+        <TextField
+          id="phBalconyArea"
+          label="Total balcony area (m²)"
+          type="number"
+          value={privateHouse.balconyArea}
+          onChange={(value) => patchPrivateHouse({ balconyArea: value })}
+          error={fieldErrors["privateHouse.balconyArea"]}
         />
-        <CheckboxField
-          id="phCentralHeating"
-          label="Central heating"
-          checked={privateHouse.centralHeating}
-          onChange={(checked) => patchPrivateHouse({ centralHeating: checked })}
-        />
-        <CheckboxField
-          id="phAirConditioner"
-          label="Air conditioner"
-          checked={privateHouse.airConditioner}
-          onChange={(checked) => patchPrivateHouse({ airConditioner: checked })}
-        />
-        <CheckboxField
-          id="phFurnished"
-          label="Furnished"
-          checked={privateHouse.furnished}
-          onChange={(checked) => patchPrivateHouse({ furnished: checked })}
-        />
-        <CheckboxField
+        {[
+          {
+            id: "phCentralHeating",
+            label: "Central heating",
+            key: "centralHeating",
+            checked: privateHouse.centralHeating,
+            onChange: (checked: boolean) =>
+              patchPrivateHouse({ centralHeating: checked }),
+          },
+          {
+            id: "phAirConditioner",
+            label: "Air conditioner",
+            key: "airConditioner",
+            checked: privateHouse.airConditioner,
+            onChange: (checked: boolean) =>
+              patchPrivateHouse({ airConditioner: checked }),
+          },
+          {
+            id: "phFurnished",
+            label: "Furnished",
+            key: "furnished",
+            checked: privateHouse.furnished,
+            onChange: (checked: boolean) => patchPrivateHouse({ furnished: checked }),
+          },
+        ].map((field) => (
+          <div key={field.key} className="flex items-center gap-2">
+            <div className="flex-1">
+              <CheckboxField
+                id={field.id}
+                label={field.label}
+                checked={field.checked}
+                onChange={field.onChange}
+              />
+            </div>
+            <NeedsVerificationToggle
+              fieldKey={field.key}
+              activeFields={privateHouse.needsVerification}
+              onChange={(nextFields) =>
+                patchPrivateHouse({ needsVerification: nextFields })
+              }
+            />
+          </div>
+        ))}
+        <TextField
           id="phParking"
-          label="Parking"
-          checked={privateHouse.parking}
-          onChange={(checked) => patchPrivateHouse({ parking: checked })}
+          label="Parking spaces"
+          type="number"
+          value={privateHouse.parkingSpaces}
+          onChange={(value) => patchPrivateHouse({ parkingSpaces: value })}
+          error={fieldErrors["privateHouse.parkingSpaces"]}
         />
         <CheckboxField
           id="phPool"
