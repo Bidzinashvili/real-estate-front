@@ -42,6 +42,8 @@ type Props = {
     addressChangeMeta?: { selectedStreetId: string | null },
   ) => void;
   onImagesChange: (files: FileList | null) => void;
+  buildingNumber?: string;
+  onBuildingNumberChange?: (value: string) => void;
 };
 
 export function AddPropertyCoreFields({
@@ -50,6 +52,8 @@ export function AddPropertyCoreFields({
   updateForm,
   updateAddress,
   onImagesChange,
+  buildingNumber,
+  onBuildingNumberChange,
 }: Props) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
   const [isPublicPriceManuallyEdited, setIsPublicPriceManuallyEdited] =
@@ -165,7 +169,7 @@ export function AddPropertyCoreFields({
         required
         error={fieldErrors.district}
       />
-      <div className="sm:col-span-2">
+      <div className={buildingNumber !== undefined ? undefined : "sm:col-span-2"}>
         <StreetAutocompleteField
           id="address"
           label="Address"
@@ -176,6 +180,14 @@ export function AddPropertyCoreFields({
           inputClassName={addPropertyInputClassName()}
         />
       </div>
+      {buildingNumber !== undefined && onBuildingNumberChange !== undefined && (
+        <TextField
+          id="buildingNumber"
+          label="Building number"
+          value={buildingNumber}
+          onChange={onBuildingNumberChange}
+        />
+      )}
       <div className="sm:col-span-2">
         <LabelAutocompleteChipsInput
           id="labels"

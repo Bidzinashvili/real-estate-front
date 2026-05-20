@@ -41,6 +41,16 @@ export function AddPropertyForm() {
             updateForm={updateForm}
             updateAddress={updateAddress}
             onImagesChange={onImagesChange}
+            buildingNumber={
+              activeSubtype === "apartment"
+                ? form.apartment.buildingNumber
+                : undefined
+            }
+            onBuildingNumberChange={
+              activeSubtype === "apartment"
+                ? (value) => patchApartment({ buildingNumber: value })
+                : undefined
+            }
           />
 
           {activeSubtype === "apartment" && (
