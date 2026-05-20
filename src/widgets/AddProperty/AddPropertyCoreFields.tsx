@@ -20,6 +20,7 @@ import {
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
+import { ImageUploadField } from "@/widgets/AddProperty/ImageUploadField";
 
 const publicPriceMarkupRatio = 1.03;
 const publicPriceRoundingInterval = 500;
@@ -47,12 +48,16 @@ function computeInternalPriceFromPublic(publicPriceInput: string): string {
 type Props = {
   form: FormState;
   fieldErrors: FormErrors;
+  images: File[];
+  imageError: string | null;
   updateForm: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   updateAddress: (
     next: string,
     addressChangeMeta?: { selectedStreetId: string | null },
   ) => void;
-  onImagesChange: (files: FileList | null) => void;
+  onAddImages: (files: File[]) => void;
+  onRemoveImage: (index: number) => void;
+  onReorderImages: (sourceIndex: number, targetIndex: number) => void;
   buildingNumber?: string;
   onBuildingNumberChange?: (value: string) => void;
 };
@@ -60,9 +65,13 @@ type Props = {
 export function AddPropertyCoreFields({
   form,
   fieldErrors,
+  images,
+  imageError,
   updateForm,
   updateAddress,
-  onImagesChange,
+  onAddImages,
+  onRemoveImage,
+  onReorderImages,
   buildingNumber,
   onBuildingNumberChange,
 }: Props) {
@@ -359,17 +368,13 @@ export function AddPropertyCoreFields({
         />
       </div>
 
-      <div className="space-y-1.5 sm:col-span-2">
-        <label htmlFor="images" className="block text-sm font-medium text-slate-800">
-          Images (optional, up to 10)
-        </label>
-        <input
-          id="images"
-          type="file"
-          multiple
-          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-          onChange={(event) => onImagesChange(event.target.files)}
-          className={addPropertyInputClassName()}
+      <div className="sm:col-span-2">
+        <ImageUploadField
+          images={images}
+          onAdd={onAddImages}
+          onRemove={onRemoveImage}
+          onReorder={onReorderImages}
+          error={imageError}
         />
       </div>
     </section>

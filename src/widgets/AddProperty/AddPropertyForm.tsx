@@ -21,7 +21,11 @@ export function AddPropertyForm() {
     patchPrivateHouse,
     patchLandPlot,
     patchCommercial,
-    onImagesChange,
+    images,
+    imageError,
+    addImages,
+    removeImage,
+    reorderImages,
     onSubmit,
     cancel,
   } = useAddPropertyForm();
@@ -38,9 +42,13 @@ export function AddPropertyForm() {
           <AddPropertyCoreFields
             form={form}
             fieldErrors={fieldErrors}
+            images={images}
+            imageError={imageError}
             updateForm={updateForm}
             updateAddress={updateAddress}
-            onImagesChange={onImagesChange}
+            onAddImages={addImages}
+            onRemoveImage={removeImage}
+            onReorderImages={reorderImages}
             buildingNumber={
               activeSubtype === "apartment"
                 ? form.apartment.buildingNumber

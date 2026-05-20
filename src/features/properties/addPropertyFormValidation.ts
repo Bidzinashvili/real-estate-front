@@ -171,8 +171,9 @@ export function validateFormInputs(
 
 export function validateAddPropertyImages(files: File[]): string | null {
   const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (files.length > 10) {
-    return "You can upload at most 10 images.";
+  const maxImageCount = 50;
+  if (files.length > maxImageCount) {
+    return "You can upload at most 50 images.";
   }
   for (const file of files) {
     if (file.size > 10 * 1024 * 1024) {

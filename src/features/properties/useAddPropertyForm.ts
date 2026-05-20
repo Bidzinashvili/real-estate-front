@@ -30,6 +30,7 @@ export function useAddPropertyForm() {
   }));
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
 
   const activeSubtype = useMemo(
@@ -174,21 +175,59 @@ export function useAddPropertyForm() {
     setForm((prev) => ({ ...prev, commercial: { ...prev.commercial, ...patch } }));
   }, []);
 
-  const onImagesChange = useCallback((files: FileList | null) => {
-    const selected = files ? Array.from(files) : [];
-    const imageError = validateAddPropertyImages(selected);
-    setSubmitError(imageError);
-    if (!imageError) {
-      setImages(selected);
-    }
+  const addImages = useCallback((incomingImages: File[]) => {
+    if (incomingImages.length === 0) return;
+
+    setImages((previousImages) => {
+      const nextImages = [...previousImages, ...incomingImages];
+      const nextError = validateAddPropertyImages(nextImages);
+      if (nextError) {
+        setImageError(nextError);
+        return previousImages;
+      }
+      setImageError(null);
+      return nextImages;
+    });
+  }, []);
+
+  const removeImage = useCallback((imageIndex: number) => {
+    setImages((previousImages) => {
+      const nextImages = previousImages.filter(
+        (_image, currentIndex) => currentIndex !== imageIndex,
+      );
+      setImageError(null);
+      return nextImages;
+    });
+  }, []);
+
+  const reorderImages = useCallback((sourceIndex: number, targetIndex: number) => {
+    setImages((previousImages) => {
+      if (sourceIndex === targetIndex) return previousImages;
+      if (
+        sourceIndex < 0 ||
+        targetIndex < 0 ||
+        sourceIndex >= previousImages.length ||
+        targetIndex > previousImages.length
+      ) {
+        return previousImages;
+      }
+
+      const nextImages = [...previousImages];
+      const [movingImage] = nextImages.splice(sourceIndex, 1);
+      nextImages.splice(targetIndex, 0, movingImage);
+      setImageError(null);
+      return nextImages;
+    });
   }, []);
 
   const onSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setSubmitError(null);
+      setImageError(null);
       const imageError = validateAddPropertyImages(images);
       if (imageError) {
+        setImageError(imageError);
         setSubmitError(imageError);
         return;
       }
@@ -232,13 +271,17 @@ export function useAddPropertyForm() {
     submitError,
     error,
     isLoading,
+    images,
+    imageError,
     updateForm,
     updateAddress,
     patchApartment,
     patchPrivateHouse,
     patchLandPlot,
     patchCommercial,
-    onImagesChange,
+    addImages,
+    removeImage,
+    reorderImages,
     onSubmit,
     cancel,
   };
