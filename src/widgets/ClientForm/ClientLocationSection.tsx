@@ -3,9 +3,7 @@
 import {
   Controller,
   useFieldArray,
-  useWatch,
   type Control,
-  type UseFormSetValue,
 } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
@@ -13,14 +11,12 @@ import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton"
 
 type ClientLocationSectionProps = {
   control: Control<ClientFormValues>;
-  setValue: UseFormSetValue<ClientFormValues>;
   fieldDescriptions?: Record<string, string>;
   showLockForPath?: (path: string) => boolean;
 };
 
 export function ClientLocationSection({
   control,
-  setValue,
   fieldDescriptions,
   showLockForPath = () => true,
 }: ClientLocationSectionProps) {
@@ -48,32 +44,6 @@ export function ClientLocationSection({
     control,
     name: "labels.value" as never,
   });
-  const currentLabels = (useWatch({ control, name: "labels.value" as never }) ?? []) as string[];
-
-  const syncLabelEntry = (labelIndex: number, nextValue: string) => {
-    const nextLabels = [...currentLabels];
-    nextLabels[labelIndex] = nextValue;
-    setValue("labels.value" as never, nextLabels, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
-
-  const addAddressEntry = () => {
-    appendAddress("");
-    appendLabel("");
-  };
-
-  const removeAddressEntry = (addressIndex: number) => {
-    removeAddress(addressIndex);
-    const nextLabels = [...currentLabels];
-    nextLabels.splice(addressIndex, 1);
-    setValue("labels.value" as never, nextLabels, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  };
-
   const addLabelEntry = () => {
     appendLabel("");
   };
@@ -176,16 +146,14 @@ export function ClientLocationSection({
                         value={field.value?.[addressIndex] ?? ""}
                         onChange={(event) => {
                           const nextAddresses = [...(field.value ?? [])];
-                          const nextAddressValue = event.target.value;
-                          nextAddresses[addressIndex] = nextAddressValue;
+                          nextAddresses[addressIndex] = event.target.value;
                           field.onChange(nextAddresses);
-                          syncLabelEntry(addressIndex, nextAddressValue);
                         }}
                         className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
                       />
                       <button
                         type="button"
-                        onClick={() => removeAddressEntry(addressIndex)}
+                        onClick={() => removeAddress(addressIndex)}
                         className="flex-none text-slate-400 transition hover:text-red-600"
                         aria-label="Remove address"
                       >
@@ -198,7 +166,7 @@ export function ClientLocationSection({
                 )}
                 <button
                   type="button"
-                  onClick={addAddressEntry}
+                  onClick={() => appendAddress("")}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />

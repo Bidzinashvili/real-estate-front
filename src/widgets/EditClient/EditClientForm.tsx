@@ -99,7 +99,7 @@ function EditClientFormInner({
           showReminderHint
         />
 
-        <ClientLocationSection control={control} setValue={setValue} />
+        <ClientLocationSection control={control} />
 
         <ClientBudgetSection control={control} errors={errors} />
 

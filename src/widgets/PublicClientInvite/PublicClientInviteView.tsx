@@ -156,7 +156,6 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
 
         <ClientLocationSection
           control={control}
-          setValue={setValue}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
           showLockForPath={formSchemaDerived.showLockForPath}
         />
