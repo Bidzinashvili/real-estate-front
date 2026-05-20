@@ -63,9 +63,16 @@ export function AddPropertyCoreFields({
 
   function handleInternalPriceChange(value: string) {
     updateForm("priceInternal", value);
-    if (!isPublicPriceManuallyEdited) {
+    if (!isPublicPriceManuallyEdited && form.dealType === "SALE") {
       updateForm("pricePublic", computePublicPriceFromInternal(value));
     }
+  }
+
+  function handleDealTypeChange(value: FormState["dealType"]) {
+    if (value !== "SALE" && !isPublicPriceManuallyEdited) {
+      updateForm("pricePublic", "");
+    }
+    updateForm("dealType", value);
   }
 
   function handlePublicPriceChange(value: string) {
@@ -122,7 +129,7 @@ export function AddPropertyCoreFields({
         id="dealType"
         label="Deal type"
         value={form.dealType}
-        onChange={(value) => updateForm("dealType", value)}
+        onChange={handleDealTypeChange}
         options={DEAL_TYPE_OPTIONS}
       />
       <SelectField
