@@ -21,18 +21,26 @@ import type { FormErrors } from "@/features/properties/addPropertyFormValidation
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 
 const publicPriceMarkupRatio = 1.03;
-const publicPriceFractionDigits = 2;
+const publicPriceRoundingInterval = 500;
 
 function computePublicPriceFromInternal(internalPriceInput: string): string {
   const trimmedInternal = internalPriceInput.trim();
   if (trimmedInternal === "") return "";
   const internalNumber = parseFloat(trimmedInternal);
   if (!Number.isFinite(internalNumber)) return "";
-  const scaled =
-    Math.round(
-      internalNumber * publicPriceMarkupRatio * 10 ** publicPriceFractionDigits,
-    ) / 10 ** publicPriceFractionDigits;
-  return String(scaled);
+  const markedPrice = internalNumber * publicPriceMarkupRatio;
+  const roundedPrice =
+    Math.round(markedPrice / publicPriceRoundingInterval) *
+    publicPriceRoundingInterval;
+  return String(roundedPrice);
+}
+
+function computeInternalPriceFromPublic(publicPriceInput: string): string {
+  const trimmedPublic = publicPriceInput.trim();
+  if (trimmedPublic === "") return "";
+  const publicNumber = parseFloat(trimmedPublic);
+  if (!Number.isFinite(publicNumber)) return "";
+  return String(Math.round(publicNumber / publicPriceMarkupRatio));
 }
 
 type Props = {
@@ -58,10 +66,18 @@ export function AddPropertyCoreFields({
   onBuildingNumberChange,
 }: Props) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
+  const [isInternalPriceManuallyEdited, setIsInternalPriceManuallyEdited] =
+    useState(false);
   const [isPublicPriceManuallyEdited, setIsPublicPriceManuallyEdited] =
     useState(false);
 
   function handleInternalPriceChange(value: string) {
+    if (value.trim() === "") {
+      setIsInternalPriceManuallyEdited(false);
+      updateForm("priceInternal", "");
+      return;
+    }
+    setIsInternalPriceManuallyEdited(true);
     updateForm("priceInternal", value);
     if (!isPublicPriceManuallyEdited && form.dealType === "SALE") {
       updateForm("pricePublic", computePublicPriceFromInternal(value));
@@ -81,8 +97,14 @@ export function AddPropertyCoreFields({
       updateForm("pricePublic", "");
       return;
     }
+    const shouldAutoFillInternal =
+      !isInternalPriceManuallyEdited && form.dealType === "SALE";
+    setIsInternalPriceManuallyEdited(false);
     updateForm("pricePublic", value);
     setIsPublicPriceManuallyEdited(true);
+    if (shouldAutoFillInternal) {
+      updateForm("priceInternal", computeInternalPriceFromPublic(value));
+    }
   }
 
   function handleOwnerPhoneChange(value: string) {
