@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { GeorgianCity } from "@/features/properties/addPropertyFormOptions";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type {
   BuildingCondition,
@@ -23,8 +24,9 @@ export type FormState = {
   dealType: DealType;
   listingLifecycleStatus: PropertyStatus | "";
   verificationReminderLocal: string;
-  city: string;
+  city: GeorgianCity;
   district: string;
+  districtGroup: string;
   address: string;
   selectedStreetId: string | null;
   labels: LabelSelection[];
@@ -43,6 +45,7 @@ export type FormState = {
     rooms: string;
     bedrooms: string;
     floor: string;
+    totalFloors: string;
     balcony: number;
     elevator: boolean;
     centralHeating: boolean;
@@ -115,8 +118,9 @@ export function initialFormState(): FormState {
     dealType: "RENT",
     listingLifecycleStatus: "",
     verificationReminderLocal: "",
-    city: "Tbilisi",
+    city: "თბილისი",
     district: "",
+    districtGroup: "",
     address: "",
     selectedStreetId: null,
     labels: [],
@@ -135,6 +139,7 @@ export function initialFormState(): FormState {
       rooms: "",
       bedrooms: "",
       floor: "",
+      totalFloors: "",
       balcony: 0,
       elevator: false,
       centralHeating: false,

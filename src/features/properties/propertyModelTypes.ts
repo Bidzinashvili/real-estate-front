@@ -114,6 +114,7 @@ export type PropertyApartment = {
   rooms: number;
   bedrooms: number;
   floor: number;
+  totalFloors: number;
   balcony: number;
   elevator: boolean;
   centralHeating: boolean;

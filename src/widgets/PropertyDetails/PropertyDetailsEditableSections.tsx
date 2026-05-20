@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
+import { useDistricts } from "@/features/districts/useDistricts";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type {
   PropertyApartmentUpdate,
@@ -36,6 +38,7 @@ import { PropertyListingFieldsView } from "@/widgets/PropertyDetails/PropertyLis
 import {
   parseDecimalInput,
 } from "@/shared/lib/parseNumericInput";
+import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 
 type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
@@ -77,6 +80,28 @@ export function PropertyDetailsEditableSections({
   setLandPlot,
   setCommercial,
 }: PropertyDetailsEditableSectionsProps) {
+  const { districts } = useDistricts();
+  const manualDistrictGroupRef = useRef(false);
+  const [selectedDistrictGroup, setSelectedDistrictGroup] = useState("");
+
+  const derivedDistrictGroup = useMemo(() => {
+    for (const districtGroup of districts ?? []) {
+      if (districtGroup.neighborhoods.includes(values.district)) {
+        return districtGroup.name;
+      }
+    }
+
+    return "";
+  }, [districts, values.district]);
+
+  useEffect(() => {
+    if (manualDistrictGroupRef.current) {
+      return;
+    }
+
+    setSelectedDistrictGroup(derivedDistrictGroup);
+  }, [derivedDistrictGroup]);
+
   if (!canEdit) {
     return (
       <PropertyListingFieldsView
@@ -116,10 +141,20 @@ export function PropertyDetailsEditableSections({
           value={values.city}
           onChange={(value) => onFieldChange("city", value)}
         />
-        <EditableTextInput
-          label="District"
-          value={values.district}
-          onChange={(value) => onFieldChange("district", value)}
+        <DistrictNeighborhoodPicker
+          value={
+            selectedDistrictGroup || values.district
+              ? {
+                  group: selectedDistrictGroup,
+                  neighborhood: values.district,
+                }
+              : null
+          }
+          onChange={(next) => {
+            manualDistrictGroupRef.current = true;
+            setSelectedDistrictGroup(next?.group ?? "");
+            onFieldChange("district", next?.neighborhood ?? "");
+          }}
         />
       </div>
 

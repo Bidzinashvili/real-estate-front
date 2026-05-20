@@ -167,6 +167,7 @@ function normalizeApartment(value: unknown): PropertyApartment | null {
     rooms: asNumber(value.rooms),
     bedrooms: asNumber(value.bedrooms),
     floor: asNumber(value.floor),
+    totalFloors: asNumber(value.totalFloors),
     balcony: asBalconyCount(value.balcony),
     elevator: asBoolean(value.elevator),
     centralHeating: asBoolean(value.centralHeating),

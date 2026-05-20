@@ -61,6 +61,7 @@ export type ApartmentApi = {
   rooms: number;
   bedrooms: number;
   floor: number;
+  totalFloors: number;
   balcony: number;
   elevator: boolean;
   centralHeating: boolean;
@@ -207,7 +208,8 @@ export type CreateApartmentPayload = {
   rooms: number;
   bedrooms: number;
   floor: number;
-  balcony: boolean;
+  totalFloors: number;
+  balcony: number;
   elevator: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
@@ -226,7 +228,7 @@ export type CreatePrivateHousePayload = {
   renovation?: string;
   rooms: number;
   bedrooms: number;
-  balcony: boolean;
+  balcony: number;
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;

@@ -1,4 +1,5 @@
 import type { AddPropertyActiveSubtype, FormState } from "@/features/properties/addPropertyFormState";
+import { GEORGIAN_CITY_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import { isHotelScope } from "@/features/properties/types";
 
 export type FormErrors = Partial<Record<string, string>>;
@@ -23,6 +24,20 @@ export function validateFormInputs(
     }
     if (!Number.isFinite(Number(value))) {
       errors[key] = `${label} must be a valid number.`;
+    }
+  };
+  const requireIntegerAtLeastOne = (key: string, value: string, label: string) => {
+    if (!value.trim()) {
+      errors[key] = `${label} is required.`;
+      return;
+    }
+    const parsedValue = Number(value);
+    if (!Number.isFinite(parsedValue) || !Number.isInteger(parsedValue)) {
+      errors[key] = `${label} must be a whole number.`;
+      return;
+    }
+    if (parsedValue < 1) {
+      errors[key] = `${label} must be at least 1.`;
     }
   };
   const optionalNumber = (key: string, value: string, label: string) => {
@@ -64,7 +79,9 @@ export function validateFormInputs(
     }
   };
 
-  requireString("city", form.city, "City");
+  if (!GEORGIAN_CITY_OPTIONS.some((option) => option.value === form.city)) {
+    errors.city = "City must be one of თბილისი, ბათუმი, ქუთაისი, or ბორჯომი.";
+  }
   requireString("district", form.district, "District");
   requireString("address", form.address, "Address");
   requireString("ownerName", form.ownerName, "Owner name");
@@ -84,6 +101,11 @@ export function validateFormInputs(
     requireNumber("apartment.rooms", form.apartment.rooms, "Apartment rooms");
     requireNumber("apartment.bedrooms", form.apartment.bedrooms, "Apartment bedrooms");
     requireNumber("apartment.floor", form.apartment.floor, "Apartment floor");
+    requireIntegerAtLeastOne(
+      "apartment.totalFloors",
+      form.apartment.totalFloors,
+      "Apartment total floors",
+    );
     if (form.dealType === "RENT") {
       requireMinRentalPeriodMonths(
         "apartment.minRentalPeriod",

@@ -1,5 +1,6 @@
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { CreatePropertyDto } from "@/features/properties/types";
+import { GEORGIAN_CITY_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
 import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
 import type {
@@ -36,6 +37,28 @@ function parseNumber(value: string, field: string, errors: string[]): number {
   return parsed;
 }
 
+function parseIntegerAtLeastOne(
+  value: string,
+  field: string,
+  errors: string[],
+): number {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    errors.push(`${field} is required.`);
+    return 0;
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+    errors.push(`${field} must be a whole number.`);
+    return 0;
+  }
+  if (parsed < 1) {
+    errors.push(`${field} must be at least 1.`);
+    return 0;
+  }
+  return parsed;
+}
+
 function parseMinRentalPeriodForPayload(value: string, field: string, errors: string[]): number {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -66,6 +89,9 @@ export function buildCreatePropertyPayload(
   const ownerPhone = form.ownerPhone.trim();
 
   if (!city) errors.push("City is required.");
+  if (city && !GEORGIAN_CITY_OPTIONS.some((option) => option.value === city)) {
+    errors.push("City must be one of თბილისი, ბათუმი, ქუთაისი, or ბორჯომი.");
+  }
   if (!district) errors.push("District is required.");
   if (!address) errors.push("Address is required.");
   if (!ownerName) errors.push("Owner name is required.");
@@ -113,7 +139,12 @@ export function buildCreatePropertyPayload(
       rooms: parseNumber(apartment.rooms, "Apartment rooms", errors),
       bedrooms: parseNumber(apartment.bedrooms, "Apartment bedrooms", errors),
       floor: parseNumber(apartment.floor, "Apartment floor", errors),
-      balcony: apartment.balcony > 0,
+      totalFloors: parseIntegerAtLeastOne(
+        apartment.totalFloors,
+        "Apartment total floors",
+        errors,
+      ),
+      balcony: apartment.balcony,
       elevator: apartment.elevator,
       centralHeating: apartment.centralHeating,
       airConditioner: apartment.airConditioner,
@@ -145,7 +176,7 @@ export function buildCreatePropertyPayload(
       totalArea: parseNumber(privateHouse.totalArea, "Total area", errors),
       rooms: parseNumber(privateHouse.rooms, "Private house rooms", errors),
       bedrooms: parseNumber(privateHouse.bedrooms, "Private house bedrooms", errors),
-      balcony: privateHouse.balcony > 0,
+      balcony: privateHouse.balcony,
       centralHeating: privateHouse.centralHeating,
       airConditioner: privateHouse.airConditioner,
       furnished: privateHouse.furnished,

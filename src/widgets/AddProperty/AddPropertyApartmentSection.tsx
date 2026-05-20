@@ -120,6 +120,15 @@ export function AddPropertyApartmentSection({
           error={fieldErrors["apartment.floor"]}
         />
         <TextField
+          id="aptTotalFloors"
+          label="Total floors"
+          type="number"
+          value={apartment.totalFloors}
+          onChange={(value) => patchApartment({ totalFloors: value })}
+          required
+          error={fieldErrors["apartment.totalFloors"]}
+        />
+        <TextField
           id="aptProject"
           label="Project"
           value={apartment.project}

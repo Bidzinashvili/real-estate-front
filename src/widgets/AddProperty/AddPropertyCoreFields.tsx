@@ -5,6 +5,7 @@ import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocomplete
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
 import {
   HOTEL_SCOPE_FORM_OPTIONS,
+  GEORGIAN_CITY_OPTIONS,
   PROPERTY_TYPE_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import type { HotelScope } from "@/features/properties/types";
@@ -17,6 +18,7 @@ import {
 } from "@/widgets/AddProperty/addPropertyFormFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
+import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 
 const publicPriceMarkupRatio = 1.03;
 const publicPriceFractionDigits = 2;
@@ -153,20 +155,28 @@ export function AddPropertyCoreFields({
           </p>
         </div>
       ) : null}
-      <TextField
+      <SelectField
         id="city"
         label="City"
         value={form.city}
         onChange={(value) => updateForm("city", value)}
+        options={GEORGIAN_CITY_OPTIONS}
         required
         error={fieldErrors.city}
       />
-      <TextField
-        id="district"
-        label="District"
-        value={form.district}
-        onChange={(value) => updateForm("district", value)}
-        required
+      <DistrictNeighborhoodPicker
+        value={
+          form.districtGroup || form.district
+            ? {
+                group: form.districtGroup,
+                neighborhood: form.district,
+              }
+            : null
+        }
+        onChange={(next) => {
+          updateForm("districtGroup", next?.group ?? "");
+          updateForm("district", next?.neighborhood ?? "");
+        }}
         error={fieldErrors.district}
       />
       <div className={buildingNumber !== undefined ? undefined : "sm:col-span-2"}>

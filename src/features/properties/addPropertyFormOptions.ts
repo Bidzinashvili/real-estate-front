@@ -14,6 +14,15 @@ import {
   LAND_CATEGORIES,
 } from "@/features/properties/types";
 
+export const GEORGIAN_CITY_OPTIONS = [
+  { value: "თბილისი", label: "თბილისი" },
+  { value: "ბათუმი", label: "ბათუმი" },
+  { value: "ქუთაისი", label: "ქუთაისი" },
+  { value: "ბორჯომი", label: "ბორჯომი" },
+] as const;
+
+export type GeorgianCity = (typeof GEORGIAN_CITY_OPTIONS)[number]["value"];
+
 const LAND_CATEGORY_LABELS: Readonly<Record<LandCategory, string>> = {
   AGRICULTURAL: "Agricultural",
   NON_AGRICULTURAL: "Non-agricultural",

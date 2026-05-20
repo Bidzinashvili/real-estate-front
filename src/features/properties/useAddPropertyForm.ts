@@ -24,7 +24,10 @@ export function useAddPropertyForm() {
   const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<FormState>(
     addPropertyDraftStorageKey,
   );
-  const [form, setForm] = useState<FormState>(() => restoredDraft ?? initialFormState());
+  const [form, setForm] = useState<FormState>(() => ({
+    ...initialFormState(),
+    ...(restoredDraft ?? {}),
+  }));
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});

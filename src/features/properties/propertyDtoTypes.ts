@@ -44,7 +44,8 @@ export type PropertyApartmentCreate = {
   rooms: number;
   bedrooms: number;
   floor: number;
-  balcony: boolean;
+  totalFloors: number;
+  balcony: number;
   elevator: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
@@ -65,7 +66,7 @@ export type PropertyPrivateHouseCreate = {
   totalArea: number;
   rooms: number;
   bedrooms: number;
-  balcony: boolean;
+  balcony: number;
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
