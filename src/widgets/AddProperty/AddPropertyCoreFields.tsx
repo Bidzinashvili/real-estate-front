@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
 import {
@@ -107,11 +108,22 @@ export function AddPropertyCoreFields({
     }
   }
 
-  function handleOwnerPhoneChange(value: string) {
-    updateForm("ownerPhone", value);
-    if (!isWhatsappManuallyEdited) {
+  function handleOwnerPhoneChange(phoneIndex: number, value: string) {
+    const updated = [...form.ownerPhones];
+    updated[phoneIndex] = value;
+    updateForm("ownerPhones", updated);
+    if (phoneIndex === 0 && !isWhatsappManuallyEdited) {
       updateForm("ownerWhatsapp", value);
     }
+  }
+
+  function handleAddOwnerPhone() {
+    updateForm("ownerPhones", [...form.ownerPhones, "+995"]);
+  }
+
+  function handleRemoveOwnerPhone(phoneIndex: number) {
+    const updated = form.ownerPhones.filter((_phone, idx) => idx !== phoneIndex);
+    updateForm("ownerPhones", updated);
   }
 
   function handleOwnerWhatsappChange(value: string) {
@@ -262,15 +274,54 @@ export function AddPropertyCoreFields({
         required
         error={fieldErrors.ownerName}
       />
-      <TextField
-        id="ownerPhone"
-        label="Owner phone"
-        value={form.ownerPhone}
-        onChange={handleOwnerPhoneChange}
-        type="tel"
-        required
-        error={fieldErrors.ownerPhone}
-      />
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-slate-800">
+          Owner phone <span className="text-red-500">*</span>
+        </label>
+        <div className="space-y-2">
+          {form.ownerPhones.map((phone, phoneIndex) => (
+            <div key={phoneIndex} className="flex items-center gap-2">
+              <input
+                id={phoneIndex === 0 ? "ownerPhone" : undefined}
+                type="tel"
+                value={phone}
+                onChange={(event) => handleOwnerPhoneChange(phoneIndex, event.target.value)}
+                className={`${addPropertyInputClassName()} ${fieldErrors[`ownerPhones.${phoneIndex}`] ? "border-red-500 focus:border-red-600" : ""}`}
+              />
+              {form.ownerPhones.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveOwnerPhone(phoneIndex)}
+                  className="flex-none text-slate-400 transition hover:text-red-600"
+                  aria-label="Remove phone"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddOwnerPhone}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            Add phone
+          </button>
+        </div>
+        {fieldErrors["ownerPhones"] && (
+          <p className="text-xs text-red-600" role="alert">
+            {fieldErrors["ownerPhones"]}
+          </p>
+        )}
+        {form.ownerPhones.map((_phone, phoneIndex) =>
+          fieldErrors[`ownerPhones.${phoneIndex}`] ? (
+            <p key={phoneIndex} className="text-xs text-red-600" role="alert">
+              {fieldErrors[`ownerPhones.${phoneIndex}`]}
+            </p>
+          ) : null,
+        )}
+      </div>
       <TextField
         id="ownerWhatsapp"
         label="Owner WhatsApp"

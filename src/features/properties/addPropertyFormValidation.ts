@@ -85,7 +85,14 @@ export function validateFormInputs(
   requireString("district", form.district, "District");
   requireString("address", form.address, "Address");
   requireString("ownerName", form.ownerName, "Owner name");
-  requireInternationalPhone("ownerPhone", form.ownerPhone);
+  if (form.ownerPhones.length === 0) {
+    errors["ownerPhones"] = "At least one phone number is required.";
+  } else {
+    requireInternationalPhone("ownerPhones.0", form.ownerPhones[0] ?? "");
+    form.ownerPhones.slice(1).forEach((phone, relativeIndex) => {
+      optionalInternationalPhone(`ownerPhones.${relativeIndex + 1}`, phone);
+    });
+  }
   optionalInternationalPhone("ownerWhatsapp", form.ownerWhatsapp);
   requireNumber("pricePublic", form.pricePublic, "Public price");
   optionalNumber("priceInternal", form.priceInternal, "Internal price");

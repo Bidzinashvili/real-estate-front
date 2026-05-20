@@ -86,7 +86,7 @@ export function buildCreatePropertyPayload(
   const district = form.district.trim();
   const address = form.address.trim();
   const ownerName = form.ownerName.trim();
-  const ownerPhone = form.ownerPhone.trim();
+  const ownerPhone = (form.ownerPhones[0] ?? "").trim();
 
   if (!city) errors.push("City is required.");
   if (city && !GEORGIAN_CITY_OPTIONS.some((option) => option.value === city)) {

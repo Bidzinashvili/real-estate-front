@@ -251,8 +251,8 @@ export type ClientFormValues = z.infer<typeof clientFormSchema>;
 
 export const emptyClientFormDefaults: ClientFormValues = {
   name: "",
-  phones: [""],
-  whatsapp: "",
+  phones: ["+995"],
+  whatsapp: "+995",
   status: "",
   reminderDate: "",
   budgetMin: { value: undefined, lock: "none" },

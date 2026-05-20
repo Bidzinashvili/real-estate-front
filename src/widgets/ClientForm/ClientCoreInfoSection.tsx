@@ -145,7 +145,7 @@ export function ClientCoreInfoSection({
             })}
             <button
               type="button"
-              onClick={() => appendPhone("")}
+              onClick={() => appendPhone("+995")}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />

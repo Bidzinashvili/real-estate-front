@@ -32,7 +32,7 @@ export type FormState = {
   labels: LabelSelection[];
   pricePublic: string;
   ownerName: string;
-  ownerPhone: string;
+  ownerPhones: string[];
   cadastralCode: string;
   priceInternal: string;
   ownerWhatsapp: string;
@@ -126,10 +126,10 @@ export function initialFormState(): FormState {
     labels: [],
     pricePublic: "",
     ownerName: "",
-    ownerPhone: "",
+    ownerPhones: ["+995"],
     cadastralCode: "",
     priceInternal: "",
-    ownerWhatsapp: "",
+    ownerWhatsapp: "+995",
     myHomeId: "",
     ssGeId: "",
     description: "",
