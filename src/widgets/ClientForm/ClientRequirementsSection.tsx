@@ -53,7 +53,7 @@ const BOOLEAN_FIELDS = [
 type ClientRequirementsSectionProps = {
   control: Control<ClientFormValues>;
   errors: FieldErrors<ClientFormValues>;
-  setValue: UseFormSetValue<ClientFormValues>;
+  setValue?: UseFormSetValue<ClientFormValues>;
   isRentDeal: boolean;
   fieldDescriptions?: Record<string, string>;
   renovationSelectOptions?: EnumSelectOption[];
@@ -93,7 +93,7 @@ function RequirementRangeRow({
   config: RangeFieldConfig;
   control: Control<ClientFormValues>;
   errors: FieldErrors<ClientFormValues>;
-  setValue: UseFormSetValue<ClientFormValues>;
+  setValue?: UseFormSetValue<ClientFormValues>;
   fieldDescriptions?: Record<string, string>;
   showLockForPath: (path: string) => boolean;
 }) {
@@ -113,7 +113,7 @@ function RequirementRangeRow({
             render={({ field }) => {
               const handleLockChange = (nextLock: LockState) => {
                 field.onChange(nextLock);
-                setValue(`${config.maxName}.lock` as never, nextLock, {
+                setValue?.(`${config.maxName}.lock`, nextLock, {
                   shouldDirty: true,
                   shouldTouch: true,
                 });

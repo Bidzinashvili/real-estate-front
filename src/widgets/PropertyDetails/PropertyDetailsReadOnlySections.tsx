@@ -23,6 +23,10 @@ export function PropertyDetailsReadOnlySections({
   property,
   showPrivateNotes,
 }: PropertyDetailsReadOnlySectionsProps) {
+  const activeExternalIds = property.externalIds.filter(
+    (externalId) => externalId.archivedAt === null,
+  );
+
   return (
     <>
       <section className="space-y-4" aria-labelledby="meta-heading">
@@ -63,6 +67,16 @@ export function PropertyDetailsReadOnlySections({
           <DetailText label="MyHome id" value={property.myHomeId} />
           <DetailText label="SSGe id" value={property.ssGeId} />
         </div>
+        {activeExternalIds.length > 0 ? (
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <p className="font-medium text-slate-800">External IDs</p>
+            {activeExternalIds.map((externalId) => (
+              <p key={externalId.id}>
+                {externalId.platform}: {externalId.value}
+              </p>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailDateTime label="Created at" value={property.createdAt} />
@@ -77,10 +91,13 @@ export function PropertyDetailsReadOnlySections({
 
         {showPrivateNotes ? (
           <>
-            <DetailMultiline label="Comment" value={property.comment} />
             <DetailMultiline
-              label="Internal comment"
-              value={property.internalComment}
+              label="Personal comment"
+              value={property.privateComment ?? property.comment}
+            />
+            <DetailMultiline
+              label="Internal text"
+              value={property.internalText ?? property.internalComment}
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -127,6 +144,20 @@ export function PropertyDetailsReadOnlySections({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailNumber label="Bedrooms" value={property.apartment.bedrooms} />
+            <DetailNumber
+              label="Total floors"
+              value={property.apartment.totalFloors}
+            />
+            <DetailNumber
+              label="Ceiling height"
+              value={property.apartment.ceilingHeight}
+              suffix="m"
+            />
+            <DetailNumber
+              label="Balcony area"
+              value={property.apartment.balconyArea}
+              suffix="m²"
+            />
             {property.dealType === "RENT" && (
               <DetailNumber
                 label="Min Rental Period (months)"
@@ -157,7 +188,10 @@ export function PropertyDetailsReadOnlySections({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailYesNo label="Furnished" value={property.apartment.furnished} />
-            <DetailYesNo label="Parking" value={property.apartment.parking} />
+            <DetailNumber
+              label="Parking spaces"
+              value={property.apartment.parkingSpaces}
+            />
             <DetailYesNo
               label="Pets allowed"
               value={Boolean(property.apartment.petsAllowed)}

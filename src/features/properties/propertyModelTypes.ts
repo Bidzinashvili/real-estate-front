@@ -103,6 +103,14 @@ export type PropertyListingImage = {
   originalName: string;
 };
 
+export type PropertyExternalId = {
+  id: string;
+  platform: "MYHOME" | "SSGE";
+  value: string;
+  enteredAt: string;
+  archivedAt: string | null;
+};
+
 export type PropertyApartment = {
   id: string;
   propertyId: string;
@@ -115,13 +123,15 @@ export type PropertyApartment = {
   bedrooms: number;
   floor: number;
   totalFloors: number;
-  balcony: number;
+  ceilingHeight: number | null;
+  balconyArea: number | null;
+  needsVerification: string[];
   elevator: boolean;
   centralHeating: boolean;
   airConditioner: boolean;
   kitchenType: KitchenType;
   furnished: boolean;
-  parking: boolean;
+  parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
 };
@@ -136,11 +146,12 @@ export type PropertyPrivateHouse = {
   renovation: string | null;
   rooms: number;
   bedrooms: number;
-  balcony: number;
+  balconyArea: number | null;
+  needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
-  parking: boolean;
+  parkingSpaces: number | null;
   pool: boolean;
   fruitTrees: boolean;
   electricity: boolean;
@@ -174,10 +185,13 @@ export type PropertyCommercial = {
   area: number;
   status: CommercialStatus;
   floor: number;
+  totalFloors: number | null;
+  ceilingHeight: number | null;
   renovation: string | null;
+  needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
-  parking: boolean;
+  parkingSpaces: number | null;
   electricity: boolean;
   water: boolean;
   gas: boolean;
@@ -205,7 +219,11 @@ export type Property = {
   ourSiteId: string | null;
   myHomeId: string | null;
   ssGeId: string | null;
+  externalIds: PropertyExternalId[];
   description: string | null;
+  publicComment: string | null;
+  privateComment: string | null;
+  internalText: string | null;
   comment: string | null;
   internalComment: string | null;
   reminderDate: string | null;

@@ -3,14 +3,22 @@ import type { JsonValue } from "@/shared/lib/jsonValue";
 export const PROPERTY_STATUSES = [
   "TO_BE_VERIFIED",
   "FOR_RENT",
+  "FOR_SALE",
+  "AVAILABLE_SOON",
   "RENTED",
+  "SOLD",
+  "ARCHIVED",
 ] as const;
 
 export type PropertyStatus = (typeof PROPERTY_STATUSES)[number];
 
 export const PROPERTY_STATUS_LABELS: Record<PropertyStatus, string> = {
   FOR_RENT: "Available for rent",
+  FOR_SALE: "Available for sale",
+  AVAILABLE_SOON: "Available soon",
   RENTED: "Rented",
+  SOLD: "Sold",
+  ARCHIVED: "Archived",
   TO_BE_VERIFIED: "Needs verification",
 };
 

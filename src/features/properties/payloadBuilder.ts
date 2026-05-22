@@ -31,7 +31,9 @@ export type PropertyFormValues = {
   selectedStreetId: string | null;
   pricePublic: number | undefined;
   priceInternal: number | undefined;
-  description: string;
+  publicComment: string;
+  privateComment: string;
+  internalText: string;
   labels: LabelSelection[];
   apartment: PropertyApartmentUpdate | null;
   privateHouse: PropertyPrivateHouseUpdate | null;
@@ -197,7 +199,15 @@ export function buildPropertyUpdatePayload(
       payload.priceInternal = current.priceInternal;
     }
   }
-  if (initial.description !== current.description) payload.description = current.description;
+  if (initial.publicComment !== current.publicComment) {
+    payload.publicComment = current.publicComment;
+  }
+  if (initial.privateComment !== current.privateComment) {
+    payload.privateComment = current.privateComment;
+  }
+  if (initial.internalText !== current.internalText) {
+    payload.internalText = current.internalText;
+  }
 
   const labelPatch = buildLabelUpdatePayload(initial.labels, current.labels);
   if (labelPatch.addLabels) {

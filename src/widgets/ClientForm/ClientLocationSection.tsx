@@ -83,7 +83,8 @@ export function ClientLocationSection({
                         type="text"
                         value={field.value?.[districtIndex] ?? ""}
                         onChange={(event) => {
-                          const nextDistricts = [...(field.value ?? [])];
+                          const currentDistricts = (field.value ?? []) as string[];
+                          const nextDistricts = [...currentDistricts];
                           nextDistricts[districtIndex] = event.target.value;
                           field.onChange(nextDistricts);
                         }}
@@ -145,7 +146,8 @@ export function ClientLocationSection({
                         type="text"
                         value={field.value?.[addressIndex] ?? ""}
                         onChange={(event) => {
-                          const nextAddresses = [...(field.value ?? [])];
+                          const currentAddresses = (field.value ?? []) as string[];
+                          const nextAddresses = [...currentAddresses];
                           nextAddresses[addressIndex] = event.target.value;
                           field.onChange(nextAddresses);
                         }}
@@ -205,7 +207,8 @@ export function ClientLocationSection({
                         type="text"
                         value={field.value?.[labelIndex] ?? ""}
                         onChange={(event) => {
-                          const nextLabels = [...(field.value ?? [])];
+                          const currentLabels = (field.value ?? []) as string[];
+                          const nextLabels = [...currentLabels];
                           nextLabels[labelIndex] = event.target.value;
                           field.onChange(nextLabels);
                         }}

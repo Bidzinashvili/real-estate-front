@@ -44,7 +44,7 @@ type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
   canEdit: boolean;
   showInternalPrice: boolean;
-  readOnlyPrivateHouseBalcony?: number;
+  readOnlyPrivateHouseBalcony?: number | null;
   onDealTypeChange: (value: DealType) => void;
   onHotelScopeChange: (raw: string) => void;
   onFieldChange: (
@@ -57,7 +57,10 @@ type PropertyDetailsEditableSectionsProps = {
     value: number | undefined,
   ) => void;
   onLabelsChange: (value: LabelSelection[]) => void;
-  onDescriptionChange: (value: string) => void;
+  onCommentChange: (
+    field: "publicComment" | "privateComment" | "internalText",
+    value: string,
+  ) => void;
   setApartment: (patch: PropertyApartmentUpdate) => void;
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
   setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
@@ -74,7 +77,7 @@ export function PropertyDetailsEditableSections({
   onFieldChange,
   onPriceChange,
   onLabelsChange,
-  onDescriptionChange,
+  onCommentChange,
   setApartment,
   setPrivateHouse,
   setLandPlot,
@@ -201,14 +204,44 @@ export function PropertyDetailsEditableSections({
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-slate-800">Description</label>
+        <label className="block text-sm font-medium text-slate-800">Public comment</label>
         <textarea
-          value={values.description}
-          onChange={(event) => onDescriptionChange(event.target.value)}
+          value={values.publicComment}
+          onChange={(event) => onCommentChange("publicComment", event.target.value)}
           className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
           rows={4}
         />
       </div>
+      {showInternalPrice ? (
+        <>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-800">
+              Personal comment
+            </label>
+            <textarea
+              value={values.privateComment}
+              onChange={(event) =>
+                onCommentChange("privateComment", event.target.value)
+              }
+              className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+              rows={4}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-800">
+              Internal text
+            </label>
+            <textarea
+              value={values.internalText}
+              onChange={(event) =>
+                onCommentChange("internalText", event.target.value)
+              }
+              className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+              rows={4}
+            />
+          </div>
+        </>
+      ) : null}
 
       {values.apartment && (
         <ApartmentEditSection

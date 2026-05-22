@@ -89,7 +89,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       selectedStreetId: property.streetId,
       pricePublic: property.pricePublic,
       priceInternal: property.priceInternal ?? undefined,
-      description: property.description ?? "",
+      publicComment: property.publicComment ?? property.description ?? "",
+      privateComment: property.privateComment ?? property.comment ?? "",
+      internalText: property.internalText ?? property.internalComment ?? "",
       labels: (property.labels ?? []).map((label) => ({
         id: label.id,
         name: label.name,
@@ -99,10 +101,15 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         ? {
             totalArea: property.apartment.totalArea,
             rooms: property.apartment.rooms,
-            balcony: property.apartment.balcony,
+            totalFloors: property.apartment.totalFloors,
+            ceilingHeight: property.apartment.ceilingHeight ?? undefined,
+            balconyArea: property.apartment.balconyArea,
+            needsVerification: property.apartment.needsVerification,
             floor: property.apartment.floor,
+            project: property.apartment.project ?? "",
             renovation: parseRenovationForForm(property.apartment.renovation),
             furnished: property.apartment.furnished,
+            parkingSpaces: property.apartment.parkingSpaces,
             minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
           }
         : null,
@@ -110,6 +117,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         ? {
             houseArea: property.privateHouse.houseArea,
             yardArea: property.privateHouse.yardArea,
+            balconyArea: property.privateHouse.balconyArea,
+            parkingSpaces: property.privateHouse.parkingSpaces,
+            needsVerification: property.privateHouse.needsVerification,
             pool: property.privateHouse.pool,
             fruitTrees: property.privateHouse.fruitTrees,
             renovation: parseRenovationForForm(property.privateHouse.renovation),
@@ -130,7 +140,10 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       commercial: property.commercial
         ? {
             area: property.commercial.area,
-            parking: property.commercial.parking,
+            totalFloors: property.commercial.totalFloors ?? undefined,
+            ceilingHeight: property.commercial.ceilingHeight ?? undefined,
+            parkingSpaces: property.commercial.parkingSpaces,
+            needsVerification: property.commercial.needsVerification,
             airConditioner: property.commercial.airConditioner,
             renovation: parseRenovationForForm(property.commercial.renovation),
             minRentalPeriod: property.commercial.minRentalPeriod ?? undefined,
@@ -329,13 +342,13 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             values={values}
             canEdit={false}
             showInternalPrice={canViewPrivateFields}
-            readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
+            readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={() => {}}
             onFieldChange={handleFieldChange}
             onPriceChange={handlePriceChange}
             onLabelsChange={() => {}}
-            onDescriptionChange={() => {}}
+            onCommentChange={() => {}}
             setApartment={setApartment}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
@@ -358,7 +371,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             values={values}
             canEdit={canEdit}
             showInternalPrice={canViewPrivateFields}
-            readOnlyPrivateHouseBalcony={property.privateHouse?.balcony}
+            readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={(raw) => {
               setValues((prev) => {
@@ -374,8 +387,8 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             onFieldChange={handleFieldChange}
             onPriceChange={handlePriceChange}
             onLabelsChange={(value) => setValues((prev) => ({ ...prev, labels: value }))}
-            onDescriptionChange={(value) =>
-              setValues((prev) => ({ ...prev, description: value }))
+            onCommentChange={(field, value) =>
+              setValues((prev) => ({ ...prev, [field]: value }))
             }
             setApartment={setApartment}
             setPrivateHouse={setPrivateHouse}

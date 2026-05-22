@@ -23,6 +23,7 @@ function formatAddress(property: Property) {
 }
 
 function cardTitle(property: Property) {
+  if (property.publicComment?.trim()) return property.publicComment.trim();
   if (property.description?.trim()) return property.description.trim();
   return formatAddress(property);
 }
@@ -53,6 +54,16 @@ function cardAreaM2(property: Property) {
     : "—";
 }
 
+function propertyAreaSquareMeters(property: Property): number | null {
+  return (
+    property.apartment?.totalArea ??
+    property.privateHouse?.totalArea ??
+    property.landPlot?.landArea ??
+    property.commercial?.area ??
+    null
+  );
+}
+
 function formatOwnerLine(property: Property) {
   const name = property.ownerName?.trim();
   const phone = property.ownerPhone?.trim();
@@ -66,8 +77,14 @@ function lifecycleStatusBadgeClass(status: PropertyStatus): string {
   if (status === "TO_BE_VERIFIED") {
     return "bg-amber-500";
   }
+  if (status === "AVAILABLE_SOON") {
+    return "bg-violet-600";
+  }
   if (status === "RENTED") {
     return "bg-slate-700";
+  }
+  if (status === "SOLD" || status === "ARCHIVED") {
+    return "bg-slate-500";
   }
   return "bg-teal-600";
 }
@@ -90,9 +107,23 @@ export function PropertyListingCard({
   onListingChanged,
 }: PropertyListingCardProps) {
   const addressLine = formatAddress(property);
+  const areaSquareMeters = propertyAreaSquareMeters(property);
+
+  function handleCardKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onView(property.id);
+    }
+  }
 
   return (
-    <article className="flex min-w-0 w-full flex-col overflow-hidden rounded-3xl bg-[#dfe8e4] shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md">
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={() => onView(property.id)}
+      onKeyDown={handleCardKeyDown}
+      className="flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-3xl bg-[#dfe8e4] shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+    >
       <div className="relative aspect-[3/2] w-full overflow-hidden">
         <PropertyCardImageCarousel
           propertyId={property.id}
@@ -122,7 +153,10 @@ export function PropertyListingCard({
 
       <div className="space-y-2.5 p-3">
         <div className="flex items-start justify-between gap-3">
-          <PropertyListingCardPriceRow pricePublic={property.pricePublic} />
+          <PropertyListingCardPriceRow
+            pricePublic={property.pricePublic}
+            areaSquareMeters={areaSquareMeters}
+          />
           <span className="flex shrink-0 flex-col items-end gap-1">
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
               {property.propertyType}
@@ -159,7 +193,10 @@ export function PropertyListingCard({
         <div className="space-y-2 pt-1">
           <button
             type="button"
-            onClick={() => onView(property.id)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onView(property.id);
+            }}
             className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-slate-900 px-3 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800 sm:w-auto sm:min-w-[7rem]"
           >
             <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />

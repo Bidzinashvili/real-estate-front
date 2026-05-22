@@ -18,6 +18,16 @@ export type AddPropertyActiveSubtype =
   | "landPlot"
   | "commercial";
 
+export type ExternalIdPlatform = "MYHOME" | "SSGE";
+
+export type ExternalIdFormRow = {
+  localId: string;
+  platform: ExternalIdPlatform;
+  value: string;
+  enteredAt: string;
+  archivedAt: string | null;
+};
+
 export type FormState = {
   propertyType: PropertyType;
   hotelScope: HotelScope | "";
@@ -38,7 +48,10 @@ export type FormState = {
   ownerWhatsapp: string;
   myHomeId: string;
   ssGeId: string;
-  description: string;
+  externalIds: ExternalIdFormRow[];
+  publicComment: string;
+  internalText: string;
+  privateComment: string;
   apartment: {
     buildingCondition: BuildingCondition;
     totalArea: string;
@@ -46,13 +59,15 @@ export type FormState = {
     bedrooms: string;
     floor: string;
     totalFloors: string;
-    balcony: number;
+    ceilingHeight: string;
+    balconyArea: string;
+    needsVerification: string[];
     elevator: boolean;
     centralHeating: boolean;
     airConditioner: boolean;
     kitchenType: KitchenType;
     furnished: boolean;
-    parking: boolean;
+    parkingSpaces: string;
     buildingNumber: string;
     project: string;
     renovation: Renovation | "";
@@ -66,11 +81,12 @@ export type FormState = {
     totalArea: string;
     rooms: string;
     bedrooms: string;
-    balcony: number;
+    balconyArea: string;
+    needsVerification: string[];
     centralHeating: boolean;
     airConditioner: boolean;
     furnished: boolean;
-    parking: boolean;
+    parkingSpaces: string;
     pool: boolean;
     fruitTrees: boolean;
     electricity: boolean;
@@ -99,9 +115,12 @@ export type FormState = {
     area: string;
     status: CommercialStatus;
     floor: string;
+    totalFloors: string;
+    ceilingHeight: string;
     centralHeating: boolean;
     airConditioner: boolean;
-    parking: boolean;
+    parkingSpaces: string;
+    needsVerification: string[];
     electricity: boolean;
     water: boolean;
     gas: boolean;
@@ -132,7 +151,10 @@ export function initialFormState(): FormState {
     ownerWhatsapp: "+995",
     myHomeId: "",
     ssGeId: "",
-    description: "",
+    externalIds: [],
+    publicComment: "",
+    internalText: "",
+    privateComment: "",
     apartment: {
       buildingCondition: "NEW",
       totalArea: "",
@@ -140,16 +162,18 @@ export function initialFormState(): FormState {
       bedrooms: "",
       floor: "",
       totalFloors: "",
-      balcony: 0,
+      ceilingHeight: "",
+      balconyArea: "",
+      needsVerification: [],
       elevator: false,
       centralHeating: false,
       airConditioner: false,
       kitchenType: "SEPARATE",
       furnished: false,
-      parking: false,
+      parkingSpaces: "",
       buildingNumber: "",
-      project: "",
-      renovation: "",
+      project: "Non-standard",
+      renovation: "NEW_RENOVATED",
       petsAllowed: false,
       minRentalPeriod: "",
     },
@@ -160,18 +184,19 @@ export function initialFormState(): FormState {
       totalArea: "",
       rooms: "",
       bedrooms: "",
-      balcony: 0,
+      balconyArea: "",
+      needsVerification: [],
       centralHeating: false,
       airConditioner: false,
       furnished: false,
-      parking: false,
+      parkingSpaces: "",
       pool: false,
       fruitTrees: false,
       electricity: false,
       water: false,
       gas: false,
       sewage: false,
-      renovation: "",
+      renovation: "NEW_RENOVATED",
       petsAllowed: false,
       minRentalPeriod: "",
     },
@@ -193,14 +218,17 @@ export function initialFormState(): FormState {
       area: "",
       status: "UNIVERSAL",
       floor: "",
+      totalFloors: "",
+      ceilingHeight: "",
       centralHeating: false,
       airConditioner: false,
-      parking: false,
+      parkingSpaces: "",
+      needsVerification: [],
       electricity: false,
       water: false,
       gas: false,
       sewage: false,
-      renovation: "",
+      renovation: "NEW_RENOVATED",
       minRentalPeriod: "",
     },
   };

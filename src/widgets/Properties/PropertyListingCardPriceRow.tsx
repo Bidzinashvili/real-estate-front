@@ -22,9 +22,13 @@ const usdCurrencyFormatter = new Intl.NumberFormat("en-US", {
 
 type PropertyListingCardPriceRowProps = {
   pricePublic: number;
+  areaSquareMeters?: number | null;
 };
 
-export function PropertyListingCardPriceRow({ pricePublic }: PropertyListingCardPriceRowProps) {
+export function PropertyListingCardPriceRow({
+  pricePublic,
+  areaSquareMeters,
+}: PropertyListingCardPriceRowProps) {
   const displayCurrency = useCatalogPriceDisplayStore((state) => state.displayCurrency);
   const [fetchErrorMessage, setFetchErrorMessage] = useState<string | null>(null);
 
@@ -97,6 +101,10 @@ export function PropertyListingCardPriceRow({ pricePublic }: PropertyListingCard
     displayCurrency === "USD" &&
     fetchErrorMessage &&
     (!isGelAmountValid || !cachedUsdResponse);
+  const pricePerSquareMeter =
+    areaSquareMeters && areaSquareMeters > 0
+      ? Math.round(pricePublic / areaSquareMeters)
+      : null;
 
   return (
     <div className="min-w-0 flex-1 space-y-0.5">
@@ -109,6 +117,11 @@ export function PropertyListingCardPriceRow({ pricePublic }: PropertyListingCard
       {showUsdError ? (
         <p className="text-xs text-red-600" role="status">
           {fetchErrorMessage}
+        </p>
+      ) : null}
+      {pricePerSquareMeter !== null ? (
+        <p className="text-xs font-medium text-slate-600">
+          {pricePerSquareMeter.toLocaleString()} ₾ / m²
         </p>
       ) : null}
     </div>

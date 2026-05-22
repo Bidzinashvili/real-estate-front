@@ -9,6 +9,8 @@ import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/add
 import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
+import { FloorInput } from "@/shared/components/FloorInput";
+import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
 
 type Props = {
   dealType: DealType;
@@ -36,14 +38,24 @@ export function AddPropertyCommercialSection({
           required
           error={fieldErrors["commercial.area"]}
         />
-        <TextField
-          id="cmFloor"
-          label="Floor"
-          type="number"
-          value={commercial.floor}
-          onChange={(value) => patchCommercial({ floor: value })}
+        <FloorInput
+          floorId="cmFloor"
+          totalFloorsId="cmTotalFloors"
+          floorValue={commercial.floor}
+          totalFloorsValue={commercial.totalFloors}
+          onFloorChange={(value) => patchCommercial({ floor: value })}
+          onTotalFloorsChange={(value) => patchCommercial({ totalFloors: value })}
+          floorError={fieldErrors["commercial.floor"]}
+          totalFloorsError={fieldErrors["commercial.totalFloors"]}
           required
-          error={fieldErrors["commercial.floor"]}
+        />
+        <TextField
+          id="cmCeilingHeight"
+          label="Ceiling height"
+          type="number"
+          value={commercial.ceilingHeight}
+          onChange={(value) => patchCommercial({ ceilingHeight: value })}
+          error={fieldErrors["commercial.ceilingHeight"]}
         />
         <SelectField
           id="cmStatus"
@@ -67,23 +79,49 @@ export function AddPropertyCommercialSection({
             error={fieldErrors["commercial.minRentalPeriod"]}
           />
         )}
-        <CheckboxField
-          id="cmCentralHeating"
-          label="Central heating"
-          checked={commercial.centralHeating}
-          onChange={(checked) => patchCommercial({ centralHeating: checked })}
-        />
-        <CheckboxField
-          id="cmAirConditioner"
-          label="Air conditioner"
-          checked={commercial.airConditioner}
-          onChange={(checked) => patchCommercial({ airConditioner: checked })}
-        />
-        <CheckboxField
+        {[
+          {
+            id: "cmCentralHeating",
+            label: "Central heating",
+            key: "centralHeating",
+            checked: commercial.centralHeating,
+            onChange: (checked: boolean) =>
+              patchCommercial({ centralHeating: checked }),
+          },
+          {
+            id: "cmAirConditioner",
+            label: "Air conditioner",
+            key: "airConditioner",
+            checked: commercial.airConditioner,
+            onChange: (checked: boolean) =>
+              patchCommercial({ airConditioner: checked }),
+          },
+        ].map((field) => (
+          <div key={field.key} className="flex items-center gap-2">
+            <div className="flex-1">
+              <CheckboxField
+                id={field.id}
+                label={field.label}
+                checked={field.checked}
+                onChange={field.onChange}
+              />
+            </div>
+            <NeedsVerificationToggle
+              fieldKey={field.key}
+              activeFields={commercial.needsVerification}
+              onChange={(nextFields) =>
+                patchCommercial({ needsVerification: nextFields })
+              }
+            />
+          </div>
+        ))}
+        <TextField
           id="cmParking"
-          label="Parking"
-          checked={commercial.parking}
-          onChange={(checked) => patchCommercial({ parking: checked })}
+          label="Parking spaces"
+          type="number"
+          value={commercial.parkingSpaces}
+          onChange={(value) => patchCommercial({ parkingSpaces: value })}
+          error={fieldErrors["commercial.parkingSpaces"]}
         />
         <CheckboxField
           id="cmElectricity"
