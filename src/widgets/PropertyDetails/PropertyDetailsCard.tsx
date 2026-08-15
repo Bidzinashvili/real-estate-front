@@ -69,6 +69,20 @@ function getMinRentalPeriodErrorMessage(months: number | undefined): string | nu
   return null;
 }
 
+function getTotalFloorsErrorMessage(
+  totalFloors: number | undefined,
+  label: string,
+): string | null {
+  if (totalFloors === undefined || Number.isNaN(totalFloors)) {
+    return `${label} is required.`;
+  }
+  if (!Number.isInteger(totalFloors) || totalFloors < 1) {
+    return `${label} must be a whole number of at least 1.`;
+  }
+
+  return null;
+}
+
 export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   const { property, canViewPrivateFields, presentation } = props;
   const canEdit = presentation === "edit" ? props.canEdit : false;
@@ -231,6 +245,28 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     if (values.landPlot) {
       if (values.landPlot.landCategory === "" || values.landPlot.landUsage === "") {
         setClientError("Select land category and land usage.");
+        return;
+      }
+    }
+
+    if (values.apartment) {
+      const message = getTotalFloorsErrorMessage(
+        values.apartment.totalFloors,
+        "Apartment total floors",
+      );
+      if (message) {
+        setClientError(message);
+        return;
+      }
+    }
+
+    if (values.commercial) {
+      const message = getTotalFloorsErrorMessage(
+        values.commercial.totalFloors,
+        "Commercial total floors",
+      );
+      if (message) {
+        setClientError(message);
         return;
       }
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getClients } from "@/features/clients/api";
 import type { Client } from "@/features/clients/types";
 import { updateProperty } from "@/features/properties/api";
@@ -22,6 +22,16 @@ const CLIENTS_PAGE_LIMIT = 500;
 
 const FIELD_CLASS =
   "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-400";
+
+function isAvailableSoonAllowed(property: Property): boolean {
+  return property.dealType === "RENT" || property.dealType === "DAILY_RENT";
+}
+
+function getStatusOptions(property: Property): PropertyStatus[] {
+  return PROPERTY_STATUSES.filter(
+    (status) => status !== "AVAILABLE_SOON" || isAvailableSoonAllowed(property),
+  );
+}
 
 type PropertyListingChangeStatusModalProps = {
   open: boolean;
@@ -82,8 +92,10 @@ export function PropertyListingChangeStatusModal({
   onClose,
   onSaved,
 }: PropertyListingChangeStatusModalProps) {
+  const statusOptions = useMemo(() => getStatusOptions(property), [property]);
+  const fallbackStatus = statusOptions[0] ?? property.status;
   const [selectedStatus, setSelectedStatus] = useState<PropertyStatus>(
-    property.status,
+    statusOptions.includes(property.status) ? property.status : fallbackStatus,
   );
   const [verificationReminderLocal, setVerificationReminderLocal] = useState(
     () => isoToDatetimeLocalValue(property.reminderDate),
@@ -106,7 +118,9 @@ export function PropertyListingChangeStatusModal({
   useEffect(() => {
     if (!open) return;
 
-    setSelectedStatus(property.status);
+    setSelectedStatus(
+      statusOptions.includes(property.status) ? property.status : fallbackStatus,
+    );
     setVerificationReminderLocal(isoToDatetimeLocalValue(property.reminderDate));
     setRentalDurationMonthsInput(
       property.rentalDurationMonths != null
@@ -146,7 +160,7 @@ export function PropertyListingChangeStatusModal({
     })();
 
     return () => controller.abort();
-  }, [open, property]);
+  }, [fallbackStatus, open, property, statusOptions]);
 
   useEffect(() => {
     if (!open) return;
@@ -260,7 +274,7 @@ export function PropertyListingChangeStatusModal({
                 }}
                 className={FIELD_CLASS}
               >
-                {PROPERTY_STATUSES.map((status) => (
+                {statusOptions.map((status) => (
                   <option key={status} value={status}>
                     {formatPropertyStatusLabel(status)}
                   </option>

@@ -1,7 +1,6 @@
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { CreatePropertyDto } from "@/features/properties/types";
 import { GEORGIAN_CITY_OPTIONS } from "@/features/properties/addPropertyFormOptions";
-import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
 import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
 import type {
   AddPropertyActiveSubtype,
@@ -104,7 +103,9 @@ export function buildCreatePropertyPayload(
   const district = form.district.trim();
   const address = form.address.trim();
   const ownerName = form.ownerName.trim();
-  const ownerPhone = (form.ownerPhones[0] ?? "").trim();
+  const ownerPhones = form.ownerPhones
+    .map((ownerPhone) => ownerPhone.trim())
+    .filter((ownerPhone) => ownerPhone !== "");
 
   if (!city) errors.push("City is required.");
   if (city && !GEORGIAN_CITY_OPTIONS.some((option) => option.value === city)) {
@@ -113,7 +114,7 @@ export function buildCreatePropertyPayload(
   if (!district) errors.push("District is required.");
   if (!address) errors.push("Address is required.");
   if (!ownerName) errors.push("Owner name is required.");
-  if (!ownerPhone) errors.push("Owner phone is required.");
+  if (ownerPhones.length === 0) errors.push("Owner phone is required.");
 
   const pricePublic = parseNumber(form.pricePublic, "Public price", errors);
   const payload: CreatePropertyDto = {
@@ -124,7 +125,7 @@ export function buildCreatePropertyPayload(
     address,
     pricePublic,
     ownerName,
-    ownerPhone,
+    ownerPhones,
   };
   const labels = normalizeLabels(form.labels);
 
@@ -151,16 +152,6 @@ export function buildCreatePropertyPayload(
   if (form.privateComment.trim()) payload.privateComment = form.privateComment.trim();
   if (form.internalText.trim()) payload.internalText = form.internalText.trim();
   if (labels.length > 0) payload.labels = labels;
-
-  if (form.listingLifecycleStatus) {
-    payload.status = form.listingLifecycleStatus;
-  }
-  if (form.listingLifecycleStatus === "TO_BE_VERIFIED") {
-    const reminderIso = datetimeLocalValueToIso(form.verificationReminderLocal);
-    if (reminderIso) {
-      payload.reminderDate = reminderIso;
-    }
-  }
 
   if (form.priceInternal.trim()) {
     payload.priceInternal = parseNumber(form.priceInternal, "Internal price", errors);

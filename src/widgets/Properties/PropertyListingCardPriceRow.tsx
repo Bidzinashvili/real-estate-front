@@ -10,6 +10,10 @@ import {
 import { ApiError } from "@/shared/lib/apiError";
 import { useCatalogPriceDisplayStore } from "@/shared/stores/catalogPriceDisplayStore";
 import { PropertyCatalogPriceCurrencyToggle } from "@/widgets/Properties/PropertyCatalogPriceCurrencyToggle";
+import {
+  calculatePricePerSquareMeter,
+  formatPricePerSquareMeter,
+} from "@/features/properties/pricePerSquareMeter";
 
 const MAX_CONVERT_AMOUNT = 1e15;
 
@@ -101,10 +105,10 @@ export function PropertyListingCardPriceRow({
     displayCurrency === "USD" &&
     fetchErrorMessage &&
     (!isGelAmountValid || !cachedUsdResponse);
-  const pricePerSquareMeter =
-    areaSquareMeters && areaSquareMeters > 0
-      ? Math.round(pricePublic / areaSquareMeters)
-      : null;
+  const pricePerSquareMeter = calculatePricePerSquareMeter(
+    pricePublic,
+    areaSquareMeters,
+  );
 
   return (
     <div className="min-w-0 flex-1 space-y-0.5">
@@ -121,7 +125,7 @@ export function PropertyListingCardPriceRow({
       ) : null}
       {pricePerSquareMeter !== null ? (
         <p className="text-xs font-medium text-slate-600">
-          {pricePerSquareMeter.toLocaleString()} ₾ / m²
+          {formatPricePerSquareMeter(pricePerSquareMeter)}
         </p>
       ) : null}
     </div>

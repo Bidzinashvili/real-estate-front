@@ -8,7 +8,7 @@ import { useCreateClient } from "@/features/clients/useCreateClient";
 import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
-import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
+import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
 import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSection";
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
@@ -20,9 +20,8 @@ const addClientDraftStorageKey = "draft:client:new";
 export function AddClientForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateClient();
-  const { restoredDraft, isDraftReady, saveDraft, clearDraft } = useSessionDraft<ClientFormValues>(
-    addClientDraftStorageKey,
-  );
+  const { restoredDraft, isDraftReady, saveDraft, clearDraft } =
+    useLocalStorageDraft<ClientFormValues>(addClientDraftStorageKey);
   const [isDraftApplied, setIsDraftApplied] = useState(false);
 
   const {
@@ -144,7 +143,6 @@ export function AddClientForm() {
           <button
             type="button"
             onClick={() => {
-              clearDraft();
               router.push("/clients");
             }}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"

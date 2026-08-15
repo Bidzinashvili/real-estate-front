@@ -129,7 +129,7 @@ export type CreatePropertyDto = {
   address: string;
   pricePublic: number;
   ownerName: string;
-  ownerPhone: string;
+  ownerPhones: string[];
   cadastralCode?: string;
   priceInternal?: number;
   ownerWhatsapp?: string;

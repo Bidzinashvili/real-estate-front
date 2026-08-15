@@ -22,6 +22,7 @@ import { SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
   EditableNumericTextInput,
+  EditableTwoDigitNumericInput,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import { MinRentalPeriodEditField } from "@/widgets/PropertyDetails/MinRentalPeriodEditField";
 import { parseDecimalInput, parseIntegerInput } from "@/shared/lib/parseNumericInput";
@@ -64,12 +65,10 @@ export function ApartmentEditSection({
           parse={parseIntegerInput}
           inputMode="numeric"
         />
-        <EditableNumericTextInput
+        <EditableTwoDigitNumericInput
           label="Total floors"
           value={apartment.totalFloors}
           onValueChange={(next) => setApartment({ totalFloors: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
         />
         <EditableNumericTextInput
           label="Ceiling height"
@@ -289,12 +288,10 @@ export function CommercialEditSection({
           parse={parseDecimalInput}
           inputMode="decimal"
         />
-        <EditableNumericTextInput
+        <EditableTwoDigitNumericInput
           label="Total floors"
           value={commercial.totalFloors}
           onValueChange={(next) => setCommercial({ totalFloors: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
         />
         <EditableNumericTextInput
           label="Ceiling height"

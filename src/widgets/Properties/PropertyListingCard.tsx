@@ -66,7 +66,10 @@ function propertyAreaSquareMeters(property: Property): number | null {
 
 function formatOwnerLine(property: Property) {
   const name = property.ownerName?.trim();
-  const phone = property.ownerPhone?.trim();
+  const phone = property.ownerPhones
+    .map((ownerPhone) => ownerPhone.trim())
+    .filter((ownerPhone) => ownerPhone !== "")
+    .join(", ");
   if (name && phone) return `${name} • ${phone}`;
   if (name) return name;
   if (phone) return phone;

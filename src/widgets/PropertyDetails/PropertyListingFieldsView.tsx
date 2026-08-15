@@ -7,6 +7,7 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
+import { calculatePricePerSquareMeter } from "@/features/properties/pricePerSquareMeter";
 import {
   DetailMultiline,
   DetailNumber,
@@ -35,10 +36,10 @@ export function PropertyListingFieldsView({
     privateHouseTotalArea ??
     values.landPlot?.landArea ??
     values.commercial?.area;
-  const pricePerSquareMeter =
-    values.pricePublic !== undefined && areaSquareMeters && areaSquareMeters > 0
-      ? Math.round(values.pricePublic / areaSquareMeters)
-      : null;
+  const pricePerSquareMeter = calculatePricePerSquareMeter(
+    values.pricePublic,
+    areaSquareMeters,
+  );
 
   return (
     <>
@@ -89,11 +90,14 @@ export function PropertyListingFieldsView({
           />
         </div>
 
-        <DetailMultiline label="Public comment" value={values.publicComment} />
+        <DetailMultiline label="Comment" value={values.publicComment} />
         {showInternalPrice ? (
           <>
-            <DetailMultiline label="Personal comment" value={values.privateComment} />
-            <DetailMultiline label="Internal text" value={values.internalText} />
+            <DetailMultiline
+              label="Comment for myself"
+              value={values.privateComment}
+            />
+            <DetailMultiline label="Upload text" value={values.internalText} />
           </>
         ) : null}
       </section>

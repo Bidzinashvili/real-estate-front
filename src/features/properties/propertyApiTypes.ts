@@ -161,7 +161,7 @@ export type PropertyApi = {
   pricePublic: number;
   priceInternal: number | null;
   ownerName: string;
-  ownerPhone: string;
+  ownerPhones: string[];
   ownerWhatsapp: string | null;
   ourSiteId: string | null;
   myHomeId: string | null;
@@ -208,7 +208,7 @@ export type CreatePropertyBase = {
   pricePublic: number;
   priceInternal?: number;
   ownerName: string;
-  ownerPhone: string;
+  ownerPhones: string[];
   ownerWhatsapp?: string;
   myHomeId?: string;
   ssGeId?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
@@ -11,7 +11,6 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import type { HotelScope } from "@/features/properties/types";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
-import { PROPERTY_STATUS_FILTER_OPTIONS } from "@/features/properties/types";
 import {
   addPropertyInputClassName,
   SelectField,
@@ -22,7 +21,11 @@ import type { FormErrors } from "@/features/properties/addPropertyFormValidation
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 import { ImageUploadField } from "@/widgets/AddProperty/ImageUploadField";
 import { ExternalIdList } from "@/shared/components/ExternalIdList";
-import { formatNoteDate } from "@/shared/lib/formatDate";
+import { applyDatedPersonalCommentEntry } from "@/shared/lib/personalCommentEntry";
+import {
+  calculatePricePerSquareMeter,
+  formatPricePerSquareMeter,
+} from "@/features/properties/pricePerSquareMeter";
 
 const publicPriceMarkupRatio = 1.03;
 const publicPriceRoundingInterval = 500;
@@ -45,6 +48,34 @@ function computeInternalPriceFromPublic(publicPriceInput: string): string {
   const publicNumber = parseFloat(trimmedPublic);
   if (!Number.isFinite(publicNumber)) return "";
   return String(Math.round(publicNumber / publicPriceMarkupRatio));
+}
+
+function parseFormNumber(value: string): number | null {
+  const trimmedValue = value.trim();
+  if (trimmedValue === "") return null;
+  const parsedValue = Number(trimmedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+function getCreateAreaSquareMeters(form: FormState): number | null {
+  if (form.propertyType === "APARTMENT") {
+    return parseFormNumber(form.apartment.totalArea);
+  }
+  if (
+    form.propertyType === "PRIVATE_HOUSE" ||
+    form.propertyType === "COTTAGE" ||
+    form.propertyType === "HOTEL"
+  ) {
+    return parseFormNumber(form.privateHouse.totalArea);
+  }
+  if (form.propertyType === "COMMERCIAL") {
+    return parseFormNumber(form.commercial.area);
+  }
+  if (form.propertyType === "LAND_PLOT") {
+    return parseFormNumber(form.landPlot.landArea);
+  }
+
+  return null;
 }
 
 type Props = {
@@ -82,6 +113,11 @@ export function AddPropertyCoreFields({
     useState(false);
   const [isPublicPriceManuallyEdited, setIsPublicPriceManuallyEdited] =
     useState(false);
+  const isPersonalCommentEntryActiveRef = useRef(false);
+  const pricePerSquareMeter = calculatePricePerSquareMeter(
+    parseFormNumber(form.pricePublic),
+    getCreateAreaSquareMeters(form),
+  );
 
   function handleInternalPriceChange(value: string) {
     if (value.trim() === "") {
@@ -147,16 +183,14 @@ export function AddPropertyCoreFields({
     setIsWhatsappManuallyEdited(true);
   }
 
-  function handleAddPrivateComment() {
-    const trimmedComment = form.privateComment.trim();
-    if (trimmedComment.startsWith(formatNoteDate(new Date()))) {
-      return;
-    }
-    if (trimmedComment === "") {
-      updateForm("privateComment", `${formatNoteDate(new Date())} `);
-      return;
-    }
-    updateForm("privateComment", `${formatNoteDate(new Date())} ${trimmedComment}`);
+  function handlePrivateCommentChange(value: string) {
+    const result = applyDatedPersonalCommentEntry({
+      previousValue: form.privateComment,
+      rawValue: value,
+      isEntryActive: isPersonalCommentEntryActiveRef.current,
+    });
+    isPersonalCommentEntryActiveRef.current = result.isEntryActive;
+    updateForm("privateComment", result.nextValue);
   }
 
   return (
@@ -189,36 +223,6 @@ export function AddPropertyCoreFields({
         onChange={handleDealTypeChange}
         options={DEAL_TYPE_OPTIONS}
       />
-      <SelectField
-        id="listingLifecycleStatus"
-        label="Listing status (optional)"
-        value={form.listingLifecycleStatus}
-        onChange={(value) => updateForm("listingLifecycleStatus", value)}
-        options={PROPERTY_STATUS_FILTER_OPTIONS}
-      />
-      {form.listingLifecycleStatus === "TO_BE_VERIFIED" ? (
-        <div className="space-y-1.5 sm:col-span-2">
-          <label
-            htmlFor="verificationReminderLocal"
-            className="block text-sm font-medium text-slate-800"
-          >
-            Verification reminder (optional)
-          </label>
-          <input
-            id="verificationReminderLocal"
-            type="datetime-local"
-            value={form.verificationReminderLocal}
-            onChange={(event) =>
-              updateForm("verificationReminderLocal", event.target.value)
-            }
-            className={addPropertyInputClassName()}
-          />
-          <p className="text-xs text-slate-500">
-            The server uses this date for scheduled reminders when the listing status is needs
-            verification.
-          </p>
-        </div>
-      ) : null}
       <SelectField
         id="city"
         label="City"
@@ -280,15 +284,22 @@ export function AddPropertyCoreFields({
         type="number"
         error={fieldErrors.priceInternal}
       />
-      <TextField
-        id="pricePublic"
-        label="Public price"
-        value={form.pricePublic}
-        onChange={handlePublicPriceChange}
-        type="number"
-        required
-        error={fieldErrors.pricePublic}
-      />
+      <div className="space-y-1.5">
+        <TextField
+          id="pricePublic"
+          label="Public price"
+          value={form.pricePublic}
+          onChange={handlePublicPriceChange}
+          type="number"
+          required
+          error={fieldErrors.pricePublic}
+        />
+        {pricePerSquareMeter !== null ? (
+          <p className="text-xs font-medium text-slate-600">
+            {formatPricePerSquareMeter(pricePerSquareMeter)}
+          </p>
+        ) : null}
+      </div>
       <TextField
         id="ownerName"
         label="Owner name"
@@ -363,7 +374,7 @@ export function AddPropertyCoreFields({
       />
       <div className="space-y-1.5 sm:col-span-2">
         <label htmlFor="publicComment" className="block text-sm font-medium text-slate-800">
-          Public comment
+          Comment
         </label>
         <textarea
           id="publicComment"
@@ -375,7 +386,7 @@ export function AddPropertyCoreFields({
       </div>
       <div className="space-y-1.5 sm:col-span-2">
         <label htmlFor="internalText" className="block text-sm font-medium text-slate-800">
-          Internal text
+          Upload text
         </label>
         <textarea
           id="internalText"
@@ -386,26 +397,20 @@ export function AddPropertyCoreFields({
         />
       </div>
       <div className="space-y-1.5 sm:col-span-2">
-        <div className="flex items-center justify-between gap-3">
-          <label
-            htmlFor="privateComment"
-            className="block text-sm font-medium text-slate-800"
-          >
-            Personal comment
-          </label>
-          <button
-            type="button"
-            onClick={handleAddPrivateComment}
-            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-          >
-            Add date
-          </button>
-        </div>
+        <label
+          htmlFor="privateComment"
+          className="block text-sm font-medium text-slate-800"
+        >
+          Comment for myself
+        </label>
         <textarea
           id="privateComment"
           rows={4}
           value={form.privateComment}
-          onChange={(event) => updateForm("privateComment", event.target.value)}
+          onChange={(event) => handlePrivateCommentChange(event.target.value)}
+          onBlur={() => {
+            isPersonalCommentEntryActiveRef.current = false;
+          }}
           className={addPropertyInputClassName()}
         />
       </div>

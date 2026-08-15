@@ -326,7 +326,7 @@ export function normalizeProperty(value: unknown): Property | null {
         ? null
         : asNumber(value.priceInternal),
     ownerName: asString(value.ownerName),
-    ownerPhone: asString(value.ownerPhone),
+    ownerPhones: asStringArray(value.ownerPhones),
     ownerWhatsapp: asNullableString(value.ownerWhatsapp),
     ourSiteId: asNullableString(value.ourSiteId),
     myHomeId: asNullableString(value.myHomeId),

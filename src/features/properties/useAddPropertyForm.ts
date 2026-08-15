@@ -14,9 +14,14 @@ import {
   validateFormInputs,
 } from "@/features/properties/addPropertyFormValidation";
 import { useCreateProperty } from "@/features/properties/useCreateProperty";
-import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
+import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
 
 const addPropertyDraftStorageKey = "draft:property:new";
+
+type LegacyAddPropertyDraft = FormState & {
+  listingLifecycleStatus?: unknown;
+  verificationReminderLocal?: unknown;
+};
 
 function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
   const initialState = initialFormState();
@@ -24,25 +29,31 @@ function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
     return initialState;
   }
 
+  const {
+    listingLifecycleStatus: legacyListingLifecycleStatus,
+    verificationReminderLocal: legacyVerificationReminderLocal,
+    ...restoredFields
+  } = restoredDraft as LegacyAddPropertyDraft;
+  void legacyListingLifecycleStatus;
+  void legacyVerificationReminderLocal;
+
   return {
     ...initialState,
-    ...restoredDraft,
-    apartment: { ...initialState.apartment, ...restoredDraft.apartment },
-    privateHouse: { ...initialState.privateHouse, ...restoredDraft.privateHouse },
-    landPlot: { ...initialState.landPlot, ...restoredDraft.landPlot },
-    commercial: { ...initialState.commercial, ...restoredDraft.commercial },
+    ...restoredFields,
+    apartment: { ...initialState.apartment, ...restoredFields.apartment },
+    privateHouse: { ...initialState.privateHouse, ...restoredFields.privateHouse },
+    landPlot: { ...initialState.landPlot, ...restoredFields.landPlot },
+    commercial: { ...initialState.commercial, ...restoredFields.commercial },
   };
 }
 
 export function useAddPropertyForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateProperty();
-  const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<FormState>(
-    addPropertyDraftStorageKey,
-  );
-  const [form, setForm] = useState<FormState>(() =>
-    mergeFormStateDraft(restoredDraft),
-  );
+  const { restoredDraft, isDraftReady, saveDraft, clearDraft } =
+    useLocalStorageDraft<FormState>(addPropertyDraftStorageKey);
+  const [form, setForm] = useState<FormState>(() => initialFormState());
+  const [isDraftApplied, setIsDraftApplied] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -54,8 +65,24 @@ export function useAddPropertyForm() {
   );
 
   useEffect(() => {
+    if (!isDraftReady) {
+      return;
+    }
+
+    if (restoredDraft) {
+      setForm(mergeFormStateDraft(restoredDraft));
+    }
+
+    setIsDraftApplied(true);
+  }, [isDraftReady, restoredDraft]);
+
+  useEffect(() => {
+    if (!isDraftReady || !isDraftApplied) {
+      return;
+    }
+
     saveDraft(form);
-  }, [form, saveDraft]);
+  }, [form, isDraftApplied, isDraftReady, saveDraft]);
 
   const updateForm = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     if (key === "propertyType") {
@@ -96,17 +123,6 @@ export function useAddPropertyForm() {
           };
         }
         return { ...prev, dealType: nextDealType };
-      }
-      if (key === "listingLifecycleStatus") {
-        const nextLifecycle = value as FormState["listingLifecycleStatus"];
-        return {
-          ...prev,
-          listingLifecycleStatus: nextLifecycle,
-          verificationReminderLocal:
-            nextLifecycle === "TO_BE_VERIFIED"
-              ? prev.verificationReminderLocal
-              : "",
-        };
       }
       if (key === "propertyType") {
         const nextPropertyType = value as FormState["propertyType"];
@@ -275,9 +291,8 @@ export function useAddPropertyForm() {
   );
 
   const cancel = useCallback(() => {
-    clearDraft();
     router.push("/properties");
-  }, [clearDraft, router]);
+  }, [router]);
 
   return {
     form,

@@ -26,6 +26,10 @@ export function PropertyDetailsReadOnlySections({
   const activeExternalIds = property.externalIds.filter(
     (externalId) => externalId.archivedAt === null,
   );
+  const ownerPhones = property.ownerPhones
+    .map((ownerPhone) => ownerPhone.trim())
+    .filter((ownerPhone) => ownerPhone !== "")
+    .join(", ");
 
   return (
     <>
@@ -55,7 +59,7 @@ export function PropertyDetailsReadOnlySections({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="Owner name" value={property.ownerName} />
-          <DetailPhone label="Owner phone" value={property.ownerPhone} />
+          <DetailText label="Owner phones" value={ownerPhones} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -92,11 +96,11 @@ export function PropertyDetailsReadOnlySections({
         {showPrivateNotes ? (
           <>
             <DetailMultiline
-              label="Personal comment"
+              label="Comment for myself"
               value={property.privateComment ?? property.comment}
             />
             <DetailMultiline
-              label="Internal text"
+              label="Upload text"
               value={property.internalText ?? property.internalComment}
             />
 

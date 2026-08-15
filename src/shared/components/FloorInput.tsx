@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { addPropertyInputClassName } from "@/widgets/AddProperty/addPropertyFormFields";
+import { sanitizeTwoDigitNumericInput } from "@/shared/lib/twoDigitNumericInput";
 
 type FloorInputProps = {
   floorId: string;
@@ -16,10 +17,6 @@ type FloorInputProps = {
   totalFloorsError?: string;
   required?: boolean;
 };
-
-function sanitizeDigits(value: string): string {
-  return value.replace(/\D/g, "").slice(0, 2);
-}
 
 export function FloorInput({
   floorId,
@@ -37,7 +34,7 @@ export function FloorInput({
   const totalFloorsInputRef = useRef<HTMLInputElement | null>(null);
 
   function handleFloorChange(value: string) {
-    const nextValue = sanitizeDigits(value);
+    const nextValue = sanitizeTwoDigitNumericInput(value);
     onFloorChange(nextValue);
     if (nextValue.length === 2) {
       totalFloorsInputRef.current?.focus();
@@ -45,7 +42,7 @@ export function FloorInput({
   }
 
   function handleTotalFloorsChange(value: string) {
-    onTotalFloorsChange(sanitizeDigits(value));
+    onTotalFloorsChange(sanitizeTwoDigitNumericInput(value));
   }
 
   return (
@@ -67,7 +64,7 @@ export function FloorInput({
             className={`${addPropertyInputClassName()} ${floorError ? "border-red-500 focus:border-red-600" : ""}`}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="w-20 space-y-1.5">
           <label
             htmlFor={totalFloorsId}
             className="block text-sm font-medium text-slate-800"

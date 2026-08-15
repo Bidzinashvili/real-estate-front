@@ -39,6 +39,11 @@ import {
   parseDecimalInput,
 } from "@/shared/lib/parseNumericInput";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
+import { applyDatedPersonalCommentEntry } from "@/shared/lib/personalCommentEntry";
+import {
+  calculatePricePerSquareMeter,
+  formatPricePerSquareMeter,
+} from "@/features/properties/pricePerSquareMeter";
 
 type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
@@ -67,6 +72,30 @@ type PropertyDetailsEditableSectionsProps = {
   setCommercial: (patch: PropertyCommercialUpdate) => void;
 };
 
+function getEditableAreaSquareMeters(values: PropertyFormValues): number | null {
+  if (values.propertyType === "APARTMENT") {
+    return values.apartment?.totalArea ?? null;
+  }
+  if (
+    values.propertyType === "PRIVATE_HOUSE" ||
+    values.propertyType === "COTTAGE" ||
+    values.propertyType === "HOTEL"
+  ) {
+    const houseArea = values.privateHouse?.houseArea;
+    const yardArea = values.privateHouse?.yardArea;
+    if (houseArea === undefined || yardArea === undefined) return null;
+    return houseArea + yardArea;
+  }
+  if (values.propertyType === "COMMERCIAL") {
+    return values.commercial?.area ?? null;
+  }
+  if (values.propertyType === "LAND_PLOT") {
+    return values.landPlot?.landArea ?? null;
+  }
+
+  return null;
+}
+
 export function PropertyDetailsEditableSections({
   values,
   canEdit,
@@ -85,7 +114,12 @@ export function PropertyDetailsEditableSections({
 }: PropertyDetailsEditableSectionsProps) {
   const { districts } = useDistricts();
   const manualDistrictGroupRef = useRef(false);
+  const isPersonalCommentEntryActiveRef = useRef(false);
   const [selectedDistrictGroup, setSelectedDistrictGroup] = useState("");
+  const pricePerSquareMeter = calculatePricePerSquareMeter(
+    values.pricePublic,
+    getEditableAreaSquareMeters(values),
+  );
 
   const derivedDistrictGroup = useMemo(() => {
     for (const districtGroup of districts ?? []) {
@@ -113,6 +147,16 @@ export function PropertyDetailsEditableSections({
         readOnlyPrivateHouseBalcony={readOnlyPrivateHouseBalcony}
       />
     );
+  }
+
+  function handlePrivateCommentChange(value: string) {
+    const result = applyDatedPersonalCommentEntry({
+      previousValue: values.privateComment,
+      rawValue: value,
+      isEntryActive: isPersonalCommentEntryActiveRef.current,
+    });
+    isPersonalCommentEntryActiveRef.current = result.isEntryActive;
+    onCommentChange("privateComment", result.nextValue);
   }
 
   return (
@@ -174,13 +218,20 @@ export function PropertyDetailsEditableSections({
       <div
         className={`grid gap-4 sm:grid-cols-2 ${showInternalPrice ? "" : "max-w-md"}`}
       >
-        <EditableNumericTextInput
-          label="Public price"
-          value={values.pricePublic}
-          onValueChange={(next) => onPriceChange("pricePublic", next)}
-          parse={parseDecimalInput}
-          inputMode="decimal"
-        />
+        <div className="space-y-1.5">
+          <EditableNumericTextInput
+            label="Public price"
+            value={values.pricePublic}
+            onValueChange={(next) => onPriceChange("pricePublic", next)}
+            parse={parseDecimalInput}
+            inputMode="decimal"
+          />
+          {pricePerSquareMeter !== null ? (
+            <p className="text-xs font-medium text-slate-600">
+              {formatPricePerSquareMeter(pricePerSquareMeter)}
+            </p>
+          ) : null}
+        </div>
         {showInternalPrice && (
           <EditableNumericTextInput
             label="Internal price"
@@ -204,7 +255,7 @@ export function PropertyDetailsEditableSections({
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-slate-800">Public comment</label>
+        <label className="block text-sm font-medium text-slate-800">Comment</label>
         <textarea
           value={values.publicComment}
           onChange={(event) => onCommentChange("publicComment", event.target.value)}
@@ -216,20 +267,21 @@ export function PropertyDetailsEditableSections({
         <>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-800">
-              Personal comment
+              Comment for myself
             </label>
             <textarea
               value={values.privateComment}
-              onChange={(event) =>
-                onCommentChange("privateComment", event.target.value)
-              }
+              onChange={(event) => handlePrivateCommentChange(event.target.value)}
+              onBlur={() => {
+                isPersonalCommentEntryActiveRef.current = false;
+              }}
               className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
               rows={4}
             />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-800">
-              Internal text
+              Upload text
             </label>
             <textarea
               value={values.internalText}
