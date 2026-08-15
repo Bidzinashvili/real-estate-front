@@ -2,6 +2,7 @@
 
 import type { MatchCriterionDto } from "@/features/matching/matchingApi.types";
 import { formatCriterionLabel } from "@/features/matching/criterionLabels";
+import { CRITERION_RESULT_LABELS } from "@/shared/i18n/enumLabels";
 
 type MatchingCriteriaListProps = {
   criteria: MatchCriterionDto[];
@@ -9,7 +10,7 @@ type MatchingCriteriaListProps = {
 
 export function MatchingCriteriaList({ criteria }: MatchingCriteriaListProps) {
   if (criteria.length === 0) {
-    return <p className="text-xs text-slate-500">No scored criteria.</p>;
+    return <p className="text-xs text-muted-foreground">შეფასებული კრიტერიუმები არ არის.</p>;
   }
 
   return (
@@ -19,16 +20,18 @@ export function MatchingCriteriaList({ criteria }: MatchingCriteriaListProps) {
           key={`${criterion.key}-${criterion.result}`}
           className="flex items-center justify-between gap-2 text-xs"
         >
-          <span className="text-slate-700">{formatCriterionLabel(criterion.key)}</span>
+          <span className="text-foreground">{formatCriterionLabel(criterion.key)}</span>
           <span
             className={
               criterion.result === "MATCH"
-                ? "font-medium text-emerald-700"
-                : "font-medium text-rose-700"
+                ? "font-medium text-success"
+                : criterion.result === "SKIP"
+                  ? "font-medium text-muted-foreground"
+                  : "font-medium text-destructive"
             }
           >
-            {criterion.result === "MATCH" ? "Match" : "Mismatch"}
-            {criterion.hardLocked ? " · hard lock" : ""}
+            {CRITERION_RESULT_LABELS[criterion.result] ?? criterion.result}
+            {criterion.hardLocked ? " · მკაცრი პირობა" : ""}
           </span>
         </li>
       ))}

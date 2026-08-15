@@ -33,7 +33,7 @@ function SignInForm() {
           router.push("/dashboard");
         } catch (err) {
           const message =
-            err instanceof Error ? err.message : "Something went wrong";
+            err instanceof Error ? err.message : "რაღაც შეცდომა მოხდა";
           setError(message);
         } finally {
           setLoading(false);
@@ -54,10 +54,10 @@ function SignInForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="border rounded-xl p-8 shadow-sm bg-card">
         <h1 className="text-2xl font-bold text-center mb-2">
-          Sign in to your account
+          ანგარიშში შესვლა
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8">
-          Sign in with Google to get started
+          გასაგრძელებლად შედით Google-ით
         </p>
 
         <div className="flex justify-center">
@@ -66,7 +66,7 @@ function SignInForm() {
 
         {loading && (
           <p className="text-sm text-muted-foreground text-center mt-4">
-            Signing you in...
+            შესვლა მიმდინარეობს...
           </p>
         )}
 

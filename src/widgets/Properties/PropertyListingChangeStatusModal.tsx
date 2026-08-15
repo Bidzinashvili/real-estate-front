@@ -21,7 +21,7 @@ import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
 const CLIENTS_PAGE_LIMIT = 500;
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-400";
+  "h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary";
 
 function isAvailableSoonAllowed(property: Property): boolean {
   return property.dealType === "RENT" || property.dealType === "DAILY_RENT";
@@ -149,7 +149,7 @@ export function PropertyListingChangeStatusModal({
       } catch (error) {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof Error ? error.message : "Could not load clients.";
+          error instanceof Error ? error.message : "კლიენტების ჩატვირთვა ვერ მოხერხდა.";
         setClientsLoadError(message);
         setClients([]);
       } finally {
@@ -194,12 +194,12 @@ export function PropertyListingChangeStatusModal({
         !Number.isInteger(parsedMonths) ||
         parsedMonths < 1
       ) {
-        setFormError("Enter a whole number of rental months (at least 1).");
+        setFormError("შეიყვანეთ ქირის თვეების მთელი რიცხვი (მინიმუმ 1).");
         return;
       }
       rentalDurationMonthsValue = parsedMonths;
       if (tenantClientId.trim() === "") {
-        setFormError("Select the client you rented this property to.");
+        setFormError("აირჩიეთ კლიენტი, რომელზეც გააქირავეთ ეს განცხადება.");
         return;
       }
     }
@@ -213,7 +213,7 @@ export function PropertyListingChangeStatusModal({
     );
 
     if (Object.keys(patch).length === 0) {
-      setFormError("No changes to save.");
+      setFormError("შესანახი ცვლილება არ არის.");
       return;
     }
 
@@ -224,7 +224,7 @@ export function PropertyListingChangeStatusModal({
       onClose();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Could not save changes.";
+        error instanceof Error ? error.message : "ცვლილებების შენახვა ვერ მოხერხდა.";
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -233,7 +233,7 @@ export function PropertyListingChangeStatusModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/40 px-4"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) handleBackdropPointerDown();
@@ -243,28 +243,28 @@ export function PropertyListingChangeStatusModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`change-status-title-${property.id}`}
-        className="max-h-[min(90vh,36rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-lg ring-1 ring-slate-200"
+        className="max-h-[min(90vh,36rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-card p-5 shadow-lg ring-1 ring-border"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2
           id={`change-status-title-${property.id}`}
-          className="text-base font-semibold text-slate-900"
+          className="text-base font-semibold text-foreground"
         >
-          Change status
+          სტატუსის შეცვლა
         </h2>
 
         <div className="mt-4 space-y-4">
           <div>
             <label
               htmlFor={`modal-status-${property.id}`}
-              className="mb-1 block text-xs font-medium text-slate-600"
+              className="mb-1 block text-xs font-medium text-muted-foreground"
             >
-              Listing status
+              განცხადების სტატუსი
             </label>
             <NativeSelectSurface>
               <select
                 id={`modal-status-${property.id}`}
-                aria-label="Listing status"
+                aria-label="განცხადების სტატუსი"
                 value={selectedStatus}
                 onChange={(event) => {
                   const raw = event.target.value;
@@ -288,9 +288,9 @@ export function PropertyListingChangeStatusModal({
               <div>
                 <label
                   htmlFor={`modal-rental-months-${property.id}`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  Rental duration (months)
+                  ქირის ხანგრძლივობა (თვე)
                 </label>
                 <input
                   id={`modal-rental-months-${property.id}`}
@@ -308,20 +308,20 @@ export function PropertyListingChangeStatusModal({
               <div>
                 <label
                   htmlFor={`modal-tenant-client-${property.id}`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  Rented to (client)
+                  გაქირავებულია (კლიენტზე)
                 </label>
                 <NativeSelectSurface>
                   <select
                     id={`modal-tenant-client-${property.id}`}
-                    aria-label="Client the property is rented to"
+                    aria-label="კლიენტი, რომელზეც არის გაქირავებული"
                     value={tenantClientId}
                     onChange={(event) => setTenantClientId(event.target.value)}
                     disabled={isLoadingClients}
                     className={FIELD_CLASS}
                   >
-                    <option value="">Select a client…</option>
+                    <option value="">აირჩიეთ კლიენტი…</option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
                         {client.name}
@@ -330,7 +330,7 @@ export function PropertyListingChangeStatusModal({
                   </select>
                 </NativeSelectSurface>
                 {clientsLoadError ? (
-                  <p className="mt-1 text-xs text-red-600" role="alert">
+                  <p className="mt-1 text-xs text-destructive" role="alert">
                     {clientsLoadError}
                   </p>
                 ) : null}
@@ -342,9 +342,9 @@ export function PropertyListingChangeStatusModal({
             <div>
               <label
                 htmlFor={`modal-verification-reminder-${property.id}`}
-                className="mb-1 block text-xs font-medium text-slate-600"
+                className="mb-1 block text-xs font-medium text-muted-foreground"
               >
-                Verification reminder
+                გადამოწმების შეხსენება
               </label>
               <input
                 id={`modal-verification-reminder-${property.id}`}
@@ -360,7 +360,7 @@ export function PropertyListingChangeStatusModal({
         </div>
 
         {formError ? (
-          <p className="mt-3 text-sm text-red-600" role="alert">
+          <p className="mt-3 text-sm text-destructive" role="alert">
             {formError}
           </p>
         ) : null}
@@ -370,17 +370,17 @@ export function PropertyListingChangeStatusModal({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Cancel
+            გაუქმება
           </button>
           <button
             type="button"
             disabled={isSaving}
             onClick={() => void handleSubmit()}
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSaving ? "Saving…" : "Save"}
+            {isSaving ? "ინახება…" : "შენახვა"}
           </button>
         </div>
       </div>

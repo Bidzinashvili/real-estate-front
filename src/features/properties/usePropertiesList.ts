@@ -33,7 +33,7 @@ export function usePropertiesList({
       return list;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not load properties right now.";
+        err instanceof Error ? err.message : "განცხადებების ჩატვირთვა ვერ მოხერხდა.";
       setError(message);
       return [];
     } finally {

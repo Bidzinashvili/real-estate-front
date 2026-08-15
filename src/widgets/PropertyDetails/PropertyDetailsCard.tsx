@@ -17,6 +17,7 @@ import {
   parseRenovationForForm,
 } from "@/features/properties/types";
 import { getApiBaseUrl } from "@/shared/lib/auth";
+import { requiredFieldMessage, wholeNumberAtLeastOneMessage } from "@/shared/i18n/ui";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
 import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
@@ -44,7 +45,7 @@ export type PropertyDetailsCardProps =
   | PropertyDetailsCardEditProps
   | PropertyDetailsCardViewProps;
 
-const propertyLabelsOwnerErrorMessage = "You can only edit labels on your own properties.";
+const propertyLabelsOwnerErrorMessage = "ლეიბლების რედაქტირება მხოლოდ საკუთარ განცხადებებზე შეგიძლიათ.";
 
 function getSaveErrorMessage(saveError: string | null): string | null {
   if (!saveError) {
@@ -60,10 +61,10 @@ function getSaveErrorMessage(saveError: string | null): string | null {
 
 function getMinRentalPeriodErrorMessage(months: number | undefined): string | null {
   if (months === undefined || Number.isNaN(months)) {
-    return "Min Rental Period (months) is required.";
+    return "მინიმალური ქირის ვადა (თვეებში) სავალდებულოა.";
   }
   if (!Number.isInteger(months) || months < 1) {
-    return "Min Rental Period must be a whole number of at least 1 month.";
+    return "მინიმალური ქირის ვადა უნდა იყოს მინიმუმ 1 თვე.";
   }
 
   return null;
@@ -74,10 +75,10 @@ function getTotalFloorsErrorMessage(
   label: string,
 ): string | null {
   if (totalFloors === undefined || Number.isNaN(totalFloors)) {
-    return `${label} is required.`;
+    return requiredFieldMessage(label);
   }
   if (!Number.isInteger(totalFloors) || totalFloors < 1) {
-    return `${label} must be a whole number of at least 1.`;
+    return wholeNumberAtLeastOneMessage(label);
   }
 
   return null;
@@ -254,7 +255,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
     if (values.landPlot) {
       if (values.landPlot.landCategory === "" || values.landPlot.landUsage === "") {
-        setClientError("Select land category and land usage.");
+        setClientError("აირჩიეთ მიწის კატეგორია და დანიშნულება.");
         return;
       }
     }
@@ -262,7 +263,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     if (values.apartment) {
       const message = getTotalFloorsErrorMessage(
         values.apartment.totalFloors,
-        "Apartment total floors",
+        "ბინის სართულიანობა",
       );
       if (message) {
         setClientError(message);
@@ -273,7 +274,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     if (values.commercial) {
       const message = getTotalFloorsErrorMessage(
         values.commercial.totalFloors,
-        "Commercial total floors",
+        "კომერციული სართულიანობა",
       );
       if (message) {
         setClientError(message);
@@ -282,7 +283,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     }
 
     if (values.dealType === "SALE" && property.status === "AVAILABLE_SOON") {
-      setClientError("AVAILABLE_SOON status is only allowed for rental properties");
+      setClientError("სტატუსი „მალე ხელმისაწვდომი“ მხოლოდ ქირავნობის განცხადებებზეა დაშვებული");
       return;
     }
 
@@ -462,14 +463,14 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           />
 
           {(clientError || getSaveErrorMessage(saveError)) && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {clientError ?? getSaveErrorMessage(saveError)}
             </p>
           )}
 
           {!canEdit && (
-            <p className="text-xs text-slate-500">
-              You don&apos;t have permission to edit this property.
+            <p className="text-xs text-muted-foreground">
+              ამ განცხადების რედაქტირების უფლება არ გაქვთ.
             </p>
           )}
 
@@ -477,9 +478,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             <button
               type="submit"
               disabled={!canEdit || isSaving}
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSaving ? "Saving…" : "Save changes"}
+              {isSaving ? "ინახება…" : "ცვლილებების შენახვა"}
             </button>
           </div>
         </form>
@@ -489,16 +490,14 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
   if (presentation === "view") {
     return (
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-2xl font-semibold tracking-tight">Property details</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          View listing information. Use Edit listing to change fields you are allowed to
-          update.
+      <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
+        <h1 className="text-2xl font-semibold tracking-tight">განცხადების დეტალები</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          ნახეთ განცხადების ინფორმაცია. დასაშვები ველების შესაცვლელად გამოიყენეთ რედაქტირება.
         </p>
         {!canViewPrivateFields && (
-          <p className="mt-2 text-sm text-slate-600">
-            Notes, internal price, and some workflow fields are hidden because you are not
-            the listing agent. Administrators always see the full record.
+          <p className="mt-2 text-sm text-muted-foreground">
+            შენიშვნები, შიდა ფასი და ზოგი სამუშაო ველი დამალულია, რადგან თქვენ არ ხართ ამ განცხადების აგენტი. ადმინისტრატორებს სრული ჩანაწერი ყოველთვის ჩანს.
           </p>
         )}
         {detailsBody}
@@ -507,15 +506,14 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   }
 
   return (
-    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h1 className="text-2xl font-semibold tracking-tight">Property details</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Update listing information. Agents can only edit their own properties.
+    <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <h1 className="text-2xl font-semibold tracking-tight">განცხადების დეტალები</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        განაახლეთ განცხადების ინფორმაცია. აგენტებს მხოლოდ საკუთარი განცხადებების რედაქტირება შეუძლიათ.
       </p>
       {!canViewPrivateFields && (
-        <p className="mt-2 text-sm text-slate-600">
-          Notes, internal price, and some workflow fields are hidden because you are not the
-          listing agent. Administrators always see the full record.
+        <p className="mt-2 text-sm text-muted-foreground">
+          შენიშვნები, შიდა ფასი და ზოგი სამუშაო ველი დამალულია, რადგან თქვენ არ ხართ ამ განცხადების აგენტი. ადმინისტრატორებს სრული ჩანაწერი ყოველთვის ჩანს.
         </p>
       )}
       {detailsBody}

@@ -75,15 +75,15 @@ function EditClientFormInner({
       <button
         type="button"
         onClick={() => router.push(`/clients/${clientId}`)}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to client
+        კლიენტზე დაბრუნება
       </button>
 
       <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Edit client</h1>
-        <p className="text-sm text-slate-600">Update the client&apos;s details below.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">კლიენტის რედაქტირება</h1>
+        <p className="text-sm text-muted-foreground">განაახლეთ კლიენტის მონაცემები.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
@@ -118,7 +118,7 @@ function EditClientFormInner({
         />
 
         {error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
         )}
@@ -127,16 +127,16 @@ function EditClientFormInner({
           <button
             type="button"
             onClick={() => router.push(`/clients/${clientId}`)}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            Cancel
+            გაუქმება
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isLoading ? "Saving…" : "Save changes"}
+            {isLoading ? "ინახება…" : "ცვლილებების შენახვა"}
           </button>
         </div>
       </form>
@@ -149,7 +149,7 @@ export function EditClientForm({ clientId }: EditClientFormProps) {
   const { client, isLoading, error } = useClientDetails(clientId);
 
   if (isLoading) {
-    return <p className="text-sm text-slate-600">Loading client…</p>;
+    return <p className="text-sm text-muted-foreground">კლიენტი იტვირთება…</p>;
   }
 
   if (error || !client) {
@@ -158,13 +158,13 @@ export function EditClientForm({ clientId }: EditClientFormProps) {
         <button
           type="button"
           onClick={() => router.push("/clients")}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back to clients
+          კლიენტებზე დაბრუნება
         </button>
-        <p className="text-sm text-red-600" role="alert">
-          {error ?? "Client not found."}
+        <p className="text-sm text-destructive" role="alert">
+          {error ?? "კლიენტი ვერ მოიძებნა."}
         </p>
       </div>
     );

@@ -15,66 +15,66 @@ export function ClientDetailsRequirementsSection({
   requirements: req,
 }: ClientDetailsRequirementsSectionProps) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 className="mb-4 text-base font-semibold text-slate-800">Requirements</h2>
+    <div className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <h2 className="mb-4 text-base font-semibold text-foreground">მოთხოვნები</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <ClientDetailsRequirementRow
-          label="Min rooms"
+          label="მინ. ოთახები"
           value={req.minRooms}
           lock={req.minRoomsLock}
         />
         <ClientDetailsRequirementRow
-          label="Max rooms"
+          label="მაქს. ოთახები"
           value={req.maxRooms}
           lock={req.maxRoomsLock}
         />
         <ClientDetailsRequirementRow
-          label="Min bedrooms"
+          label="მინ. საძინებლები"
           value={req.minBedrooms}
           lock={req.minBedroomsLock}
         />
         <ClientDetailsRequirementRow
-          label="Max bedrooms"
+          label="მაქს. საძინებლები"
           value={req.maxBedrooms}
           lock={req.maxBedroomsLock}
         />
         <ClientDetailsRequirementRow
-          label="Min bathrooms"
+          label="მინ. სველი წერტილები"
           value={req.minBathrooms}
           lock={req.minBathroomsLock}
         />
         <ClientDetailsRequirementRow
-          label="Max bathrooms"
+          label="მაქს. სველი წერტილები"
           value={req.maxBathrooms}
           lock={req.maxBathroomsLock}
         />
         <ClientDetailsRequirementRow
-          label="Min floor"
+          label="მინ. სართული"
           value={req.minFloor}
           lock={req.minFloorLock}
         />
         <ClientDetailsRequirementRow
-          label="Max floor"
+          label="მაქს. სართული"
           value={req.maxFloor}
           lock={req.maxFloorLock}
         />
         <ClientDetailsRequirementRow
-          label="Exclude last floor"
+          label="ბოლო სართულის გამოკლებით"
           value={req.excludeLastFloor}
           lock={req.excludeLastFloorLock}
         />
         <ClientDetailsRequirementRow
-          label="Min area"
+          label="მინ. ფართობი"
           value={req.minArea !== null ? `${req.minArea} m²` : null}
           lock={req.minAreaLock}
         />
         <ClientDetailsRequirementRow
-          label="Max area"
+          label="მაქს. ფართობი"
           value={req.maxArea !== null ? `${req.maxArea} m²` : null}
           lock={req.maxAreaLock}
         />
         <ClientDetailsRequirementRow
-          label="Renovations"
+          label="რემონტი"
           value={
             (req.renovations ?? []).length > 0
               ? (req.renovations ?? []).map((renovation) => RENOVATION_LABELS[renovation]).join(", ")
@@ -83,64 +83,64 @@ export function ClientDetailsRequirementsSection({
           lock={req.renovationsLock}
         />
         <ClientDetailsRequirementRow
-          label="Building condition"
+          label="შენობის მდგომარეობა"
           value={
             req.buildingCondition ? BUILDING_CONDITION_LABELS[req.buildingCondition] : null
           }
           lock={req.buildingConditionLock}
         />
         <ClientDetailsRequirementRow
-          label="Kitchen type"
+          label="სამზარეულოს ტიპი"
           value={req.kitchenType ? KITCHEN_TYPE_LABELS[req.kitchenType] : null}
           lock={req.kitchenTypeLock}
         />
         <ClientDetailsRequirementRow
-          label="Has balcony"
+          label="აივანი"
           value={req.hasBalcony}
           lock={req.hasBalconyLock}
         />
         <ClientDetailsRequirementRow
-          label="Balcony min (m²)"
+          label="აივნის მინ. ფართობი (მ²)"
           value={req.balconyAreaMin}
           lock={req.balconyAreaMinLock}
         />
         <ClientDetailsRequirementRow
-          label="Balcony max (m²)"
+          label="აივნის მაქს. ფართობი (მ²)"
           value={req.balconyAreaMax}
           lock={req.balconyAreaMaxLock}
         />
         <ClientDetailsRequirementRow
-          label="Good view"
+          label="კარგი ხედი"
           value={req.goodView}
           lock={req.goodViewLock}
         />
         <ClientDetailsRequirementRow
-          label="Elevator"
+          label="ლიფტი"
           value={req.elevator}
           lock={req.elevatorLock}
         />
         <ClientDetailsRequirementRow
-          label="Central heating"
+          label="ცენტრალური გათბობა"
           value={req.centralHeating}
           lock={req.centralHeatingLock}
         />
         <ClientDetailsRequirementRow
-          label="Air conditioner"
+          label="კონდიციონერი"
           value={req.airConditioner}
           lock={req.airConditionerLock}
         />
         <ClientDetailsRequirementRow
-          label="Furnished"
+          label="ავეჯით"
           value={req.furnished}
           lock={req.furnishedLock}
         />
         <ClientDetailsRequirementRow
-          label="Parking"
+          label="პარკინგი"
           value={req.parking}
           lock={req.parkingLock}
         />
         <ClientDetailsRequirementRow
-          label="Min rental period"
+          label="მინიმალური ქირის ვადა"
           value={
             req.minRentalPeriod !== null
               ? `${req.minRentalPeriod} month${req.minRentalPeriod === 1 ? "" : "s"}`
@@ -151,12 +151,12 @@ export function ClientDetailsRequirementsSection({
         {((req.projectExclude ?? []).length > 0 || (req.projectExcludeLock ?? "none") !== "none") && (
           <div className="col-span-2 flex flex-col gap-0.5 sm:col-span-3 md:col-span-4">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-slate-500">Exclude projects</span>
+              <span className="text-xs text-muted-foreground">გამორიცხული პროექტები</span>
               {req.projectExcludeLock !== undefined ? (
                 <ClientDetailsLockBadge lock={req.projectExcludeLock} />
               ) : null}
             </div>
-            <span className="text-sm font-medium text-slate-800">
+            <span className="text-sm font-medium text-foreground">
               {(req.projectExclude ?? []).length > 0
                 ? (req.projectExclude ?? []).join(", ")
                 : "—"}

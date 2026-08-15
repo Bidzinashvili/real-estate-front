@@ -72,44 +72,44 @@ export function ApartmentEditSection({
 
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Apartment</legend>
+      <legend className="text-sm font-semibold text-foreground">ბინა</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Total area"
+          label="საერთო ფართობი"
           value={apartment.totalArea}
           onValueChange={(next) => setApartment({ totalArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Rooms"
+          label="ოთახები"
           value={apartment.rooms}
           onValueChange={(next) => setApartment({ rooms: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableNumericTextInput
-          label="Bedrooms"
+          label="საძინებლები"
           value={apartment.bedrooms}
           onValueChange={(next) => setApartment({ bedrooms: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableNumericTextInput
-          label="Floor"
+          label="სართული"
           value={apartment.floor}
           onValueChange={(next) => setApartment({ floor: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableTwoDigitNumericInput
-          label="Total floors"
+          label="სართულიანობა"
           value={apartment.totalFloors}
           onValueChange={(next) => setApartment({ totalFloors: next })}
         />
         <EditableNumericTextInput
-          label="Ceiling height"
+          label="ჭერის სიმაღლე"
           value={apartment.ceilingHeight ?? undefined}
           onValueChange={(next) => setApartment({ ceilingHeight: next })}
           parse={parseDecimalInput}
@@ -118,7 +118,7 @@ export function ApartmentEditSection({
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <EditableNumericTextInput
-              label="Balcony area"
+              label="აივნის ფართობი"
               value={apartment.balconyArea ?? undefined}
               onValueChange={(next) => {
                 setApartment({ balconyArea: next ?? null });
@@ -144,7 +144,7 @@ export function ApartmentEditSection({
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <EditableNumericTextInput
-              label="Parking spaces"
+              label="პარკინგის ადგილები"
               value={apartment.parkingSpaces ?? undefined}
               onValueChange={(next) => {
                 if (next !== undefined) {
@@ -169,7 +169,7 @@ export function ApartmentEditSection({
           />
         </div>
         <EditableNumericTextInput
-          label="Bathrooms"
+          label="სველი წერტილები"
           value={apartment.bathrooms ?? undefined}
           onValueChange={(next) => setApartment({ bathrooms: next ?? null })}
           parse={parseIntegerInput}
@@ -177,38 +177,38 @@ export function ApartmentEditSection({
         />
         <HashtagPicker
           id="editAptProject"
-          label="Project"
+          label="პროექტი"
           value={apartment.project ?? ""}
           onChange={(next) => setApartment({ project: next })}
         />
         <SelectField
           id="editAptRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={parseRenovationForForm(apartment.renovation ?? null)}
           onChange={(next) => setApartment({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
         />
         <SelectField
           id="editAptBuildingCondition"
-          label="Building condition"
+          label="შენობის მდგომარეობა"
           value={apartment.buildingCondition ?? "NEW"}
           onChange={(next) => setApartment({ buildingCondition: next })}
           options={BUILDING_CONDITION_OPTIONS}
         />
         <SelectField
           id="editAptKitchenType"
-          label="Kitchen type"
+          label="სამზარეულოს ტიპი"
           value={apartment.kitchenType ?? "SEPARATE"}
           onChange={(next) => setApartment({ kitchenType: next })}
           options={KITCHEN_TYPE_OPTIONS}
         />
         {(
           [
-            { label: "Elevator", key: "elevator" },
-            { label: "Central heating", key: "centralHeating" },
-            { label: "Air conditioner", key: "airConditioner" },
-            { label: "Furnished", key: "furnished" },
-            { label: "Good view", key: "goodView" },
+            { label: "ლიფტი", key: "elevator" },
+            { label: "ცენტრალური გათბობა", key: "centralHeating" },
+            { label: "კონდიციონერი", key: "airConditioner" },
+            { label: "ავეჯით", key: "furnished" },
+            { label: "კარგი ხედი", key: "goodView" },
           ] as const
         ).map((field) => (
           <div key={field.key} className="flex items-end gap-2">
@@ -238,7 +238,7 @@ export function ApartmentEditSection({
         {dealType === "RENT" ? (
           <VerifiableBooleanField
             id="editAptPetsAllowed"
-            label="Pets allowed"
+            label="ცხოველები დაიშვება"
             value={booleanUiStateFromApartment(
               apartment.petsAllowed,
               apartment.needsVerification ?? [],
@@ -271,55 +271,55 @@ export function PrivateHouseEditSection({
 }: PrivateHouseProps) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Private house</legend>
+      <legend className="text-sm font-semibold text-foreground">კერძო სახლი</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="House area"
+          label="სახლის ფართობი"
           value={privateHouse.houseArea}
           onValueChange={(next) => setPrivateHouse({ houseArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Yard area"
+          label="ეზოს ფართობი"
           value={privateHouse.yardArea}
           onValueChange={(next) => setPrivateHouse({ yardArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Balcony area"
+          label="აივნის ფართობი"
           value={privateHouse.balconyArea ?? undefined}
           onValueChange={(next) => setPrivateHouse({ balconyArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           value={privateHouse.parkingSpaces ?? undefined}
           onValueChange={(next) => setPrivateHouse({ parkingSpaces: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableCheckbox
-          label="Furnished"
+          label="ავეჯით"
           checked={Boolean(privateHouse.furnished)}
           onChange={(checked) => setPrivateHouse({ furnished: checked })}
         />
         <EditableCheckbox
-          label="Pool"
+          label="აუზი"
           checked={Boolean(privateHouse.pool)}
           onChange={(checked) => setPrivateHouse({ pool: checked })}
         />
         <EditableCheckbox
-          label="Fruit trees"
+          label="ხეხილი"
           checked={Boolean(privateHouse.fruitTrees)}
           onChange={(checked) => setPrivateHouse({ fruitTrees: checked })}
         />
         <SelectField
           id="editPhRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={parseRenovationForForm(privateHouse.renovation ?? null)}
           onChange={(next) => setPrivateHouse({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
@@ -357,11 +357,11 @@ export function LandPlotEditSection({ dealType, landPlot, setLandPlot }: LandPlo
 
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Land plot</legend>
+      <legend className="text-sm font-semibold text-foreground">მიწის ნაკვეთი</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Land area"
+          label="მიწის ფართობი"
           value={landPlot.landArea}
           onValueChange={(next) => setLandPlot({ landArea: next })}
           parse={parseDecimalInput}
@@ -369,26 +369,26 @@ export function LandPlotEditSection({ dealType, landPlot, setLandPlot }: LandPlo
         />
         <SelectField
           id="editLpLandCategory"
-          label="Land category"
+          label="მიწის კატეგორია"
           value={landPlot.landCategory}
           onChange={handleLandCategoryChange}
           options={LAND_CATEGORY_SELECT_OPTIONS}
         />
         <SelectField
           id="editLpLandUsage"
-          label="Land usage"
+          label="მიწის დანიშნულება"
           value={landPlot.landUsage}
           onChange={handleLandUsageChange}
           options={LAND_USAGE_SELECT_OPTIONS}
           disabled={!hasLandCategory}
         />
         <EditableCheckbox
-          label="For investment"
+          label="საინვესტიციო"
           checked={Boolean(landPlot.forInvestment)}
           onChange={(checked) => setLandPlot({ forInvestment: checked })}
         />
         <EditableCheckbox
-          label="Can be divided"
+          label="იყოფა"
           checked={Boolean(landPlot.canBeDivided)}
           onChange={(checked) => setLandPlot({ canBeDivided: checked })}
         />
@@ -416,43 +416,43 @@ export function CommercialEditSection({
 }: CommercialProps) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Commercial</legend>
+      <legend className="text-sm font-semibold text-foreground">კომერციული</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Area"
+          label="ფართობი"
           value={commercial.area}
           onValueChange={(next) => setCommercial({ area: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableTwoDigitNumericInput
-          label="Total floors"
+          label="სართულიანობა"
           value={commercial.totalFloors}
           onValueChange={(next) => setCommercial({ totalFloors: next })}
         />
         <EditableNumericTextInput
-          label="Ceiling height"
+          label="ჭერის სიმაღლე"
           value={commercial.ceilingHeight ?? undefined}
           onValueChange={(next) => setCommercial({ ceilingHeight: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           value={commercial.parkingSpaces ?? undefined}
           onValueChange={(next) => setCommercial({ parkingSpaces: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableCheckbox
-          label="Air conditioner"
+          label="კონდიციონერი"
           checked={Boolean(commercial.airConditioner)}
           onChange={(checked) => setCommercial({ airConditioner: checked })}
         />
         <SelectField
           id="editCmRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={parseRenovationForForm(commercial.renovation ?? null)}
           onChange={(next) => setCommercial({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}

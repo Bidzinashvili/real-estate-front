@@ -12,11 +12,11 @@ export function ClientDetailsLockBadge({ lock }: ClientDetailsLockBadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center gap-0.5 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800"
-      title="Frozen hard lock"
+      className="inline-flex items-center gap-0.5 rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive"
+      title="გაყინული მკაცრი პირობა"
     >
       <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
-      Frozen
+      გაყინული
     </span>
   );
 }

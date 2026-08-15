@@ -281,7 +281,7 @@ export function useAddPropertyForm() {
         setSubmitError(
           Object.values(liveErrors)[0] ??
             errors[0] ??
-            "Please check form values and try again.",
+            "შეამოწმეთ ფორმის ველები და სცადეთ ხელახლა.",
         );
         return;
       }

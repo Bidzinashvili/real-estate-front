@@ -105,19 +105,19 @@ export function AddPropertyPrivateHouseSection({
   ]);
 
   return (
-    <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h2 className="text-sm font-semibold text-slate-800">Private house details</h2>
+    <section className="space-y-3 rounded-xl border border-border bg-muted p-4">
+      <h2 className="text-sm font-semibold text-foreground">კერძო სახლის დეტალები</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           id="phBuildingCondition"
-          label="Building condition"
+          label="შენობის მდგომარეობა"
           value={privateHouse.buildingCondition}
           onChange={(value) => patchPrivateHouse({ buildingCondition: value })}
           options={BUILDING_CONDITION_OPTIONS}
         />
         <TextField
           id="phHouseArea"
-          label="House area"
+          label="სახლის ფართობი"
           type="number"
           value={privateHouse.houseArea}
           onChange={handleHouseAreaChange}
@@ -126,7 +126,7 @@ export function AddPropertyPrivateHouseSection({
         />
         <TextField
           id="phYardArea"
-          label="Yard area"
+          label="ეზოს ფართობი"
           type="number"
           value={privateHouse.yardArea}
           onChange={handleYardAreaChange}
@@ -135,7 +135,7 @@ export function AddPropertyPrivateHouseSection({
         />
         <TextField
           id="phTotalArea"
-          label="Total area"
+          label="საერთო ფართობი"
           type="number"
           value={totalArea}
           onChange={() => {}}
@@ -145,7 +145,7 @@ export function AddPropertyPrivateHouseSection({
         />
         <TextField
           id="phRooms"
-          label="Rooms"
+          label="ოთახები"
           type="number"
           value={privateHouse.rooms}
           onChange={handleRoomsChange}
@@ -154,7 +154,7 @@ export function AddPropertyPrivateHouseSection({
         />
         <TextField
           id="phBedrooms"
-          label="Bedrooms"
+          label="საძინებლები"
           type="number"
           value={privateHouse.bedrooms}
           onChange={handleBedroomsChange}
@@ -163,7 +163,7 @@ export function AddPropertyPrivateHouseSection({
         />
         <SelectField
           id="phRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={privateHouse.renovation}
           onChange={(value) => patchPrivateHouse({ renovation: value })}
           options={RENOVATION_SELECT_OPTIONS}
@@ -178,7 +178,7 @@ export function AddPropertyPrivateHouseSection({
         ) : null}
         <TextField
           id="phBalconyArea"
-          label="Total balcony area (m²)"
+          label="აივნის ჯამური ფართობი (მ²)"
           type="number"
           value={privateHouse.balconyArea}
           onChange={(value) => patchPrivateHouse({ balconyArea: value })}
@@ -187,7 +187,7 @@ export function AddPropertyPrivateHouseSection({
         {[
           {
             id: "phCentralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             key: "centralHeating",
             checked: privateHouse.centralHeating,
             onChange: (checked: boolean) =>
@@ -195,7 +195,7 @@ export function AddPropertyPrivateHouseSection({
           },
           {
             id: "phAirConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             key: "airConditioner",
             checked: privateHouse.airConditioner,
             onChange: (checked: boolean) =>
@@ -203,7 +203,7 @@ export function AddPropertyPrivateHouseSection({
           },
           {
             id: "phFurnished",
-            label: "Furnished",
+            label: "ავეჯით",
             key: "furnished",
             checked: privateHouse.furnished,
             onChange: (checked: boolean) => patchPrivateHouse({ furnished: checked }),
@@ -229,7 +229,7 @@ export function AddPropertyPrivateHouseSection({
         ))}
         <TextField
           id="phParking"
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           type="number"
           value={privateHouse.parkingSpaces}
           onChange={(value) => patchPrivateHouse({ parkingSpaces: value })}
@@ -237,44 +237,44 @@ export function AddPropertyPrivateHouseSection({
         />
         <CheckboxField
           id="phPool"
-          label="Pool"
+          label="აუზი"
           checked={privateHouse.pool}
           onChange={(checked) => patchPrivateHouse({ pool: checked })}
         />
         <CheckboxField
           id="phFruitTrees"
-          label="Fruit trees"
+          label="ხეხილი"
           checked={privateHouse.fruitTrees}
           onChange={(checked) => patchPrivateHouse({ fruitTrees: checked })}
         />
         <CheckboxField
           id="phElectricity"
-          label="Electricity"
+          label="ელექტროენერგია"
           checked={privateHouse.electricity}
           onChange={(checked) => patchPrivateHouse({ electricity: checked })}
         />
         <CheckboxField
           id="phWater"
-          label="Water"
+          label="წყალი"
           checked={privateHouse.water}
           onChange={(checked) => patchPrivateHouse({ water: checked })}
         />
         <CheckboxField
           id="phGas"
-          label="Gas"
+          label="გაზი"
           checked={privateHouse.gas}
           onChange={(checked) => patchPrivateHouse({ gas: checked })}
         />
         <CheckboxField
           id="phSewage"
-          label="Sewage"
+          label="კანალიზაცია"
           checked={privateHouse.sewage}
           onChange={(checked) => patchPrivateHouse({ sewage: checked })}
         />
         {dealType === "RENT" ? (
           <CheckboxField
             id="phPetsAllowed"
-            label="Pets allowed"
+            label="ცხოველები დაიშვება"
             checked={privateHouse.petsAllowed}
             onChange={(checked) => patchPrivateHouse({ petsAllowed: checked })}
           />

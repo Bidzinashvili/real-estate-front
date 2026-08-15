@@ -68,7 +68,7 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
       const message =
         error instanceof Error
           ? error.message
-          : "Could not delete this comment right now.";
+          : "კომენტარის წაშლა ვერ მოხერხდა.";
       setPublicCommentDeleteError(message);
     } finally {
       setDeletingPublicCommentId(null);
@@ -99,7 +99,7 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
       <ClientDetailsRelatedPersonsSection relatedPersons={relatedPersons} />
 
       <ClientCommentThread
-        title="Comments"
+        title="კომენტარები"
         comments={publicComments}
         isSubmitting={isPostingComment}
         submitError={commentError}
@@ -110,7 +110,7 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
       />
 
       <ClientCommentThread
-        title="Internal notes"
+        title="შიდა შენიშვნები"
         comments={internalComments}
         isSubmitting={isPostingComment}
         submitError={commentError}
@@ -118,17 +118,17 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
       />
 
       {deleteError && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {deleteError}
         </p>
       )}
 
       <ConfirmDialog
         open={deleteOpen}
-        title="Delete this client?"
-        description="This will soft-delete the client record. You can contact support to restore it."
-        confirmLabel="Yes, delete"
-        cancelLabel="Cancel"
+        title="წავშალოთ ეს კლიენტი?"
+        description="კლიენტი დაარქივდება. აღსადგენად დაუკავშირდით მხარდაჭერას."
+        confirmLabel="დიახ, წაშლა"
+        cancelLabel="გაუქმება"
         isProcessing={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}

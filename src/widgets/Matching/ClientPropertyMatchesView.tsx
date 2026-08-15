@@ -40,10 +40,10 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/clients/${clientId}`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back to client
+          კლიენტზე დაბრუნება
         </Link>
         <MatchingScopeToggle
           value={scope}
@@ -55,9 +55,9 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
       </div>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Matching properties</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Results use the backend match percentage. Order is preserved from the API.
+        <h1 className="text-2xl font-semibold tracking-tight">შესაბამისი განცხადებები</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          შედეგები იყენებს სერვერის შესაბამისობის პროცენტს. თანმიმდევრობა API-დან უცვლელია.
         </p>
       </div>
 
@@ -70,45 +70,45 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
         }}
       />
 
-      {isLoading ? <p className="text-sm text-slate-600">Loading matches…</p> : null}
+      {isLoading ? <p className="text-sm text-muted-foreground">შესაბამისობები იტვირთება…</p> : null}
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
       {!isLoading && !error && data && data.total === 0 ? (
-        <p className="text-sm text-slate-600">No matching properties.</p>
+        <p className="text-sm text-muted-foreground">შესაბამისი განცხადებები ვერ მოიძებნა.</p>
       ) : null}
       {!isLoading && !error && data && data.properties.length > 0 ? (
         <>
-          <p className="text-xs text-slate-500">
-            Showing {data.properties.length} of {data.total}
+          <p className="text-xs text-muted-foreground">
+            ნაჩვენებია {data.properties.length} / {data.total}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {data.properties.map((match) => (
               <PropertyMatchCard key={match.id} match={match} />
             ))}
           </div>
-          <div className="flex flex-col gap-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
-              Page {data.page} of {totalPages}
+              გვერდი {data.page} / {totalPages}
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={data.page <= 1}
                 onClick={() => setPage(data.page - 1)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Previous
+                წინა
               </button>
               <button
                 type="button"
                 disabled={data.page >= totalPages}
                 onClick={() => setPage(data.page + 1)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Next
+                შემდეგი
               </button>
             </div>
           </div>

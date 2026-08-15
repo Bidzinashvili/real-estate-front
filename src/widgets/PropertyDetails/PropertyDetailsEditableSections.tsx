@@ -165,7 +165,7 @@ export function PropertyDetailsEditableSections({
   return (
     <>
       <LabeledSelect
-        label="Deal type"
+        label="გარიგების ტიპი"
         value={values.dealType}
         onChange={(value) => {
           if (isDealType(value)) onDealTypeChange(value);
@@ -175,11 +175,11 @@ export function PropertyDetailsEditableSections({
 
       {values.propertyType === "HOTEL" && (
         <LabeledSelect
-          label="Hotel scope"
+          label="სასტუმროს ტიპი"
           value={values.hotelScope ?? ""}
           onChange={onHotelScopeChange}
           options={[
-            { value: "", label: "Not specified" },
+            { value: "", label: "არ არის მითითებული" },
             ...HOTEL_SCOPE_FORM_OPTIONS,
           ]}
         />
@@ -187,7 +187,7 @@ export function PropertyDetailsEditableSections({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableTextInput
-          label="City"
+          label="ქალაქი"
           value={values.city}
           onChange={(value) => onFieldChange("city", value)}
         />
@@ -210,7 +210,7 @@ export function PropertyDetailsEditableSections({
 
       <StreetAutocompleteField
         id="propertyAddress"
-        label="Address"
+        label="მისამართი"
         value={values.address}
         onChange={(next, addressChangeMeta) =>
           onFieldChange("address", next, addressChangeMeta)
@@ -223,21 +223,21 @@ export function PropertyDetailsEditableSections({
       >
         <div className="space-y-1.5">
           <EditableNumericTextInput
-            label="Public price"
+            label="საჯარო ფასი"
             value={values.pricePublic}
             onValueChange={(next) => onPriceChange("pricePublic", next)}
             parse={parseDecimalInput}
             inputMode="decimal"
           />
           {pricePerSquareMeter !== null ? (
-            <p className="text-xs font-medium text-slate-600">
+            <p className="text-xs font-medium text-muted-foreground">
               {formatPricePerSquareMeter(pricePerSquareMeter)}
             </p>
           ) : null}
         </div>
         {showInternalPrice && (
           <EditableNumericTextInput
-            label="Internal price"
+            label="შიდა ფასი"
             value={values.priceInternal}
             onValueChange={(next) => onPriceChange("priceInternal", next)}
             parse={parseDecimalInput}
@@ -249,28 +249,28 @@ export function PropertyDetailsEditableSections({
       <div className="space-y-1.5">
         <LabelAutocompleteChipsInput
           id="propertyLabels"
-          label="Labels"
+          label="ლეიბლები"
           selectedLabels={values.labels}
           onChange={onLabelsChange}
           allowFreeText
-          placeholder="Type to search or add labels"
+          placeholder="აკრიფეთ ლეიბლის მოსაძებნად ან დასამატებლად"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-slate-800">Comment</label>
+        <label className="block text-sm font-medium text-foreground">კომენტარი</label>
         <textarea
           value={values.publicComment}
           onChange={(event) => onCommentChange("publicComment", event.target.value)}
-          className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+          className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
           rows={4}
         />
       </div>
       {showInternalPrice ? (
         <>
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-800">
-              Comment for myself
+            <label className="block text-sm font-medium text-foreground">
+              კომენტარი ჩემთვის
             </label>
             <textarea
               value={values.privateComment}
@@ -278,20 +278,20 @@ export function PropertyDetailsEditableSections({
               onBlur={() => {
                 isPersonalCommentEntryActiveRef.current = false;
               }}
-              className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+              className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
               rows={4}
             />
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-800">
-              Upload text
+            <label className="block text-sm font-medium text-foreground">
+              ატვირთვის ტექსტი
             </label>
             <textarea
               value={values.internalText}
               onChange={(event) =>
                 onCommentChange("internalText", event.target.value)
               }
-              className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+              className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
               rows={4}
             />
           </div>

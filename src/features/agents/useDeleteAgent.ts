@@ -21,7 +21,7 @@ export function useDeleteAgent(): UseDeleteAgentResult {
       await deleteAgents([id]);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not delete this agent.";
+        err instanceof Error ? err.message : "აგენტის წაშლა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

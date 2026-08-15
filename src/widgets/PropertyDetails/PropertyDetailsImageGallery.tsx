@@ -51,7 +51,7 @@ export function PropertyDetailsImageGallery({
     for (const img of images) {
       const src = resolveApiMediaUrl(img.url, apiBaseUrl);
       if (!src) continue;
-      const label = img.originalName?.trim() || "Listing photo";
+      const label = img.originalName?.trim() || "განცხადების ფოტო";
       const deleteId = imageIdForApiDelete(img);
       list.push({ img, src, label, deleteId });
     }
@@ -121,7 +121,7 @@ export function PropertyDetailsImageGallery({
       await onDeleted();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Could not remove this image.";
+        error instanceof Error ? error.message : "ფოტოს წაშლა ვერ მოხერხდა.";
       setError(message);
     } finally {
       setDeletingImageId(null);
@@ -133,12 +133,12 @@ export function PropertyDetailsImageGallery({
       <section className="space-y-2" aria-labelledby="gallery-heading">
         <h2
           id="gallery-heading"
-          className="text-sm font-semibold text-slate-800"
+          className="text-sm font-semibold text-foreground"
         >
-          Photos
+          ფოტოები
         </h2>
-        <p className="text-sm text-slate-500">
-          No photos attached to this listing.
+        <p className="text-sm text-muted-foreground">
+          ამ განცხადებას ფოტოები არ აქვს.
         </p>
       </section>
     );
@@ -150,11 +150,11 @@ export function PropertyDetailsImageGallery({
 
   return (
     <section className="space-y-3" aria-labelledby="gallery-heading">
-      <h2 id="gallery-heading" className="text-sm font-semibold text-slate-800">
-        Photos
+      <h2 id="gallery-heading" className="text-sm font-semibold text-foreground">
+        ფოტოები
       </h2>
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
@@ -164,13 +164,13 @@ export function PropertyDetailsImageGallery({
           return (
             <li
               key={`${deleteId}-${img.url}`}
-              className="relative aspect-square overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200"
+              className="relative aspect-square overflow-hidden rounded-xl bg-muted ring-1 ring-border"
             >
               <button
                 type="button"
                 onClick={() => setLightboxIndex(index)}
                 className="absolute inset-0 flex h-full w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
-                aria-label={`Open ${label} fullscreen`}
+                aria-label={`${label} სრულ ეკრანზე`}
               >
                 <img
                   src={src}
@@ -191,7 +191,7 @@ export function PropertyDetailsImageGallery({
                     void handleDelete(deleteId);
                   }}
                   className="absolute right-2 top-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white shadow-sm backdrop-blur-[2px] transition hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label={`Remove ${label}`}
+                  aria-label={`${label}-ის წაშლა`}
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
@@ -207,18 +207,18 @@ export function PropertyDetailsImageGallery({
             className="fixed inset-0 z-[100]"
             role="dialog"
             aria-modal="true"
-            aria-label="Photo viewer"
+            aria-label="ფოტოების ნახვა"
           >
             <button
               type="button"
               className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-colors"
-              aria-label="Close photo viewer"
+              aria-label="ფოტოების დახურვა"
               onClick={closeLightbox}
             />
             <button
               type="button"
               className="pointer-events-auto fixed right-4 top-4 z-[110] inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/65 sm:right-6 sm:top-6"
-              aria-label="Close"
+              aria-label="დახურვა"
               onClick={closeLightbox}
             >
               <X className="h-5 w-5" aria-hidden />
@@ -229,7 +229,7 @@ export function PropertyDetailsImageGallery({
                 <button
                   type="button"
                   className="pointer-events-auto fixed left-3 top-1/2 z-[110] inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/65 sm:left-5 md:left-8"
-                  aria-label="Previous photo"
+                  aria-label="წინა ფოტო"
                   onClick={(clickEvent) => {
                     clickEvent.stopPropagation();
                     goPrev();
@@ -240,7 +240,7 @@ export function PropertyDetailsImageGallery({
                 <button
                   type="button"
                   className="pointer-events-auto fixed right-3 top-1/2 z-[110] inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/65 sm:right-5 md:right-8"
-                  aria-label="Next photo"
+                  aria-label="შემდეგი ფოტო"
                   onClick={(clickEvent) => {
                     clickEvent.stopPropagation();
                     goNext();

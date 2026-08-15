@@ -6,7 +6,7 @@ import type { Property } from "@/features/properties/types";
 import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-400";
+  "h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary";
 
 type ReminderFormRow = {
   rowKey: string;
@@ -101,7 +101,7 @@ export function PropertyListingRemindersModal({
     }
 
     if (payloads.length === 0) {
-      setFormError("Add at least one reminder with a valid date and time.");
+      setFormError("დაამატეთ მინიმუმ ერთი შეხსენება სწორი თარიღითა და დროით.");
       return;
     }
 
@@ -119,7 +119,7 @@ export function PropertyListingRemindersModal({
       onClose();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Could not save reminders.";
+        error instanceof Error ? error.message : "შეხსენებების შენახვა ვერ მოხერხდა.";
       setFormError(message);
     } finally {
       setIsSubmitting(false);
@@ -128,7 +128,7 @@ export function PropertyListingRemindersModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/40 px-4"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) handleBackdropPointerDown();
@@ -138,47 +138,46 @@ export function PropertyListingRemindersModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`reminders-title-${property.id}`}
-        className="max-h-[min(90vh,40rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-lg ring-1 ring-slate-200"
+        className="max-h-[min(90vh,40rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-card p-5 shadow-lg ring-1 ring-border"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2
           id={`reminders-title-${property.id}`}
-          className="text-base font-semibold text-slate-900"
+          className="text-base font-semibold text-foreground"
         >
-          Set reminders
+          შეხსენებების დაყენება
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          You can schedule several notifications for this listing. Each row is saved as its own
-          reminder.
+        <p className="mt-1 text-sm text-muted-foreground">
+          ამ განცხადებაზე შეგიძლიათ რამდენიმე შეტყობინება დაგეგმოთ. თითოეული სტრიქონი ცალკე შეხსენებად ინახება.
         </p>
 
         <div className="mt-4 space-y-4">
           {reminderRows.map((row, rowIndex) => (
             <div
               key={row.rowKey}
-              className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-3"
+              className="rounded-xl border border-border bg-muted/80 p-3 space-y-3"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Reminder {rowIndex + 1}
+                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  შეხსენება {rowIndex + 1}
                 </span>
                 {reminderRows.length > 1 ? (
                   <button
                     type="button"
                     onClick={() => handleRemoveReminderRow(row.rowKey)}
                     disabled={isSubmitting}
-                    className="text-xs font-medium text-red-700 transition hover:text-red-800 disabled:opacity-50"
+                    className="text-xs font-medium text-destructive transition hover:text-red-800 disabled:opacity-50"
                   >
-                    Remove
+                    წაშლა
                   </button>
                 ) : null}
               </div>
               <div>
                 <label
                   htmlFor={`reminder-when-${row.rowKey}`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  When
+                  როდის
                 </label>
                 <input
                   id={`reminder-when-${row.rowKey}`}
@@ -200,9 +199,9 @@ export function PropertyListingRemindersModal({
               <div>
                 <label
                   htmlFor={`reminder-note-${row.rowKey}`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  Note (optional)
+                  შენიშვნა (არასავალდებულო)
                 </label>
                 <textarea
                   id={`reminder-note-${row.rowKey}`}
@@ -231,11 +230,11 @@ export function PropertyListingRemindersModal({
           disabled={isSubmitting}
           className="mt-3 text-sm font-medium text-teal-800 transition hover:text-teal-900 disabled:opacity-50"
         >
-          + Add another reminder
+          + სხვა შეხსენების დამატება
         </button>
 
         {formError ? (
-          <p className="mt-3 text-sm text-red-600" role="alert">
+          <p className="mt-3 text-sm text-destructive" role="alert">
             {formError}
           </p>
         ) : null}
@@ -245,17 +244,17 @@ export function PropertyListingRemindersModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Cancel
+            გაუქმება
           </button>
           <button
             type="button"
             disabled={isSubmitting}
             onClick={() => void handleSubmit()}
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSubmitting ? "Saving…" : "Save reminders"}
+            {isSubmitting ? "ინახება…" : "შეხსენებების შენახვა"}
           </button>
         </div>
       </div>

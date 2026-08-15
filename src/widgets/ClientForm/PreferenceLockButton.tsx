@@ -11,13 +11,13 @@ type PreferenceLockButtonProps = {
 };
 
 const LOCK_TITLE: Record<"none" | "frozen", string> = {
-  none: "Not frozen — click to freeze as a hard matching lock",
-  frozen: "Frozen hard lock — click to clear",
+  none: "არ არის გაყინული — დააჭირეთ მკაცრ პირობად გასაყინად",
+  frozen: "გაყინული მკაცრი პირობა — დააჭირეთ გასასუფთავებლად",
 };
 
 const LOCK_BUTTON_CLASS: Record<"none" | "frozen", string> = {
-  none: "border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100",
-  frozen: "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100",
+  none: "border-border bg-muted text-muted-foreground hover:bg-accent",
+  frozen: "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15",
 };
 
 function toPersistentLock(value: LockState): "none" | "frozen" {

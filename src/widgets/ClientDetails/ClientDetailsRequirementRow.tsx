@@ -28,18 +28,18 @@ export function ClientDetailsRequirementRow({
       ? "—"
       : typeof value === "boolean"
         ? value
-          ? "Yes"
-          : "No"
+          ? "კი"
+          : "არა"
         : typeof value === "string" && isClientPreferenceValue(value)
           ? CLIENT_PREFERENCE_LABELS[value]
           : String(value);
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-xs text-muted-foreground">{label}</span>
         {lock !== undefined ? <ClientDetailsLockBadge lock={lock} /> : null}
       </div>
-      <span className="text-sm font-medium text-slate-800">{displayValue}</span>
+      <span className="text-sm font-medium text-foreground">{displayValue}</span>
     </div>
   );
 }

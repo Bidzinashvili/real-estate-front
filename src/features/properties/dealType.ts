@@ -1,13 +1,14 @@
 import type { JsonValue } from "@/shared/lib/jsonValue";
+import { DEAL_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 
 export const DEAL_TYPES = ["SALE", "RENT", "DAILY_RENT"] as const;
 
 export type DealType = (typeof DEAL_TYPES)[number];
 
 export const DEAL_TYPE_OPTIONS: ReadonlyArray<{ value: DealType; label: string }> = [
-  { value: "SALE", label: "Sale" },
-  { value: "RENT", label: "Rent" },
-  { value: "DAILY_RENT", label: "Daily rent" },
+  { value: "SALE", label: DEAL_TYPE_LABELS.SALE },
+  { value: "RENT", label: DEAL_TYPE_LABELS.RENT },
+  { value: "DAILY_RENT", label: DEAL_TYPE_LABELS.DAILY_RENT },
 ];
 
 export function isDealType(value: string): value is DealType {

@@ -2,7 +2,10 @@
 
 import { formatPropertyStatusLabel, type Property } from "@/features/properties/types";
 import {
+  formatBuildingConditionLabel,
   formatHotelScopeLabel,
+  formatKitchenTypeLabel,
+  formatPropertyTypeLabel,
   formatRenovationLabel,
 } from "@/features/properties/addPropertyFormOptions";
 import {
@@ -37,44 +40,44 @@ export function PropertyDetailsReadOnlySections({
       <section className="space-y-4" aria-labelledby="meta-heading">
         <h2
           id="meta-heading"
-          className="text-sm font-semibold text-slate-800"
+          className="text-sm font-semibold text-foreground"
         >
-          Listing metadata
+          განცხადების მონაცემები
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="Property type" value={property.propertyType} />
+          <DetailText label="უძრავი ქონების ტიპი" value={formatPropertyTypeLabel(property.propertyType)} />
           <DetailText
-            label="Listing status"
+            label="განცხადების სტატუსი"
             value={formatPropertyStatusLabel(property.status)}
           />
-          <DetailText label="Cadastral code" value={property.cadastralCode} />
+          <DetailText label="საკადასტრო კოდი" value={property.cadastralCode} />
         </div>
 
         {property.propertyType === "HOTEL" && property.hotelScope ? (
           <DetailText
-            label="Hotel scope"
+            label="სასტუმროს ტიპი"
             value={formatHotelScopeLabel(property.hotelScope)}
           />
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="Owner name" value={property.ownerName} />
-          <DetailText label="Owner phones" value={ownerPhones} />
+          <DetailText label="მესაკუთრის სახელი" value={property.ownerName} />
+          <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailPhone label="Owner whatsapp" value={property.ownerWhatsapp} />
-          <DetailText label="External site id" value={property.ourSiteId} />
+          <DetailPhone label="მესაკუთრის WhatsApp" value={property.ownerWhatsapp} />
+          <DetailText label="გარე საიტის ID" value={property.ourSiteId} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="MyHome id" value={property.myHomeId} />
-          <DetailText label="SSGe id" value={property.ssGeId} />
+          <DetailText label="MyHome ID" value={property.myHomeId} />
+          <DetailText label="SS.ge ID" value={property.ssGeId} />
         </div>
         {activeExternalIds.length > 0 ? (
-          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            <p className="font-medium text-slate-800">External IDs</p>
+          <div className="space-y-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
+            <p className="font-medium text-foreground">გარე ID-ები</p>
             {activeExternalIds.map((externalId) => (
               <p key={externalId.id}>
                 {externalId.platform}: {externalId.value}
@@ -84,103 +87,102 @@ export function PropertyDetailsReadOnlySections({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailDateTime label="Created at" value={property.createdAt} />
-          <DetailDateTime label="Updated at" value={property.updatedAt} />
+          <DetailDateTime label="შექმნის თარიღი" value={property.createdAt} />
+          <DetailDateTime label="განახლების თარიღი" value={property.updatedAt} />
         </div>
       </section>
 
       <section className="space-y-3 pt-2" aria-labelledby="notes-heading">
-        <h2 id="notes-heading" className="text-sm font-semibold text-slate-800">
-          Notes &amp; attachments
+        <h2 id="notes-heading" className="text-sm font-semibold text-foreground">
+          შენიშვნები და დანართები
         </h2>
 
         {showPrivateNotes ? (
           <>
             <DetailMultiline
-              label="Comment for myself"
+              label="შიდა კომენტარი"
               value={property.privateComment ?? property.comment}
             />
             <DetailMultiline
-              label="Upload text"
+              label="ატვირთვის ტექსტი"
               value={property.internalText ?? property.internalComment}
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <DetailDateTime label="Reminder date" value={property.reminderDate} />
-              <DetailDateTime label="Comment date" value={property.commentDate} />
+              <DetailDateTime label="შეხსენების თარიღი" value={property.reminderDate} />
+              <DetailDateTime label="კომენტარის თარიღი" value={property.commentDate} />
             </div>
           </>
         ) : (
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-            Comments and internal notes are only visible to the listing agent and
-            administrators.
+          <p className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+            კომენტარები და შიდა შენიშვნები მხოლოდ განცხადების აგენტსა და ადმინისტრატორებს ეჩვენებათ.
           </p>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="Assigned agent" value={property.userId} />
+          <DetailText label="მიმაგრებული აგენტი" value={property.userId} />
         </div>
       </section>
 
       {property.apartment && (
         <section className="space-y-3 pt-2" aria-labelledby="ro-apt-heading">
-          <h2 id="ro-apt-heading" className="text-sm font-semibold text-slate-800">
-            Apartment details
+          <h2 id="ro-apt-heading" className="text-sm font-semibold text-foreground">
+            ბინის დეტალები
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailText
-              label="Building number"
+              label="კორპუსის ნომერი"
               value={property.apartment.buildingNumber}
             />
             <DetailText
-              label="Building condition"
-              value={property.apartment.buildingCondition}
+              label="შენობის მდგომარეობა"
+              value={formatBuildingConditionLabel(property.apartment.buildingCondition)}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailText label="Project" value={property.apartment.project} />
+            <DetailText label="პროექტი" value={property.apartment.project} />
             <DetailText
-              label="Renovation"
+              label="რემონტი"
               value={formatRenovationLabel(property.apartment.renovation)}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailNumber label="Bedrooms" value={property.apartment.bedrooms} />
+            <DetailNumber label="საძინებლები" value={property.apartment.bedrooms} />
             <DetailNumber
-              label="Total floors"
+              label="სართულიანობა"
               value={property.apartment.totalFloors}
             />
             <DetailNumber
-              label="Ceiling height"
+              label="ჭერის სიმაღლე"
               value={property.apartment.ceilingHeight}
-              suffix="m"
+              suffix="მ"
             />
             <DetailNumber
-              label="Balcony area"
+              label="აივნის ფართობი"
               value={property.apartment.balconyArea}
-              suffix="m²"
+              suffix="მ²"
             />
             {property.dealType === "RENT" || property.dealType === "DAILY_RENT" ? (
               <DetailNumber
-                label="Min Rental Period (months)"
+                label="მინიმალური ქირის ვადა (თვე)"
                 value={property.apartment.minRentalPeriod}
-                suffix="months"
+                suffix="თვე"
               />
             ) : null}
-            <DetailNumber label="Bathrooms" value={property.apartment.bathrooms} />
+            <DetailNumber label="სველი წერტილები" value={property.apartment.bathrooms} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailVerification
-              label="Elevator"
+              label="ლიფტი"
               value={property.apartment.elevator}
               isToBeVerified={property.apartment.needsVerification.includes("elevator")}
             />
             <DetailVerification
-              label="Central heating"
+              label="ცენტრალური გათბობა"
               value={property.apartment.centralHeating}
               isToBeVerified={property.apartment.needsVerification.includes(
                 "centralHeating",
@@ -190,35 +192,35 @@ export function PropertyDetailsReadOnlySections({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailVerification
-              label="Air conditioner"
+              label="კონდიციონერი"
               value={property.apartment.airConditioner}
               isToBeVerified={property.apartment.needsVerification.includes(
                 "airConditioner",
               )}
             />
             <DetailText
-              label="Kitchen type"
-              value={property.apartment.kitchenType}
+              label="სამზარეულოს ტიპი"
+              value={formatKitchenTypeLabel(property.apartment.kitchenType)}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailVerification
-              label="Furnished"
+              label="ავეჯით"
               value={property.apartment.furnished}
               isToBeVerified={property.apartment.needsVerification.includes("furnished")}
             />
             <DetailNumber
-              label="Parking spaces"
+              label="პარკინგის ადგილები"
               value={property.apartment.parkingSpaces}
             />
             <DetailVerification
-              label="Good view"
+              label="კარგი ხედი"
               value={property.apartment.goodView}
               isToBeVerified={property.apartment.needsVerification.includes("goodView")}
             />
             <DetailVerification
-              label="Pets allowed"
+              label="ცხოველები დაიშვება"
               value={property.apartment.petsAllowed}
               isToBeVerified={property.apartment.needsVerification.includes(
                 "petsAllowed",

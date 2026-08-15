@@ -30,27 +30,27 @@ export function MinRentalPeriodEditField({
   if (dealType !== "RENT" && dealType !== "DAILY_RENT") return null;
 
   const presetOptions = [
-    { value: "" as const, label: "Quick select (months)" },
-    { value: "1" as const, label: "1 month" },
-    { value: "3" as const, label: "3 months" },
-    { value: "6" as const, label: "6 months" },
-    { value: "12" as const, label: "12 months" },
+    { value: "" as const, label: "სწრაფი არჩევა (თვეები)" },
+    { value: "1" as const, label: "1 თვე" },
+    { value: "3" as const, label: "3 თვე" },
+    { value: "6" as const, label: "6 თვე" },
+    { value: "12" as const, label: "12 თვე" },
   ];
 
   return (
     <div className="space-y-3 sm:col-span-2">
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Min Rental Period (months)"
+          label="მინიმალური ქირის ვადა (თვე)"
           value={months}
           onValueChange={onMonthsChange}
           parse={parseIntegerInput}
           inputMode="numeric"
-          placeholder="Enter minimum rental period in months"
+          placeholder="შეიყვანეთ მინიმალური ქირის ვადა თვეებში"
         />
         <SelectField
           id={`${idPrefix}MinRentalPreset`}
-          label="Common lengths"
+          label="ხშირი ვადები"
           value={presetValueFromMonths(months)}
           onChange={(preset) => {
             if (preset !== "") {

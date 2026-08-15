@@ -65,7 +65,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
       } catch (err) {
         if (cancelled) return;
         const message =
-          err instanceof Error ? err.message : "Could not load clients right now.";
+          err instanceof Error ? err.message : "კლიენტების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
       } finally {
         if (!cancelled) {

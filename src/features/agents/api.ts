@@ -20,11 +20,11 @@ function getAuthHeaders() {
   const token = getStoredAuthToken();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
 
   return {
@@ -52,7 +52,7 @@ export async function getAgentsList(
     return res.data.agents ?? res.data.items ?? [];
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load agents right now.";
+      const fallback = "აგენტების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -75,7 +75,7 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load this agent right now.";
+      const fallback = "აგენტის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -98,7 +98,7 @@ export async function createAgent(payload: AgentCreatePayload): Promise<Agent> {
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not create agent right now.";
+      const fallback = "აგენტის შექმნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -128,7 +128,7 @@ export async function updateAgent(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not save changes for this agent.";
+      const fallback = "აგენტის ცვლილებების შენახვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -157,7 +157,7 @@ export async function deleteAgents(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not delete this agent right now.";
+      const fallback = "აგენტის წაშლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,

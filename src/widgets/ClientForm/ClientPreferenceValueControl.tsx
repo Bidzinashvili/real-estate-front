@@ -27,7 +27,7 @@ export function ClientPreferenceValueControl({
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value as ClientPreferenceValue)}
-        className="block w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-10 text-sm text-slate-900 outline-none focus:border-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50"
+        className="block w-full appearance-none rounded-lg border border-border bg-card py-2 pl-3 pr-10 text-sm text-foreground outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-muted"
       >
         {CLIENT_PREFERENCE_VALUES.map((preferenceValue) => (
           <option key={preferenceValue} value={preferenceValue}>

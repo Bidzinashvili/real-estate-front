@@ -22,11 +22,11 @@ function getAuthHeaders() {
   const token = getStoredAuthToken();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
 
   return {
@@ -121,20 +121,20 @@ export async function searchStreets(
       if (isNetworkFailure) {
         throw new ApiError(
           {
-            message: "Network error. Check your connection and try again.",
+            message: "ქსელის შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.",
             error: "NetworkError",
             statusCode: status,
           },
-          "Network error. Check your connection and try again.",
+          "ქსელის შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.",
         );
       }
 
       const fallback =
         status === 401
-          ? "Your session expired. Sign in again."
+          ? "სესია ამოიწურა. შედით ხელახლა."
           : status === 400
-            ? "Invalid search. Try a different query."
-            : "Could not load street suggestions right now.";
+            ? "არასწორი ძიება. სცადეთ სხვა მოთხოვნა."
+            : "ქუჩების ჩატვირთვა ვერ მოხერხდა.";
 
       const parsed = parseStandardApiError(
         error.response?.data,

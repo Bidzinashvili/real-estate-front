@@ -10,7 +10,7 @@ import { patchReminder } from "@/features/reminders/remindersApi";
 import { isoToDatetimeLocalValue } from "@/shared/lib/datetimeLocalIso";
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-400";
+  "h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary";
 
 type DashboardReminderEditModalProps = {
   row: DashboardReminderRow;
@@ -74,7 +74,7 @@ export function DashboardReminderEditModal({
 
     const built = buildDashboardReminderPatch(row, form);
     if (built === null) {
-      setFormError("No changes to save.");
+      setFormError("შესანახი ცვლილება არ არის.");
       return;
     }
     if ("errorMessage" in built) {
@@ -91,7 +91,7 @@ export function DashboardReminderEditModal({
       const message =
         errorUnknown instanceof Error
           ? errorUnknown.message
-          : "Could not update this reminder.";
+          : "შეხსენების განახლება ვერ მოხერხდა.";
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -100,7 +100,7 @@ export function DashboardReminderEditModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/40 px-4"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) handleBackdropPointerDown();
@@ -110,18 +110,18 @@ export function DashboardReminderEditModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${formFieldIdPrefix}-title`}
-        className="max-h-[min(90vh,40rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-lg ring-1 ring-slate-200"
+        className="max-h-[min(90vh,40rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-card p-5 shadow-lg ring-1 ring-border"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2
           id={`${formFieldIdPrefix}-title`}
-          className="text-base font-semibold text-slate-900"
+          className="text-base font-semibold text-foreground"
         >
-          Edit reminder
+          შეხსენების რედაქტირება
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           {row.reminderKindLabel}
-          <span className="text-slate-400"> · </span>
+          <span className="text-muted-foreground"> · </span>
           {row.subjectTitle}
         </p>
 
@@ -129,9 +129,9 @@ export function DashboardReminderEditModal({
           <div>
             <label
               htmlFor={`${formFieldIdPrefix}-when`}
-              className="mb-1 block text-xs font-medium text-slate-600"
+              className="mb-1 block text-xs font-medium text-muted-foreground"
             >
-              When
+              როდის
             </label>
             <input
               id={`${formFieldIdPrefix}-when`}
@@ -150,9 +150,9 @@ export function DashboardReminderEditModal({
             <div>
               <label
                 htmlFor={`${formFieldIdPrefix}-note`}
-                className="mb-1 block text-xs font-medium text-slate-600"
+                className="mb-1 block text-xs font-medium text-muted-foreground"
               >
-                Note (optional)
+                შენიშვნა (არასავალდებულო)
               </label>
               <textarea
                 id={`${formFieldIdPrefix}-note`}
@@ -169,16 +169,16 @@ export function DashboardReminderEditModal({
           ) : null}
 
           {showRentalFields ? (
-            <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-              <p className="text-xs font-medium text-slate-600">
-                Rental period (required if you change any of these)
+            <div className="space-y-4 rounded-xl border border-border bg-muted/80 p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                ქირის პერიოდი (სავალდებულოა, თუ რომელიმე ამ ველს შეცვლით)
               </p>
               <div>
                 <label
                   htmlFor={`${formFieldIdPrefix}-rental-months`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  Duration (months)
+                  ხანგრძლივობა (თვე)
                 </label>
                 <input
                   id={`${formFieldIdPrefix}-rental-months`}
@@ -200,9 +200,9 @@ export function DashboardReminderEditModal({
               <div>
                 <label
                   htmlFor={`${formFieldIdPrefix}-rental-start`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  Period start
+                  პერიოდის დასაწყისი
                 </label>
                 <input
                   id={`${formFieldIdPrefix}-rental-start`}
@@ -221,9 +221,9 @@ export function DashboardReminderEditModal({
               <div>
                 <label
                   htmlFor={`${formFieldIdPrefix}-rental-end`}
-                  className="mb-1 block text-xs font-medium text-slate-600"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
                 >
-                  Period end
+                  პერიოდის დასასრული
                 </label>
                 <input
                   id={`${formFieldIdPrefix}-rental-end`}
@@ -244,7 +244,7 @@ export function DashboardReminderEditModal({
         </div>
 
         {formError ? (
-          <p className="mt-3 text-sm text-red-600" role="alert">
+          <p className="mt-3 text-sm text-destructive" role="alert">
             {formError}
           </p>
         ) : null}
@@ -254,17 +254,17 @@ export function DashboardReminderEditModal({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Cancel
+            გაუქმება
           </button>
           <button
             type="button"
             disabled={isSaving}
             onClick={() => void handleSubmit()}
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSaving ? "Saving…" : "Save"}
+            {isSaving ? "ინახება…" : "შენახვა"}
           </button>
         </div>
       </div>

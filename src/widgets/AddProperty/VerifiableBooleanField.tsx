@@ -7,10 +7,10 @@ const VERIFIABLE_BOOLEAN_OPTIONS: Array<{
   value: VerifiableBooleanUiState;
   label: string;
 }> = [
-  { value: "unknown", label: "Unspecified" },
-  { value: "toBeVerified", label: "To be verified" },
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
+  { value: "unknown", label: "არ არის მითითებული" },
+  { value: "toBeVerified", label: "გადასამოწმებელია" },
+  { value: "yes", label: "კი" },
+  { value: "no", label: "არა" },
 ];
 
 type VerifiableBooleanFieldProps = {
@@ -28,7 +28,7 @@ export function VerifiableBooleanField({
 }: VerifiableBooleanFieldProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
       <NativeSelectSurface>
@@ -38,7 +38,7 @@ export function VerifiableBooleanField({
           onChange={(event) =>
             onChange(event.target.value as VerifiableBooleanUiState)
           }
-          className="block w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-10 text-sm text-slate-900 outline-none focus:border-slate-400"
+          className="block w-full appearance-none rounded-lg border border-border bg-card py-2 pl-3 pr-10 text-sm text-foreground outline-none focus:border-primary"
         >
           {VERIFIABLE_BOOLEAN_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>

@@ -39,12 +39,12 @@ export function AddPropertyLandPlotSection({
   }
 
   return (
-    <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h2 className="text-sm font-semibold text-slate-800">Land plot details</h2>
+    <section className="space-y-3 rounded-xl border border-border bg-muted p-4">
+      <h2 className="text-sm font-semibold text-foreground">მიწის ნაკვეთის დეტალები</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           id="lpLandArea"
-          label="Land area"
+          label="მიწის ფართობი"
           type="number"
           value={landPlot.landArea}
           onChange={(value) => patchLandPlot({ landArea: value })}
@@ -53,7 +53,7 @@ export function AddPropertyLandPlotSection({
         />
         <SelectField
           id="lpLandCategory"
-          label="Land category"
+          label="მიწის კატეგორია"
           value={landPlot.landCategory}
           onChange={handleLandCategoryChange}
           options={LAND_CATEGORY_SELECT_OPTIONS}
@@ -61,7 +61,7 @@ export function AddPropertyLandPlotSection({
         />
         <SelectField
           id="lpLandUsage"
-          label="Land usage"
+          label="მიწის დანიშნულება"
           value={landPlot.landUsage}
           onChange={handleLandUsageChange}
           options={LAND_USAGE_SELECT_OPTIONS}
@@ -78,49 +78,49 @@ export function AddPropertyLandPlotSection({
         ) : null}
         <CheckboxField
           id="lpForInvestment"
-          label="For investment"
+          label="საინვესტიციო"
           checked={landPlot.forInvestment}
           onChange={(checked) => patchLandPlot({ forInvestment: checked })}
         />
         <CheckboxField
           id="lpApprovedProject"
-          label="Approved project"
+          label="დამტკიცებული პროექტი"
           checked={landPlot.approvedProject}
           onChange={(checked) => patchLandPlot({ approvedProject: checked })}
         />
         <CheckboxField
           id="lpCanBeDivided"
-          label="Can be divided"
+          label="იყოფა"
           checked={landPlot.canBeDivided}
           onChange={(checked) => patchLandPlot({ canBeDivided: checked })}
         />
         <CheckboxField
           id="lpFruitTrees"
-          label="Fruit trees"
+          label="ხეხილი"
           checked={landPlot.fruitTrees}
           onChange={(checked) => patchLandPlot({ fruitTrees: checked })}
         />
         <CheckboxField
           id="lpElectricity"
-          label="Electricity"
+          label="ელექტროენერგია"
           checked={landPlot.electricity}
           onChange={(checked) => patchLandPlot({ electricity: checked })}
         />
         <CheckboxField
           id="lpWater"
-          label="Water"
+          label="წყალი"
           checked={landPlot.water}
           onChange={(checked) => patchLandPlot({ water: checked })}
         />
         <CheckboxField
           id="lpGas"
-          label="Gas"
+          label="გაზი"
           checked={landPlot.gas}
           onChange={(checked) => patchLandPlot({ gas: checked })}
         />
         <CheckboxField
           id="lpSewage"
-          label="Sewage"
+          label="კანალიზაცია"
           checked={landPlot.sewage}
           onChange={(checked) => patchLandPlot({ sewage: checked })}
         />

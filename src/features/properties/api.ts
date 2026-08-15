@@ -22,11 +22,11 @@ function getAuthHeaders() {
   const token = getStoredAuthToken();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
 
   return {
@@ -64,7 +64,7 @@ export async function getProperties(
       throw error;
     }
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load properties right now.";
+      const fallback = "განცხადებების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -141,7 +141,7 @@ export async function updateProperty(
     });
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not save property changes right now.";
+      const fallback = "განცხადების ცვლილებების შენახვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -209,7 +209,7 @@ export async function deletePropertyImage(
     );
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not delete this image right now.";
+      const fallback = "ფოტოს წაშლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -261,12 +261,12 @@ export async function createProperty(
       const status = error.response?.status ?? 500;
       const fallback =
         status === 409
-          ? "This external property ID is already used."
+          ? "ეს გარე ID უკვე გამოყენებულია."
           : status === 403
-            ? "You do not have permission to create properties."
+            ? "განცხადების შექმნის უფლება არ გაქვთ."
             : status === 401
-              ? "You are not authenticated."
-              : "Could not create this property right now.";
+              ? "ავტორიზაცია საჭიროა."
+              : "განცხადების შექმნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         status,
@@ -278,6 +278,6 @@ export async function createProperty(
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error("Could not create this property right now.");
+    throw new Error("განცხადების შექმნა ვერ მოხერხდა.");
   }
 }

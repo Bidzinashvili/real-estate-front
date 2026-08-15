@@ -21,12 +21,12 @@ export function buildDashboardReminderPatch(
 ): { patch: PatchReminderBody } | { errorMessage: string } | null {
   const notifyIso = datetimeLocalValueToIso(form.notifyLocal);
   if (form.notifyLocal.trim() !== "" && notifyIso === null) {
-    return { errorMessage: "Enter a valid date and time for the reminder." };
+    return { errorMessage: "შეიყვანეთ შეხსენების სწორი თარიღი და დრო." };
   }
 
   if (row.reminderVariant === "LISTING_VERIFICATION") {
     if (notifyIso === null) {
-      return { errorMessage: "A date and time is required." };
+      return { errorMessage: "თარიღი და დრო სავალდებულოა." };
     }
     if (notifyIso === row.dueAtIso) {
       return null;
@@ -37,7 +37,7 @@ export function buildDashboardReminderPatch(
 
   if (row.reminderVariant === "CLIENT_REMINDER") {
     if (notifyIso === null) {
-      return { errorMessage: "A date and time is required." };
+      return { errorMessage: "თარიღი და დრო სავალდებულოა." };
     }
     if (notifyIso === row.dueAtIso) {
       return null;
@@ -47,7 +47,7 @@ export function buildDashboardReminderPatch(
   }
 
   if (row.reminderVariant !== "SCHEDULED_PROPERTY") {
-    return { errorMessage: "This reminder cannot be edited here." };
+    return { errorMessage: "ამ შეხსენების რედაქტირება აქ შეუძლებელია." };
   }
 
   if (row.scheduledKind === "RENTAL_PERIOD_ENDING") {
@@ -90,7 +90,7 @@ export function buildDashboardReminderPatch(
       if (!rentalFormComplete) {
         return {
           errorMessage:
-            "Rental ending reminders need duration (months) and both period start and end.",
+            "ქირის დასრულების შეხსენებას სჭირდება ხანგრძლივობა (თვეები) და პერიოდის დასაწყისი/დასასრული.",
         };
       }
       const rentalPatch: PatchScheduledRentalEndingReminderBody = {

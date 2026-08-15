@@ -40,15 +40,15 @@ export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesV
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/properties/${propertyId}`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back to listing
+          განცხადებაზე დაბრუნება
         </Link>
         <MatchingScopeToggle
           value={scope}
-          globalLabel="All clients"
-          mineLabel="My clients"
+          globalLabel="ყველა კლიენტი"
+          mineLabel="ჩემი კლიენტები"
           onChange={(nextScope) => {
             setScope(nextScope);
             setPage(1);
@@ -57,9 +57,9 @@ export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesV
       </div>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Matching clients</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          MINE uses your own clients, not the listing owner. Cards show public match fields only.
+        <h1 className="text-2xl font-semibold tracking-tight">შესაბამისი კლიენტები</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          ჩემი კლიენტები ნიშნავს თქვენს კლიენტებს და არა განცხადების მფლობელისას. ბარათებში მხოლოდ საჯარო ველები ჩანს.
         </p>
       </div>
 
@@ -72,45 +72,45 @@ export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesV
         }}
       />
 
-      {isLoading ? <p className="text-sm text-slate-600">Loading matches…</p> : null}
+      {isLoading ? <p className="text-sm text-muted-foreground">შესაბამისობები იტვირთება…</p> : null}
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
       {!isLoading && !error && data && data.total === 0 ? (
-        <p className="text-sm text-slate-600">No matching clients.</p>
+        <p className="text-sm text-muted-foreground">შესაბამისი კლიენტები ვერ მოიძებნა.</p>
       ) : null}
       {!isLoading && !error && data && data.clients.length > 0 ? (
         <>
-          <p className="text-xs text-slate-500">
-            Showing {data.clients.length} of {data.total}
+          <p className="text-xs text-muted-foreground">
+            ნაჩვენებია {data.clients.length} / {data.total}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {data.clients.map((match) => (
               <ClientMatchCard key={match.id} match={match} />
             ))}
           </div>
-          <div className="flex flex-col gap-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
-              Page {data.page} of {totalPages}
+              გვერდი {data.page} / {totalPages}
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={data.page <= 1}
                 onClick={() => setPage(data.page - 1)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Previous
+                წინა
               </button>
               <button
                 type="button"
                 disabled={data.page >= totalPages}
                 onClick={() => setPage(data.page + 1)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Next
+                შემდეგი
               </button>
             </div>
           </div>

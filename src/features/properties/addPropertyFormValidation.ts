@@ -1,12 +1,18 @@
 import type { AddPropertyActiveSubtype, FormState } from "@/features/properties/addPropertyFormState";
 import { GEORGIAN_CITY_OPTIONS } from "@/features/properties/addPropertyFormOptions";
 import { isHotelScope } from "@/features/properties/types";
+import {
+  invalidNumberMessage,
+  requiredFieldMessage,
+  wholeNumberMessage,
+  atLeastOneMessage,
+} from "@/shared/i18n/ui";
 
 export type FormErrors = Partial<Record<string, string>>;
 
 const internationalPhoneRegex = /^\+\d{10,15}$/;
 const internationalPhoneError =
-  "Phone number must be in international format, e.g. +995555111222";
+  "ტელეფონი უნდა იყოს საერთაშორისო ფორმატში, მაგ. +995555111222";
 
 export function validateFormInputs(
   form: FormState,
@@ -15,56 +21,56 @@ export function validateFormInputs(
   const errors: FormErrors = {};
 
   const requireString = (key: string, value: string, label: string) => {
-    if (!value.trim()) errors[key] = `${label} is required.`;
+    if (!value.trim()) errors[key] = requiredFieldMessage(label);
   };
   const requireNumber = (key: string, value: string, label: string) => {
     if (!value.trim()) {
-      errors[key] = `${label} is required.`;
+      errors[key] = requiredFieldMessage(label);
       return;
     }
     if (!Number.isFinite(Number(value))) {
-      errors[key] = `${label} must be a valid number.`;
+      errors[key] = invalidNumberMessage(label);
     }
   };
   const requireIntegerAtLeastOne = (key: string, value: string, label: string) => {
     if (!value.trim()) {
-      errors[key] = `${label} is required.`;
+      errors[key] = requiredFieldMessage(label);
       return;
     }
     const parsedValue = Number(value);
     if (!Number.isFinite(parsedValue) || !Number.isInteger(parsedValue)) {
-      errors[key] = `${label} must be a whole number.`;
+      errors[key] = wholeNumberMessage(label);
       return;
     }
     if (parsedValue < 1) {
-      errors[key] = `${label} must be at least 1.`;
+      errors[key] = atLeastOneMessage(label);
     }
   };
   const optionalNumber = (key: string, value: string, label: string) => {
     if (!value.trim()) return;
     if (!Number.isFinite(Number(value))) {
-      errors[key] = `${label} must be a valid number.`;
+      errors[key] = invalidNumberMessage(label);
     }
   };
   const requireMinRentalPeriodMonths = (key: string, value: string) => {
     const trimmed = value.trim();
     if (!trimmed) {
-      errors[key] = "Min Rental Period (months) is required.";
+      errors[key] = "მინიმალური ქირის ვადა (თვეებში) სავალდებულოა.";
       return;
     }
     const parsed = Number(trimmed);
     if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
-      errors[key] = "Min Rental Period must be a whole number of months.";
+      errors[key] = "მინიმალური ქირის ვადა უნდა იყოს მთელი რიცხვი თვეებში.";
       return;
     }
     if (parsed < 1) {
-      errors[key] = "Min Rental Period must be at least 1 month.";
+      errors[key] = "მინიმალური ქირის ვადა უნდა იყოს მინიმუმ 1 თვე.";
     }
   };
   const requireInternationalPhone = (key: string, value: string) => {
     const normalized = value.trim();
     if (!normalized) {
-      errors[key] = "Owner phone is required.";
+      errors[key] = "მესაკუთრის ტელეფონი სავალდებულოა.";
       return;
     }
     if (!internationalPhoneRegex.test(normalized)) {
@@ -80,13 +86,13 @@ export function validateFormInputs(
   };
 
   if (!GEORGIAN_CITY_OPTIONS.some((option) => option.value === form.city)) {
-    errors.city = "City must be one of თბილისი, ბათუმი, ქუთაისი, or ბორჯომი.";
+    errors.city = "ქალაქი უნდა იყოს თბილისი, ბათუმი, ქუთაისი ან ბორჯომი.";
   }
-  requireString("district", form.district, "District");
-  requireString("address", form.address, "Address");
-  requireString("ownerName", form.ownerName, "Owner name");
+  requireString("district", form.district, "უბანი");
+  requireString("address", form.address, "მისამართი");
+  requireString("ownerName", form.ownerName, "მესაკუთრის სახელი");
   if (form.ownerPhones.length === 0) {
-    errors["ownerPhones"] = "At least one phone number is required.";
+    errors["ownerPhones"] = "საჭიროა მინიმუმ ერთი ტელეფონის ნომერი.";
   } else {
     requireInternationalPhone("ownerPhones.0", form.ownerPhones[0] ?? "");
     form.ownerPhones.slice(1).forEach((phone, relativeIndex) => {
@@ -94,39 +100,39 @@ export function validateFormInputs(
     });
   }
   optionalInternationalPhone("ownerWhatsapp", form.ownerWhatsapp);
-  requireNumber("pricePublic", form.pricePublic, "Public price");
-  optionalNumber("priceInternal", form.priceInternal, "Internal price");
+  requireNumber("pricePublic", form.pricePublic, "საჯარო ფასი");
+  optionalNumber("priceInternal", form.priceInternal, "შიდა ფასი");
 
   if (form.propertyType === "HOTEL") {
     if (!isHotelScope(form.hotelScope)) {
-      errors.hotelScope = "Select whole hotel or hotel room.";
+      errors.hotelScope = "აირჩიეთ მთელი სასტუმრო ან ნომერი.";
     }
   }
 
   if (activeSubtype === "apartment") {
-    requireNumber("apartment.totalArea", form.apartment.totalArea, "Apartment total area");
-    requireNumber("apartment.rooms", form.apartment.rooms, "Apartment rooms");
-    requireNumber("apartment.bedrooms", form.apartment.bedrooms, "Apartment bedrooms");
-    requireNumber("apartment.floor", form.apartment.floor, "Apartment floor");
+    requireNumber("apartment.totalArea", form.apartment.totalArea, "ბინის საერთო ფართობი");
+    requireNumber("apartment.rooms", form.apartment.rooms, "ბინის ოთახები");
+    requireNumber("apartment.bedrooms", form.apartment.bedrooms, "ბინის საძინებლები");
+    requireNumber("apartment.floor", form.apartment.floor, "ბინის სართული");
     requireIntegerAtLeastOne(
       "apartment.totalFloors",
       form.apartment.totalFloors,
-      "Apartment total floors",
+      "ბინის სართულიანობა",
     );
     optionalNumber(
       "apartment.ceilingHeight",
       form.apartment.ceilingHeight,
-      "Apartment ceiling height",
+      "ბინის ჭერის სიმაღლე",
     );
     optionalNumber(
       "apartment.balconyArea",
       form.apartment.balconyArea,
-      "Apartment balcony area",
+      "ბინის აივნის ფართობი",
     );
     optionalNumber(
       "apartment.parkingSpaces",
       form.apartment.parkingSpaces,
-      "Apartment parking spaces",
+      "ბინის პარკინგის ადგილები",
     );
     if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
@@ -134,28 +140,28 @@ export function validateFormInputs(
         form.apartment.minRentalPeriod,
       );
     }
-    optionalNumber("apartment.bathrooms", form.apartment.bathrooms, "Apartment bathrooms");
+    optionalNumber("apartment.bathrooms", form.apartment.bathrooms, "ბინის სველი წერტილები");
   }
 
   if (activeSubtype === "privateHouse") {
-    requireNumber("privateHouse.houseArea", form.privateHouse.houseArea, "House area");
-    requireNumber("privateHouse.yardArea", form.privateHouse.yardArea, "Yard area");
-    requireNumber("privateHouse.totalArea", form.privateHouse.totalArea, "Total area");
-    requireNumber("privateHouse.rooms", form.privateHouse.rooms, "Private house rooms");
+    requireNumber("privateHouse.houseArea", form.privateHouse.houseArea, "სახლის ფართობი");
+    requireNumber("privateHouse.yardArea", form.privateHouse.yardArea, "ეზოს ფართობი");
+    requireNumber("privateHouse.totalArea", form.privateHouse.totalArea, "საერთო ფართობი");
+    requireNumber("privateHouse.rooms", form.privateHouse.rooms, "კერძო სახლის ოთახები");
     requireNumber(
       "privateHouse.bedrooms",
       form.privateHouse.bedrooms,
-      "Private house bedrooms",
+      "კერძო სახლის საძინებლები",
     );
     optionalNumber(
       "privateHouse.balconyArea",
       form.privateHouse.balconyArea,
-      "Private house balcony area",
+      "კერძო სახლის აივნის ფართობი",
     );
     optionalNumber(
       "privateHouse.parkingSpaces",
       form.privateHouse.parkingSpaces,
-      "Private house parking spaces",
+      "კერძო სახლის პარკინგის ადგილები",
     );
     if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
@@ -166,12 +172,12 @@ export function validateFormInputs(
   }
 
   if (activeSubtype === "landPlot") {
-    requireNumber("landPlot.landArea", form.landPlot.landArea, "Land area");
+    requireNumber("landPlot.landArea", form.landPlot.landArea, "მიწის ფართობი");
     if (form.landPlot.landCategory === "") {
-      errors["landPlot.landCategory"] = "Land category is required.";
+      errors["landPlot.landCategory"] = "მიწის კატეგორია სავალდებულოა.";
     }
     if (form.landPlot.landUsage === "") {
-      errors["landPlot.landUsage"] = "Land usage is required.";
+      errors["landPlot.landUsage"] = "მიწის დანიშნულება სავალდებულოა.";
     }
     if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
@@ -182,22 +188,22 @@ export function validateFormInputs(
   }
 
   if (activeSubtype === "commercial") {
-    requireNumber("commercial.area", form.commercial.area, "Commercial area");
-    requireNumber("commercial.floor", form.commercial.floor, "Commercial floor");
+    requireNumber("commercial.area", form.commercial.area, "კომერციული ფართობი");
+    requireNumber("commercial.floor", form.commercial.floor, "კომერციული სართული");
     requireIntegerAtLeastOne(
       "commercial.totalFloors",
       form.commercial.totalFloors,
-      "Commercial total floors",
+      "კომერციული სართულიანობა",
     );
     optionalNumber(
       "commercial.ceilingHeight",
       form.commercial.ceilingHeight,
-      "Commercial ceiling height",
+      "კომერციული ჭერის სიმაღლე",
     );
     optionalNumber(
       "commercial.parkingSpaces",
       form.commercial.parkingSpaces,
-      "Commercial parking spaces",
+      "კომერციული პარკინგის ადგილები",
     );
     if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
@@ -214,14 +220,14 @@ export function validateAddPropertyImages(files: File[]): string | null {
   const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
   const maxImageCount = 50;
   if (files.length > maxImageCount) {
-    return "You can upload at most 50 images.";
+    return "შეგიძლიათ ატვირთოთ მაქსიმუმ 50 ფოტო.";
   }
   for (const file of files) {
     if (file.size > 10 * 1024 * 1024) {
-      return `Image ${file.name} exceeds 10MB.`;
+      return `ფოტო ${file.name} აღემატება 10MB-ს.`;
     }
     if (!allowedMimeTypes.includes(file.type)) {
-      return `Image ${file.name} is not a supported type (jpg, jpeg, png, webp).`;
+      return `ფოტო ${file.name} მხარდაჭერილი ტიპი არ არის (jpg, jpeg, png, webp).`;
     }
   }
   return null;

@@ -9,7 +9,7 @@ type AppLayoutProps = {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
         <UserBootstrap />
         <ReminderAlertCenter />
@@ -19,4 +19,3 @@ export default function AppLayout({ children }: AppLayoutProps) {
     </main>
   );
 }
-

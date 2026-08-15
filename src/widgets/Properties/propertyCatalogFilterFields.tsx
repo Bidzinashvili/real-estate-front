@@ -32,13 +32,13 @@ import {
 import { PropertyCatalogMoreFiltersDetails } from "@/widgets/Properties/propertyCatalogMoreFiltersDetails";
 
 const SORT_OPTIONS = [
-  { value: "createdAt", label: "Newest" },
-  { value: "pricePublic", label: "Price" },
+  { value: "createdAt", label: "უახლესი" },
+  { value: "pricePublic", label: "ფასი" },
 ] as const;
 
 const ORDER_OPTIONS = [
-  { value: "desc", label: "High → low" },
-  { value: "asc", label: "Low → high" },
+  { value: "desc", label: "კლებადობით" },
+  { value: "asc", label: "ზრდადობით" },
 ] as const;
 
 function parseDealTypeSelectValue(raw: string): DealType | "" {
@@ -72,17 +72,17 @@ export function PropertyCatalogFilterFields({
   return (
     <div className="space-y-5">
       <div>
-        <span className={LABEL_CLASS}>Deal type</span>
+        <span className={LABEL_CLASS}>გარიგების ტიპი</span>
         <NativeSelectSurface>
           <select
-            aria-label="Filter by deal type"
+            aria-label="გარიგების ტიპით გაფილტვრა"
             value={state.dealType}
             onChange={(event) =>
               catalog.setDealType(parseDealTypeSelectValue(event.target.value))
             }
             className={SELECT_CLASS}
           >
-            <option value="">All deals</option>
+            <option value="">ყველა გარიგება</option>
             {DEAL_TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -93,10 +93,10 @@ export function PropertyCatalogFilterFields({
       </div>
 
       <div>
-        <span className={LABEL_CLASS}>Listing status</span>
+        <span className={LABEL_CLASS}>განცხადების სტატუსი</span>
         <NativeSelectSurface>
           <select
-            aria-label="Filter by listing lifecycle status"
+            aria-label="სტატუსით გაფილტვრა"
             value={state.lifecycleStatus}
             onChange={(event) =>
               catalog.setLifecycleStatus(
@@ -115,17 +115,17 @@ export function PropertyCatalogFilterFields({
       </div>
 
       <div>
-        <span className={LABEL_CLASS}>Property type</span>
+        <span className={LABEL_CLASS}>უძრავი ქონების ტიპი</span>
         <NativeSelectSurface>
           <select
-            aria-label="Filter by property type"
+            aria-label="ტიპით გაფილტვრა"
             value={state.propertyType}
             onChange={(event) =>
               catalog.setPropertyType(parsePropertyTypeSelectValue(event.target.value))
             }
             className={SELECT_CLASS}
           >
-            <option value="">All types</option>
+            <option value="">ყველა ტიპი</option>
             {PROPERTY_TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -137,81 +137,81 @@ export function PropertyCatalogFilterFields({
 
       <LabelAutocompleteChipsInput
         id="catalogLabels"
-        label="Labels"
+        label="ლეიბლები"
         selectedLabels={catalog.selectedLabels}
         onChange={catalog.setSelectedLabels}
-        placeholder="Type to search labels"
+        placeholder="აკრიფეთ ლეიბლის მოსაძებნად"
       />
 
       <div>
-        <span className={LABEL_CLASS}>City</span>
+        <span className={LABEL_CLASS}>ქალაქი</span>
         <input
           type="text"
           value={state.city}
           onChange={(event) => catalog.setCity(event.target.value)}
           className={INPUT_CLASS}
-          placeholder="City contains…"
+          placeholder="ქალაქი შეიცავს…"
           autoComplete="address-level2"
         />
       </div>
 
       <div>
-        <span className={LABEL_CLASS}>District</span>
+        <span className={LABEL_CLASS}>უბანი</span>
         <input
           type="text"
           value={state.district}
           onChange={(event) => catalog.setDistrict(event.target.value)}
           className={INPUT_CLASS}
-          placeholder="District contains…"
+          placeholder="უბანი შეიცავს…"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <span className={LABEL_CLASS}>Min price (₾)</span>
+          <span className={LABEL_CLASS}>მინ. ფასი (₾)</span>
           <input
             type="text"
             inputMode="decimal"
             value={state.minPrice}
             onChange={(event) => catalog.setMinPrice(event.target.value)}
             className={INPUT_CLASS}
-            placeholder="Min"
+            placeholder="მინ."
           />
         </div>
         <div>
-          <span className={LABEL_CLASS}>Max price (₾)</span>
+          <span className={LABEL_CLASS}>მაქს. ფასი (₾)</span>
           <input
             type="text"
             inputMode="decimal"
             value={state.maxPrice}
             onChange={(event) => catalog.setMaxPrice(event.target.value)}
             className={INPUT_CLASS}
-            placeholder="Max"
+            placeholder="მაქს."
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <span className={LABEL_CLASS}>Min area (m²)</span>
+          <span className={LABEL_CLASS}>მინ. ფართობი (მ²)</span>
           <input
             type="text"
             inputMode="decimal"
             value={state.minArea}
             onChange={(event) => catalog.setMinArea(event.target.value)}
             className={INPUT_CLASS}
-            placeholder="Min"
+            placeholder="მინ."
           />
         </div>
         <div>
-          <span className={LABEL_CLASS}>Max area (m²)</span>
+          <span className={LABEL_CLASS}>მაქს. ფართობი (მ²)</span>
           <input
             type="text"
             inputMode="decimal"
             value={state.maxArea}
             onChange={(event) => catalog.setMaxArea(event.target.value)}
             className={INPUT_CLASS}
-            placeholder="Max"
+            placeholder="მაქს."
           />
         </div>
       </div>
@@ -219,10 +219,10 @@ export function PropertyCatalogFilterFields({
       <PropertyCatalogMoreFiltersDetails catalog={catalog} />
 
       <div>
-        <span className={LABEL_CLASS}>Sort</span>
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2">
+        <span className={LABEL_CLASS}>სორტირება</span>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-2 py-2">
           <InlineSelect
-            aria-label="Sort listings by"
+            aria-label="სორტირება"
             value={state.sortBy}
             onChange={(selectedValue) => {
               if (isPropertySortBy(selectedValue)) catalog.setSortBy(selectedValue);
@@ -230,9 +230,9 @@ export function PropertyCatalogFilterFields({
             options={SORT_OPTIONS}
             className="min-w-0 flex-1 text-sm"
           />
-          <span className="h-4 w-px shrink-0 bg-slate-200" />
+          <span className="h-4 w-px shrink-0 bg-border" />
           <InlineSelect
-            aria-label="Sort direction"
+            aria-label="მიმართულება"
             value={state.order}
             onChange={(selectedValue) => {
               if (isPropertyListSortOrder(selectedValue)) catalog.setOrder(selectedValue);
@@ -244,17 +244,17 @@ export function PropertyCatalogFilterFields({
       </div>
 
       <div>
-        <span className={LABEL_CLASS}>Per page</span>
+        <span className={LABEL_CLASS}>გვერდზე</span>
         <NativeSelectSurface>
           <select
-            aria-label="Results per page"
+            aria-label="შედეგები გვერდზე"
             value={String(state.limit)}
             onChange={(event) => catalog.setLimit(Number(event.target.value))}
             className={SELECT_CLASS}
           >
             {CATALOG_LIMIT_OPTIONS.map((limitOption) => (
               <option key={limitOption} value={limitOption}>
-                {limitOption} listings
+                {limitOption} განცხადება
               </option>
             ))}
           </select>
@@ -265,17 +265,17 @@ export function PropertyCatalogFilterFields({
         <button
           type="button"
           onClick={() => catalog.resetFilters()}
-          className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+          className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
         >
-          Clear all
+          ყველას გასუფთავება
         </button>
         {showMobileFooter && (
           <button
             type="button"
             onClick={onApplyMobile}
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
-            Show results
+            შედეგების ჩვენება
           </button>
         )}
       </div>

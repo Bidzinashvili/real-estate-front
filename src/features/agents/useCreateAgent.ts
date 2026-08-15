@@ -23,7 +23,7 @@ export function useCreateAgent(): UseCreateAgentResult {
       return agent;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not create this agent.";
+        err instanceof Error ? err.message : "აგენტის შექმნა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

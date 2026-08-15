@@ -23,7 +23,7 @@ export function useDeleteClient(): UseDeleteClientResult {
       const message =
         err instanceof Error
           ? err.message
-          : "Could not delete this client right now.";
+          : "კლიენტის წაშლა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

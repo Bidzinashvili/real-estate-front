@@ -53,13 +53,13 @@ export function ClientLocationSection({
   };
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 className="mb-4 text-base font-semibold text-slate-800">Location</h2>
+    <section className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <h2 className="mb-4 text-base font-semibold text-foreground">მდებარეობა</h2>
       <div className="space-y-4">
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
-            <label className="block flex-1 text-sm font-medium text-slate-800">
-              Districts
+            <label className="block flex-1 text-sm font-medium text-foreground">
+              უბნები
             </label>
             {showLockForPath("districts") ? (
               <Controller
@@ -88,41 +88,41 @@ export function ClientLocationSection({
                           nextDistricts[districtIndex] = event.target.value;
                           field.onChange(nextDistricts);
                         }}
-                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                        className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
                       />
                       <button
                         type="button"
                         onClick={() => removeDistrict(districtIndex)}
-                        className="flex-none text-slate-400 transition hover:text-red-600"
-                        aria-label="Remove district"
+                        className="flex-none text-muted-foreground transition hover:text-destructive"
+                        aria-label="უბნის წაშლა"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-500">Add a district to get started.</p>
+                  <p className="text-xs text-muted-foreground">დაამატეთ უბანი დასაწყებად.</p>
                 )}
                 <button
                   type="button"
                   onClick={() => appendDistrict("")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  Add district
+                  უბნის დამატება
                 </button>
               </div>
             )}
           />
           {fieldDescriptions?.districts ? (
-            <p className="text-xs text-slate-500">{fieldDescriptions.districts}</p>
+            <p className="text-xs text-muted-foreground">{fieldDescriptions.districts}</p>
           ) : null}
         </div>
 
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
-            <label className="block flex-1 text-sm font-medium text-slate-800">
-              Addresses
+            <label className="block flex-1 text-sm font-medium text-foreground">
+              მისამართები
             </label>
             {showLockForPath("addresses") ? (
               <Controller
@@ -151,40 +151,40 @@ export function ClientLocationSection({
                           nextAddresses[addressIndex] = event.target.value;
                           field.onChange(nextAddresses);
                         }}
-                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                        className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
                       />
                       <button
                         type="button"
                         onClick={() => removeAddress(addressIndex)}
-                        className="flex-none text-slate-400 transition hover:text-red-600"
-                        aria-label="Remove address"
+                        className="flex-none text-muted-foreground transition hover:text-destructive"
+                        aria-label="მისამართის წაშლა"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-500">Add an address to get started.</p>
+                  <p className="text-xs text-muted-foreground">დაამატეთ მისამართი დასაწყებად.</p>
                 )}
                 <button
                   type="button"
                   onClick={() => appendAddress("")}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  Add address
+                  მისამართის დამატება
                 </button>
               </div>
             )}
           />
           {fieldDescriptions?.addresses ? (
-            <p className="text-xs text-slate-500">{fieldDescriptions.addresses}</p>
+            <p className="text-xs text-muted-foreground">{fieldDescriptions.addresses}</p>
           ) : null}
         </div>
 
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
-            <label className="block flex-1 text-sm font-medium text-slate-800">Labels</label>
+            <label className="block flex-1 text-sm font-medium text-foreground">ლეიბლები</label>
             {showLockForPath("labels") ? (
               <Controller
                 name="labels.lock"
@@ -212,34 +212,34 @@ export function ClientLocationSection({
                           nextLabels[labelIndex] = event.target.value;
                           field.onChange(nextLabels);
                         }}
-                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                        className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
                       />
                       <button
                         type="button"
                         onClick={() => removeLabelEntry(labelIndex)}
-                        className="flex-none text-slate-400 transition hover:text-red-600"
-                        aria-label="Remove label"
+                        className="flex-none text-muted-foreground transition hover:text-destructive"
+                        aria-label="ლეიბლის წაშლა"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-500">Add a label to get started.</p>
+                  <p className="text-xs text-muted-foreground">დაამატეთ ლეიბლი დასაწყებად.</p>
                 )}
                 <button
                   type="button"
                   onClick={addLabelEntry}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  Add label
+                  ლეიბლის დამატება
                 </button>
               </div>
             )}
           />
           {fieldDescriptions?.labels ? (
-            <p className="text-xs text-slate-500">{fieldDescriptions.labels}</p>
+            <p className="text-xs text-muted-foreground">{fieldDescriptions.labels}</p>
           ) : null}
         </div>
       </div>

@@ -40,19 +40,19 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
     (client.petLock !== undefined && client.petLock !== "none");
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <div className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {client.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
             {(budgetRange ||
               (client.budgetMinLock !== undefined && client.budgetMinLock !== "none") ||
               (client.budgetMaxLock !== undefined && client.budgetMaxLock !== "none")) && (
               <>
-                <span className="text-slate-300">·</span>
+                <span className="text-muted-foreground">·</span>
                 <span className="inline-flex flex-wrap items-center gap-1.5">
                   {budgetRange ? <span>{budgetRange}</span> : null}
                   {client.budgetMinLock !== undefined ? (
@@ -80,12 +80,12 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2">
         <div>
-          <p className="text-xs text-slate-500">Phones</p>
+          <p className="text-xs text-muted-foreground">ტელეფონები</p>
           <div className="mt-1 space-y-0.5">
             {phones.map((phone, phoneIndex) => (
-              <p key={phoneIndex} className="text-sm font-medium text-slate-800">
+              <p key={phoneIndex} className="text-sm font-medium text-foreground">
                 {phone}
               </p>
             ))}
@@ -94,46 +94,46 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
 
         {client.whatsapp && (
           <div>
-            <p className="text-xs text-slate-500">WhatsApp</p>
-            <p className="mt-1 text-sm font-medium text-slate-800">{client.whatsapp}</p>
+            <p className="text-xs text-muted-foreground">WhatsApp</p>
+            <p className="mt-1 text-sm font-medium text-foreground">{client.whatsapp}</p>
           </div>
         )}
 
         {showPetBlock && (
           <div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <p className="text-xs text-slate-500">Pet</p>
+              <p className="text-xs text-muted-foreground">შინაური ცხოველი</p>
               {client.petLock !== undefined ? (
                 <ClientDetailsLockBadge lock={client.petLock} />
               ) : null}
             </div>
-            <p className="mt-1 text-sm font-medium text-slate-800">
+            <p className="mt-1 text-sm font-medium text-foreground">
               {client.pet ?? "—"}
             </p>
           </div>
         )}
 
         <div>
-          <p className="text-xs text-slate-500">Created</p>
-          <p className="mt-1 text-sm font-medium text-slate-800">
+          <p className="text-xs text-muted-foreground">შექმნილია</p>
+          <p className="mt-1 text-sm font-medium text-foreground">
             {formatClientDetailsDate(client.createdAt)}
           </p>
         </div>
       </div>
 
       {client.description && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          <p className="text-xs text-slate-500">Description</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground">აღწერა</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
             {client.description}
           </p>
         </div>
       )}
 
       {showAddressesBlock && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-slate-500">Addresses</p>
+            <p className="text-xs text-muted-foreground">მისამართები</p>
             {client.addressesLock !== undefined ? (
               <ClientDetailsLockBadge lock={client.addressesLock} />
             ) : null}
@@ -141,41 +141,41 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
           <div className="mt-1 space-y-0.5">
             {addresses.length > 0 ? (
               addresses.map((address, addressIndex) => (
-                <p key={addressIndex} className="text-sm text-slate-800">
+                <p key={addressIndex} className="text-sm text-foreground">
                   {address}
                 </p>
               ))
             ) : (
-              <p className="text-sm text-slate-600">—</p>
+              <p className="text-sm text-muted-foreground">—</p>
             )}
           </div>
         </div>
       )}
 
       {showLabelsBlock && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-slate-500">Labels</p>
+            <p className="text-xs text-muted-foreground">ლეიბლები</p>
             {client.labelsLock !== undefined ? <ClientDetailsLockBadge lock={client.labelsLock} /> : null}
           </div>
           <div className="mt-1 space-y-0.5">
             {labels.length > 0 ? (
               labels.map((label, labelIndex) => (
-                <p key={labelIndex} className="text-sm text-slate-800">
+                <p key={labelIndex} className="text-sm text-foreground">
                   {label}
                 </p>
               ))
             ) : (
-              <p className="text-sm text-slate-600">—</p>
+              <p className="text-sm text-muted-foreground">—</p>
             )}
           </div>
         </div>
       )}
 
       {showDistrictsBlock && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-slate-500">Districts</p>
+            <p className="text-xs text-muted-foreground">უბნები</p>
             {client.districtsLock !== undefined ? (
               <ClientDetailsLockBadge lock={client.districtsLock} />
             ) : null}
@@ -183,12 +183,12 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
           <div className="mt-1 space-y-0.5">
             {districts.length > 0 ? (
               districts.map((district, districtIndex) => (
-                <p key={districtIndex} className="text-sm text-slate-800">
+                <p key={districtIndex} className="text-sm text-foreground">
                   {district}
                 </p>
               ))
             ) : (
-              <p className="text-sm text-slate-600">—</p>
+              <p className="text-sm text-muted-foreground">—</p>
             )}
           </div>
         </div>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { EditClientForm } from "@/widgets/EditClient/EditClientForm";
 
 export const metadata: Metadata = {
-  title: "Edit client",
+  title: "კლიენტის რედაქტირება",
 };
 
 type EditClientPageProps = {

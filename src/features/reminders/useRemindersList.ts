@@ -44,7 +44,7 @@ export function useRemindersList({
       const message =
         errorUnknown instanceof Error
           ? errorUnknown.message
-          : "Could not load reminders right now.";
+          : "შეხსენებების ჩატვირთვა ვერ მოხერხდა.";
       setError(message);
       if (showLoadingState) {
         setReminders([]);

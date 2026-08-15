@@ -61,7 +61,7 @@ export function useDistricts() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Failed to load districts.",
+          : "უბნების ჩატვირთვა ვერ მოხერხდა.",
       );
     } finally {
       if (!mountedRef.current) return;

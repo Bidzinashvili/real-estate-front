@@ -50,7 +50,7 @@ export function PropertyListingCardManager({
           className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white shadow-sm backdrop-blur-[2px] transition hover:bg-black/60"
           aria-expanded={isActionMenuOpen}
           aria-haspopup="menu"
-          aria-label="Listing actions"
+          aria-label="განცხადების მოქმედებები"
         >
           <MoreVertical className="h-4 w-4" aria-hidden />
         </button>
@@ -58,34 +58,34 @@ export function PropertyListingCardManager({
         {isActionMenuOpen ? (
           <div
             role="menu"
-            className="absolute right-0 top-full mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-slate-200/60"
+            className="absolute right-0 top-full mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-border/60"
           >
             {canChangeStatus ? (
               <button
                 type="button"
                 role="menuitem"
-                className="flex w-full px-3 py-2 text-left text-slate-800 transition hover:bg-slate-50"
+                className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted"
                 onClick={(event) => {
                   event.stopPropagation();
                   setIsActionMenuOpen(false);
                   setIsChangeStatusOpen(true);
                 }}
               >
-                Change status
+                სტატუსის შეცვლა
               </button>
             ) : null}
             {canSetReminders ? (
               <button
                 type="button"
                 role="menuitem"
-                className="flex w-full px-3 py-2 text-left text-slate-800 transition hover:bg-slate-50"
+                className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted"
                 onClick={(event) => {
                   event.stopPropagation();
                   setIsActionMenuOpen(false);
                   setIsRemindersOpen(true);
                 }}
               >
-                Set reminders
+                შეხსენებების დაყენება
               </button>
             ) : null}
           </div>

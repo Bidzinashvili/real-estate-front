@@ -11,8 +11,8 @@ export default async function InvitePage(props: InvitePageProps) {
 
   if (!isUuidV4Token(trimmedToken)) {
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-900">
-        This invite link is not valid. Check the URL or ask your agent for a new link.
+      <div className="rounded-xl border border-amber-200 bg-warning-muted px-4 py-6 text-center text-sm text-amber-900">
+        ეს მოწვევის ბმული არასწორია. შეამოწმეთ მისამართი ან სთხოვეთ აგენტს ახალი ბმული.
       </div>
     );
   }

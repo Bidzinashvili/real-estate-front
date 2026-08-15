@@ -16,17 +16,17 @@ export function PropertyCatalogMoreFiltersDetails({
   const { state } = catalog;
 
   return (
-    <details className="group rounded-lg border border-slate-200 bg-slate-50/80 open:bg-white">
-      <summary className="cursor-pointer list-none px-3 py-2.5 text-sm font-medium text-slate-800 [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-lg border border-border bg-muted/80 open:bg-card">
+      <summary className="cursor-pointer list-none px-3 py-2.5 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
         <span className="flex items-center justify-between gap-2">
-          More filters
-          <span className="text-xs font-normal text-slate-500">Exact fields</span>
+          მეტი ფილტრი
+          <span className="text-xs font-normal text-muted-foreground">ზუსტი ველები</span>
         </span>
       </summary>
-      <div className="space-y-4 border-t border-slate-100 p-3">
+      <div className="space-y-4 border-t border-border p-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <span className={LABEL_CLASS}>Rooms</span>
+            <span className={LABEL_CLASS}>ოთახები</span>
             <input
               type="text"
               inputMode="numeric"
@@ -36,7 +36,7 @@ export function PropertyCatalogMoreFiltersDetails({
             />
           </div>
           <div>
-            <span className={LABEL_CLASS}>Bedrooms</span>
+            <span className={LABEL_CLASS}>საძინებლები</span>
             <input
               type="text"
               inputMode="numeric"
@@ -47,19 +47,19 @@ export function PropertyCatalogMoreFiltersDetails({
           </div>
         </div>
         <div>
-          <span className={LABEL_CLASS}>Floor</span>
+          <span className={LABEL_CLASS}>სართული</span>
           <input
             type="text"
             inputMode="numeric"
             value={state.floor}
             onChange={(e) => catalog.setFloor(e.target.value)}
             className={INPUT_CLASS}
-            placeholder="Apartment or commercial"
+            placeholder="ბინა ან კომერციული"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <span className={LABEL_CLASS}>Yard area</span>
+            <span className={LABEL_CLASS}>ეზოს ფართობი</span>
             <input
               type="text"
               inputMode="decimal"
@@ -69,7 +69,7 @@ export function PropertyCatalogMoreFiltersDetails({
             />
           </div>
           <div>
-            <span className={LABEL_CLASS}>House area</span>
+            <span className={LABEL_CLASS}>სახლის ფართობი</span>
             <input
               type="text"
               inputMode="decimal"
@@ -80,7 +80,7 @@ export function PropertyCatalogMoreFiltersDetails({
           </div>
         </div>
         <div>
-          <span className={LABEL_CLASS}>Land area</span>
+          <span className={LABEL_CLASS}>მიწის ფართობი</span>
           <input
             type="text"
             inputMode="decimal"
@@ -90,7 +90,7 @@ export function PropertyCatalogMoreFiltersDetails({
           />
         </div>
         <div>
-          <span className={LABEL_CLASS}>Commercial area</span>
+          <span className={LABEL_CLASS}>კომერციული ფართობი</span>
           <input
             type="text"
             inputMode="decimal"

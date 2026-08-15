@@ -15,10 +15,10 @@ export function DetailRow({
 }) {
   return (
     <div className="min-w-0 space-y-0.5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <div className="break-words text-sm text-slate-900">{children}</div>
+      <div className="break-words text-sm text-foreground">{children}</div>
     </div>
   );
 }
@@ -52,10 +52,10 @@ export function DetailMultiline({
   const text = isEmpty(value) ? empty : String(value);
   return (
     <div className="min-w-0 space-y-1">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <div className="rounded-lg border border-slate-100 bg-slate-50/90 px-3 py-2 text-sm text-slate-800 whitespace-pre-wrap">
+      <div className="rounded-lg border border-border bg-muted/90 px-3 py-2 text-sm text-foreground whitespace-pre-wrap">
         {text}
       </div>
     </div>
@@ -70,16 +70,16 @@ export function DetailYesNo({
   value: boolean | null | undefined;
 }) {
   const display =
-    value === true ? "Yes" : value === false ? "No" : "Unknown";
+    value === true ? "კი" : value === false ? "არა" : "უცნობი";
   return (
     <DetailRow label={label}>
       <span
         className={
           value === true
-            ? "font-medium text-emerald-800"
+            ? "font-medium text-success-foreground"
             : value === false
-              ? "text-slate-500"
-              : "text-slate-400"
+              ? "text-muted-foreground"
+              : "text-muted-foreground"
         }
       >
         {display}
@@ -100,7 +100,7 @@ export function DetailVerification({
   if (isToBeVerified) {
     return (
       <DetailRow label={label}>
-        <span className="font-medium text-amber-800">To be verified</span>
+        <span className="font-medium text-warning-foreground">გადასამოწმებელია</span>
       </DetailRow>
     );
   }
@@ -125,7 +125,7 @@ export function DetailPhone({
     <DetailRow label={label}>
       <a
         href={`tel:${tel}`}
-        className="text-emerald-800 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-900"
+        className="text-success-foreground underline decoration-emerald-200 underline-offset-2 hover:text-success-foreground"
       >
         {raw}
       </a>

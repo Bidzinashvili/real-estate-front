@@ -12,8 +12,8 @@ export function PropertyCatalogDesktopAside({
   catalog: UsePropertiesCatalogResult;
 }) {
   return (
-    <aside className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold text-slate-900">Filters</h2>
+    <aside className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-sm">
+      <h2 className="mb-4 text-sm font-semibold text-foreground">ფილტრები</h2>
       <PropertyCatalogFilterFields
         catalog={catalog}
         showMobileFooter={false}
@@ -33,10 +33,10 @@ export function PropertyCatalogMobileFiltersButton({
     <button
       type="button"
       onClick={onOpen}
-      className="relative inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 sm:w-auto"
+      className="relative inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted sm:w-auto"
     >
-      <SlidersHorizontal className="h-4 w-4 text-slate-600" aria-hidden />
-      Filters
+      <SlidersHorizontal className="h-4 w-4 text-muted-foreground" aria-hidden />
+      ფილტრები
       {catalog.activeFilterCount > 0 && (
         <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] font-bold text-white">
           {catalog.activeFilterCount > 99 ? "99+" : catalog.activeFilterCount}
@@ -65,26 +65,26 @@ export function PropertyCatalogMobileDrawer({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex h-dvh max-h-dvh min-h-dvh w-full flex-col overflow-hidden bg-white lg:hidden"
+      className="fixed inset-0 z-[100] flex h-dvh max-h-dvh min-h-dvh w-full flex-col overflow-hidden bg-card lg:hidden"
       role="dialog"
       aria-modal="true"
-      aria-label="Property filters"
+      aria-label="განცხადების ფილტრები"
     >
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold text-slate-900">Filters</h2>
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <h2 className="text-base font-semibold text-foreground">ფილტრები</h2>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => catalog.resetFilters()}
-            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
           >
-            Clear
+            გასუფთავება
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700"
-            aria-label="Close filters"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground"
+            aria-label="ფილტრების დახურვა"
           >
             <X className="h-4 w-4" />
           </button>

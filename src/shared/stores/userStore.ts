@@ -33,7 +33,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     const token = getStoredAuthToken();
 
     if (!baseUrl || !token) {
-      set({ error: "Missing API URL or auth token" });
+      set({ error: "API მისამართი ან ავტორიზაციის ტოკენი აკლია" });
       return;
     }
 
@@ -47,8 +47,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
       set({ user: res.data, isLoading: false });
     } catch (error: unknown) {
       const message = axios.isAxiosError(error)
-        ? error.response?.data?.message ?? "Failed to fetch user"
-        : "Failed to fetch user";
+        ? error.response?.data?.message ?? "მომხმარებლის ჩატვირთვა ვერ მოხერხდა"
+        : "მომხმარებლის ჩატვირთვა ვერ მოხერხდა";
 
       set({ user: null, isLoading: false, error: message });
     }

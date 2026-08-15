@@ -69,7 +69,7 @@ export function getCachedGelToUsd(gelAmount: number): Promise<ConvertCurrencyRes
     gelAmount < 0 ||
     gelAmount > MAX_CONVERT_AMOUNT
   ) {
-    return Promise.reject(new Error("Invalid GEL amount for conversion."));
+    return Promise.reject(new Error("არასწორი ლარის თანხა კონვერტაციისთვის."));
   }
 
   const cacheKey = gelAmountCacheKey(gelAmount);

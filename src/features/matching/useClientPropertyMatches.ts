@@ -60,7 +60,7 @@ export function useClientPropertyMatches({
         const message =
           loadError instanceof Error
             ? loadError.message
-            : "Could not load property matches right now.";
+            : "შესაბამისი განცხადებების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
         setData(null);
       } finally {

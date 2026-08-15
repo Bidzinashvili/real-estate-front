@@ -61,7 +61,7 @@ export function PropertyListingCardPriceRow({
     }
 
     if (!isGelAmountValid) {
-      setFetchErrorMessage("This price cannot be converted.");
+      setFetchErrorMessage("ამ ფასის კონვერტაცია შეუძლებელია.");
       return;
     }
 
@@ -83,7 +83,7 @@ export function PropertyListingCardPriceRow({
         const message =
           unknownError instanceof ApiError
             ? unknownError.message
-            : "Could not load USD price.";
+            : "დოლარის ფასის ჩატვირთვა ვერ მოხერხდა.";
         setFetchErrorMessage(message);
       });
 
@@ -113,18 +113,18 @@ export function PropertyListingCardPriceRow({
   return (
     <div className="min-w-0 flex-1 space-y-0.5">
       <div className="flex min-w-0 items-center gap-2">
-        <p className="min-w-0 truncate text-2xl font-semibold tracking-tight text-slate-900">
+        <p className="min-w-0 truncate text-2xl font-semibold tracking-tight text-foreground">
           {primaryLine}
         </p>
         <PropertyCatalogPriceCurrencyToggle />
       </div>
       {showUsdError ? (
-        <p className="text-xs text-red-600" role="status">
+        <p className="text-xs text-destructive" role="status">
           {fetchErrorMessage}
         </p>
       ) : null}
       {pricePerSquareMeter !== null ? (
-        <p className="text-xs font-medium text-slate-600">
+        <p className="text-xs font-medium text-muted-foreground">
           {formatPricePerSquareMeter(pricePerSquareMeter)}
         </p>
       ) : null}

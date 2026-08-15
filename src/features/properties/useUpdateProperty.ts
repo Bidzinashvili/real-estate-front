@@ -21,7 +21,7 @@ export function useUpdateProperty(): UseUpdatePropertyResult {
     try {
       await updateProperty(id, payload);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not save changes.";
+      const message = err instanceof Error ? err.message : "ცვლილებების შენახვა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

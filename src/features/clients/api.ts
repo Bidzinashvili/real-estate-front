@@ -47,7 +47,7 @@ export async function getClients(
       throw error;
     }
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load clients right now.";
+      const fallback = "კლიენტების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -69,7 +69,7 @@ export async function getClientById(id: string): Promise<ClientDetail> {
     return normalizeClientDetail(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load this client right now.";
+      const fallback = "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -94,10 +94,10 @@ export async function createClient(dto: CreateClientPayload): Promise<Client> {
       const status = error.response?.status ?? 500;
       const fallback =
         status === 403
-          ? "You do not have permission to create clients."
+          ? "კლიენტების შექმნის უფლება არ გაქვთ."
           : status === 401
-            ? "You are not authenticated."
-            : "Could not create this client right now.";
+            ? "ავტორიზაცია საჭიროა."
+            : "კლიენტის შექმნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }
@@ -118,7 +118,7 @@ export async function updateClient(
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not save client changes right now.";
+      const fallback = "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -141,7 +141,7 @@ export async function deleteClient(id: string): Promise<DeleteClientResponse> {
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not delete this client right now.";
+      const fallback = "კლიენტის წაშლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -168,7 +168,7 @@ export async function addClientComment(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not post comment right now.";
+      const fallback = "კომენტარის გაგზავნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -195,7 +195,7 @@ export async function addClientInternalComment(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not post internal comment right now.";
+      const fallback = "შიდა კომენტარის გაგზავნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -222,7 +222,7 @@ export async function deleteClientComment(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not delete this comment right now.";
+      const fallback = "კომენტარის წაშლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,

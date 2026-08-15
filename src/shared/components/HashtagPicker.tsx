@@ -74,7 +74,7 @@ export function HashtagPicker({ id, label, value, onChange }: HashtagPickerProps
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
       <input
@@ -85,7 +85,7 @@ export function HashtagPicker({ id, label, value, onChange }: HashtagPickerProps
       />
       {selectedHashtag ? (
         <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">
+          <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-white">
             {selectedHashtag}
           </span>
         </div>
@@ -97,7 +97,7 @@ export function HashtagPicker({ id, label, value, onChange }: HashtagPickerProps
               key={suggestion.name}
               type="button"
               onClick={() => handleValueChange(suggestion.name)}
-              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+              className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition hover:border-slate-400 hover:text-foreground"
             >
               {displayHashtag(suggestion.name)}
             </button>

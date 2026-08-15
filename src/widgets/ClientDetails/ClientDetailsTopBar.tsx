@@ -21,35 +21,35 @@ export function ClientDetailsTopBar({
       <button
         type="button"
         onClick={onNavigateToList}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        All clients
+        ყველა კლიენტი
       </button>
 
       <div className="flex items-center gap-2">
         {canRunMatches ? (
           <Link
             href={`/clients/${clientId}/matches`}
-            className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            Find matching properties
+            შესაბამისი განცხადებების ძიება
           </Link>
         ) : null}
         <button
           type="button"
           onClick={onNavigateToEdit}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
         >
           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-          Edit
+          რედაქტირება
         </button>
         <button
           type="button"
           onClick={onRequestDelete}
-          className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm transition hover:bg-red-100"
+          className="inline-flex items-center rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive shadow-sm transition hover:bg-destructive/15"
         >
-          Delete
+          წაშლა
         </button>
       </div>
     </div>

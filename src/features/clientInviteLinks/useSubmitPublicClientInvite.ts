@@ -66,7 +66,7 @@ export function useSubmitPublicClientInvite(): UseSubmitPublicClientInviteResult
       setError({
         kind: "generic",
         message:
-          err instanceof Error ? err.message : "Could not submit your details right now.",
+          err instanceof Error ? err.message : "მონაცემების გაგზავნა ვერ მოხერხდა.",
       });
       return null;
     } finally {

@@ -46,100 +46,100 @@ export function PropertyListingFieldsView({
       <section className="space-y-4" aria-labelledby="listing-core-heading">
         <h2
           id="listing-core-heading"
-          className="text-sm font-semibold text-slate-800"
+          className="text-sm font-semibold text-foreground"
         >
-          Listing (view only)
+          განცხადება (მხოლოდ ნახვა)
         </h2>
 
         <DetailText
-          label="Deal type"
+          label="გარიგების ტიპი"
           value={formatDealTypeLabel(values.dealType)}
         />
 
         {values.propertyType === "HOTEL" && (
           <DetailText
-            label="Hotel scope"
+            label="სასტუმროს ტიპი"
             value={formatHotelScopeLabelOrUnset(values.hotelScope)}
           />
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="City" value={values.city} />
-          <DetailText label="District" value={values.district} />
+          <DetailText label="ქალაქი" value={values.city} />
+          <DetailText label="უბანი" value={values.district} />
         </div>
 
-        <DetailText label="Address" value={values.address} />
+        <DetailText label="მისამართი" value={values.address} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailNumber
-            label="Public price"
+            label="საჯარო ფასი"
             value={values.pricePublic}
             suffix="₾"
           />
           {showInternalPrice && (
             <DetailNumber
-              label="Internal price"
+              label="შიდა ფასი"
               value={values.priceInternal}
               suffix="₾"
             />
           )}
           <DetailNumber
-            label="Price per m²"
+            label="ფასი მ²-ზე"
             value={pricePerSquareMeter}
             suffix="₾"
           />
         </div>
 
-        <DetailMultiline label="Comment" value={values.publicComment} />
+        <DetailMultiline label="კომენტარი" value={values.publicComment} />
         {showInternalPrice ? (
           <>
             <DetailMultiline
-              label="Comment for myself"
+              label="შიდა კომენტარი"
               value={values.privateComment}
             />
-            <DetailMultiline label="Upload text" value={values.internalText} />
+            <DetailMultiline label="ატვირთვის ტექსტი" value={values.internalText} />
           </>
         ) : null}
       </section>
 
       {values.apartment && (
         <section className="space-y-3 pt-2" aria-labelledby="apt-heading">
-          <h2 id="apt-heading" className="text-sm font-semibold text-slate-800">
-            Apartment
+          <h2 id="apt-heading" className="text-sm font-semibold text-foreground">
+            ბინა
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailNumber
-              label="Total area"
+              label="საერთო ფართობი"
               value={values.apartment.totalArea}
-              suffix="m²"
+              suffix="მ²"
             />
-            <DetailNumber label="Rooms" value={values.apartment.rooms} />
-            <DetailNumber label="Floor" value={values.apartment.floor} />
+            <DetailNumber label="ოთახები" value={values.apartment.rooms} />
+            <DetailNumber label="სართული" value={values.apartment.floor} />
             <DetailNumber
-              label="Total floors"
+              label="სართულიანობა"
               value={values.apartment.totalFloors}
             />
             <DetailNumber
-              label="Ceiling height"
+              label="ჭერის სიმაღლე"
               value={values.apartment.ceilingHeight}
-              suffix="m"
+              suffix="მ"
             />
             <DetailNumber
-              label="Balcony area"
+              label="აივნის ფართობი"
               value={values.apartment.balconyArea}
-              suffix="m²"
+              suffix="მ²"
             />
             <DetailNumber
-              label="Parking spaces"
+              label="პარკინგის ადგილები"
               value={values.apartment.parkingSpaces}
             />
             <DetailYesNo
-              label="Furnished"
+              label="ავეჯით"
               value={values.apartment.furnished}
             />
             {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
-                label="Min Rental Period (months)"
+                label="მინიმალური ქირის ვადა (თვე)"
                 value={values.apartment.minRentalPeriod ?? undefined}
               />
             ) : null}
@@ -149,39 +149,39 @@ export function PropertyListingFieldsView({
 
       {values.privateHouse && (
         <section className="space-y-3 pt-2" aria-labelledby="ph-heading">
-          <h2 id="ph-heading" className="text-sm font-semibold text-slate-800">
-            Private house
+          <h2 id="ph-heading" className="text-sm font-semibold text-foreground">
+            კერძო სახლი
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailNumber
-              label="House area"
+              label="სახლის ფართობი"
               value={values.privateHouse.houseArea}
-              suffix="m²"
+              suffix="მ²"
             />
             <DetailNumber
-              label="Yard area"
+              label="ეზოს ფართობი"
               value={values.privateHouse.yardArea}
-              suffix="m²"
+              suffix="მ²"
             />
             {readOnlyPrivateHouseBalcony !== undefined ? (
-              <DetailNumber label="Balcony area" value={readOnlyPrivateHouseBalcony} />
+              <DetailNumber label="აივნის ფართობი" value={readOnlyPrivateHouseBalcony} />
             ) : null}
             <DetailNumber
-              label="Parking spaces"
+              label="პარკინგის ადგილები"
               value={values.privateHouse.parkingSpaces}
             />
             <DetailYesNo
-              label="Furnished"
+              label="ავეჯით"
               value={Boolean(values.privateHouse.furnished)}
             />
-            <DetailYesNo label="Pool" value={Boolean(values.privateHouse.pool)} />
+            <DetailYesNo label="აუზი" value={Boolean(values.privateHouse.pool)} />
             <DetailYesNo
-              label="Fruit trees"
+              label="ხეხილი"
               value={Boolean(values.privateHouse.fruitTrees)}
             />
             {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
-                label="Min Rental Period (months)"
+                label="მინიმალური ქირის ვადა (თვე)"
                 value={values.privateHouse.minRentalPeriod ?? undefined}
               />
             ) : null}
@@ -191,34 +191,34 @@ export function PropertyListingFieldsView({
 
       {values.landPlot && (
         <section className="space-y-3 pt-2" aria-labelledby="land-heading">
-          <h2 id="land-heading" className="text-sm font-semibold text-slate-800">
-            Land plot
+          <h2 id="land-heading" className="text-sm font-semibold text-foreground">
+            მიწის ნაკვეთი
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailNumber
-              label="Land area"
+              label="მიწის ფართობი"
               value={values.landPlot.landArea}
-              suffix="m²"
+              suffix="მ²"
             />
             <DetailText
-              label="Land category"
+              label="მიწის კატეგორია"
               value={formatLandCategoryLabel(values.landPlot.landCategory)}
             />
             <DetailText
-              label="Land usage"
+              label="მიწის დანიშნულება"
               value={formatLandUsageLabel(values.landPlot.landUsage)}
             />
             <DetailYesNo
-              label="For investment"
+              label="საინვესტიციო"
               value={Boolean(values.landPlot.forInvestment)}
             />
             <DetailYesNo
-              label="Can be divided"
+              label="იყოფა"
               value={Boolean(values.landPlot.canBeDivided)}
             />
             {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
-                label="Min Rental Period (months)"
+                label="მინიმალური ქირის ვადა (თვე)"
                 value={values.landPlot.minRentalPeriod ?? undefined}
               />
             ) : null}
@@ -228,35 +228,35 @@ export function PropertyListingFieldsView({
 
       {values.commercial && (
         <section className="space-y-3 pt-2" aria-labelledby="com-heading">
-          <h2 id="com-heading" className="text-sm font-semibold text-slate-800">
-            Commercial
+          <h2 id="com-heading" className="text-sm font-semibold text-foreground">
+            კომერციული
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailNumber
-              label="Area"
+              label="ფართობი"
               value={values.commercial.area}
-              suffix="m²"
+              suffix="მ²"
             />
             <DetailNumber
-              label="Total floors"
+              label="სართულიანობა"
               value={values.commercial.totalFloors}
             />
             <DetailNumber
-              label="Ceiling height"
+              label="ჭერის სიმაღლე"
               value={values.commercial.ceilingHeight}
-              suffix="m"
+              suffix="მ"
             />
             <DetailNumber
-              label="Parking spaces"
+              label="პარკინგის ადგილები"
               value={values.commercial.parkingSpaces}
             />
             <DetailYesNo
-              label="Air conditioner"
+              label="კონდიციონერი"
               value={Boolean(values.commercial.airConditioner)}
             />
             {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
-                label="Min Rental Period (months)"
+                label="მინიმალური ქირის ვადა (თვე)"
                 value={values.commercial.minRentalPeriod ?? undefined}
               />
             ) : null}

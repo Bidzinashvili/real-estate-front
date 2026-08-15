@@ -339,7 +339,7 @@ export function usePropertiesCatalog(
           return;
         }
         const message =
-          error instanceof Error ? error.message : "Could not load properties right now.";
+          error instanceof Error ? error.message : "განცხადებების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
         setProperties([]);
         setTotal(0);

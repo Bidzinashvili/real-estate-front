@@ -59,22 +59,22 @@ export function LabelChipsInput({
 
   return (
     <div className="space-y-1.5 sm:col-span-2">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
-      <div className="rounded-lg border border-slate-200 bg-white px-3 py-3 shadow-sm">
+      <div className="rounded-lg border border-border bg-card px-3 py-3 shadow-sm">
         <div className="flex flex-wrap gap-2">
           {value.map((labelName) => (
             <span
               key={labelName.toLocaleLowerCase()}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
+              className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm text-foreground"
             >
               <span>{labelName}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveLabel(labelName)}
-                aria-label={`Remove ${labelName}`}
-                className="text-slate-500 transition hover:text-slate-800"
+                aria-label={`${labelName}-ის წაშლა`}
+                className="text-muted-foreground transition hover:text-foreground"
               >
                 &times;
               </button>
@@ -89,15 +89,15 @@ export function LabelChipsInput({
             onChange={(event) => setInputValue(event.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={() => commitLabel(inputValue)}
-            placeholder="Type a label and press Enter"
-            className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+            placeholder="აკრიფეთ ლეიბლი და დააჭირეთ Enter"
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
           />
           <button
             type="button"
             onClick={() => commitLabel(inputValue)}
-            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
           >
-            Add
+            დამატება
           </button>
         </div>
       </div>

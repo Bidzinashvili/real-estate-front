@@ -26,7 +26,7 @@ export function useUpdateAgent(): UseUpdateAgentResult {
       return result;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not save changes.";
+        err instanceof Error ? err.message : "ცვლილებების შენახვა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

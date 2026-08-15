@@ -17,7 +17,7 @@ export function NativeSelectSurface({
     <div className={cn("relative w-full", className)}>
       {children}
       <ChevronDown
-        className="pointer-events-none absolute right-[10px] top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600"
+        className="pointer-events-none absolute right-[10px] top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
         strokeWidth={2}
         aria-hidden
       />

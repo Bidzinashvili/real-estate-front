@@ -12,12 +12,12 @@ import type {
   PublicClientInviteGetResponse,
 } from "@/features/clientInviteLinks/types";
 
-const PUBLIC_INVITE_NOT_FOUND = "This invite link was not found.";
-const PUBLIC_INVITE_GONE = "This link has expired or has already been used.";
+const PUBLIC_INVITE_NOT_FOUND = "მოწვევის ბმული ვერ მოიძებნა.";
+const PUBLIC_INVITE_GONE = "ეს ბმული ვადაგასულია ან უკვე გამოყენებულია.";
 const PUBLIC_INVITE_RATE_LIMIT =
-  "Too many requests. Please wait a few minutes and try again.";
+  "ძალიან ბევრი მოთხოვნაა. გთხოვთ, ცოტა ხანში სცადოთ.";
 const PUBLIC_INVITE_CONFLICT =
-  "This link was just used. Refresh the page or ask for a new link.";
+  "ეს ბმული ახლახან გამოიყენეს. განაახლეთ გვერდი ან სთხოვეთ ახალი ბმული.";
 
 function throwIfPublicInviteAxiosStatus(status: number, submit: boolean): void {
   switch (status) {
@@ -56,12 +56,12 @@ export async function createClientInviteLink(
       const status = error.response?.status ?? 500;
       const fallback =
         status === 403
-          ? "You do not have permission to create invite links."
+          ? "მოწვევის ბმულების შექმნის უფლება არ გაქვთ."
           : status === 401
-            ? "You are not authenticated."
+            ? "ავტორიზაცია საჭიროა."
             : status === 429
-              ? "Too many requests. Please wait and try again."
-              : "Could not create this invite link right now.";
+              ? "ძალიან ბევრი მოთხოვნაა. გთხოვთ, ცოტა ხანში სცადოთ."
+              : "მოწვევის ბმულის შექმნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }
@@ -93,12 +93,12 @@ export async function getClientInviteLinks(
       const status = error.response?.status ?? 500;
       const fallback =
         status === 403
-          ? "You do not have permission to view invite links."
+          ? "მოწვევის ბმულების ნახვის უფლება არ გაქვთ."
           : status === 401
-            ? "You are not authenticated."
+            ? "ავტორიზაცია საჭიროა."
             : status === 429
-              ? "Too many requests. Please wait and try again."
-              : "Could not load invite links right now.";
+              ? "ძალიან ბევრი მოთხოვნაა. გთხოვთ, ცოტა ხანში სცადოთ."
+              : "მოწვევის ბმულების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }
@@ -121,7 +121,7 @@ export async function getPublicClientInvite(
       const status = error.response?.status ?? 500;
       throwIfPublicInviteAxiosStatus(status, false);
 
-      const fallback = "Could not load this invite form right now.";
+      const fallback = "მოწვევის ფორმის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }
@@ -150,12 +150,12 @@ export async function submitPublicClientInvite(
       throwIfPublicInviteAxiosStatus(status, true);
 
       if (status === 400) {
-        const fallback = "Please check the form and try again.";
+        const fallback = "შეამოწმეთ ფორმა და სცადეთ ხელახლა.";
         const parsed = parseStandardApiError(error.response?.data, status, fallback);
         throw new ApiError(parsed, fallback);
       }
 
-      const fallback = "Could not submit your details right now.";
+      const fallback = "მონაცემების გაგზავნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }

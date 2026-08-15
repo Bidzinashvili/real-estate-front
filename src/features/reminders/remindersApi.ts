@@ -41,11 +41,11 @@ function getAuthContext() {
   const token = getStoredAuthToken();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
 
   return {
@@ -104,7 +104,7 @@ export async function getReminders(
     return normalizeDashboardRemindersList(response.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load reminders right now.";
+      const fallback = "შეხსენებების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -132,7 +132,7 @@ export async function createReminder(
     emitRemindersChangedEvent();
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not schedule this reminder right now.";
+      const fallback = "შეხსენების დაყენება ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -162,7 +162,7 @@ export async function patchReminder(
     emitRemindersChangedEvent();
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not update this reminder right now.";
+      const fallback = "შეხსენების განახლება ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -186,7 +186,7 @@ export async function deleteReminder(reminderId: string): Promise<void> {
     emitRemindersChangedEvent();
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not remove this reminder right now.";
+      const fallback = "შეხსენების წაშლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,

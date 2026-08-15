@@ -34,7 +34,7 @@ export function useClientDetails(id: string): UseClientDetailsResult {
           const message =
             err instanceof Error
               ? err.message
-              : "Could not load this client right now.";
+              : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
           setError(message);
         }
       } finally {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClientDetailsView } from "@/widgets/ClientDetails/ClientDetailsView";
 
 export const metadata: Metadata = {
-  title: "Client details",
+  title: "კლიენტის დეტალები",
 };
 
 type ClientPageProps = {

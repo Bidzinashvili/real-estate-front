@@ -28,7 +28,7 @@ async function authenticateWithGoogleIdToken(idToken: string) {
   const baseUrl = getApiBaseUrl();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   try {
@@ -64,7 +64,7 @@ async function authenticateWithGoogleIdToken(idToken: string) {
         ? `Google auth failed: ${response.status} ${
             response.statusText ?? ""
           }`.trim()
-        : "Google auth failed: network error";
+        : "Google ავტორიზაცია ვერ მოხერხდა: ქსელის შეცდომა";
       const parsed = parseStandardApiError(data, response?.status ?? 500, message);
       throw new ApiError(parsed, message);
     }
@@ -76,7 +76,7 @@ async function authenticateWithGoogleIdToken(idToken: string) {
 export function requireApiBaseUrl(): string {
   const baseUrl = getApiBaseUrl();
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
   return baseUrl;
 }
@@ -88,7 +88,7 @@ export function getBearerAuthContext(): {
   const baseUrl = requireApiBaseUrl();
   const token = getStoredAuthToken();
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
   return {
     baseUrl,

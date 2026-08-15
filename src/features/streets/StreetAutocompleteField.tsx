@@ -98,7 +98,7 @@ export function StreetAutocompleteField({
         if (loadError instanceof ApiError) {
           setFetchError(loadError.message);
         } else {
-          setFetchError("Could not load street suggestions right now.");
+          setFetchError("ქუჩების ჩატვირთვა ვერ მოხერხდა.");
         }
         setSuggestions([]);
       } finally {
@@ -153,7 +153,7 @@ export function StreetAutocompleteField({
 
   return (
     <div ref={containerRef} className="relative space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
       <input
@@ -168,10 +168,10 @@ export function StreetAutocompleteField({
         aria-autocomplete="list"
         onChange={(event) => handleInputChange(event.target.value)}
         onFocus={() => setIsOpen(true)}
-        className={`${inputClassName} ${error ? "border-red-500 focus:border-red-600" : ""}`}
+        className={`${inputClassName} ${error ? "border-destructive focus:border-destructive" : ""}`}
       />
       {error ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {error}
         </p>
       ) : null}
@@ -180,20 +180,20 @@ export function StreetAutocompleteField({
         <div
           id={listboxId}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-black/5"
         >
           {isLoading ? (
-            <p className="px-3 py-2 text-slate-500">Loading…</p>
+            <p className="px-3 py-2 text-muted-foreground">იტვირთება…</p>
           ) : null}
 
           {fetchError ? (
-            <p className="px-3 py-2 text-red-600" role="alert">
+            <p className="px-3 py-2 text-destructive" role="alert">
               {fetchError}
             </p>
           ) : null}
 
           {showEmptyState ? (
-            <p className="px-3 py-2 text-slate-500">No matching streets</p>
+            <p className="px-3 py-2 text-muted-foreground">შესაბამისი ქუჩები ვერ მოიძებნა</p>
           ) : null}
 
           {!isLoading &&
@@ -203,7 +203,7 @@ export function StreetAutocompleteField({
                 key={street.id}
                 type="button"
                 role="option"
-                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
+                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-foreground hover:bg-muted"
                 onMouseDown={(event) => {
                   event.preventDefault();
                   handleSelectStreet(street);

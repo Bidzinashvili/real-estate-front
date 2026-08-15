@@ -86,7 +86,7 @@ export function useReminderCallAlerts({
       const message =
         errorUnknown instanceof Error
           ? errorUnknown.message
-          : "Could not dismiss this reminder right now.";
+          : "შეხსენების დახურვა ვერ მოხერხდა.";
       setError(message);
     } finally {
       setIsDismissing(false);
@@ -112,7 +112,7 @@ export function useReminderCallAlerts({
         const message =
           errorUnknown instanceof Error
             ? errorUnknown.message
-            : "Could not snooze this reminder right now.";
+            : "შეხსენების გადადება ვერ მოხერხდა.";
         setError(message);
       } finally {
         setIsSnoozing(false);

@@ -99,15 +99,15 @@ function buildReminderKindLabel(
   scheduledKind: ReminderScheduledKind | null,
 ): string {
   if (variant === "LISTING_VERIFICATION") {
-    return "Listing verification";
+    return "განცხადების გადამოწმება";
   }
   if (variant === "CLIENT_REMINDER") {
-    return "Client follow-up";
+    return "კლიენტის შეხსენება";
   }
   if (scheduledKind === "RENTAL_PERIOD_ENDING") {
-    return "Scheduled (rental ending)";
+    return "დაგეგმილი (ქირის დასრულება)";
   }
-  return "Scheduled";
+  return "დაგეგმილი";
 }
 
 function pickFirstNonEmptyString(

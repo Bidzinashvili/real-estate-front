@@ -24,11 +24,11 @@ export function MinRentalPeriodField({
   error,
 }: MinRentalPeriodFieldProps) {
   const presetOptions = [
-    { value: "" as const, label: "Quick select (months)" },
-    { value: "1" as const, label: "1 month" },
-    { value: "3" as const, label: "3 months" },
-    { value: "6" as const, label: "6 months" },
-    { value: "12" as const, label: "12 months" },
+    { value: "" as const, label: "სწრაფი არჩევა (თვეები)" },
+    { value: "1" as const, label: "1 თვე" },
+    { value: "3" as const, label: "3 თვე" },
+    { value: "6" as const, label: "6 თვე" },
+    { value: "12" as const, label: "12 თვე" },
   ];
 
   return (
@@ -36,17 +36,17 @@ export function MinRentalPeriodField({
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           id={`${idPrefix}MinRentalMonths`}
-          label="Min Rental Period (months)"
+          label="მინიმალური ქირის ვადა (თვე)"
           name="minRentalPeriod"
           type="number"
-          placeholder="Enter minimum rental period in months"
+          placeholder="შეიყვანეთ მინიმალური ქირის ვადა თვეებში"
           value={value}
           onChange={onChange}
           error={error}
         />
         <SelectField
           id={`${idPrefix}MinRentalPreset`}
-          label="Common lengths"
+          label="ხშირი ვადები"
           value={presetSelectValueFromMonthsString(value)}
           onChange={(preset) => {
             if (preset !== "") onChange(preset);

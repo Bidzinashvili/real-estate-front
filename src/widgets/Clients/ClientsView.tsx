@@ -20,18 +20,18 @@ import {
 import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
 
 const SORT_OPTIONS: { value: ClientSortBy; label: string }[] = [
-  { value: "createdAt", label: "Created" },
-  { value: "updatedAt", label: "Updated" },
-  { value: "name", label: "Name" },
+  { value: "createdAt", label: "შექმნილია" },
+  { value: "updatedAt", label: "განახლებულია" },
+  { value: "name", label: "სახელი" },
 ];
 
 const ORDER_OPTIONS: { value: ClientSortOrder; label: string }[] = [
-  { value: "desc", label: "Desc" },
-  { value: "asc", label: "Asc" },
+  { value: "desc", label: "კლებადი" },
+  { value: "asc", label: "ზრდადი" },
 ];
 
 const DEAL_TYPE_OPTIONS = [
-  { value: "", label: "All deal types" },
+  { value: "", label: "ყველა გარიგება" },
   ...DEAL_TYPES.map((dealType) => ({
     value: dealType,
     label: DEAL_TYPE_LABELS[dealType],
@@ -39,7 +39,7 @@ const DEAL_TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
+  { value: "", label: "ყველა სტატუსი" },
   ...CLIENT_STATUSES.map((clientStatus) => ({
     value: clientStatus,
     label: CLIENT_STATUS_LABELS[clientStatus],
@@ -47,9 +47,9 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_BADGE_CLASSES: Record<ClientStatus, string> = {
-  ACTIVE: "bg-green-100 text-green-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  ARCHIVED: "bg-slate-100 text-slate-600",
+  ACTIVE: "bg-success-muted text-success-foreground",
+  IN_PROGRESS: "bg-primary/15 text-primary",
+  ARCHIVED: "bg-muted text-muted-foreground",
 };
 
 const DEFAULT_LIMIT = 20;
@@ -114,37 +114,37 @@ export function ClientsView() {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Clients &amp; Leads
+            კლიენტები და ლიდები
           </h1>
-          <p className="max-w-md text-sm text-slate-600">
-            Manage your CRM leads, track deal progress, and follow up with clients.
+          <p className="max-w-md text-sm text-muted-foreground">
+            მართეთ კლიენტები, თვალი ადევნეთ გარიგებებს და განაგრძეთ კომუნიკაცია.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <Link
             href="/clients/invite-links"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            Invite links
+            მოწვევის ბმულები
           </Link>
           <button
             type="button"
             onClick={() => router.push("/clients/new")}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
-            Add client
+            კლიენტის დამატება
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         <input
           type="text"
           value={district}
           onChange={(event) => handleDistrictChange(event.target.value)}
-          placeholder="District…"
-          className="h-8 w-36 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+          placeholder="უბანი…"
+          className="h-8 w-36 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
         />
 
         <input
@@ -154,8 +154,8 @@ export function ClientsView() {
             setBudgetMinInput(event.target.value);
             setPage(1);
           }}
-          placeholder="Budget min"
-          className="h-8 w-32 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+          placeholder="მინ. ბიუჯეტი"
+          className="h-8 w-32 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
         />
 
         <input
@@ -165,39 +165,39 @@ export function ClientsView() {
             setBudgetMaxInput(event.target.value);
             setPage(1);
           }}
-          placeholder="Budget max"
-          className="h-8 w-32 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+          placeholder="მაქს. ბიუჯეტი"
+          className="h-8 w-32 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
         />
 
-        <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
+        <div className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
           <InlineSelect
-            aria-label="Filter by deal type"
+            aria-label="გარიგების ტიპით გაფილტვრა"
             value={dealTypeFilter}
             onChange={handleDealTypeChange}
             options={DEAL_TYPE_OPTIONS}
           />
         </div>
 
-        <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
+        <div className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
           <InlineSelect
-            aria-label="Filter by status"
+            aria-label="სტატუსით გაფილტვრა"
             value={statusFilter}
             onChange={handleStatusChange}
             options={STATUS_OPTIONS}
           />
         </div>
 
-        <div className="ml-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
-          <span className="hidden font-medium sm:inline">Sort</span>
+        <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
+          <span className="hidden font-medium sm:inline">სორტირება</span>
           <InlineSelect
-            aria-label="Sort clients by"
+            aria-label="კლიენტების სორტირება"
             value={sortBy}
             onChange={handleSortChange}
             options={SORT_OPTIONS}
           />
-          <span className="h-4 w-px bg-slate-200" />
+          <span className="h-4 w-px bg-border" />
           <InlineSelect
-            aria-label="Sort order"
+            aria-label="სორტირების მიმართულება"
             value={order}
             onChange={handleOrderChange}
             options={ORDER_OPTIONS}
@@ -205,49 +205,49 @@ export function ClientsView() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         {isLoading && (
-          <p className="text-sm text-slate-600">Loading clients…</p>
+          <p className="text-sm text-muted-foreground">კლიენტები იტვირთება…</p>
         )}
 
         {error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
         )}
 
         {!isLoading && !error && clients.length === 0 && (
-          <p className="text-sm text-slate-600">No clients found.</p>
+          <p className="text-sm text-muted-foreground">კლიენტები ვერ მოიძებნა.</p>
         )}
 
         {!isLoading && !error && clients.length > 0 && (
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500">
+              <thead className="bg-muted text-left text-xs font-medium text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Deal</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Budget</th>
-                  <th className="px-4 py-3">District</th>
-                  <th className="px-4 py-3">Created</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">სახელი</th>
+                  <th className="px-4 py-3">ტელეფონი</th>
+                  <th className="px-4 py-3">გარიგება</th>
+                  <th className="px-4 py-3">სტატუსი</th>
+                  <th className="px-4 py-3">ბიუჯეტი</th>
+                  <th className="px-4 py-3">უბანი</th>
+                  <th className="px-4 py-3">შექმნილია</th>
+                  <th className="px-4 py-3 text-right">მოქმედებები</th>
                 </tr>
               </thead>
               <tbody>
                 {clients.map((client) => (
                   <tr
                     key={client.id}
-                    className="border-t border-slate-100 hover:bg-slate-50/60"
+                    className="border-t border-border hover:bg-muted/60"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                    <td className="px-4 py-3 font-medium text-foreground">
                       {client.name}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {client.phones[0] ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {DEAL_TYPE_LABELS[client.dealType]}
                     </td>
                     <td className="px-4 py-3">
@@ -257,7 +257,7 @@ export function ClientsView() {
                         {CLIENT_STATUS_LABELS[client.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {client.budgetMin !== null || client.budgetMax !== null
                         ? [
                             client.budgetMin !== null ? client.budgetMin.toLocaleString() : null,
@@ -267,19 +267,19 @@ export function ClientsView() {
                             .join(" – ")
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {client.districts[0] ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {new Date(client.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => router.push(`/clients/${client.id}`)}
-                        className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+                        className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
                       >
-                        View
+                        ნახვა
                       </button>
                     </td>
                   </tr>
@@ -291,26 +291,26 @@ export function ClientsView() {
       </div>
 
       {!isLoading && !error && total > 0 && (
-        <div className="flex items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
           <span>
-            Page {page} of {totalPages} &bull; {total} total
+            გვერდი {page} / {totalPages} • სულ {total}
           </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={page === 1}
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Previous
+              წინა
             </button>
             <button
               type="button"
               disabled={page === totalPages}
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Next
+              შემდეგი
             </button>
           </div>
         </div>

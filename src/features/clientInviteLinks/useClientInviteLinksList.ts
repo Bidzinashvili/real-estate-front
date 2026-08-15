@@ -53,7 +53,7 @@ export function useClientInviteLinksList(
       } catch (err) {
         if (cancelled) return;
         const message =
-          err instanceof Error ? err.message : "Could not load invite links right now.";
+          err instanceof Error ? err.message : "მოწვევის ბმულების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
       } finally {
         if (!cancelled) {

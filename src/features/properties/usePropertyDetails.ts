@@ -32,12 +32,12 @@ export function usePropertyDetails(
       const next = await getPropertyFromListById(id);
       setProperty(next);
       if (!next) {
-        setError("Property not found.");
+        setError("განცხადება ვერ მოიძებნა.");
       }
       return next;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not load property details.";
+        err instanceof Error ? err.message : "განცხადების დეტალების ჩატვირთვა ვერ მოხერხდა.";
       setError(message);
       setProperty(null);
       return null;

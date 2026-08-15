@@ -55,28 +55,28 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
 
   if (isLoading || (!agent && !error)) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
-        <p className="text-slate-500">Loading agent details…</p>
+      <main className="flex min-h-screen items-center justify-center bg-muted text-foreground">
+        <p className="text-muted-foreground">აგენტის დეტალები იტვირთება…</p>
       </main>
     );
   }
 
   if (error || !agent) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
+      <main className="flex min-h-screen items-center justify-center bg-muted text-foreground">
         <div className="flex w-full max-w-xl flex-col gap-4 px-4">
           <button
             type="button"
             onClick={handleGoBack}
-            className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            className="self-start text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
             <span className="inline-flex items-center gap-1.5">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            <span>Go back</span>
+            <span>უკან</span>
             </span>
           </button>
-          <p className="text-slate-500">
-            {error ?? "We could not find this agent."}
+          <p className="text-muted-foreground">
+            {error ?? "აგენტი ვერ მოიძებნა."}
           </p>
         </div>
       </main>
@@ -84,16 +84,16 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
+    <main className="flex min-h-screen items-center justify-center bg-muted text-foreground">
       <div className="flex w-full max-w-xl flex-col gap-4 px-4">
         <button
           type="button"
           onClick={handleGoBack}
-          className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
+          className="self-start text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <span className="inline-flex items-center gap-1.5">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          <span>Go back</span>
+          <span>უკან</span>
           </span>
         </button>
         <AgentDetailsCard
@@ -104,7 +104,7 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
           onDeleteClick={() => setDeleteOpen(true)}
         />
         {deleteError && (
-          <p className="px-1 text-sm text-red-600" role="alert">
+          <p className="px-1 text-sm text-destructive" role="alert">
             {deleteError}
           </p>
         )}
@@ -112,10 +112,10 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
 
       <ConfirmDialog
         open={deleteOpen}
-        title="Delete this agent?"
-        description="This will remove the agent from your list. You can always add them again later."
-        confirmLabel="Yes, delete"
-        cancelLabel="Cancel"
+        title="წავშალოთ ეს აგენტი?"
+        description="აგენტი წაიშლება სიიდან. საჭიროების შემთხვევაში მოგვიანებით კვლავ შეგიძლიათ დამატება."
+        confirmLabel="დიახ, წაშლა"
+        cancelLabel="გაუქმება"
         isProcessing={isDeleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteOpen(false)}

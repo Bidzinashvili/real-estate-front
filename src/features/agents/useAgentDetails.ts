@@ -34,7 +34,7 @@ export function useAgentDetails(id: string | null | undefined): UseAgentDetailsR
       } catch (err) {
         if (!cancelled) {
           const message =
-            err instanceof Error ? err.message : "Could not load this agent.";
+            err instanceof Error ? err.message : "აგენტის ჩატვირთვა ვერ მოხერხდა.";
           setError(message);
           setAgent(null);
         }

@@ -98,8 +98,8 @@ export function AddClientForm() {
   return (
     <div className="mx-auto w-full max-w-3xl">
       <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Add client</h1>
-        <p className="text-sm text-slate-600">Fill in the details below to create a new lead.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">კლიენტის დამატება</h1>
+        <p className="text-sm text-muted-foreground">შეავსეთ ქვემოთ მოცემული ველები ახალი კლიენტის დასამატებლად.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} className="space-y-8" noValidate>
@@ -134,7 +134,7 @@ export function AddClientForm() {
         />
 
         {error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
         )}
@@ -145,16 +145,16 @@ export function AddClientForm() {
             onClick={() => {
               router.push("/clients");
             }}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            Cancel
+            გაუქმება
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isLoading ? "Saving…" : "Save client"}
+            {isLoading ? "ინახება…" : "კლიენტის შენახვა"}
           </button>
         </div>
       </form>

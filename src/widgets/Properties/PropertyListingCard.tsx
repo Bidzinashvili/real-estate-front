@@ -8,6 +8,7 @@ import {
   type Property,
   type PropertyStatus,
 } from "@/features/properties/types";
+import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 import { PropertyListingCardManager } from "@/widgets/Properties/PropertyListingCardManager";
 import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListingCardPriceRow";
@@ -78,16 +79,16 @@ function formatOwnerLine(property: Property) {
 
 function lifecycleStatusBadgeClass(status: PropertyStatus): string {
   if (status === "TO_BE_VERIFIED") {
-    return "bg-amber-500";
+    return "bg-warning";
   }
   if (status === "AVAILABLE_SOON") {
     return "bg-violet-600";
   }
   if (status === "RENTED") {
-    return "bg-slate-700";
+    return "bg-muted-foreground";
   }
   if (status === "SOLD" || status === "ARCHIVED") {
-    return "bg-slate-500";
+    return "bg-muted-foreground";
   }
   return "bg-teal-600";
 }
@@ -125,7 +126,7 @@ export function PropertyListingCard({
       tabIndex={0}
       onClick={() => onView(property.id)}
       onKeyDown={handleCardKeyDown}
-      className="flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-3xl bg-[#dfe8e4] shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+      className="flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-3xl bg-card shadow-sm ring-1 ring-border transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="relative aspect-[3/2] w-full overflow-hidden">
         <PropertyCardImageCarousel
@@ -161,35 +162,35 @@ export function PropertyListingCard({
             areaSquareMeters={areaSquareMeters}
           />
           <span className="flex shrink-0 flex-col items-end gap-1">
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-              {property.propertyType}
+            <span className="rounded-full bg-success-muted px-2 py-0.5 text-[10px] font-semibold text-success">
+              {PROPERTY_TYPE_LABELS[property.propertyType] ?? property.propertyType}
             </span>
             {property.propertyType === "HOTEL" && property.hotelScope ? (
-              <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-800">
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 {formatHotelScopeLabel(property.hotelScope)}
               </span>
             ) : null}
           </span>
         </div>
 
-        <p className="line-clamp-2 text-lg font-semibold text-slate-800">
+        <p className="line-clamp-2 text-lg font-semibold text-foreground">
           {cardTitle(property)}
         </p>
 
-        <p className="inline-flex items-center gap-1.5 text-sm text-slate-700">
-          <MapPin className="h-4 w-4 shrink-0 text-slate-500" />
+        <p className="inline-flex items-center gap-1.5 text-sm text-foreground">
+          <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="min-w-0">{addressLine}</span>
         </p>
 
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-slate-700">
-            {cardRooms(property)} rooms
+          <span className="rounded-full bg-success-muted px-2.5 py-1 text-foreground">
+            {cardRooms(property)} ოთახი
           </span>
-          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-slate-700">
-            {cardBedrooms(property)} bedrooms
+          <span className="rounded-full bg-success-muted px-2.5 py-1 text-foreground">
+            {cardBedrooms(property)} საძინებელი
           </span>
-          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-slate-700">
-            {cardAreaM2(property)} m²
+          <span className="rounded-full bg-success-muted px-2.5 py-1 text-foreground">
+            {cardAreaM2(property)} მ²
           </span>
         </div>
 
@@ -200,12 +201,12 @@ export function PropertyListingCard({
               event.stopPropagation();
               onView(property.id);
             }}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-slate-900 px-3 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800 sm:w-auto sm:min-w-[7rem]"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:w-auto sm:min-w-[7rem]"
           >
             <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            View
+            ნახვა
           </button>
-          <p className="min-w-0 truncate text-xs text-slate-500">
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
             {formatOwnerLine(property)}
           </p>
         </div>

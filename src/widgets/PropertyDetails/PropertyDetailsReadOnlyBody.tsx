@@ -53,18 +53,18 @@ export function PropertyDetailsReadOnlyBody({
     if (property.apartment) {
       return calculateMatchScore(
         [
-          { key: "elevator", label: "Elevator", value: property.apartment.elevator },
+          { key: "elevator", label: "ლიფტი", value: property.apartment.elevator },
           {
             key: "centralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             value: property.apartment.centralHeating,
           },
           {
             key: "airConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             value: property.apartment.airConditioner,
           },
-          { key: "furnished", label: "Furnished", value: property.apartment.furnished },
+          { key: "furnished", label: "ავეჯით", value: property.apartment.furnished },
         ],
         property.apartment.needsVerification,
       );
@@ -75,17 +75,17 @@ export function PropertyDetailsReadOnlyBody({
         [
           {
             key: "centralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             value: property.privateHouse.centralHeating,
           },
           {
             key: "airConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             value: property.privateHouse.airConditioner,
           },
           {
             key: "furnished",
-            label: "Furnished",
+            label: "ავეჯით",
             value: property.privateHouse.furnished,
           },
         ],
@@ -98,12 +98,12 @@ export function PropertyDetailsReadOnlyBody({
         [
           {
             key: "centralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             value: property.commercial.centralHeating,
           },
           {
             key: "airConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             value: property.commercial.airConditioner,
           },
         ],
@@ -126,7 +126,7 @@ export function PropertyDetailsReadOnlyBody({
       await refetch();
     } catch (error) {
       setArchiveError(
-        error instanceof Error ? error.message : "Could not archive property.",
+        error instanceof Error ? error.message : "განცხადების დაარქივება ვერ მოხერხდა.",
       );
     } finally {
       setIsArchiving(false);
@@ -137,11 +137,11 @@ export function PropertyDetailsReadOnlyBody({
     <div
       className={
         layout === "page"
-          ? "flex min-h-screen items-center justify-center bg-slate-50 text-slate-900"
-          : "flex min-h-[12rem] items-center justify-center text-slate-500"
+          ? "flex min-h-screen items-center justify-center bg-muted text-foreground"
+          : "flex min-h-[12rem] items-center justify-center text-muted-foreground"
       }
     >
-      <p className="text-slate-500">Loading property details…</p>
+      <p className="text-muted-foreground">განცხადების დეტალები იტვირთება…</p>
     </div>
   );
 
@@ -150,24 +150,24 @@ export function PropertyDetailsReadOnlyBody({
   }
 
   if (error || !property) {
-    const message = error ?? "We could not find this property.";
+    const message = error ?? "განცხადება ვერ მოიძებნა.";
     if (layout === "embedded") {
-      return <p className="text-sm text-slate-600">{message}</p>;
+      return <p className="text-sm text-muted-foreground">{message}</p>;
     }
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
+      <main className="flex min-h-screen items-center justify-center bg-muted text-foreground">
         <div className="flex w-full max-w-xl flex-col gap-4 px-4">
           <button
             type="button"
             onClick={handleGoBack}
-            className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            className="self-start text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
             <span className="inline-flex items-center gap-1.5">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              <span>Go back</span>
+              <span>უკან</span>
             </span>
           </button>
-          <p className="text-slate-500">{message}</p>
+          <p className="text-muted-foreground">{message}</p>
         </div>
       </main>
     );
@@ -178,11 +178,11 @@ export function PropertyDetailsReadOnlyBody({
       <div
         className={
           layout === "page"
-            ? "flex min-h-screen items-center justify-center bg-slate-50 text-slate-900"
-            : "flex min-h-[12rem] items-center justify-center text-slate-500"
+            ? "flex min-h-screen items-center justify-center bg-muted text-foreground"
+            : "flex min-h-[12rem] items-center justify-center text-muted-foreground"
         }
       >
-        <p className="text-slate-500">Loading your session…</p>
+        <p className="text-muted-foreground">სესია იტვირთება…</p>
       </div>
     );
     return sessionBlock;
@@ -194,9 +194,9 @@ export function PropertyDetailsReadOnlyBody({
         {property.propertyType === "APARTMENT" ? (
           <Link
             href={`/properties/${property.id}/matches`}
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-5 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            Find matching clients
+            შესაბამისი კლიენტების ძიება
           </Link>
         ) : null}
         {canEdit ? (
@@ -205,9 +205,9 @@ export function PropertyDetailsReadOnlyBody({
             onClick={() => {
               onBeforeEditNavigation?.();
             }}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
-            Edit listing
+            განცხადების რედაქტირება
           </Link>
         ) : null}
       </div>
@@ -218,23 +218,23 @@ export function PropertyDetailsReadOnlyBody({
         canViewPrivateFields={canViewPrivateFields}
       />
       {layout === "page" ? (
-        <div className="sticky bottom-4 z-30 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur">
+        <div className="sticky bottom-4 z-30 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setIsRemindersOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
             >
               <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-              Reminder
+              შეხსენება
             </button>
             {canEdit ? (
               <Link
                 href={`/properties/${property.id}/edit`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
               >
                 <Tags className="h-3.5 w-3.5" aria-hidden="true" />
-                Color tags
+                ფერადი ლეიბლები
               </Link>
             ) : null}
             {canEdit ? (
@@ -242,21 +242,21 @@ export function PropertyDetailsReadOnlyBody({
                 type="button"
                 disabled={isArchiving || property.status === "ARCHIVED"}
                 onClick={handleArchiveProperty}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-                {isArchiving ? "Archiving..." : "Archive"}
+                {isArchiving ? "არქივდება..." : "დაარქივება"}
               </button>
             ) : null}
-            <span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-800">
-              Details completeness: {matchScore.percentage ?? "N/A"}%
+            <span className="rounded-full bg-success-muted px-3 py-2 text-xs font-semibold text-success-foreground">
+              ინფორმაციის შევსება: {matchScore.percentage ?? "—"}%
             </span>
             <span className="rounded-full bg-purple-100 px-3 py-2 text-xs font-semibold text-purple-800">
-              My data: pending
+              ჩემი მონაცემები: მოლოდინში
             </span>
           </div>
           {archiveError ? (
-            <p className="mt-2 text-xs text-red-600" role="alert">
+            <p className="mt-2 text-xs text-destructive" role="alert">
               {archiveError}
             </p>
           ) : null}
@@ -275,16 +275,16 @@ export function PropertyDetailsReadOnlyBody({
 
   if (layout === "page") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
+      <main className="flex min-h-screen items-center justify-center bg-muted text-foreground">
         <div className="flex w-full max-w-2xl flex-col gap-4 px-4">
           <button
             type="button"
             onClick={handleGoBack}
-            className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            className="self-start text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
             <span className="inline-flex items-center gap-1.5">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              <span>Go back</span>
+              <span>უკან</span>
             </span>
           </button>
           {cardSection}

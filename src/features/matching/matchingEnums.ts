@@ -1,3 +1,5 @@
+import { CLIENT_PREFERENCE_LABELS as CLIENT_PREFERENCE_DISPLAY_LABELS } from "@/shared/i18n/enumLabels";
+
 export const LOCK_STATES = ["none", "locked", "frozen"] as const;
 
 export type LockState = (typeof LOCK_STATES)[number];
@@ -12,10 +14,10 @@ export const CLIENT_PREFERENCE_VALUES = [
 export type ClientPreferenceValue = (typeof CLIENT_PREFERENCE_VALUES)[number];
 
 export const CLIENT_PREFERENCE_LABELS: Record<ClientPreferenceValue, string> = {
-  YES: "Yes",
-  NO: "No",
-  DOES_NOT_MATTER: "Doesn't matter",
-  NOT_SET: "Not set",
+  YES: CLIENT_PREFERENCE_DISPLAY_LABELS.YES,
+  NO: CLIENT_PREFERENCE_DISPLAY_LABELS.NO,
+  DOES_NOT_MATTER: CLIENT_PREFERENCE_DISPLAY_LABELS.DOES_NOT_MATTER,
+  NOT_SET: CLIENT_PREFERENCE_DISPLAY_LABELS.NOT_SET,
 };
 
 export function isClientPreferenceValue(

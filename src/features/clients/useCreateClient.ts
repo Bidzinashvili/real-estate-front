@@ -26,7 +26,7 @@ export function useCreateClient(): UseCreateClientResult {
       const message =
         err instanceof Error
           ? err.message
-          : "Could not create this client right now.";
+          : "კლიენტის შექმნა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

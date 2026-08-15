@@ -4,58 +4,76 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 198 67% 98%;
+    --foreground: 221 39% 17%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 221 39% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 221 39% 17%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 198 67% 96%;
+    --secondary-foreground: 221 39% 17%;
+    --muted: 198 67% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 198 80% 94%;
+    --accent-foreground: 221 39% 17%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 25% 88%;
+    --input: 200 25% 88%;
+    --ring: 217 91% 60%;
+    --cyan: 199 89% 60%;
+    --elevated: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 142 64% 24%;
+    --success-muted: 141 84% 93%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 32 81% 29%;
+    --warning-muted: 48 96% 89%;
     --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 199 89% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84% 60%;
+    color-scheme: light;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 220 28% 5%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 216 24% 11%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 216 22% 14%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 220 28% 8%;
+    --secondary: 216 27% 8%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 216 22% 14%;
+    --muted-foreground: 213 16% 71%;
+    --accent: 216 22% 14%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --border: 216 18% 20%;
+    --input: 216 18% 20%;
+    --ring: 213 94% 68%;
+    --cyan: 199 89% 60%;
+    --elevated: 216 22% 14%;
+    --success: 142 69% 58%;
+    --success-foreground: 141 79% 85%;
+    --success-muted: 142 40% 16%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --warning-muted: 38 40% 16%;
+    --chart-1: 213 94% 68%;
+    --chart-2: 199 89% 60%;
+    --chart-3: 142 69% 58%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 55%;
+    color-scheme: dark;
   }
 }
 
@@ -63,8 +81,17 @@
   * {
     @apply border-border;
   }
-  body {
+  html {
     @apply bg-background text-foreground;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  input,
+  textarea,
+  select {
+    color-scheme: inherit;
   }
 
   input[type="search"]::-webkit-search-decoration,
@@ -72,5 +99,11 @@
   input[type="search"]::-webkit-search-results-button,
   input[type="search"]::-webkit-search-results-decoration {
     -webkit-appearance: none;
+  }
+}
+
+@layer components {
+  .field-control {
+    @apply w-full rounded-lg border border-input bg-card py-2 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25;
   }
 }

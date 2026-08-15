@@ -136,14 +136,14 @@ export function AddPropertyApartmentSection({
   }
 
   return (
-    <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h2 className="text-sm font-semibold text-slate-800">Apartment details</h2>
+    <section className="space-y-3 rounded-xl border border-border bg-muted p-4">
+      <h2 className="text-sm font-semibold text-foreground">ბინის დეტალები</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex items-start gap-2">
           <div className="flex-1">
             <SelectField
               id="aptBuildingCondition"
-              label="Building condition"
+              label="შენობის მდგომარეობა"
               value={apartment.buildingCondition}
               onChange={(value) => patchApartment({ buildingCondition: value })}
               options={BUILDING_CONDITION_OPTIONS}
@@ -160,7 +160,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <SelectField
               id="aptKitchenType"
-              label="Kitchen type"
+              label="სამზარეულოს ტიპი"
               value={apartment.kitchenType}
               onChange={(value) => patchApartment({ kitchenType: value })}
               options={KITCHEN_TYPE_OPTIONS}
@@ -177,7 +177,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <TextField
               id="aptTotalArea"
-              label="Total area"
+              label="საერთო ფართობი"
               type="number"
               value={apartment.totalArea}
               onChange={(value) => patchApartment({ totalArea: value })}
@@ -196,7 +196,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <TextField
               id="aptRooms"
-              label="Rooms"
+              label="ოთახები"
               type="number"
               value={apartment.rooms}
               onChange={handleRoomsChange}
@@ -215,7 +215,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <TextField
               id="aptBedrooms"
-              label="Bedrooms"
+              label="საძინებლები"
               type="number"
               value={apartment.bedrooms}
               onChange={handleBedroomsChange}
@@ -253,7 +253,7 @@ export function AddPropertyApartmentSection({
         </div>
         <TextField
           id="aptCeilingHeight"
-          label="Ceiling height"
+          label="ჭერის სიმაღლე"
           type="number"
           value={apartment.ceilingHeight}
           onChange={(value) => patchApartment({ ceilingHeight: value })}
@@ -263,7 +263,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <TextField
               id="aptBathrooms"
-              label="Bathrooms"
+              label="სველი წერტილები"
               type="number"
               value={apartment.bathrooms}
               onChange={(value) => patchApartment({ bathrooms: value })}
@@ -281,7 +281,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <HashtagPicker
               id="aptProject"
-              label="Project"
+              label="პროექტი"
               value={apartment.project}
               onChange={(value) => patchApartment({ project: value })}
             />
@@ -297,7 +297,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <SelectField
               id="aptRenovation"
-              label="Renovation"
+              label="რემონტი"
               value={apartment.renovation}
               onChange={(value) => patchApartment({ renovation: value })}
               options={RENOVATION_SELECT_OPTIONS}
@@ -330,7 +330,7 @@ export function AddPropertyApartmentSection({
         )}
         <NumericVerificationRow
           id="aptBalconyArea"
-          label="Total balcony area (m²)"
+          label="აივნის ჯამური ფართობი (მ²)"
           value={apartment.balconyArea}
           fieldKey="balconyArea"
           error={fieldErrors["apartment.balconyArea"]}
@@ -342,7 +342,7 @@ export function AddPropertyApartmentSection({
         />
         <NumericVerificationRow
           id="aptParking"
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           value={apartment.parkingSpaces}
           fieldKey="parkingSpaces"
           error={fieldErrors["apartment.parkingSpaces"]}
@@ -354,11 +354,11 @@ export function AddPropertyApartmentSection({
         />
         {(
           [
-            { id: "aptElevator", label: "Elevator", key: "elevator" },
-            { id: "aptCentralHeating", label: "Central heating", key: "centralHeating" },
-            { id: "aptAirConditioner", label: "Air conditioner", key: "airConditioner" },
-            { id: "aptFurnished", label: "Furnished", key: "furnished" },
-            { id: "aptGoodView", label: "Good view", key: "goodView" },
+            { id: "aptElevator", label: "ლიფტი", key: "elevator" },
+            { id: "aptCentralHeating", label: "ცენტრალური გათბობა", key: "centralHeating" },
+            { id: "aptAirConditioner", label: "კონდიციონერი", key: "airConditioner" },
+            { id: "aptFurnished", label: "ავეჯით", key: "furnished" },
+            { id: "aptGoodView", label: "კარგი ხედი", key: "goodView" },
           ] as const
         ).map((field) => (
           <div key={field.key} className="flex items-end gap-2">
@@ -385,7 +385,7 @@ export function AddPropertyApartmentSection({
             <div className="flex-1">
               <VerifiableBooleanField
                 id="aptPetsAllowed"
-                label="Pets allowed"
+                label="ცხოველები დაიშვება"
                 value={booleanUiStateFromApartment(
                   apartment.petsAllowed,
                   apartment.needsVerification,

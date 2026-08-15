@@ -23,26 +23,25 @@ export function PropertyDetailsLifecycleSection({
     <section className="space-y-4" aria-labelledby="lifecycle-heading">
       <h2
         id="lifecycle-heading"
-        className="text-sm font-semibold text-slate-800"
+        className="text-sm font-semibold text-foreground"
       >
-        Listing lifecycle
+        განცხადების ციკლი
       </h2>
 
-      <div className="space-y-1 text-sm text-slate-700">
+      <div className="space-y-1 text-sm text-foreground">
         <p>
-          <span className="font-medium text-slate-600">Status: </span>
+          <span className="font-medium text-muted-foreground">სტატუსი: </span>
           {formatPropertyStatusLabel(lifecycleStatus)}
         </p>
-        <p className="text-xs text-slate-500">
-          Change listing status and set reminders from the catalog card menu (three dots on the
-          listing image).
+        <p className="text-xs text-muted-foreground">
+          განცხადების სტატუსი და შეხსენებები იცვლება კატალოგის ბარათის მენიუდან (სამი წერტილი ფოტოზე).
         </p>
         {lifecycleStatus === "TO_BE_VERIFIED" &&
         typeof verificationReminderIso === "string" &&
         verificationReminderIso.trim() !== "" ? (
           <p>
-            <span className="font-medium text-slate-600">
-              Verification reminder:{" "}
+            <span className="font-medium text-muted-foreground">
+              გადამოწმების შეხსენება:{" "}
             </span>
             {formatVerificationReminderLabel(verificationReminderIso)}
           </p>

@@ -197,7 +197,7 @@ export function AddPropertyCoreFields({
     <section className="grid gap-4 sm:grid-cols-2">
       <SelectField
         id="propertyType"
-        label="Property type"
+        label="უძრავი ქონების ტიპი"
         value={form.propertyType}
         onChange={(value) => updateForm("propertyType", value)}
         options={PROPERTY_TYPE_OPTIONS}
@@ -205,11 +205,11 @@ export function AddPropertyCoreFields({
       {form.propertyType === "HOTEL" && (
         <SelectField<"" | HotelScope>
           id="hotelScope"
-          label="Hotel scope"
+          label="სასტუმროს ტიპი"
           value={form.hotelScope}
           onChange={(next) => updateForm("hotelScope", next)}
           options={[
-            { value: "", label: "Select hotel scope" },
+            { value: "", label: "აირჩიეთ სასტუმროს ტიპი" },
             ...HOTEL_SCOPE_FORM_OPTIONS,
           ]}
           required
@@ -218,14 +218,14 @@ export function AddPropertyCoreFields({
       )}
       <SelectField
         id="dealType"
-        label="Deal type"
+        label="გარიგების ტიპი"
         value={form.dealType}
         onChange={handleDealTypeChange}
         options={DEAL_TYPE_OPTIONS}
       />
       <SelectField
         id="city"
-        label="City"
+        label="ქალაქი"
         value={form.city}
         onChange={(value) => updateForm("city", value)}
         options={GEORGIAN_CITY_OPTIONS}
@@ -250,7 +250,7 @@ export function AddPropertyCoreFields({
       <div className={buildingNumber !== undefined ? undefined : "sm:col-span-2"}>
         <StreetAutocompleteField
           id="address"
-          label="Address"
+          label="მისამართი"
           value={form.address}
           onChange={updateAddress}
           required
@@ -261,7 +261,7 @@ export function AddPropertyCoreFields({
       {buildingNumber !== undefined && onBuildingNumberChange !== undefined && (
         <TextField
           id="buildingNumber"
-          label="Building number"
+          label="კორპუსის ნომერი"
           value={buildingNumber}
           onChange={onBuildingNumberChange}
         />
@@ -269,16 +269,16 @@ export function AddPropertyCoreFields({
       <div className="sm:col-span-2">
         <LabelAutocompleteChipsInput
           id="labels"
-          label="Labels"
+          label="ლეიბლები"
           selectedLabels={form.labels}
           onChange={(value) => updateForm("labels", value)}
           allowFreeText
-          placeholder="Type to search or add labels"
+          placeholder="აკრიფეთ ლეიბლის მოსაძებნად ან დასამატებლად"
         />
       </div>
       <TextField
         id="priceInternal"
-        label="Internal price"
+        label="შიდა ფასი"
         value={form.priceInternal}
         onChange={handleInternalPriceChange}
         type="number"
@@ -287,7 +287,7 @@ export function AddPropertyCoreFields({
       <div className="space-y-1.5">
         <TextField
           id="pricePublic"
-          label="Public price"
+          label="საჯარო ფასი"
           value={form.pricePublic}
           onChange={handlePublicPriceChange}
           type="number"
@@ -295,22 +295,22 @@ export function AddPropertyCoreFields({
           error={fieldErrors.pricePublic}
         />
         {pricePerSquareMeter !== null ? (
-          <p className="text-xs font-medium text-slate-600">
+          <p className="text-xs font-medium text-muted-foreground">
             {formatPricePerSquareMeter(pricePerSquareMeter)}
           </p>
         ) : null}
       </div>
       <TextField
         id="ownerName"
-        label="Owner name"
+        label="მესაკუთრის სახელი"
         value={form.ownerName}
         onChange={(value) => updateForm("ownerName", value)}
         required
         error={fieldErrors.ownerName}
       />
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-slate-800">
-          Owner phone <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-foreground">
+          მესაკუთრის ტელეფონი <span className="text-red-500">*</span>
         </label>
         <div className="space-y-2">
           {form.ownerPhones.map((phone, phoneIndex) => (
@@ -320,14 +320,14 @@ export function AddPropertyCoreFields({
                 type="tel"
                 value={phone}
                 onChange={(event) => handleOwnerPhoneChange(phoneIndex, event.target.value)}
-                className={`${addPropertyInputClassName()} ${fieldErrors[`ownerPhones.${phoneIndex}`] ? "border-red-500 focus:border-red-600" : ""}`}
+                className={`${addPropertyInputClassName()} ${fieldErrors[`ownerPhones.${phoneIndex}`] ? "border-destructive focus:border-destructive" : ""}`}
               />
               {form.ownerPhones.length > 1 && (
                 <button
                   type="button"
                   onClick={() => handleRemoveOwnerPhone(phoneIndex)}
-                  className="flex-none text-slate-400 transition hover:text-red-600"
-                  aria-label="Remove phone"
+                  className="flex-none text-muted-foreground transition hover:text-destructive"
+                  aria-label="ტელეფონის წაშლა"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -337,20 +337,20 @@ export function AddPropertyCoreFields({
           <button
             type="button"
             onClick={handleAddOwnerPhone}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 transition hover:text-slate-900"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            Add phone
+            ტელეფონის დამატება
           </button>
         </div>
         {fieldErrors["ownerPhones"] && (
-          <p className="text-xs text-red-600" role="alert">
+          <p className="text-xs text-destructive" role="alert">
             {fieldErrors["ownerPhones"]}
           </p>
         )}
         {form.ownerPhones.map((_phone, phoneIndex) =>
           fieldErrors[`ownerPhones.${phoneIndex}`] ? (
-            <p key={phoneIndex} className="text-xs text-red-600" role="alert">
+            <p key={phoneIndex} className="text-xs text-destructive" role="alert">
               {fieldErrors[`ownerPhones.${phoneIndex}`]}
             </p>
           ) : null,
@@ -358,13 +358,13 @@ export function AddPropertyCoreFields({
       </div>
       <TextField
         id="ownerWhatsapp"
-        label="Owner WhatsApp"
+        label="მესაკუთრის WhatsApp"
         value={form.ownerWhatsapp}
         onChange={handleOwnerWhatsappChange}
       />
       <TextField
         id="cadastralCode"
-        label="Cadastral code"
+        label="საკადასტრო კოდი"
         value={form.cadastralCode}
         onChange={(value) => updateForm("cadastralCode", value)}
       />
@@ -373,8 +373,8 @@ export function AddPropertyCoreFields({
         onChange={(nextIds) => updateForm("externalIds", nextIds)}
       />
       <div className="space-y-1.5 sm:col-span-2">
-        <label htmlFor="publicComment" className="block text-sm font-medium text-slate-800">
-          Comment
+        <label htmlFor="publicComment" className="block text-sm font-medium text-foreground">
+          კომენტარი
         </label>
         <textarea
           id="publicComment"
@@ -385,8 +385,8 @@ export function AddPropertyCoreFields({
         />
       </div>
       <div className="space-y-1.5 sm:col-span-2">
-        <label htmlFor="internalText" className="block text-sm font-medium text-slate-800">
-          Upload text
+        <label htmlFor="internalText" className="block text-sm font-medium text-foreground">
+          ატვირთვის ტექსტი
         </label>
         <textarea
           id="internalText"
@@ -399,9 +399,9 @@ export function AddPropertyCoreFields({
       <div className="space-y-1.5 sm:col-span-2">
         <label
           htmlFor="privateComment"
-          className="block text-sm font-medium text-slate-800"
+          className="block text-sm font-medium text-foreground"
         >
-          Comment for myself
+          კომენტარი ჩემთვის
         </label>
         <textarea
           id="privateComment"

@@ -13,10 +13,10 @@ export type MatchingRequestOptions = {
 
 function matchingFallback(status: number, defaultMessage: string): string {
   if (status === 401) {
-    return "You are not authenticated.";
+    return "ავტორიზაცია საჭიროა.";
   }
   if (status === 403) {
-    return "You do not have access to this client";
+    return "ამ კლიენტზე წვდომა არ გაქვთ";
   }
   return defaultMessage;
 }
@@ -44,7 +44,7 @@ export async function fetchClientPropertyMatches(
     }
     if (axios.isAxiosError(error)) {
       const status = error.response?.status ?? 500;
-      const fallback = matchingFallback(status, "Could not load property matches right now.");
+      const fallback = matchingFallback(status, "შესაბამისი განცხადებების ჩატვირთვა ვერ მოხერხდა.");
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }
@@ -77,8 +77,8 @@ export async function fetchPropertyClientMatches(
       const status = error.response?.status ?? 500;
       const fallback =
         status === 403
-          ? "You do not have permission to run this match."
-          : matchingFallback(status, "Could not load client matches right now.");
+          ? "ამ შესაბამისობის გაშვების უფლება არ გაქვთ."
+          : matchingFallback(status, "შესაბამისი კლიენტების ჩატვირთვა ვერ მოხერხდა.");
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }

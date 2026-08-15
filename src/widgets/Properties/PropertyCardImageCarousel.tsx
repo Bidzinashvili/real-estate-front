@@ -62,7 +62,7 @@ export function PropertyCardImageCarousel({
             type="button"
             onClick={goPrev}
             className="absolute left-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-sm backdrop-blur-[2px] transition hover:bg-black/55"
-            aria-label="Previous image"
+            aria-label="წინა ფოტო"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </button>
@@ -70,7 +70,7 @@ export function PropertyCardImageCarousel({
             type="button"
             onClick={goNext}
             className="absolute right-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-sm backdrop-blur-[2px] transition hover:bg-black/55"
-            aria-label="Next image"
+            aria-label="შემდეგი ფოტო"
           >
             <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
@@ -79,7 +79,7 @@ export function PropertyCardImageCarousel({
               <span
                 key={dotIndex}
                 className={`h-1.5 w-1.5 rounded-full transition ${
-                  dotIndex === activeIndex ? "bg-white" : "bg-white/40"
+                  dotIndex === activeIndex ? "bg-card" : "bg-card/40"
                 }`}
               />
             ))}
