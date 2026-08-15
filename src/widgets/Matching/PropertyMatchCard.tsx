@@ -4,12 +4,12 @@ import Link from "next/link";
 import type { ScoredPropertyMatch } from "@/features/matching/matchingApi.types";
 import { getMatchImageUrl } from "@/features/matching/matchImageUrl";
 import { MatchingCriteriaList } from "@/widgets/Matching/MatchingCriteriaList";
+import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
 import {
   CLIENT_PREFERENCE_LABELS,
   isClientPreferenceValue,
 } from "@/features/matching/matchingEnums";
 import { DEAL_TYPE_LABELS, lookupEnumLabel, PROPERTY_STATUS_LABELS } from "@/shared/i18n/enumLabels";
-import { formatCriteriaMatchSummary } from "@/shared/i18n/ui";
 
 type PropertyMatchCardProps = {
   match: ScoredPropertyMatch;
@@ -43,8 +43,8 @@ export function PropertyMatchCard({ match }: PropertyMatchCardProps) {
         </div>
       )}
       <div className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">
               {listing.address}
               {listing.city ? `, ${listing.city}` : ""}
@@ -54,13 +54,13 @@ export function PropertyMatchCard({ match }: PropertyMatchCardProps) {
               {lookupEnumLabel(PROPERTY_STATUS_LABELS, listing.status)}
             </p>
           </div>
-          <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-primary">
-            {match.matchPercentage}%
-          </span>
+          <MatchingScoreSummary
+            matchPercentage={match.matchPercentage}
+            matchedCriteriaCount={match.matchedCriteriaCount}
+            scoredCriteriaCount={match.scoredCriteriaCount}
+            criteria={match.criteria}
+          />
         </div>
-        <p className="text-xs text-muted-foreground">
-          {formatCriteriaMatchSummary(match.matchedCriteriaCount, match.scoredCriteriaCount)}
-        </p>
         {apartment ? (
           <p className="text-xs text-muted-foreground">
             {apartment.rooms ?? "—"} ოთახი · {apartment.totalArea ?? "—"} მ² · სართული{" "}

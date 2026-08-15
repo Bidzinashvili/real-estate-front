@@ -9,7 +9,7 @@ export const MATCH_CRITERION_LABELS: Record<MatchCriterionKey, string> = {
   rooms: "ოთახები",
   bedrooms: "საძინებლები",
   floor: "სართული",
-  excludeLastFloor: "ბოლო სართულის გამოკლებით",
+  excludeLastFloor: "ბოლო სართულის გამორიცხვა",
   renovation: "რემონტი",
   buildingCondition: "შენობის მდგომარეობა",
   projectExclude: "პროექტი",
@@ -21,10 +21,10 @@ export const MATCH_CRITERION_LABELS: Record<MatchCriterionKey, string> = {
   centralHeating: "ცენტრალური გათბობა",
   airConditioner: "კონდიციონერი",
   kitchenType: "სამზარეულოს ტიპი",
-  furnished: "ავეჯით",
+  furnished: "ავეჯი",
   parking: "პარკინგი",
-  pet: "შინაური ცხოველები",
-  minRentalPeriod: "მინიმალური ქირის ვადა",
+  pet: "შინაური ცხოველი",
+  minRentalPeriod: "მინიმალური ქირავნობის პერიოდი",
   bathrooms: "სველი წერტილები",
 };
 

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import type { ScoredClientMatch } from "@/features/matching/matchingApi.types";
 import { MatchingCriteriaList } from "@/widgets/Matching/MatchingCriteriaList";
+import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
 import { formatPreference } from "@/widgets/Matching/PropertyMatchCard";
 import {
   CLIENT_STATUS_LABELS,
   DEAL_TYPE_LABELS,
   lookupEnumLabel,
 } from "@/shared/i18n/enumLabels";
-import { formatCriteriaMatchSummary } from "@/shared/i18n/ui";
 
 type ClientMatchCardProps = {
   match: ScoredClientMatch;
@@ -21,8 +21,8 @@ export function ClientMatchCard({ match }: ClientMatchCardProps) {
 
   return (
     <article className="space-y-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
             {lookupEnumLabel(DEAL_TYPE_LABELS, client.dealType)} ·{" "}
             {lookupEnumLabel(CLIENT_STATUS_LABELS, client.status)}
@@ -31,13 +31,13 @@ export function ClientMatchCard({ match }: ClientMatchCardProps) {
             {(client.districts ?? []).join(", ") || "უბნები არ არის"}
           </p>
         </div>
-        <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-primary">
-          {match.matchPercentage}%
-        </span>
+        <MatchingScoreSummary
+          matchPercentage={match.matchPercentage}
+          matchedCriteriaCount={match.matchedCriteriaCount}
+          scoredCriteriaCount={match.scoredCriteriaCount}
+          criteria={match.criteria}
+        />
       </div>
-      <p className="text-xs text-muted-foreground">
-        {formatCriteriaMatchSummary(match.matchedCriteriaCount, match.scoredCriteriaCount)}
-      </p>
       <p className="text-sm text-foreground">
         ბიუჯეტი: {client.budgetMin ?? "—"} – {client.budgetMax ?? "—"}
       </p>

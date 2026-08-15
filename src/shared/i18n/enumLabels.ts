@@ -89,9 +89,9 @@ export const CLIENT_INVITE_LINK_STATUS_LABELS = {
 } as const;
 
 export const CRITERION_RESULT_LABELS = {
-  MATCH: "ემთხვევა",
-  MISMATCH: "არ ემთხვევა",
-  SKIP: "გამოტოვებული",
+  MATCH: "შესაბამისია",
+  MISMATCH: "არ შეესაბამება",
+  SKIP: "გადასამოწმებელია",
 } as const;
 
 export const USER_ROLE_LABELS = {
