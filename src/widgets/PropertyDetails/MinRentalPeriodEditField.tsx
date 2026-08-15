@@ -27,7 +27,7 @@ export function MinRentalPeriodEditField({
   months,
   onMonthsChange,
 }: MinRentalPeriodEditFieldProps) {
-  if (dealType !== "RENT") return null;
+  if (dealType !== "RENT" && dealType !== "DAILY_RENT") return null;
 
   const presetOptions = [
     { value: "" as const, label: "Quick select (months)" },

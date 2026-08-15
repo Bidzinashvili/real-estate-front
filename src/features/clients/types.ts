@@ -10,6 +10,7 @@ import type {
   LockState,
   UUID,
 } from "@/features/clients/clientApi.types";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 
 export type RelatedPerson = {
   id: UUID;
@@ -43,23 +44,23 @@ export type ClientRequirements = {
   minFloor: number | null;
   maxFloor: number | null;
   excludeLastFloor: boolean;
-  renovation: Renovation | null;
+  renovations: Renovation[];
   buildingCondition: BuildingCondition | null;
   projectExclude: string[];
   minArea: number | null;
   maxArea: number | null;
-  hasBalcony: boolean | null;
+  hasBalcony: ClientPreferenceValue;
   balconyAreaMin: number | null;
   balconyAreaMax: number | null;
-  goodView: boolean | null;
-  elevator: boolean | null;
-  centralHeating: boolean | null;
-  airConditioner: boolean | null;
+  goodView: ClientPreferenceValue;
+  elevator: ClientPreferenceValue;
+  centralHeating: ClientPreferenceValue;
+  airConditioner: ClientPreferenceValue;
   kitchenType: KitchenType | null;
-  furnished: boolean | null;
+  furnished: ClientPreferenceValue;
   minBathrooms: number | null;
   maxBathrooms: number | null;
-  parking: boolean | null;
+  parking: ClientPreferenceValue;
   minRentalPeriod: number | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
@@ -70,7 +71,7 @@ export type ClientRequirements = {
   minFloorLock?: LockState;
   maxFloorLock?: LockState;
   excludeLastFloorLock?: LockState;
-  renovationLock?: LockState;
+  renovationsLock?: LockState;
   buildingConditionLock?: LockState;
   projectExcludeLock?: LockState;
   minAreaLock?: LockState;

@@ -112,17 +112,28 @@ export function useAddPropertyForm() {
     setForm((prev) => {
       if (key === "dealType") {
         const nextDealType = value as FormState["dealType"];
-        if (nextDealType !== "RENT") {
+        if (nextDealType !== "RENT" && nextDealType !== "DAILY_RENT") {
           return {
             ...prev,
             dealType: nextDealType,
-            apartment: { ...prev.apartment, minRentalPeriod: "" },
+            apartment: {
+              ...prev.apartment,
+              minRentalPeriod: "",
+              petsAllowed: null,
+            },
             privateHouse: { ...prev.privateHouse, minRentalPeriod: "" },
             landPlot: { ...prev.landPlot, minRentalPeriod: "" },
             commercial: { ...prev.commercial, minRentalPeriod: "" },
           };
         }
-        return { ...prev, dealType: nextDealType };
+        return {
+          ...prev,
+          dealType: nextDealType,
+          apartment: {
+            ...prev.apartment,
+            petsAllowed: nextDealType === "RENT" ? prev.apartment.petsAllowed : null,
+          },
+        };
       }
       if (key === "propertyType") {
         const nextPropertyType = value as FormState["propertyType"];

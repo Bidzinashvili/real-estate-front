@@ -66,7 +66,9 @@ export function AddPropertyForm() {
               dealType={form.dealType}
               apartment={form.apartment}
               fieldErrors={fieldErrors}
+              fieldLocks={form.fieldLocks}
               patchApartment={patchApartment}
+              patchFieldLocks={(nextLocks) => updateForm("fieldLocks", nextLocks)}
             />
           )}
 

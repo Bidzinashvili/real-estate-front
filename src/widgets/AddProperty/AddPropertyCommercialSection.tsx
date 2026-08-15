@@ -71,14 +71,14 @@ export function AddPropertyCommercialSection({
           onChange={(value) => patchCommercial({ renovation: value })}
           options={RENOVATION_SELECT_OPTIONS}
         />
-        {dealType === "RENT" && (
+        {dealType === "RENT" || dealType === "DAILY_RENT" ? (
           <MinRentalPeriodField
             idPrefix="cm"
             value={commercial.minRentalPeriod}
             onChange={(value) => patchCommercial({ minRentalPeriod: value })}
             error={fieldErrors["commercial.minRentalPeriod"]}
           />
-        )}
+        ) : null}
         {[
           {
             id: "cmCentralHeating",

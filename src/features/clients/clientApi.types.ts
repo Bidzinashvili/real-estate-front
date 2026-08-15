@@ -5,8 +5,9 @@ import type {
   KitchenType,
   Renovation,
 } from "@/features/clients/clientEnums";
+import type { ClientPreferenceValue, LockState } from "@/features/matching/matchingEnums";
 
-export type LockState = "none" | "locked" | "frozen";
+export type { LockState } from "@/features/matching/matchingEnums";
 
 export function cycleLockState(lock: LockState): LockState {
   if (lock === "none") {
@@ -18,9 +19,11 @@ export function cycleLockState(lock: LockState): LockState {
   return "none";
 }
 
-export type Locked<T> = { value: T; lock: LockState };
+export type Locked<Value> = { value: Value; lock: LockState };
 
-export type LockedPartial<T> = { value?: T; lock: LockState };
+export type LockedPartial<Value> = { value?: Value; lock: LockState };
+
+export type LockedOptional<Value> = LockedPartial<Value>;
 
 export type ISODateString = string;
 export type UUID = string;
@@ -42,12 +45,12 @@ export interface CreateClientPayload {
   status?: ClientStatus;
   reminderDate?: string | null;
   relatedPersons?: CreateClientRelatedPersonPayload[];
-  budgetMin?: LockedPartial<number>;
-  budgetMax?: LockedPartial<number>;
+  budgetMin?: LockedOptional<number>;
+  budgetMax?: LockedOptional<number>;
   districts: Locked<string[]>;
   addresses: Locked<string[]>;
   labels?: Locked<string[]>;
-  pet?: LockedPartial<string>;
+  pet?: LockedOptional<string>;
   minRooms?: Locked<number>;
   maxRooms?: Locked<number>;
   minBedrooms?: Locked<number>;
@@ -55,27 +58,67 @@ export interface CreateClientPayload {
   minFloor?: Locked<number>;
   maxFloor?: Locked<number>;
   excludeLastFloor?: Locked<boolean>;
-  renovation?: LockedPartial<Renovation>;
-  buildingCondition?: LockedPartial<BuildingCondition>;
-  projectExclude?: LockedPartial<string[]>;
+  renovations?: Locked<Renovation[]>;
+  buildingCondition?: LockedOptional<BuildingCondition>;
+  projectExclude?: LockedOptional<string[]>;
   minArea?: Locked<number>;
   maxArea?: Locked<number>;
-  hasBalcony?: Locked<boolean>;
+  hasBalcony?: Locked<ClientPreferenceValue>;
   balconyAreaMin?: Locked<number>;
   balconyAreaMax?: Locked<number>;
-  goodView?: Locked<boolean>;
-  elevator?: Locked<boolean>;
-  centralHeating?: Locked<boolean>;
-  airConditioner?: Locked<boolean>;
-  kitchenType?: LockedPartial<KitchenType>;
-  furnished?: Locked<boolean>;
+  goodView?: Locked<ClientPreferenceValue>;
+  elevator?: Locked<ClientPreferenceValue>;
+  centralHeating?: Locked<ClientPreferenceValue>;
+  airConditioner?: Locked<ClientPreferenceValue>;
+  kitchenType?: LockedOptional<KitchenType>;
+  furnished?: Locked<ClientPreferenceValue>;
   minBathrooms?: Locked<number>;
   maxBathrooms?: Locked<number>;
-  parking?: Locked<boolean>;
-  minRentalPeriod?: LockedPartial<number>;
+  parking?: Locked<ClientPreferenceValue>;
+  minRentalPeriod?: LockedOptional<number>;
 }
 
-export type UpdateClientPayload = Partial<CreateClientPayload>;
+export type UpdateClientPayload = {
+  name?: string;
+  phones?: string[];
+  whatsapp?: string;
+  dealType?: DealType;
+  description?: string;
+  status?: ClientStatus;
+  reminderDate?: string | null;
+  relatedPersons?: CreateClientRelatedPersonPayload[];
+  budgetMin?: LockedOptional<number>;
+  budgetMax?: LockedOptional<number>;
+  districts?: Locked<string[]>;
+  addresses?: Locked<string[]>;
+  labels?: Locked<string[]>;
+  pet?: LockedOptional<string>;
+  minRooms?: Locked<number>;
+  maxRooms?: Locked<number>;
+  minBedrooms?: Locked<number>;
+  maxBedrooms?: Locked<number>;
+  minFloor?: Locked<number>;
+  maxFloor?: Locked<number>;
+  excludeLastFloor?: Locked<boolean>;
+  renovations?: Locked<Renovation[]>;
+  buildingCondition?: LockedOptional<BuildingCondition>;
+  projectExclude?: LockedOptional<string[]>;
+  minArea?: Locked<number>;
+  maxArea?: Locked<number>;
+  hasBalcony?: Locked<ClientPreferenceValue>;
+  balconyAreaMin?: Locked<number>;
+  balconyAreaMax?: Locked<number>;
+  goodView?: Locked<ClientPreferenceValue>;
+  elevator?: Locked<ClientPreferenceValue>;
+  centralHeating?: Locked<ClientPreferenceValue>;
+  airConditioner?: Locked<ClientPreferenceValue>;
+  kitchenType?: LockedOptional<KitchenType>;
+  furnished?: Locked<ClientPreferenceValue>;
+  minBathrooms?: Locked<number>;
+  maxBathrooms?: Locked<number>;
+  parking?: Locked<ClientPreferenceValue>;
+  minRentalPeriod?: LockedOptional<number>;
+};
 
 export type ClientSortBy = "createdAt" | "updatedAt" | "name";
 
@@ -99,29 +142,29 @@ export type ClientRequirementsApi = {
   id: UUID;
   clientId: UUID;
   minRooms: Locked<number | null>;
-  maxRooms?: Locked<number | null>;
+  maxRooms: Locked<number | null>;
   minBedrooms: Locked<number | null>;
-  maxBedrooms?: Locked<number | null>;
+  maxBedrooms: Locked<number | null>;
   minFloor: Locked<number | null>;
   maxFloor: Locked<number | null>;
-  excludeLastFloor: Locked<boolean | null>;
-  renovation: Locked<Renovation | null>;
+  excludeLastFloor: Locked<boolean>;
+  renovations: Locked<Renovation[]>;
   buildingCondition: Locked<BuildingCondition | null>;
-  projectExclude: Locked<string[] | null>;
+  projectExclude: Locked<string[]>;
   minArea: Locked<number | null>;
-  maxArea?: Locked<number | null>;
-  hasBalcony: Locked<boolean | null>;
+  maxArea: Locked<number | null>;
+  hasBalcony: Locked<ClientPreferenceValue>;
   balconyAreaMin: Locked<number | null>;
   balconyAreaMax: Locked<number | null>;
-  goodView: Locked<boolean | null>;
-  elevator: Locked<boolean | null>;
-  centralHeating: Locked<boolean | null>;
-  airConditioner: Locked<boolean | null>;
+  goodView: Locked<ClientPreferenceValue>;
+  elevator: Locked<ClientPreferenceValue>;
+  centralHeating: Locked<ClientPreferenceValue>;
+  airConditioner: Locked<ClientPreferenceValue>;
   kitchenType: Locked<KitchenType | null>;
-  furnished: Locked<boolean | null>;
+  furnished: Locked<ClientPreferenceValue>;
   minBathrooms: Locked<number | null>;
-  maxBathrooms?: Locked<number | null>;
-  parking: Locked<boolean | null>;
+  maxBathrooms: Locked<number | null>;
+  parking: Locked<ClientPreferenceValue>;
   minRentalPeriod: Locked<number | null>;
   createdAt: ISODateString;
   updatedAt: ISODateString;

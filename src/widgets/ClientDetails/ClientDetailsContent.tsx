@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrentUser } from "@/shared/hooks";
 import { useRouter } from "next/navigation";
 import { deleteClientComment } from "@/features/clients/api";
 import { useAddClientComment } from "@/features/clients/useAddClientComment";
@@ -34,6 +35,9 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
     string | null
   >(null);
 
+  const { user } = useCurrentUser();
+  const canRunMatches =
+    user?.role === "ADMIN" || (user?.role === "AGENT" && user.id === client.userId);
   const relatedPersons = client.relatedPersons ?? [];
 
   const [publicComments, setPublicComments] = useState<Comment[]>(
@@ -79,6 +83,8 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
   return (
     <>
       <ClientDetailsTopBar
+        clientId={client.id}
+        canRunMatches={canRunMatches}
         onNavigateToList={() => router.push("/clients")}
         onNavigateToEdit={() => router.push(`/clients/${client.id}/edit`)}
         onRequestDelete={() => setDeleteOpen(true)}

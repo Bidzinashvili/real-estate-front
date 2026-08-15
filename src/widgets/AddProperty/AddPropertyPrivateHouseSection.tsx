@@ -168,14 +168,14 @@ export function AddPropertyPrivateHouseSection({
           onChange={(value) => patchPrivateHouse({ renovation: value })}
           options={RENOVATION_SELECT_OPTIONS}
         />
-        {dealType === "RENT" && (
+        {dealType === "RENT" || dealType === "DAILY_RENT" ? (
           <MinRentalPeriodField
             idPrefix="ph"
             value={privateHouse.minRentalPeriod}
             onChange={(value) => patchPrivateHouse({ minRentalPeriod: value })}
             error={fieldErrors["privateHouse.minRentalPeriod"]}
           />
-        )}
+        ) : null}
         <TextField
           id="phBalconyArea"
           label="Total balcony area (m²)"
@@ -271,14 +271,14 @@ export function AddPropertyPrivateHouseSection({
           checked={privateHouse.sewage}
           onChange={(checked) => patchPrivateHouse({ sewage: checked })}
         />
-        {dealType === "RENT" && (
+        {dealType === "RENT" ? (
           <CheckboxField
             id="phPetsAllowed"
             label="Pets allowed"
             checked={privateHouse.petsAllowed}
             onChange={(checked) => patchPrivateHouse({ petsAllowed: checked })}
           />
-        )}
+        ) : null}
       </div>
     </section>
   );

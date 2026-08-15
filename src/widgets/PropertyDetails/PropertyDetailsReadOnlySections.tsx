@@ -12,6 +12,7 @@ import {
   DetailPhone,
   DetailText,
   DetailYesNo,
+  DetailVerification,
 } from "@/widgets/PropertyDetails/DetailDisplay";
 
 type PropertyDetailsReadOnlySectionsProps = {
@@ -162,27 +163,38 @@ export function PropertyDetailsReadOnlySections({
               value={property.apartment.balconyArea}
               suffix="m²"
             />
-            {property.dealType === "RENT" && (
+            {property.dealType === "RENT" || property.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="Min Rental Period (months)"
                 value={property.apartment.minRentalPeriod}
                 suffix="months"
               />
-            )}
+            ) : null}
+            <DetailNumber label="Bathrooms" value={property.apartment.bathrooms} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailYesNo label="Elevator" value={property.apartment.elevator} />
-            <DetailYesNo
+            <DetailVerification
+              label="Elevator"
+              value={property.apartment.elevator}
+              isToBeVerified={property.apartment.needsVerification.includes("elevator")}
+            />
+            <DetailVerification
               label="Central heating"
               value={property.apartment.centralHeating}
+              isToBeVerified={property.apartment.needsVerification.includes(
+                "centralHeating",
+              )}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailYesNo
+            <DetailVerification
               label="Air conditioner"
               value={property.apartment.airConditioner}
+              isToBeVerified={property.apartment.needsVerification.includes(
+                "airConditioner",
+              )}
             />
             <DetailText
               label="Kitchen type"
@@ -191,14 +203,26 @@ export function PropertyDetailsReadOnlySections({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailYesNo label="Furnished" value={property.apartment.furnished} />
+            <DetailVerification
+              label="Furnished"
+              value={property.apartment.furnished}
+              isToBeVerified={property.apartment.needsVerification.includes("furnished")}
+            />
             <DetailNumber
               label="Parking spaces"
               value={property.apartment.parkingSpaces}
             />
-            <DetailYesNo
+            <DetailVerification
+              label="Good view"
+              value={property.apartment.goodView}
+              isToBeVerified={property.apartment.needsVerification.includes("goodView")}
+            />
+            <DetailVerification
               label="Pets allowed"
-              value={Boolean(property.apartment.petsAllowed)}
+              value={property.apartment.petsAllowed}
+              isToBeVerified={property.apartment.needsVerification.includes(
+                "petsAllowed",
+              )}
             />
           </div>
         </section>

@@ -1,6 +1,9 @@
 import type { ClientDetail } from "@/features/clients/types";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
+import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
+import { persistEntityLock } from "@/features/matching/persistEntityLock";
 
 function isoToDatetimeLocal(iso: string | null): string {
   if (!iso) {
@@ -25,17 +28,17 @@ function wrapLockedNumber(
 ): ClientFormValues["minRooms"] {
   return {
     value: value ?? undefined,
-    lock: lock ?? "none",
+    lock: persistEntityLock(lock ?? "none"),
   };
 }
 
-function wrapLockedBoolean(
-  value: boolean | null | undefined,
+function wrapLockedPreference(
+  value: ClientPreferenceValue | undefined,
   lock: ClientFormValues["hasBalcony"]["lock"] | undefined,
 ): ClientFormValues["hasBalcony"] {
   return {
-    value: value ?? undefined,
-    lock: lock ?? "none",
+    value: value && isClientPreferenceValue(value) ? value : "NOT_SET",
+    lock: persistEntityLock(lock ?? "none"),
   };
 }
 
@@ -46,14 +49,14 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     name: client.name,
     phones: client.phones.length > 0 ? client.phones : [""],
     whatsapp: client.whatsapp ?? "",
-    budgetMin: { value: client.budgetMin ?? undefined, lock: client.budgetMinLock ?? "none" },
-    budgetMax: { value: client.budgetMax ?? undefined, lock: client.budgetMaxLock ?? "none" },
+    budgetMin: { value: client.budgetMin ?? undefined, lock: persistEntityLock(client.budgetMinLock ?? "none") },
+    budgetMax: { value: client.budgetMax ?? undefined, lock: persistEntityLock(client.budgetMaxLock ?? "none") },
     dealType: client.dealType,
     description: client.description,
-    pet: { value: client.pet ?? "", lock: client.petLock ?? "none" },
-    districts: { value: client.districts, lock: client.districtsLock ?? "none" },
-    addresses: { value: client.addresses, lock: client.addressesLock ?? "none" },
-    labels: { value: client.labels, lock: client.labelsLock ?? "none" },
+    pet: { value: client.pet ?? "", lock: persistEntityLock(client.petLock ?? "none") },
+    districts: { value: client.districts, lock: persistEntityLock(client.districtsLock ?? "none") },
+    addresses: { value: client.addresses, lock: persistEntityLock(client.addressesLock ?? "none") },
+    labels: { value: client.labels, lock: persistEntityLock(client.labelsLock ?? "none") },
     status: client.status,
     reminderDate: isoToDatetimeLocal(client.reminderDate),
     relatedPersons: client.relatedPersons.map((person) => ({
@@ -70,40 +73,40 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     minFloor: wrapLockedNumber(req?.minFloor, req?.minFloorLock),
     maxFloor: wrapLockedNumber(req?.maxFloor, req?.maxFloorLock),
     excludeLastFloor: req
-      ? { value: req.excludeLastFloor, lock: req.excludeLastFloorLock ?? "none" }
-      : { value: undefined, lock: "none" },
-    renovation: {
-      value: req?.renovation ?? "",
-      lock: req?.renovationLock ?? "none",
+      ? { value: req.excludeLastFloor, lock: persistEntityLock(req.excludeLastFloorLock ?? "none") }
+      : { value: false, lock: "none" },
+    renovations: {
+      value: req?.renovations ?? [],
+      lock: persistEntityLock(req?.renovationsLock ?? "none"),
     },
     buildingCondition: {
       value: req?.buildingCondition ?? "",
-      lock: req?.buildingConditionLock ?? "none",
+      lock: persistEntityLock(req?.buildingConditionLock ?? "none"),
     },
     projectExclude: {
       value: req?.projectExclude ?? [],
-      lock: req?.projectExcludeLock ?? "none",
+      lock: persistEntityLock(req?.projectExcludeLock ?? "none"),
     },
     minArea: wrapLockedNumber(req?.minArea, req?.minAreaLock),
     maxArea: wrapLockedNumber(req?.maxArea, req?.maxAreaLock),
-    hasBalcony: wrapLockedBoolean(req?.hasBalcony ?? undefined, req?.hasBalconyLock),
+    hasBalcony: wrapLockedPreference(req?.hasBalcony, req?.hasBalconyLock),
     balconyAreaMin: wrapLockedNumber(req?.balconyAreaMin, req?.balconyAreaMinLock),
     balconyAreaMax: wrapLockedNumber(req?.balconyAreaMax, req?.balconyAreaMaxLock),
-    goodView: wrapLockedBoolean(req?.goodView ?? undefined, req?.goodViewLock),
-    elevator: wrapLockedBoolean(req?.elevator ?? undefined, req?.elevatorLock),
-    centralHeating: wrapLockedBoolean(req?.centralHeating ?? undefined, req?.centralHeatingLock),
-    airConditioner: wrapLockedBoolean(req?.airConditioner ?? undefined, req?.airConditionerLock),
+    goodView: wrapLockedPreference(req?.goodView, req?.goodViewLock),
+    elevator: wrapLockedPreference(req?.elevator, req?.elevatorLock),
+    centralHeating: wrapLockedPreference(req?.centralHeating, req?.centralHeatingLock),
+    airConditioner: wrapLockedPreference(req?.airConditioner, req?.airConditionerLock),
     kitchenType: {
       value: req?.kitchenType ?? "",
-      lock: req?.kitchenTypeLock ?? "none",
+      lock: persistEntityLock(req?.kitchenTypeLock ?? "none"),
     },
-    furnished: wrapLockedBoolean(req?.furnished ?? undefined, req?.furnishedLock),
+    furnished: wrapLockedPreference(req?.furnished, req?.furnishedLock),
     minBathrooms: wrapLockedNumber(req?.minBathrooms, req?.minBathroomsLock),
     maxBathrooms: wrapLockedNumber(req?.maxBathrooms, req?.maxBathroomsLock),
-    parking: wrapLockedBoolean(req?.parking ?? undefined, req?.parkingLock),
+    parking: wrapLockedPreference(req?.parking, req?.parkingLock),
     minRentalPeriod: {
       value: req?.minRentalPeriod ?? undefined,
-      lock: req?.minRentalPeriodLock ?? "none",
+      lock: persistEntityLock(req?.minRentalPeriodLock ?? "none"),
     },
   };
 }

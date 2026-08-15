@@ -6,6 +6,12 @@ import type {
   AddPropertyActiveSubtype,
   FormState,
 } from "@/features/properties/addPropertyFormState";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { persistPropertyFieldLocks } from "@/features/matching/persistEntityLock";
+import {
+  omitUnspecifiedBoolean,
+  sanitizeNeedsVerification,
+} from "@/features/properties/apartmentVerification";
 
 function normalizeLabels(labels: LabelSelection[]): string[] {
   const uniqueLabels = new Map<string, string>();
@@ -76,6 +82,19 @@ function parseOptionalNumber(value: string, field: string, errors: string[]): nu
   return parsed;
 }
 
+function isRentalDealType(dealType: FormState["dealType"]): boolean {
+  return dealType === "RENT" || dealType === "DAILY_RENT";
+}
+
+function appendPersistedFieldLocks(
+  payload: CreatePropertyDto,
+  fieldLocks: PropertyFieldLocks,
+): void {
+  const persisted = persistPropertyFieldLocks(fieldLocks);
+  if (persisted) {
+    payload.fieldLocks = persisted;
+  }
+}
 function parseMinRentalPeriodForPayload(value: string, field: string, errors: string[]): number {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -159,6 +178,14 @@ export function buildCreatePropertyPayload(
 
   if (activeSubtype === "apartment") {
     const apartment = form.apartment;
+    const createNeedsVerification = sanitizeNeedsVerification(
+      apartment.needsVerification,
+    ).filter((fieldKey) => {
+      if (fieldKey === "petsAllowed" && form.dealType !== "RENT") {
+        return false;
+      }
+      return true;
+    });
     payload.apartment = {
       buildingCondition: apartment.buildingCondition,
       totalArea: parseNumber(apartment.totalArea, "Apartment total area", errors),
@@ -175,23 +202,45 @@ export function buildCreatePropertyPayload(
         "Apartment ceiling height",
         errors,
       ),
-      balconyArea: parseOptionalNumber(
+      kitchenType: apartment.kitchenType,
+    };
+    if (!createNeedsVerification.includes("balconyArea")) {
+      payload.apartment.balconyArea = parseOptionalNumber(
         apartment.balconyArea,
         "Apartment balcony area",
         errors,
-      ),
-      needsVerification: apartment.needsVerification,
-      elevator: apartment.elevator,
-      centralHeating: apartment.centralHeating,
-      airConditioner: apartment.airConditioner,
-      kitchenType: apartment.kitchenType,
-      furnished: apartment.furnished,
-      parkingSpaces: parseOptionalNumber(
+      );
+    }
+    if (!createNeedsVerification.includes("parkingSpaces")) {
+      payload.apartment.parkingSpaces = parseOptionalNumber(
         apartment.parkingSpaces,
         "Apartment parking spaces",
         errors,
-      ),
-    };
+      );
+    }
+    const elevatorValue = omitUnspecifiedBoolean(apartment.elevator);
+    if (elevatorValue !== undefined) payload.apartment.elevator = elevatorValue;
+    const centralHeatingValue = omitUnspecifiedBoolean(apartment.centralHeating);
+    if (centralHeatingValue !== undefined) {
+      payload.apartment.centralHeating = centralHeatingValue;
+    }
+    const airConditionerValue = omitUnspecifiedBoolean(apartment.airConditioner);
+    if (airConditionerValue !== undefined) {
+      payload.apartment.airConditioner = airConditionerValue;
+    }
+    const furnishedValue = omitUnspecifiedBoolean(apartment.furnished);
+    if (furnishedValue !== undefined) payload.apartment.furnished = furnishedValue;
+    const goodViewValue = omitUnspecifiedBoolean(apartment.goodView);
+    if (goodViewValue !== undefined) payload.apartment.goodView = goodViewValue;
+    const bathroomsValue = parseOptionalNumber(
+      apartment.bathrooms,
+      "Apartment bathrooms",
+      errors,
+    );
+    if (bathroomsValue !== undefined) payload.apartment.bathrooms = bathroomsValue;
+    if (createNeedsVerification.length > 0) {
+      payload.apartment.needsVerification = createNeedsVerification;
+    }
     if (apartment.buildingNumber.trim()) {
       payload.apartment.buildingNumber = apartment.buildingNumber.trim();
     }
@@ -200,7 +249,12 @@ export function buildCreatePropertyPayload(
       payload.apartment.renovation = apartment.renovation.trim();
     }
     if (form.dealType === "RENT") {
-      payload.apartment.petsAllowed = apartment.petsAllowed;
+      const petsAllowedValue = omitUnspecifiedBoolean(apartment.petsAllowed);
+      if (petsAllowedValue !== undefined) {
+        payload.apartment.petsAllowed = petsAllowedValue;
+      }
+    }
+    if (isRentalDealType(form.dealType)) {
       payload.apartment.minRentalPeriod = parseMinRentalPeriodForPayload(
         apartment.minRentalPeriod,
         "Apartment Min Rental Period (months)",
@@ -242,6 +296,8 @@ export function buildCreatePropertyPayload(
     }
     if (form.dealType === "RENT") {
       payload.privateHouse.petsAllowed = privateHouse.petsAllowed;
+    }
+    if (isRentalDealType(form.dealType)) {
       payload.privateHouse.minRentalPeriod = parseMinRentalPeriodForPayload(
         privateHouse.minRentalPeriod,
         "Private house Min Rental Period (months)",
@@ -271,7 +327,7 @@ export function buildCreatePropertyPayload(
       gas: landPlot.gas,
       sewage: landPlot.sewage,
     };
-    if (form.dealType === "RENT") {
+    if (isRentalDealType(form.dealType)) {
       payload.landPlot.minRentalPeriod = parseMinRentalPeriodForPayload(
         landPlot.minRentalPeriod,
         "Land plot Min Rental Period (months)",
@@ -310,7 +366,7 @@ export function buildCreatePropertyPayload(
     if (commercial.renovation.trim()) {
       payload.commercial.renovation = commercial.renovation.trim();
     }
-    if (form.dealType === "RENT") {
+    if (isRentalDealType(form.dealType)) {
       payload.commercial.minRentalPeriod = parseMinRentalPeriodForPayload(
         commercial.minRentalPeriod,
         "Commercial Min Rental Period (months)",
@@ -326,6 +382,8 @@ export function buildCreatePropertyPayload(
       errors.push("Hotel scope is required.");
     }
   }
+
+  appendPersistedFieldLocks(payload, form.fieldLocks);
 
   return { payload: errors.length === 0 ? payload : null, errors };
 }

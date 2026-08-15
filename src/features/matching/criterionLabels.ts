@@ -1,0 +1,76 @@
+import type { MatchCriterionKey, TemporaryLockKey } from "@/features/matching/matchingEnums";
+
+export const MATCH_CRITERION_LABELS: Record<MatchCriterionKey, string> = {
+  street: "Street",
+  price: "Price",
+  rooms: "Rooms",
+  bedrooms: "Bedrooms",
+  floor: "Floor",
+  excludeLastFloor: "Exclude last floor",
+  renovation: "Renovation",
+  buildingCondition: "Building condition",
+  projectExclude: "Project",
+  area: "Area",
+  hasBalcony: "Balcony",
+  balconyArea: "Balcony area",
+  goodView: "Good view",
+  elevator: "Elevator",
+  centralHeating: "Central heating",
+  airConditioner: "Air conditioner",
+  kitchenType: "Kitchen type",
+  furnished: "Furnished",
+  parking: "Parking",
+  pet: "Pets",
+  minRentalPeriod: "Min rental period",
+  bathrooms: "Bathrooms",
+};
+
+export const TEMPORARY_LOCK_LABELS: Record<TemporaryLockKey, string> = {
+  addresses: "Addresses",
+  street: "Street",
+  budgetMin: "Budget min",
+  budgetMax: "Budget max",
+  price: "Price",
+  minRooms: "Min rooms",
+  maxRooms: "Max rooms",
+  rooms: "Rooms",
+  minBedrooms: "Min bedrooms",
+  maxBedrooms: "Max bedrooms",
+  bedrooms: "Bedrooms",
+  minFloor: "Min floor",
+  maxFloor: "Max floor",
+  floor: "Floor",
+  excludeLastFloor: "Exclude last floor",
+  renovations: "Renovations",
+  renovation: "Renovation",
+  buildingCondition: "Building condition",
+  projectExclude: "Excluded projects",
+  project: "Project",
+  minArea: "Min area",
+  maxArea: "Max area",
+  area: "Area",
+  hasBalcony: "Balcony",
+  balconyAreaMin: "Balcony area min",
+  balconyAreaMax: "Balcony area max",
+  balconyArea: "Balcony area",
+  goodView: "Good view",
+  elevator: "Elevator",
+  centralHeating: "Central heating",
+  airConditioner: "Air conditioner",
+  kitchenType: "Kitchen type",
+  furnished: "Furnished",
+  parking: "Parking",
+  pet: "Pets",
+  petsAllowed: "Pets allowed",
+  minRentalPeriod: "Min rental period",
+  minBathrooms: "Min bathrooms",
+  maxBathrooms: "Max bathrooms",
+  bathrooms: "Bathrooms",
+};
+
+export function formatCriterionLabel(key: string): string {
+  if (key in MATCH_CRITERION_LABELS) {
+    return MATCH_CRITERION_LABELS[key as MatchCriterionKey];
+  }
+  return key;
+}

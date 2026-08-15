@@ -1,12 +1,17 @@
 import { ArrowLeft, Pencil } from "lucide-react";
+import Link from "next/link";
 
 type ClientDetailsTopBarProps = {
+  clientId: string;
+  canRunMatches: boolean;
   onNavigateToList: () => void;
   onNavigateToEdit: () => void;
   onRequestDelete: () => void;
 };
 
 export function ClientDetailsTopBar({
+  clientId,
+  canRunMatches,
   onNavigateToList,
   onNavigateToEdit,
   onRequestDelete,
@@ -23,6 +28,14 @@ export function ClientDetailsTopBar({
       </button>
 
       <div className="flex items-center gap-2">
+        {canRunMatches ? (
+          <Link
+            href={`/clients/${clientId}/matches`}
+            className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Find matching properties
+          </Link>
+        ) : null}
         <button
           type="button"
           onClick={onNavigateToEdit}

@@ -31,6 +31,9 @@ import {
   isJsonObject,
 } from "@/shared/lib/jsonValue";
 import type { JsonValue } from "@/shared/lib/jsonValue";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { isPropertyFieldLockKey } from "@/features/matching/matchingEnums";
+import { persistEntityLock } from "@/features/matching/persistEntityLock";
 
 function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
   const candidate = typeof value === "string" ? value.trim() : "";
@@ -77,6 +80,22 @@ function asStringArray(value: JsonValue | undefined): string[] {
   return value
     .map((item) => (typeof item === "string" ? item.trim() : ""))
     .filter((item) => item !== "");
+}
+
+function parseFieldLocks(value: JsonValue | undefined): PropertyFieldLocks | undefined {
+  if (!isJsonObject(value)) {
+    return undefined;
+  }
+  const fieldLocks: PropertyFieldLocks = {};
+  for (const [lockKey, lockValue] of Object.entries(value)) {
+    if (!isPropertyFieldLockKey(lockKey)) {
+      continue;
+    }
+    if (lockValue === "frozen") {
+      fieldLocks[lockKey] = persistEntityLock("frozen");
+    }
+  }
+  return Object.keys(fieldLocks).length > 0 ? fieldLocks : undefined;
 }
 
 function asNullableBoolean(value: JsonValue | undefined): boolean | null {
@@ -210,14 +229,16 @@ function normalizeApartment(value: unknown): PropertyApartment | null {
     ceilingHeight: asNullableNumber(value.ceilingHeight),
     balconyArea: asNullableNumber(value.balconyArea ?? value.balcony),
     needsVerification: asStringArray(value.needsVerification),
-    elevator: asBoolean(value.elevator),
-    centralHeating: asBoolean(value.centralHeating),
-    airConditioner: asBoolean(value.airConditioner),
+    elevator: asNullableBoolean(value.elevator),
+    centralHeating: asNullableBoolean(value.centralHeating),
+    airConditioner: asNullableBoolean(value.airConditioner),
     kitchenType: parseKitchenType(value.kitchenType),
-    furnished: asBoolean(value.furnished),
+    furnished: asNullableBoolean(value.furnished),
     parkingSpaces: asNullableNumber(value.parkingSpaces),
     petsAllowed: asNullableBoolean(value.petsAllowed),
     minRentalPeriod: asNullableNumber(value.minRentalPeriod),
+    goodView: asNullableBoolean(value.goodView),
+    bathrooms: asNullableNumber(value.bathrooms),
   };
 }
 
@@ -358,5 +379,6 @@ export function normalizeProperty(value: unknown): Property | null {
     privateHouse: normalizePrivateHouse(value.privateHouse),
     landPlot: normalizeLandPlot(value.landPlot),
     commercial: normalizeCommercial(value.commercial),
+    fieldLocks: parseFieldLocks(value.fieldLocks),
   };
 }

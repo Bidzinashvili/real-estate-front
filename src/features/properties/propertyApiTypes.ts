@@ -9,6 +9,7 @@ import type {
   LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 
 export type PropertySortBy = "createdAt" | "pricePublic";
 
@@ -73,14 +74,16 @@ export type ApartmentApi = {
   ceilingHeight: number | null;
   balconyArea: number | null;
   needsVerification: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator: boolean | null;
+  centralHeating: boolean | null;
+  airConditioner: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished: boolean | null;
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
+  goodView: boolean | null;
+  bathrooms: number | null;
 };
 
 export type PrivateHouseApi = {
@@ -187,6 +190,7 @@ export type PropertyApi = {
   privateHouse: PrivateHouseApi | null;
   landPlot: LandPlotApi | null;
   commercial: CommercialApi | null;
+  fieldLocks?: PropertyFieldLocks;
 };
 
 export type PropertyListResponse = {
@@ -222,6 +226,7 @@ export type CreatePropertyBase = {
   internalText?: string;
   labels?: string[];
   images?: PropertyImageInputWire[];
+  fieldLocks?: PropertyFieldLocks;
 };
 
 export type CreateApartmentPayload = {
@@ -237,14 +242,16 @@ export type CreateApartmentPayload = {
   ceilingHeight?: number;
   balconyArea?: number;
   needsVerification?: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator?: boolean | null;
+  centralHeating?: boolean | null;
+  airConditioner?: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished?: boolean | null;
   parkingSpaces?: number;
-  petsAllowed?: boolean;
+  petsAllowed?: boolean | null;
   minRentalPeriod?: number;
+  goodView?: boolean | null;
+  bathrooms?: number;
 };
 
 export type CreatePrivateHousePayload = {
@@ -348,16 +355,26 @@ export type UpdatePropertyRequestBody = {
     project?: string;
     totalArea?: number;
     rooms?: number;
+    bedrooms?: number;
     totalFloors?: number;
     ceilingHeight?: number;
     balconyArea?: number | null;
     needsVerification?: string[];
     floor?: number;
     renovation?: string;
-    furnished?: boolean;
+    buildingCondition?: BuildingCondition;
+    furnished?: boolean | null;
     parkingSpaces?: number | null;
     minRentalPeriod?: number | null;
+    elevator?: boolean | null;
+    centralHeating?: boolean | null;
+    airConditioner?: boolean | null;
+    kitchenType?: KitchenType;
+    goodView?: boolean | null;
+    bathrooms?: number | null;
+    petsAllowed?: boolean | null;
   };
+  fieldLocks?: PropertyFieldLocks;
   privateHouse?: {
     houseArea?: number;
     yardArea?: number;

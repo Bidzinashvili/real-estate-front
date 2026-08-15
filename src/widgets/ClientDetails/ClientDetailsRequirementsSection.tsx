@@ -74,9 +74,13 @@ export function ClientDetailsRequirementsSection({
           lock={req.maxAreaLock}
         />
         <ClientDetailsRequirementRow
-          label="Renovation"
-          value={req.renovation ? RENOVATION_LABELS[req.renovation] : null}
-          lock={req.renovationLock}
+          label="Renovations"
+          value={
+            (req.renovations ?? []).length > 0
+              ? (req.renovations ?? []).map((renovation) => RENOVATION_LABELS[renovation]).join(", ")
+              : null
+          }
+          lock={req.renovationsLock}
         />
         <ClientDetailsRequirementRow
           label="Building condition"

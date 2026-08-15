@@ -7,16 +7,15 @@ import {
   KITCHEN_TYPES,
 } from "@/features/clients/clientEnums";
 import type { LockState } from "@/features/clients/clientApi.types";
+import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
 
-const LOCK_STATES: [LockState, LockState, LockState] = ["none", "locked", "frozen"];
+const LOCK_STATES: [LockState, LockState] = ["none", "frozen"];
 
 export const lockStateSchema = z.enum(LOCK_STATES);
 
 const lockStateFieldSchema = z.preprocess((candidate): LockState => {
-  if (typeof candidate === "string") {
-    if (candidate === "none" || candidate === "locked" || candidate === "frozen") {
-      return candidate;
-    }
+  if (candidate === "frozen") {
+    return "frozen";
   }
   return "none";
 }, lockStateSchema);
@@ -77,8 +76,13 @@ const lockedBooleanFieldSchema = z.object({
   lock: lockStateFieldSchema,
 });
 
-const lockedPartialRenovationFieldSchema = z.object({
-  value: z.union([z.enum(RENOVATION_VALUES), z.literal("")]).optional(),
+const lockedPreferenceFieldSchema = z.object({
+  value: z.enum(CLIENT_PREFERENCE_VALUES),
+  lock: lockStateFieldSchema,
+});
+
+const lockedRenovationsFieldSchema = z.object({
+  value: z.array(z.enum(RENOVATION_VALUES)).max(20).default([]),
   lock: lockStateFieldSchema,
 });
 
@@ -123,23 +127,23 @@ export const clientFormSchema = z
     minFloor: lockedIntFieldSchema,
     maxFloor: lockedIntFieldSchema,
     excludeLastFloor: lockedBooleanFieldSchema,
-    renovation: lockedPartialRenovationFieldSchema,
+    renovations: lockedRenovationsFieldSchema,
     buildingCondition: lockedPartialBuildingConditionFieldSchema,
     projectExclude: lockedStringArrayListFieldSchema,
     minArea: lockedNumberFieldSchema,
     maxArea: lockedNumberFieldSchema,
-    hasBalcony: lockedBooleanFieldSchema,
+    hasBalcony: lockedPreferenceFieldSchema,
     balconyAreaMin: lockedNumberFieldSchema,
     balconyAreaMax: lockedNumberFieldSchema,
-    goodView: lockedBooleanFieldSchema,
-    elevator: lockedBooleanFieldSchema,
-    centralHeating: lockedBooleanFieldSchema,
-    airConditioner: lockedBooleanFieldSchema,
+    goodView: lockedPreferenceFieldSchema,
+    elevator: lockedPreferenceFieldSchema,
+    centralHeating: lockedPreferenceFieldSchema,
+    airConditioner: lockedPreferenceFieldSchema,
     kitchenType: lockedPartialKitchenTypeFieldSchema,
-    furnished: lockedBooleanFieldSchema,
+    furnished: lockedPreferenceFieldSchema,
     minBathrooms: lockedIntNonNegFieldSchema,
     maxBathrooms: lockedIntNonNegFieldSchema,
-    parking: lockedBooleanFieldSchema,
+    parking: lockedPreferenceFieldSchema,
     minRentalPeriod: lockedPartialNumberFieldSchema,
   })
   .superRefine((data, context) => {
@@ -270,23 +274,23 @@ export const emptyClientFormDefaults: ClientFormValues = {
   maxBedrooms: { value: undefined, lock: "none" },
   minFloor: { value: undefined, lock: "none" },
   maxFloor: { value: undefined, lock: "none" },
-  excludeLastFloor: { value: undefined, lock: "none" },
-  renovation: { value: "", lock: "none" },
+  excludeLastFloor: { value: false, lock: "none" },
+  renovations: { value: [], lock: "none" },
   buildingCondition: { value: "", lock: "none" },
   projectExclude: { value: [], lock: "none" },
   minArea: { value: undefined, lock: "none" },
   maxArea: { value: undefined, lock: "none" },
-  hasBalcony: { value: undefined, lock: "none" },
+  hasBalcony: { value: "NOT_SET", lock: "none" },
   balconyAreaMin: { value: undefined, lock: "none" },
   balconyAreaMax: { value: undefined, lock: "none" },
-  goodView: { value: undefined, lock: "none" },
-  elevator: { value: undefined, lock: "none" },
-  centralHeating: { value: undefined, lock: "none" },
-  airConditioner: { value: undefined, lock: "none" },
+  goodView: { value: "NOT_SET", lock: "none" },
+  elevator: { value: "NOT_SET", lock: "none" },
+  centralHeating: { value: "NOT_SET", lock: "none" },
+  airConditioner: { value: "NOT_SET", lock: "none" },
   kitchenType: { value: "", lock: "none" },
-  furnished: { value: undefined, lock: "none" },
+  furnished: { value: "NOT_SET", lock: "none" },
   minBathrooms: { value: undefined, lock: "none" },
   maxBathrooms: { value: undefined, lock: "none" },
-  parking: { value: undefined, lock: "none" },
+  parking: { value: "NOT_SET", lock: "none" },
   minRentalPeriod: { value: undefined, lock: "none" },
 };

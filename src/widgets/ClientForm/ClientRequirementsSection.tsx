@@ -15,8 +15,8 @@ import {
   BUILDING_CONDITION_LABELS,
   KITCHEN_TYPE_LABELS,
 } from "@/features/clients/clientEnums";
-import type { LockState } from "@/features/clients/clientApi.types";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
+import { ClientPreferenceValueControl } from "@/widgets/ClientForm/ClientPreferenceValueControl";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 
 const splitLines = (value: string) =>
@@ -39,8 +39,9 @@ const RANGE_FIELDS = [
   },
 ] as const;
 
-const BOOLEAN_FIELDS = [
-  { name: "excludeLastFloor" as const, label: "Exclude last floor" },
+const BOOLEAN_FIELDS = [{ name: "excludeLastFloor" as const, label: "Exclude last floor" }];
+
+const PREFERENCE_FIELDS = [
   { name: "hasBalcony" as const, label: "Has balcony" },
   { name: "goodView" as const, label: "Good view" },
   { name: "elevator" as const, label: "Elevator" },
@@ -48,7 +49,7 @@ const BOOLEAN_FIELDS = [
   { name: "airConditioner" as const, label: "Air conditioner" },
   { name: "furnished" as const, label: "Furnished" },
   { name: "parking" as const, label: "Parking" },
-];
+] as const;
 
 type ClientRequirementsSectionProps = {
   control: Control<ClientFormValues>;
@@ -86,7 +87,6 @@ function RequirementRangeRow({
   config,
   control,
   errors,
-  setValue,
   fieldDescriptions,
   showLockForPath,
 }: {
@@ -100,35 +100,26 @@ function RequirementRangeRow({
   const minErrorMessage = readRangeError(errors, config.minName);
   const maxErrorMessage = readRangeError(errors, config.maxName);
   const fieldDescription = fieldDescriptions?.[config.minName] ?? fieldDescriptions?.[config.maxName];
-  const shouldShowLock = showLockForPath(config.minName) || showLockForPath(config.maxName);
+  const shouldShowMinLock = showLockForPath(config.minName);
+  const shouldShowMaxLock = showLockForPath(config.maxName);
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-2">
-        <label className="block flex-1 text-sm font-medium text-slate-800">{config.label}</label>
-        {shouldShowLock ? (
-          <Controller
-            name={`${config.minName}.lock`}
-            control={control}
-            render={({ field }) => {
-              const handleLockChange = (nextLock: LockState) => {
-                field.onChange(nextLock);
-                setValue?.(`${config.maxName}.lock`, nextLock, {
-                  shouldDirty: true,
-                  shouldTouch: true,
-                });
-              };
-
-              return (
-                <PreferenceLockButton value={field.value} onChange={handleLockChange} />
-              );
-            }}
-          />
-        ) : null}
-      </div>
+      <label className="block text-sm font-medium text-slate-800">{config.label}</label>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <div className="space-y-1">
-          <span className="text-xs font-medium text-slate-500">From</span>
+          <div className="flex items-center gap-2">
+            <span className="flex-1 text-xs font-medium text-slate-500">From</span>
+            {shouldShowMinLock ? (
+              <Controller
+                name={`${config.minName}.lock`}
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
+            ) : null}
+          </div>
           <Controller
             name={`${config.minName}.value`}
             control={control}
@@ -148,7 +139,18 @@ function RequirementRangeRow({
         </div>
         <div className="flex items-end justify-center pb-2 text-slate-400">–</div>
         <div className="space-y-1">
-          <span className="text-xs font-medium text-slate-500">To</span>
+          <div className="flex items-center gap-2">
+            <span className="flex-1 text-xs font-medium text-slate-500">To</span>
+            {shouldShowMaxLock ? (
+              <Controller
+                name={`${config.maxName}.lock`}
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
+            ) : null}
+          </div>
           <Controller
             name={`${config.maxName}.value`}
             control={control}
@@ -273,43 +275,63 @@ export function ClientRequirementsSection({
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <label className="block flex-1 text-sm font-medium text-slate-800">Renovation</label>
-              {showLockForPath("renovation") ? (
-                <Controller
-                  name="renovation.lock"
-                  control={control}
-                  render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
-                  )}
-                />
-              ) : null}
-            </div>
-            <Controller
-              name="renovation.value"
-              control={control}
-              render={({ field }) => (
-                <select
-                  value={field.value ?? ""}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
-                >
-                  <option value="">Any</option>
-                  {renovationOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {fieldDescriptions?.renovation ? (
-              <p className="text-xs text-slate-500">{fieldDescriptions.renovation}</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <label className="block flex-1 text-sm font-medium text-slate-800">Renovations</label>
+            {showLockForPath("renovations") || showLockForPath("renovation") ? (
+              <Controller
+                name="renovations.lock"
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
             ) : null}
           </div>
+          <Controller
+            name="renovations.value"
+            control={control}
+            render={({ field }) => (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {renovationOptions.map((option) => {
+                  const isChecked = field.value.includes(
+                    option.value as (typeof RENOVATION_VALUES)[number],
+                  );
+                  return (
+                    <label
+                      key={option.value}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(event) => {
+                          const optionValue = option.value as (typeof RENOVATION_VALUES)[number];
+                          if (event.target.checked) {
+                            field.onChange([...field.value, optionValue]);
+                            return;
+                          }
+                          field.onChange(
+                            field.value.filter((currentValue) => currentValue !== optionValue),
+                          );
+                        }}
+                        className="h-4 w-4 rounded border-slate-300 text-slate-900"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
+          {fieldDescriptions?.renovations || fieldDescriptions?.renovation ? (
+            <p className="text-xs text-slate-500">
+              {fieldDescriptions?.renovations ?? fieldDescriptions?.renovation}
+            </p>
+          ) : null}
+        </div>
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <label className="block flex-1 text-sm font-medium text-slate-800">
@@ -446,6 +468,38 @@ export function ClientRequirementsSection({
                   />
                 ) : null}
               </div>
+              {fieldDescriptions?.[name] ? (
+                <p className="text-xs text-slate-500">{fieldDescriptions[name]}</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {PREFERENCE_FIELDS.map(({ name, label }) => (
+            <div key={name} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <label className="block flex-1 text-sm font-medium text-slate-800">{label}</label>
+                {showLockForPath(name) ? (
+                  <Controller
+                    name={`${name}.lock`}
+                    control={control}
+                    render={({ field }) => (
+                      <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                ) : null}
+              </div>
+              <Controller
+                name={`${name}.value`}
+                control={control}
+                render={({ field }) => (
+                  <ClientPreferenceValueControl
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
               {fieldDescriptions?.[name] ? (
                 <p className="text-xs text-slate-500">{fieldDescriptions[name]}</p>
               ) : null}

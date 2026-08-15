@@ -9,10 +9,13 @@ import type {
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import { parseRenovationForForm } from "@/features/properties/types";
+import { HashtagPicker } from "@/shared/components/HashtagPicker";
 import {
   LAND_CATEGORY_SELECT_OPTIONS,
   LAND_USAGE_SELECT_OPTIONS,
   RENOVATION_SELECT_OPTIONS,
+  BUILDING_CONDITION_OPTIONS,
+  KITCHEN_TYPE_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import type {
   PropertyFormLandPlot,
@@ -26,19 +29,47 @@ import {
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import { MinRentalPeriodEditField } from "@/widgets/PropertyDetails/MinRentalPeriodEditField";
 import { parseDecimalInput, parseIntegerInput } from "@/shared/lib/parseNumericInput";
-import { HashtagPicker } from "@/shared/components/HashtagPicker";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
+import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { VerifiableBooleanField } from "@/widgets/AddProperty/VerifiableBooleanField";
+import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
+import {
+  applyBooleanUiState,
+  booleanUiStateFromApartment,
+  type ApartmentBooleanVerifiableField,
+} from "@/features/properties/apartmentVerification";
 
 type ApartmentProps = {
   dealType: DealType;
   apartment: NonNullable<PropertyFormValues["apartment"]>;
   setApartment: (patch: PropertyApartmentUpdate) => void;
+  fieldLocks: PropertyFieldLocks;
+  setFieldLocks: (nextLocks: PropertyFieldLocks) => void;
 };
 
 export function ApartmentEditSection({
   dealType,
   apartment,
   setApartment,
+  fieldLocks,
+  setFieldLocks,
 }: ApartmentProps) {
+  function handleBooleanFieldChange(
+    fieldKey: ApartmentBooleanVerifiableField,
+    nextState: ReturnType<typeof booleanUiStateFromApartment>,
+  ) {
+    const next = applyBooleanUiState(
+      apartment.needsVerification ?? [],
+      fieldKey,
+      nextState,
+    );
+    setApartment({
+      [fieldKey]: next.value,
+      needsVerification: next.needsVerification,
+    });
+  }
+
   return (
     <fieldset className="space-y-3">
       <legend className="text-sm font-semibold text-slate-800">Apartment</legend>
@@ -55,6 +86,13 @@ export function ApartmentEditSection({
           label="Rooms"
           value={apartment.rooms}
           onValueChange={(next) => setApartment({ rooms: next })}
+          parse={parseIntegerInput}
+          inputMode="numeric"
+        />
+        <EditableNumericTextInput
+          label="Bedrooms"
+          value={apartment.bedrooms}
+          onValueChange={(next) => setApartment({ bedrooms: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
@@ -77,17 +115,63 @@ export function ApartmentEditSection({
           parse={parseDecimalInput}
           inputMode="decimal"
         />
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <EditableNumericTextInput
+              label="Balcony area"
+              value={apartment.balconyArea ?? undefined}
+              onValueChange={(next) => {
+                setApartment({ balconyArea: next ?? null });
+                if (next !== undefined) {
+                  setApartment({
+                    balconyArea: next,
+                    needsVerification: (apartment.needsVerification ?? []).filter(
+                      (fieldKey) => fieldKey !== "balconyArea",
+                    ),
+                  });
+                }
+              }}
+              parse={parseDecimalInput}
+              inputMode="decimal"
+            />
+          </div>
+          <NeedsVerificationToggle
+            fieldKey="balconyArea"
+            activeFields={apartment.needsVerification ?? []}
+            onChange={(nextFields) => setApartment({ needsVerification: nextFields })}
+          />
+        </div>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <EditableNumericTextInput
+              label="Parking spaces"
+              value={apartment.parkingSpaces ?? undefined}
+              onValueChange={(next) => {
+                if (next !== undefined) {
+                  setApartment({
+                    parkingSpaces: next,
+                    needsVerification: (apartment.needsVerification ?? []).filter(
+                      (fieldKey) => fieldKey !== "parkingSpaces",
+                    ),
+                  });
+                  return;
+                }
+                setApartment({ parkingSpaces: null });
+              }}
+              parse={parseIntegerInput}
+              inputMode="numeric"
+            />
+          </div>
+          <NeedsVerificationToggle
+            fieldKey="parkingSpaces"
+            activeFields={apartment.needsVerification ?? []}
+            onChange={(nextFields) => setApartment({ needsVerification: nextFields })}
+          />
+        </div>
         <EditableNumericTextInput
-          label="Balcony area"
-          value={apartment.balconyArea ?? undefined}
-          onValueChange={(next) => setApartment({ balconyArea: next })}
-          parse={parseDecimalInput}
-          inputMode="decimal"
-        />
-        <EditableNumericTextInput
-          label="Parking spaces"
-          value={apartment.parkingSpaces ?? undefined}
-          onValueChange={(next) => setApartment({ parkingSpaces: next })}
+          label="Bathrooms"
+          value={apartment.bathrooms ?? undefined}
+          onValueChange={(next) => setApartment({ bathrooms: next ?? null })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
@@ -104,11 +188,65 @@ export function ApartmentEditSection({
           onChange={(next) => setApartment({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
         />
-        <EditableCheckbox
-          label="Furnished"
-          checked={Boolean(apartment.furnished)}
-          onChange={(checked) => setApartment({ furnished: checked })}
+        <SelectField
+          id="editAptBuildingCondition"
+          label="Building condition"
+          value={apartment.buildingCondition ?? "NEW"}
+          onChange={(next) => setApartment({ buildingCondition: next })}
+          options={BUILDING_CONDITION_OPTIONS}
         />
+        <SelectField
+          id="editAptKitchenType"
+          label="Kitchen type"
+          value={apartment.kitchenType ?? "SEPARATE"}
+          onChange={(next) => setApartment({ kitchenType: next })}
+          options={KITCHEN_TYPE_OPTIONS}
+        />
+        {(
+          [
+            { label: "Elevator", key: "elevator" },
+            { label: "Central heating", key: "centralHeating" },
+            { label: "Air conditioner", key: "airConditioner" },
+            { label: "Furnished", key: "furnished" },
+            { label: "Good view", key: "goodView" },
+          ] as const
+        ).map((field) => (
+          <div key={field.key} className="flex items-end gap-2">
+            <div className="flex-1">
+              <VerifiableBooleanField
+                id={`editApt-${field.key}`}
+                label={field.label}
+                value={booleanUiStateFromApartment(
+                  apartment[field.key],
+                  apartment.needsVerification ?? [],
+                  field.key,
+                )}
+                onChange={(nextState) => handleBooleanFieldChange(field.key, nextState)}
+              />
+            </div>
+            <PreferenceLockButton
+              value={readPropertyFieldLock(fieldLocks, field.key)}
+              onChange={(nextLock) =>
+                setFieldLocks({
+                  ...fieldLocks,
+                  [field.key]: nextLock === "frozen" ? "frozen" : "none",
+                })
+              }
+            />
+          </div>
+        ))}
+        {dealType === "RENT" ? (
+          <VerifiableBooleanField
+            id="editAptPetsAllowed"
+            label="Pets allowed"
+            value={booleanUiStateFromApartment(
+              apartment.petsAllowed,
+              apartment.needsVerification ?? [],
+              "petsAllowed",
+            )}
+            onChange={(nextState) => handleBooleanFieldChange("petsAllowed", nextState)}
+          />
+        ) : null}
         <MinRentalPeriodEditField
           dealType={dealType}
           idPrefix="editApt"

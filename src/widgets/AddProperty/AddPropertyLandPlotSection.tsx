@@ -68,14 +68,14 @@ export function AddPropertyLandPlotSection({
           disabled={!hasLandCategory}
           error={fieldErrors["landPlot.landUsage"]}
         />
-        {dealType === "RENT" && (
+        {dealType === "RENT" || dealType === "DAILY_RENT" ? (
           <MinRentalPeriodField
             idPrefix="lp"
             value={landPlot.minRentalPeriod}
             onChange={(value) => patchLandPlot({ minRentalPeriod: value })}
             error={fieldErrors["landPlot.minRentalPeriod"]}
           />
-        )}
+        ) : null}
         <CheckboxField
           id="lpForInvestment"
           label="For investment"

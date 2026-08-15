@@ -2,6 +2,7 @@ import type { DealType } from "@/features/properties/dealType";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 
 export type { DealType };
 export type { PropertyStatus };
@@ -126,14 +127,16 @@ export type PropertyApartment = {
   ceilingHeight: number | null;
   balconyArea: number | null;
   needsVerification: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator: boolean | null;
+  centralHeating: boolean | null;
+  airConditioner: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished: boolean | null;
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
+  goodView: boolean | null;
+  bathrooms: number | null;
 };
 
 export type PropertyPrivateHouse = {
@@ -241,4 +244,5 @@ export type Property = {
   privateHouse: PropertyPrivateHouse | null;
   landPlot: PropertyLandPlot | null;
   commercial: PropertyCommercial | null;
+  fieldLocks?: PropertyFieldLocks;
 };

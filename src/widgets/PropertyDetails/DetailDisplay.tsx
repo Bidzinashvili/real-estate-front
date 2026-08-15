@@ -62,18 +62,49 @@ export function DetailMultiline({
   );
 }
 
-export function DetailYesNo({ label, value }: { label: string; value: boolean }) {
+export function DetailYesNo({
+  label,
+  value,
+}: {
+  label: string;
+  value: boolean | null | undefined;
+}) {
+  const display =
+    value === true ? "Yes" : value === false ? "No" : "Unknown";
   return (
     <DetailRow label={label}>
       <span
         className={
-          value ? "font-medium text-emerald-800" : "text-slate-500"
+          value === true
+            ? "font-medium text-emerald-800"
+            : value === false
+              ? "text-slate-500"
+              : "text-slate-400"
         }
       >
-        {value ? "Yes" : "No"}
+        {display}
       </span>
     </DetailRow>
   );
+}
+
+export function DetailVerification({
+  label,
+  value,
+  isToBeVerified,
+}: {
+  label: string;
+  value: boolean | null | undefined;
+  isToBeVerified: boolean;
+}) {
+  if (isToBeVerified) {
+    return (
+      <DetailRow label={label}>
+        <span className="font-medium text-amber-800">To be verified</span>
+      </DetailRow>
+    );
+  }
+  return <DetailYesNo label={label} value={value} />;
 }
 
 export function DetailPhone({

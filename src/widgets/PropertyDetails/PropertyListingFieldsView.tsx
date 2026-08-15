@@ -135,14 +135,14 @@ export function PropertyListingFieldsView({
             />
             <DetailYesNo
               label="Furnished"
-              value={Boolean(values.apartment.furnished)}
+              value={values.apartment.furnished}
             />
-            {values.dealType === "RENT" && (
+            {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="Min Rental Period (months)"
                 value={values.apartment.minRentalPeriod ?? undefined}
               />
-            )}
+            ) : null}
           </div>
         </section>
       )}
@@ -179,12 +179,12 @@ export function PropertyListingFieldsView({
               label="Fruit trees"
               value={Boolean(values.privateHouse.fruitTrees)}
             />
-            {values.dealType === "RENT" && (
+            {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="Min Rental Period (months)"
                 value={values.privateHouse.minRentalPeriod ?? undefined}
               />
-            )}
+            ) : null}
           </div>
         </section>
       )}
@@ -216,12 +216,12 @@ export function PropertyListingFieldsView({
               label="Can be divided"
               value={Boolean(values.landPlot.canBeDivided)}
             />
-            {values.dealType === "RENT" && (
+            {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="Min Rental Period (months)"
                 value={values.landPlot.minRentalPeriod ?? undefined}
               />
-            )}
+            ) : null}
           </div>
         </section>
       )}
@@ -254,12 +254,12 @@ export function PropertyListingFieldsView({
               label="Air conditioner"
               value={Boolean(values.commercial.airConditioner)}
             />
-            {values.dealType === "RENT" && (
+            {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="Min Rental Period (months)"
                 value={values.commercial.minRentalPeriod ?? undefined}
               />
-            )}
+            ) : null}
           </div>
         </section>
       )}

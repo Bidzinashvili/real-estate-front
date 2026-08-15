@@ -115,6 +115,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         ? {
             totalArea: property.apartment.totalArea,
             rooms: property.apartment.rooms,
+            bedrooms: property.apartment.bedrooms,
             totalFloors: property.apartment.totalFloors,
             ceilingHeight: property.apartment.ceilingHeight ?? undefined,
             balconyArea: property.apartment.balconyArea,
@@ -122,9 +123,17 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             floor: property.apartment.floor,
             project: property.apartment.project ?? "",
             renovation: parseRenovationForForm(property.apartment.renovation),
+            buildingCondition: property.apartment.buildingCondition,
             furnished: property.apartment.furnished,
             parkingSpaces: property.apartment.parkingSpaces,
             minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
+            elevator: property.apartment.elevator,
+            centralHeating: property.apartment.centralHeating,
+            airConditioner: property.apartment.airConditioner,
+            kitchenType: property.apartment.kitchenType,
+            goodView: property.apartment.goodView,
+            bathrooms: property.apartment.bathrooms,
+            petsAllowed: property.apartment.petsAllowed,
           }
         : null,
       privateHouse: property.privateHouse
@@ -163,6 +172,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             minRentalPeriod: property.commercial.minRentalPeriod ?? undefined,
           }
         : null,
+      fieldLocks: property.fieldLocks ?? {},
     };
   }, [property]);
 
@@ -173,7 +183,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   }, [initialValues]);
 
   const handleDealTypeChange = (value: DealType) => {
-    const clearRentFields = value !== "RENT";
+    const clearRentFields = value !== "RENT" && value !== "DAILY_RENT";
     setValues((prev) => ({
       ...prev,
       dealType: value,
@@ -271,7 +281,12 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       }
     }
 
-    if (values.dealType === "RENT") {
+    if (values.dealType === "SALE" && property.status === "AVAILABLE_SOON") {
+      setClientError("AVAILABLE_SOON status is only allowed for rental properties");
+      return;
+    }
+
+    if (values.dealType === "RENT" || values.dealType === "DAILY_RENT") {
       if (values.apartment) {
         const message = getMinRentalPeriodErrorMessage(values.apartment.minRentalPeriod ?? undefined);
         if (message) {
@@ -317,6 +332,13 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     }
 
     void onSubmit(payload);
+  };
+
+  const setFieldLocks = (nextLocks: PropertyFormValues["fieldLocks"]) => {
+    setValues((previousValues) => ({
+      ...previousValues,
+      fieldLocks: nextLocks,
+    }));
   };
 
   const setApartment = (patch: PropertyApartmentUpdate) => {
@@ -386,6 +408,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             onLabelsChange={() => {}}
             onCommentChange={() => {}}
             setApartment={setApartment}
+            setFieldLocks={setFieldLocks}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}
@@ -427,6 +450,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
               setValues((prev) => ({ ...prev, [field]: value }))
             }
             setApartment={setApartment}
+            setFieldLocks={setFieldLocks}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}

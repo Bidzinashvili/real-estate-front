@@ -2,6 +2,7 @@ import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
 import type { LabelDto } from "@/features/labels/labelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   BuildingCondition,
   CommercialStatus,
@@ -48,17 +49,19 @@ export type PropertyApartmentCreate = {
   ceilingHeight?: number;
   balconyArea?: number;
   needsVerification?: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator?: boolean | null;
+  centralHeating?: boolean | null;
+  airConditioner?: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished?: boolean | null;
   parkingSpaces?: number;
   buildingNumber?: string;
   project?: string;
   renovation?: string;
-  petsAllowed?: boolean;
+  petsAllowed?: boolean | null;
   minRentalPeriod?: number;
+  goodView?: boolean | null;
+  bathrooms?: number;
 };
 
 export type PropertyPrivateHouseCreate = {
@@ -145,6 +148,7 @@ export type CreatePropertyDto = {
   internalText?: string;
   labels?: string[];
   images?: PropertyImageInput[];
+  fieldLocks?: PropertyFieldLocks;
   apartment?: PropertyApartmentCreate;
   privateHouse?: PropertyPrivateHouseCreate;
   landPlot?: PropertyLandPlotCreate;

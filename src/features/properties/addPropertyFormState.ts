@@ -1,6 +1,7 @@
 import type { DealType } from "@/features/properties/dealType";
 import type { GeorgianCity } from "@/features/properties/addPropertyFormOptions";
 import type { LabelSelection } from "@/features/labels/labelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   BuildingCondition,
   CommercialStatus,
@@ -49,6 +50,7 @@ export type FormState = {
   publicComment: string;
   internalText: string;
   privateComment: string;
+  fieldLocks: PropertyFieldLocks;
   apartment: {
     buildingCondition: BuildingCondition;
     totalArea: string;
@@ -59,17 +61,19 @@ export type FormState = {
     ceilingHeight: string;
     balconyArea: string;
     needsVerification: string[];
-    elevator: boolean;
-    centralHeating: boolean;
-    airConditioner: boolean;
+    elevator: boolean | null;
+    centralHeating: boolean | null;
+    airConditioner: boolean | null;
     kitchenType: KitchenType;
-    furnished: boolean;
+    furnished: boolean | null;
     parkingSpaces: string;
     buildingNumber: string;
     project: string;
     renovation: Renovation | "";
-    petsAllowed: boolean;
+    petsAllowed: boolean | null;
     minRentalPeriod: string;
+    goodView: boolean | null;
+    bathrooms: string;
   };
   privateHouse: {
     buildingCondition: BuildingCondition;
@@ -150,6 +154,7 @@ export function initialFormState(): FormState {
     publicComment: "",
     internalText: "",
     privateComment: "",
+    fieldLocks: {},
     apartment: {
       buildingCondition: "NEW",
       totalArea: "",
@@ -160,17 +165,19 @@ export function initialFormState(): FormState {
       ceilingHeight: "",
       balconyArea: "",
       needsVerification: [],
-      elevator: false,
-      centralHeating: false,
-      airConditioner: false,
+      elevator: null,
+      centralHeating: null,
+      airConditioner: null,
       kitchenType: "SEPARATE",
-      furnished: false,
+      furnished: null,
       parkingSpaces: "",
       buildingNumber: "",
       project: "Non-standard",
       renovation: "NEW_RENOVATED",
-      petsAllowed: false,
+      petsAllowed: null,
       minRentalPeriod: "",
+      goodView: null,
+      bathrooms: "",
     },
     privateHouse: {
       buildingCondition: "NEW",

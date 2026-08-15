@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { useDistricts } from "@/features/districts/useDistricts";
 import type { LabelSelection } from "@/features/labels/labelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
@@ -67,6 +68,7 @@ type PropertyDetailsEditableSectionsProps = {
     value: string,
   ) => void;
   setApartment: (patch: PropertyApartmentUpdate) => void;
+  setFieldLocks: (nextLocks: PropertyFieldLocks) => void;
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
   setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
   setCommercial: (patch: PropertyCommercialUpdate) => void;
@@ -108,6 +110,7 @@ export function PropertyDetailsEditableSections({
   onLabelsChange,
   onCommentChange,
   setApartment,
+  setFieldLocks,
   setPrivateHouse,
   setLandPlot,
   setCommercial,
@@ -300,6 +303,8 @@ export function PropertyDetailsEditableSections({
           dealType={values.dealType}
           apartment={values.apartment}
           setApartment={setApartment}
+          fieldLocks={values.fieldLocks}
+          setFieldLocks={setFieldLocks}
         />
       )}
 

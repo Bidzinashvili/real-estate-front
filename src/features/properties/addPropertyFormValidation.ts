@@ -128,12 +128,13 @@ export function validateFormInputs(
       form.apartment.parkingSpaces,
       "Apartment parking spaces",
     );
-    if (form.dealType === "RENT") {
+    if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
         "apartment.minRentalPeriod",
         form.apartment.minRentalPeriod,
       );
     }
+    optionalNumber("apartment.bathrooms", form.apartment.bathrooms, "Apartment bathrooms");
   }
 
   if (activeSubtype === "privateHouse") {
@@ -156,7 +157,7 @@ export function validateFormInputs(
       form.privateHouse.parkingSpaces,
       "Private house parking spaces",
     );
-    if (form.dealType === "RENT") {
+    if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
         "privateHouse.minRentalPeriod",
         form.privateHouse.minRentalPeriod,
@@ -172,7 +173,7 @@ export function validateFormInputs(
     if (form.landPlot.landUsage === "") {
       errors["landPlot.landUsage"] = "Land usage is required.";
     }
-    if (form.dealType === "RENT") {
+    if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
         "landPlot.minRentalPeriod",
         form.landPlot.minRentalPeriod,
@@ -198,7 +199,7 @@ export function validateFormInputs(
       form.commercial.parkingSpaces,
       "Commercial parking spaces",
     );
-    if (form.dealType === "RENT") {
+    if (form.dealType === "RENT" || form.dealType === "DAILY_RENT") {
       requireMinRentalPeriodMonths(
         "commercial.minRentalPeriod",
         form.commercial.minRentalPeriod,

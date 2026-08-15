@@ -16,6 +16,9 @@ import {
   coalesceLock,
   readParallelLock,
 } from "@/features/clients/parseClientApiLocks";
+import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
+import { persistEntityLock } from "@/features/matching/persistEntityLock";
 
 function mergeRequirementLock(
   parsedLock: LockState,
@@ -27,7 +30,18 @@ function mergeRequirementLock(
   const fromClientRoot = clientRecord
     ? readParallelLock(clientRecord, fieldKey)
     : undefined;
-  return coalesceLock(coalesceLock(parsedLock, fromRequirements), fromClientRoot);
+  return persistEntityLock(
+    coalesceLock(coalesceLock(parsedLock, fromRequirements), fromClientRoot),
+  );
+}
+
+function readPreferenceValue(
+  value: ClientPreferenceValue | string | undefined | null,
+): ClientPreferenceValue {
+  if (typeof value === "string" && isClientPreferenceValue(value)) {
+    return value;
+  }
+  return "NOT_SET";
 }
 
 function normalizeRequirements(
@@ -69,14 +83,25 @@ function normalizeRequirements(
     maxFloor: requirements.maxFloor.value,
     maxFloorLock: mergeRequirementLock(requirements.maxFloor.lock, record, clientRecord, "maxFloor"),
     excludeLastFloor: requirements.excludeLastFloor.value ?? false,
-    excludeLastFloorLock: mergeRequirementLock(
-      requirements.excludeLastFloor.lock,
-      record,
-      clientRecord,
-      "excludeLastFloor",
+    excludeLastFloorLock: persistEntityLock(
+      mergeRequirementLock(
+        requirements.excludeLastFloor.lock,
+        record,
+        clientRecord,
+        "excludeLastFloor",
+      ),
     ),
-    renovation: requirements.renovation.value,
-    renovationLock: mergeRequirementLock(requirements.renovation.lock, record, clientRecord, "renovation"),
+    renovations: Array.isArray(requirements.renovations?.value)
+      ? requirements.renovations.value
+      : [],
+    renovationsLock: persistEntityLock(
+      mergeRequirementLock(
+        requirements.renovations?.lock ?? "none",
+        record,
+        clientRecord,
+        "renovations",
+      ),
+    ),
     buildingCondition: requirements.buildingCondition.value,
     buildingConditionLock: mergeRequirementLock(
       requirements.buildingCondition.lock,
@@ -100,8 +125,13 @@ function normalizeRequirements(
       clientRecord,
       "maxArea",
     ),
-    hasBalcony: requirements.hasBalcony.value,
-    hasBalconyLock: mergeRequirementLock(requirements.hasBalcony.lock, record, clientRecord, "hasBalcony"),
+    hasBalcony: readPreferenceValue(requirements.hasBalcony?.value),
+    hasBalconyLock: mergeRequirementLock(
+      requirements.hasBalcony?.lock ?? "none",
+      record,
+      clientRecord,
+      "hasBalcony",
+    ),
     balconyAreaMin: requirements.balconyAreaMin.value,
     balconyAreaMinLock: mergeRequirementLock(
       requirements.balconyAreaMin.lock,
@@ -116,20 +146,30 @@ function normalizeRequirements(
       clientRecord,
       "balconyAreaMax",
     ),
-    goodView: requirements.goodView.value,
-    goodViewLock: mergeRequirementLock(requirements.goodView.lock, record, clientRecord, "goodView"),
-    elevator: requirements.elevator.value,
-    elevatorLock: mergeRequirementLock(requirements.elevator.lock, record, clientRecord, "elevator"),
-    centralHeating: requirements.centralHeating.value,
+    goodView: readPreferenceValue(requirements.goodView?.value),
+    goodViewLock: mergeRequirementLock(
+      requirements.goodView?.lock ?? "none",
+      record,
+      clientRecord,
+      "goodView",
+    ),
+    elevator: readPreferenceValue(requirements.elevator?.value),
+    elevatorLock: mergeRequirementLock(
+      requirements.elevator?.lock ?? "none",
+      record,
+      clientRecord,
+      "elevator",
+    ),
+    centralHeating: readPreferenceValue(requirements.centralHeating?.value),
     centralHeatingLock: mergeRequirementLock(
-      requirements.centralHeating.lock,
+      requirements.centralHeating?.lock ?? "none",
       record,
       clientRecord,
       "centralHeating",
     ),
-    airConditioner: requirements.airConditioner.value,
+    airConditioner: readPreferenceValue(requirements.airConditioner?.value),
     airConditionerLock: mergeRequirementLock(
-      requirements.airConditioner.lock,
+      requirements.airConditioner?.lock ?? "none",
       record,
       clientRecord,
       "airConditioner",
@@ -141,8 +181,13 @@ function normalizeRequirements(
       clientRecord,
       "kitchenType",
     ),
-    furnished: requirements.furnished.value,
-    furnishedLock: mergeRequirementLock(requirements.furnished.lock, record, clientRecord, "furnished"),
+    furnished: readPreferenceValue(requirements.furnished?.value),
+    furnishedLock: mergeRequirementLock(
+      requirements.furnished?.lock ?? "none",
+      record,
+      clientRecord,
+      "furnished",
+    ),
     minBathrooms: requirements.minBathrooms.value,
     minBathroomsLock: mergeRequirementLock(
       requirements.minBathrooms.lock,
@@ -157,8 +202,13 @@ function normalizeRequirements(
       clientRecord,
       "maxBathrooms",
     ),
-    parking: requirements.parking.value,
-    parkingLock: mergeRequirementLock(requirements.parking.lock, record, clientRecord, "parking"),
+    parking: readPreferenceValue(requirements.parking?.value),
+    parkingLock: mergeRequirementLock(
+      requirements.parking?.lock ?? "none",
+      record,
+      clientRecord,
+      "parking",
+    ),
     minRentalPeriod: requirements.minRentalPeriod.value,
     minRentalPeriodLock: mergeRequirementLock(
       requirements.minRentalPeriod.lock,
@@ -176,19 +226,27 @@ export function normalizeClient(client: ClientApi): Client {
     ...client,
     phones: client.phones ?? [],
     districts: client.districts.value ?? [],
-    districtsLock: coalesceLock(client.districts.lock, readParallelLock(record, "districts")),
+    districtsLock: persistEntityLock(
+      coalesceLock(client.districts.lock, readParallelLock(record, "districts")),
+    ),
     addresses: client.addresses.value ?? [],
-    addressesLock: coalesceLock(client.addresses.lock, readParallelLock(record, "addresses")),
+    addressesLock: persistEntityLock(
+      coalesceLock(client.addresses.lock, readParallelLock(record, "addresses")),
+    ),
     labels: client.labels?.value ?? [],
     labelsLock: client.labels
-      ? coalesceLock(client.labels.lock, readParallelLock(record, "labels"))
+      ? persistEntityLock(coalesceLock(client.labels.lock, readParallelLock(record, "labels")))
       : undefined,
     budgetMin: client.budgetMin.value,
-    budgetMinLock: coalesceLock(client.budgetMin.lock, readParallelLock(record, "budgetMin")),
+    budgetMinLock: persistEntityLock(
+      coalesceLock(client.budgetMin.lock, readParallelLock(record, "budgetMin")),
+    ),
     budgetMax: client.budgetMax.value,
-    budgetMaxLock: coalesceLock(client.budgetMax.lock, readParallelLock(record, "budgetMax")),
+    budgetMaxLock: persistEntityLock(
+      coalesceLock(client.budgetMax.lock, readParallelLock(record, "budgetMax")),
+    ),
     pet: client.pet.value,
-    petLock: coalesceLock(client.pet.lock, readParallelLock(record, "pet")),
+    petLock: persistEntityLock(coalesceLock(client.pet.lock, readParallelLock(record, "pet"))),
     relatedPersons: client.relatedPersons ?? [],
     requirements: normalizeRequirements(client.requirements, record),
   };
