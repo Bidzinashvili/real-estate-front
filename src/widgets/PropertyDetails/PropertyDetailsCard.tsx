@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   GEORGIAN_CITY_OPTIONS,
   isTbilisiCity,
@@ -551,10 +552,20 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
   return (
     <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
-      <h1 className="text-2xl font-semibold tracking-tight">განცხადების დეტალები</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        განაახლეთ განცხადების ინფორმაცია. აგენტებს მხოლოდ საკუთარი განცხადებების რედაქტირება შეუძლიათ.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight">განცხადების დეტალები</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            განაახლეთ განცხადების ინფორმაცია. აგენტებს მხოლოდ საკუთარი განცხადებების რედაქტირება შეუძლიათ.
+          </p>
+        </div>
+        <Link
+          href={`/properties/${property.id}`}
+          className="inline-flex items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
+        >
+          ობიექტის ნახვა
+        </Link>
+      </div>
       {!canViewPrivateFields && (
         <p className="mt-2 text-sm text-muted-foreground">
           შენიშვნები, შიდა ფასი და ზოგი სამუშაო ველი დამალულია, რადგან თქვენ არ ხართ ამ განცხადების აგენტი. ადმინისტრატორებს სრული ჩანაწერი ყოველთვის ჩანს.

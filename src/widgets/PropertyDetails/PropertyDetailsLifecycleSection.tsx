@@ -4,11 +4,10 @@ import {
   formatPropertyStatusLabel,
   type PropertyStatus,
 } from "@/features/properties/types";
-
-function formatVerificationReminderLabel(isoTimestamp: string): string {
-  const parsed = new Date(isoTimestamp);
-  return Number.isNaN(parsed.getTime()) ? isoTimestamp : parsed.toLocaleString();
-}
+import {
+  formatPropertyDateTime,
+  propertyStatusBadgeClass,
+} from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 type PropertyDetailsLifecycleSectionProps = {
   lifecycleStatus: PropertyStatus;
@@ -19,34 +18,34 @@ export function PropertyDetailsLifecycleSection({
   lifecycleStatus,
   verificationReminderIso = null,
 }: PropertyDetailsLifecycleSectionProps) {
-  return (
-    <section className="space-y-4" aria-labelledby="lifecycle-heading">
-      <h2
-        id="lifecycle-heading"
-        className="text-sm font-semibold text-foreground"
-      >
-        განცხადების ციკლი
-      </h2>
+  const reminderLabel = formatPropertyDateTime(verificationReminderIso);
 
-      <div className="space-y-1 text-sm text-foreground">
-        <p>
-          <span className="font-medium text-muted-foreground">სტატუსი: </span>
+  return (
+    <section
+      className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border sm:p-6"
+      aria-labelledby="lifecycle-heading"
+    >
+      <h2 id="lifecycle-heading" className="text-sm font-semibold text-foreground">
+        სტატუსი
+      </h2>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span
+          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${propertyStatusBadgeClass(lifecycleStatus)}`}
+        >
           {formatPropertyStatusLabel(lifecycleStatus)}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          განცხადების სტატუსი და შეხსენებები იცვლება კატალოგის ბარათის მენიუდან (სამი წერტილი ფოტოზე).
-        </p>
-        {lifecycleStatus === "TO_BE_VERIFIED" &&
-        typeof verificationReminderIso === "string" &&
-        verificationReminderIso.trim() !== "" ? (
-          <p>
-            <span className="font-medium text-muted-foreground">
-              გადამოწმების შეხსენება:{" "}
-            </span>
-            {formatVerificationReminderLabel(verificationReminderIso)}
-          </p>
-        ) : null}
+        </span>
       </div>
+      {lifecycleStatus === "TO_BE_VERIFIED" && reminderLabel ? (
+        <p className="mt-3 text-sm text-foreground">
+          <span className="text-muted-foreground">შეხსენება: </span>
+          {reminderLabel}
+        </p>
+      ) : reminderLabel ? (
+        <p className="mt-3 text-sm text-foreground">
+          <span className="text-muted-foreground">შეხსენება: </span>
+          {reminderLabel}
+        </p>
+      ) : null}
     </section>
   );
 }
