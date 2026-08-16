@@ -4,6 +4,7 @@ import {
   formatHotelScopeLabelOrUnset,
   formatLandCategoryLabel,
   formatLandUsageLabel,
+  isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
@@ -65,7 +66,9 @@ export function PropertyListingFieldsView({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="ქალაქი" value={values.city} />
-          <DetailText label="უბანი" value={values.district} />
+          {isTbilisiCity(values.city) ? (
+            <DetailText label="უბანი" value={values.district} />
+          ) : null}
         </div>
 
         <DetailText label="მისამართი" value={values.address} />

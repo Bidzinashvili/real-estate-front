@@ -1,18 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
+import {
+  FREQUENT_RENTAL_PERIOD_OPTIONS,
+  type FrequentRentalPeriodValue,
+} from "@/widgets/AddProperty/MinRentalPeriodField";
 import { SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import { EditableNumericTextInput } from "@/widgets/PropertyDetails/PropertyFormControls";
 import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
-
-function presetValueFromMonths(
-  months: number | undefined,
-): "" | "1" | "3" | "6" | "12" {
-  if (months === 1 || months === 3 || months === 6 || months === 12) {
-    return String(months) as "1" | "3" | "6" | "12";
-  }
-  return "";
-}
 
 type MinRentalPeriodEditFieldProps = {
   dealType: DealType;
@@ -27,15 +23,10 @@ export function MinRentalPeriodEditField({
   months,
   onMonthsChange,
 }: MinRentalPeriodEditFieldProps) {
-  if (dealType !== "RENT" && dealType !== "DAILY_RENT") return null;
+  const [frequentRentalPeriod, setFrequentRentalPeriod] =
+    useState<FrequentRentalPeriodValue>("");
 
-  const presetOptions = [
-    { value: "" as const, label: "სწრაფი არჩევა (თვეები)" },
-    { value: "1" as const, label: "1 თვე" },
-    { value: "3" as const, label: "3 თვე" },
-    { value: "6" as const, label: "6 თვე" },
-    { value: "12" as const, label: "12 თვე" },
-  ];
+  if (dealType !== "RENT" && dealType !== "DAILY_RENT") return null;
 
   return (
     <div className="space-y-3 sm:col-span-2">
@@ -49,15 +40,11 @@ export function MinRentalPeriodEditField({
           placeholder="შეიყვანეთ მინიმალური ქირის ვადა თვეებში"
         />
         <SelectField
-          id={`${idPrefix}MinRentalPreset`}
+          id={`${idPrefix}FrequentRentalPeriod`}
           label="ხშირი ვადები"
-          value={presetValueFromMonths(months)}
-          onChange={(preset) => {
-            if (preset !== "") {
-              onMonthsChange(Number.parseInt(preset, 10));
-            }
-          }}
-          options={presetOptions}
+          value={frequentRentalPeriod}
+          onChange={setFrequentRentalPeriod}
+          options={FREQUENT_RENTAL_PERIOD_OPTIONS}
         />
       </div>
     </div>

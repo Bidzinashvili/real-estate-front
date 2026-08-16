@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type UseLocalStorageDraftResult<TDraft> = {
   restoredDraft: TDraft | null;
@@ -42,10 +42,11 @@ export function useLocalStorageDraft<TDraft>(
 ): UseLocalStorageDraftResult<TDraft> {
   const [restoredDraft, setRestoredDraft] = useState<TDraft | null>(null);
   const [isDraftReady, setIsDraftReady] = useState(false);
+  const canPersistDraftRef = useRef(true);
 
   const saveDraft = useCallback(
     (draftValue: TDraft) => {
-      if (typeof window === "undefined") {
+      if (typeof window === "undefined" || !canPersistDraftRef.current) {
         return;
       }
 
@@ -55,6 +56,8 @@ export function useLocalStorageDraft<TDraft>(
   );
 
   const clearDraft = useCallback(() => {
+    canPersistDraftRef.current = false;
+
     if (typeof window === "undefined") {
       return;
     }

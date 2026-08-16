@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/cl
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
 import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
+import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
 import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSection";
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
@@ -23,6 +24,7 @@ export function AddClientForm() {
   const { restoredDraft, isDraftReady, saveDraft, clearDraft } =
     useLocalStorageDraft<ClientFormValues>(addClientDraftStorageKey);
   const [isDraftApplied, setIsDraftApplied] = useState(false);
+  const hasCommittedSubmitRef = useRef(false);
 
   const {
     register,
@@ -66,6 +68,11 @@ export function AddClientForm() {
         ...emptyClientFormDefaults,
         ...restoredDraft,
         relatedPersons: restoredDraft.relatedPersons ?? [],
+        phones: (restoredDraft.phones?.length
+          ? restoredDraft.phones
+          : emptyClientFormDefaults.phones
+        ).map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
+        whatsapp: normalizeGeorgianPhone(restoredDraft.whatsapp ?? ""),
       });
     }
 
@@ -73,6 +80,10 @@ export function AddClientForm() {
   }, [reset, isDraftReady, restoredDraft]);
 
   useEffect(() => {
+    if (hasCommittedSubmitRef.current) {
+      return;
+    }
+
     if (!isDraftReady || !isDraftApplied) {
       return;
     }
@@ -84,6 +95,7 @@ export function AddClientForm() {
     try {
       const clientCreatePayload = buildCreateClientDto(values);
       const created = await create(clientCreatePayload);
+      hasCommittedSubmitRef.current = true;
       clearDraft();
       router.push(`/clients/${created.id}`);
     } catch (error) {

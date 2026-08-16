@@ -1,5 +1,8 @@
 import type { DealType } from "@/features/properties/dealType";
-import type { GeorgianCity } from "@/features/properties/addPropertyFormOptions";
+import {
+  TBILISI_CITY,
+  type GeorgianCity,
+} from "@/features/properties/addPropertyFormOptions";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
@@ -136,7 +139,7 @@ export function initialFormState(): FormState {
     propertyType: "APARTMENT",
     hotelScope: "",
     dealType: "RENT",
-    city: "თბილისი",
+    city: TBILISI_CITY,
     district: "",
     districtGroup: "",
     address: "",

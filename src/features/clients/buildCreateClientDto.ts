@@ -11,6 +11,15 @@ import {
 } from "@/features/clients/clientEnums";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
+import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
+
+function toSubmittedWhatsapp(rawWhatsapp: string | undefined): string | undefined {
+  const trimmedWhatsapp = rawWhatsapp?.trim() ?? "";
+  if (!trimmedWhatsapp) {
+    return undefined;
+  }
+  return normalizeGeorgianPhone(trimmedWhatsapp);
+}
 
 function parseReminderDateToIso(raw: string): string | undefined {
   const trimmed = raw.trim();
@@ -224,7 +233,7 @@ function appendMatchingFields(
 export function buildCreateClientDto(values: ClientFormValues): CreateClientPayload {
   const dto: CreateClientPayload = {
     name: values.name,
-    phones: values.phones,
+    phones: values.phones.map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
     dealType: values.dealType,
     description: values.description,
     districts: {
@@ -241,8 +250,9 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
     },
   };
 
-  if (values.whatsapp?.trim()) {
-    dto.whatsapp = values.whatsapp.trim();
+  const submittedWhatsapp = toSubmittedWhatsapp(values.whatsapp);
+  if (submittedWhatsapp) {
+    dto.whatsapp = submittedWhatsapp;
   }
 
   if (values.status) {
@@ -269,7 +279,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
 export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayload {
   const dto: UpdateClientPayload = {
     name: values.name,
-    phones: values.phones,
+    phones: values.phones.map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
     dealType: values.dealType,
     description: values.description,
     districts: {
@@ -290,8 +300,9 @@ export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayl
     status: values.status ? values.status : undefined,
   };
 
-  if (values.whatsapp?.trim()) {
-    dto.whatsapp = values.whatsapp.trim();
+  const submittedWhatsapp = toSubmittedWhatsapp(values.whatsapp);
+  if (submittedWhatsapp) {
+    dto.whatsapp = submittedWhatsapp;
   }
 
   const validPersons = (values.relatedPersons ?? []).filter(

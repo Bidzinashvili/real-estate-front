@@ -128,7 +128,7 @@ export type CreatePropertyDto = {
   status?: PropertyStatus;
   reminderDate?: string;
   city: string;
-  district: string;
+  district?: string;
   address: string;
   pricePublic: number;
   ownerName: string;

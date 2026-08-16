@@ -4,6 +4,7 @@ import { emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
+import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 
 function isoToDatetimeLocal(iso: string | null): string {
   if (!iso) {
@@ -47,8 +48,11 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
   return {
     ...emptyClientFormDefaults,
     name: client.name,
-    phones: client.phones.length > 0 ? client.phones : [""],
-    whatsapp: client.whatsapp ?? "",
+    phones:
+      client.phones.length > 0
+        ? client.phones.map((phoneNumber) => normalizeGeorgianPhone(phoneNumber))
+        : [normalizeGeorgianPhone("")],
+    whatsapp: client.whatsapp ? normalizeGeorgianPhone(client.whatsapp) : "",
     budgetMin: { value: client.budgetMin ?? undefined, lock: persistEntityLock(client.budgetMinLock ?? "none") },
     budgetMax: { value: client.budgetMax ?? undefined, lock: persistEntityLock(client.budgetMaxLock ?? "none") },
     dealType: client.dealType,

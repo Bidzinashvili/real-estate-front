@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { isTbilisiCity } from "@/features/properties/addPropertyFormOptions";
 import { buildCreatePropertyPayload } from "@/features/properties/addPropertyFormPayload";
 import {
   initialFormState,
@@ -100,10 +101,13 @@ export function useAddPropertyForm() {
       setFieldErrors((prev) => {
         const prefix = String(key);
         const next = { ...prev };
-        for (const k of Object.keys(next)) {
-          if (k === prefix || k.startsWith(`${prefix}.`)) {
-            delete next[k];
+        for (const errorKey of Object.keys(next)) {
+          if (errorKey === prefix || errorKey.startsWith(`${prefix}.`)) {
+            delete next[errorKey];
           }
+        }
+        if (key === "city") {
+          delete next.district;
         }
         return next;
       });
@@ -143,8 +147,19 @@ export function useAddPropertyForm() {
           hotelScope: nextPropertyType === "HOTEL" ? prev.hotelScope : "",
         };
       }
-      if (key === "city" || key === "district") {
-        return { ...prev, [key]: value, selectedStreetId: null };
+      if (key === "city") {
+        const nextCity = value as FormState["city"];
+        const keepTbilisiDistricts = isTbilisiCity(nextCity);
+        return {
+          ...prev,
+          city: nextCity,
+          district: keepTbilisiDistricts ? prev.district : "",
+          districtGroup: keepTbilisiDistricts ? prev.districtGroup : "",
+          selectedStreetId: null,
+        };
+      }
+      if (key === "district") {
+        return { ...prev, district: value as string, selectedStreetId: null };
       }
       return { ...prev, [key]: value };
     });

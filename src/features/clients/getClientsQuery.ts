@@ -1,6 +1,6 @@
-import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
+import type { ClientStatus } from "@/features/clients/clientEnums";
+import { isClientStatus } from "@/features/clients/clientEnums";
 import type { ClientsListResponse } from "@/features/clients/types";
-import type { JsonValue } from "@/shared/lib/jsonValue";
 import type {
   GetClientsQuery,
   ClientSortBy,
@@ -14,6 +14,10 @@ export type ClientSortOrder = SortOrder;
 
 export type ClientsListResult = ClientsListResponse;
 
+export const DISTRICT_FILTER_MIN_LENGTH = 3;
+
+export const DISTRICT_FILTER_DEBOUNCE_MS = 400;
+
 export function isClientSortBy(value: string): value is ClientSortBy {
   return value === "createdAt" || value === "updatedAt" || value === "name";
 }
@@ -22,8 +26,8 @@ export function isClientSortOrder(value: string): value is SortOrder {
   return value === "asc" || value === "desc";
 }
 
-function encodeJsonParam(value: JsonValue): string {
-  return encodeURIComponent(JSON.stringify(value));
+function toLockedQueryJson(value: { value?: unknown; lock: string }): string {
+  return JSON.stringify(value);
 }
 
 export function toGetClientsSearchParams(
@@ -34,19 +38,19 @@ export function toGetClientsSearchParams(
   const out: Record<string, string> = {};
 
   if (query.district !== undefined) {
-    out.district = encodeJsonParam(query.district);
+    out.district = toLockedQueryJson(query.district);
   }
   if (query.budgetMin !== undefined) {
-    out.budgetMin = encodeJsonParam(query.budgetMin);
+    out.budgetMin = toLockedQueryJson(query.budgetMin);
   }
   if (query.budgetMax !== undefined) {
-    out.budgetMax = encodeJsonParam(query.budgetMax);
+    out.budgetMax = toLockedQueryJson(query.budgetMax);
   }
   if (query.dealType) {
     out.dealType = query.dealType;
   }
   if (query.status !== undefined) {
-    out.status = encodeJsonParam(query.status);
+    out.status = toLockedQueryJson(query.status);
   }
   if (query.sortBy) {
     out.sortBy = query.sortBy;
@@ -66,7 +70,7 @@ export function toGetClientsSearchParams(
 
 export function buildDistrictFilterParam(value: string): GetClientsQuery["district"] {
   const trimmed = value.trim();
-  if (!trimmed) {
+  if (Array.from(trimmed).length < DISTRICT_FILTER_MIN_LENGTH) {
     return undefined;
   }
   return {
@@ -75,19 +79,17 @@ export function buildDistrictFilterParam(value: string): GetClientsQuery["distri
   };
 }
 
-export function buildBudgetFilterParam(
-  raw: string,
-): GetClientsQuery["budgetMin"] | GetClientsQuery["budgetMax"] {
+export function buildBudgetFilterParam(raw: string): GetClientsQuery["budgetMin"] {
   const trimmed = raw.trim();
   if (trimmed === "") {
     return undefined;
   }
-  const parsed = Number(trimmed);
-  if (!Number.isFinite(parsed)) {
+  const parsedNumber = Number(trimmed);
+  if (!Number.isFinite(parsedNumber)) {
     return undefined;
   }
   return {
-    value: parsed,
+    value: parsedNumber,
     lock: DEFAULT_CLIENT_LIST_FILTER_LOCK,
   };
 }
@@ -95,7 +97,7 @@ export function buildBudgetFilterParam(
 export function buildStatusFilterParam(
   status: ClientStatus | "",
 ): GetClientsQuery["status"] {
-  if (status === "") {
+  if (status === "" || !isClientStatus(status)) {
     return undefined;
   }
   return {

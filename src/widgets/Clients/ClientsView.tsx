@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientsList } from "@/features/clients/useClientsList";
@@ -16,6 +16,8 @@ import {
   buildBudgetFilterParam,
   buildDistrictFilterParam,
   buildStatusFilterParam,
+  DISTRICT_FILTER_DEBOUNCE_MS,
+  DISTRICT_FILTER_MIN_LENGTH,
 } from "@/features/clients/getClientsQuery";
 import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
 
@@ -58,6 +60,7 @@ export function ClientsView() {
   const router = useRouter();
 
   const [district, setDistrict] = useState("");
+  const [debouncedDistrict, setDebouncedDistrict] = useState("");
   const [budgetMinInput, setBudgetMinInput] = useState("");
   const [budgetMaxInput, setBudgetMaxInput] = useState("");
   const [dealTypeFilter, setDealTypeFilter] = useState<DealType | "">("");
@@ -66,8 +69,24 @@ export function ClientsView() {
   const [order, setOrder] = useState<ClientSortOrder>("desc");
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    const trimmedDistrict = district.trim();
+    if (Array.from(trimmedDistrict).length < DISTRICT_FILTER_MIN_LENGTH) {
+      setDebouncedDistrict(district);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedDistrict(district);
+    }, DISTRICT_FILTER_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [district]);
+
   const { clients, total, isLoading, error } = useClientsList({
-    district: buildDistrictFilterParam(district),
+    district: buildDistrictFilterParam(debouncedDistrict),
     budgetMin: buildBudgetFilterParam(budgetMinInput),
     budgetMax: buildBudgetFilterParam(budgetMaxInput),
     dealType: dealTypeFilter || undefined,

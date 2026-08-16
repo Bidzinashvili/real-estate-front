@@ -8,6 +8,7 @@ import {
   HOTEL_SCOPE_FORM_OPTIONS,
   GEORGIAN_CITY_OPTIONS,
   PROPERTY_TYPE_OPTIONS,
+  isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import type { HotelScope } from "@/features/properties/types";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
@@ -22,33 +23,11 @@ import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighb
 import { ImageUploadField } from "@/widgets/AddProperty/ImageUploadField";
 import { ExternalIdList } from "@/shared/components/ExternalIdList";
 import { applyDatedPersonalCommentEntry } from "@/shared/lib/personalCommentEntry";
+import { applyLinkedPropertyPriceInputChange } from "@/features/properties/linkedPropertyPrices";
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "@/features/properties/pricePerSquareMeter";
-
-const publicPriceMarkupRatio = 1.03;
-const publicPriceRoundingInterval = 500;
-
-function computePublicPriceFromInternal(internalPriceInput: string): string {
-  const trimmedInternal = internalPriceInput.trim();
-  if (trimmedInternal === "") return "";
-  const internalNumber = parseFloat(trimmedInternal);
-  if (!Number.isFinite(internalNumber)) return "";
-  const markedPrice = internalNumber * publicPriceMarkupRatio;
-  const roundedPrice =
-    Math.round(markedPrice / publicPriceRoundingInterval) *
-    publicPriceRoundingInterval;
-  return String(roundedPrice);
-}
-
-function computeInternalPriceFromPublic(publicPriceInput: string): string {
-  const trimmedPublic = publicPriceInput.trim();
-  if (trimmedPublic === "") return "";
-  const publicNumber = parseFloat(trimmedPublic);
-  if (!Number.isFinite(publicNumber)) return "";
-  return String(Math.round(publicNumber / publicPriceMarkupRatio));
-}
 
 function parseFormNumber(value: string): number | null {
   const trimmedValue = value.trim();
@@ -109,10 +88,6 @@ export function AddPropertyCoreFields({
   onBuildingNumberChange,
 }: Props) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
-  const [isInternalPriceManuallyEdited, setIsInternalPriceManuallyEdited] =
-    useState(false);
-  const [isPublicPriceManuallyEdited, setIsPublicPriceManuallyEdited] =
-    useState(false);
   const isPersonalCommentEntryActiveRef = useRef(false);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     parseFormNumber(form.pricePublic),
@@ -120,39 +95,25 @@ export function AddPropertyCoreFields({
   );
 
   function handleInternalPriceChange(value: string) {
-    if (value.trim() === "") {
-      setIsInternalPriceManuallyEdited(false);
-      updateForm("priceInternal", "");
-      return;
-    }
-    setIsInternalPriceManuallyEdited(true);
-    updateForm("priceInternal", value);
-    if (!isPublicPriceManuallyEdited && form.dealType === "SALE") {
-      updateForm("pricePublic", computePublicPriceFromInternal(value));
-    }
-  }
-
-  function handleDealTypeChange(value: FormState["dealType"]) {
-    if (value !== "SALE" && !isPublicPriceManuallyEdited) {
-      updateForm("pricePublic", "");
-    }
-    updateForm("dealType", value);
+    const linkedPrices = applyLinkedPropertyPriceInputChange({
+      changedField: "priceInternal",
+      nextInput: value,
+      currentInternal: form.priceInternal,
+      currentPublic: form.pricePublic,
+    });
+    updateForm("priceInternal", linkedPrices.priceInternal);
+    updateForm("pricePublic", linkedPrices.pricePublic);
   }
 
   function handlePublicPriceChange(value: string) {
-    if (value.trim() === "") {
-      setIsPublicPriceManuallyEdited(false);
-      updateForm("pricePublic", "");
-      return;
-    }
-    const shouldAutoFillInternal =
-      !isInternalPriceManuallyEdited && form.dealType === "SALE";
-    setIsInternalPriceManuallyEdited(false);
-    updateForm("pricePublic", value);
-    setIsPublicPriceManuallyEdited(true);
-    if (shouldAutoFillInternal) {
-      updateForm("priceInternal", computeInternalPriceFromPublic(value));
-    }
+    const linkedPrices = applyLinkedPropertyPriceInputChange({
+      changedField: "pricePublic",
+      nextInput: value,
+      currentInternal: form.priceInternal,
+      currentPublic: form.pricePublic,
+    });
+    updateForm("priceInternal", linkedPrices.priceInternal);
+    updateForm("pricePublic", linkedPrices.pricePublic);
   }
 
   function handleOwnerPhoneChange(phoneIndex: number, value: string) {
@@ -220,7 +181,7 @@ export function AddPropertyCoreFields({
         id="dealType"
         label="გარიგების ტიპი"
         value={form.dealType}
-        onChange={handleDealTypeChange}
+        onChange={(value) => updateForm("dealType", value)}
         options={DEAL_TYPE_OPTIONS}
       />
       <SelectField
@@ -232,21 +193,23 @@ export function AddPropertyCoreFields({
         required
         error={fieldErrors.city}
       />
-      <DistrictNeighborhoodPicker
-        value={
-          form.districtGroup || form.district
-            ? {
-                group: form.districtGroup,
-                neighborhood: form.district,
-              }
-            : null
-        }
-        onChange={(next) => {
-          updateForm("districtGroup", next?.group ?? "");
-          updateForm("district", next?.neighborhood ?? "");
-        }}
-        error={fieldErrors.district}
-      />
+      {isTbilisiCity(form.city) ? (
+        <DistrictNeighborhoodPicker
+          value={
+            form.districtGroup || form.district
+              ? {
+                  group: form.districtGroup,
+                  neighborhood: form.district,
+                }
+              : null
+          }
+          onChange={(next) => {
+            updateForm("districtGroup", next?.group ?? "");
+            updateForm("district", next?.neighborhood ?? "");
+          }}
+          error={fieldErrors.district}
+        />
+      ) : null}
       <div className={buildingNumber !== undefined ? undefined : "sm:col-span-2"}>
         <StreetAutocompleteField
           id="address"

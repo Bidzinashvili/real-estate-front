@@ -14,6 +14,10 @@ type UseClientsListResult = {
   error: string | null;
 };
 
+function lockedFieldKey(field: { value?: unknown; lock: string } | undefined): string {
+  return field === undefined ? "" : JSON.stringify(field);
+}
+
 export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const [clients, setClients] = useState<Client[]>([]);
   const [total, setTotal] = useState(0);
@@ -22,11 +26,11 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const district = query?.district;
-  const budgetMin = query?.budgetMin;
-  const budgetMax = query?.budgetMax;
+  const districtKey = lockedFieldKey(query?.district);
+  const budgetMinKey = lockedFieldKey(query?.budgetMin);
+  const budgetMaxKey = lockedFieldKey(query?.budgetMax);
+  const statusKey = lockedFieldKey(query?.status);
   const dealType = query?.dealType;
-  const status = query?.status;
   const sortBy = query?.sortBy;
   const order = query?.order;
   const queryPage = query?.page;
@@ -43,11 +47,23 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
       try {
         const result = await getClients(
           {
-            district,
-            budgetMin,
-            budgetMax,
+            district:
+              districtKey === ""
+                ? undefined
+                : (JSON.parse(districtKey) as GetClientsQuery["district"]),
+            budgetMin:
+              budgetMinKey === ""
+                ? undefined
+                : (JSON.parse(budgetMinKey) as GetClientsQuery["budgetMin"]),
+            budgetMax:
+              budgetMaxKey === ""
+                ? undefined
+                : (JSON.parse(budgetMaxKey) as GetClientsQuery["budgetMax"]),
             dealType,
-            status,
+            status:
+              statusKey === ""
+                ? undefined
+                : (JSON.parse(statusKey) as GetClientsQuery["status"]),
             sortBy,
             order,
             page: queryPage,
@@ -81,11 +97,11 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
       controller.abort();
     };
   }, [
-    district,
-    budgetMin,
-    budgetMax,
+    districtKey,
+    budgetMinKey,
+    budgetMaxKey,
+    statusKey,
     dealType,
-    status,
     sortBy,
     order,
     queryPage,

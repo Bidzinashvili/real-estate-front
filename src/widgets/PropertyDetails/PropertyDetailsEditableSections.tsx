@@ -11,7 +11,9 @@ import type {
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import {
+  GEORGIAN_CITY_OPTIONS,
   HOTEL_SCOPE_FORM_OPTIONS,
+  isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import {
   DEAL_TYPE_OPTIONS,
@@ -26,7 +28,6 @@ import { LabeledSelect } from "@/shared/ui/LabeledSelect";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
   EditableNumericTextInput,
-  EditableTextInput,
   propertyDetailsEditableInputClassName,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import {
@@ -36,9 +37,7 @@ import {
   PrivateHouseEditSection,
 } from "@/widgets/PropertyDetails/PropertyNestedEditSections";
 import { PropertyListingFieldsView } from "@/widgets/PropertyDetails/PropertyListingFieldsView";
-import {
-  parseDecimalInput,
-} from "@/shared/lib/parseNumericInput";
+import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 import { applyDatedPersonalCommentEntry } from "@/shared/lib/personalCommentEntry";
 import {
@@ -124,7 +123,20 @@ export function PropertyDetailsEditableSections({
     getEditableAreaSquareMeters(values),
   );
 
+  const showDistrictFields = isTbilisiCity(values.city);
+  const hasKnownCity = GEORGIAN_CITY_OPTIONS.some(
+    (option) => option.value === values.city,
+  );
+  const citySelectOptions =
+    hasKnownCity || values.city.trim() === ""
+      ? GEORGIAN_CITY_OPTIONS
+      : [{ value: values.city, label: values.city }, ...GEORGIAN_CITY_OPTIONS];
+
   const derivedDistrictGroup = useMemo(() => {
+    if (!showDistrictFields) {
+      return "";
+    }
+
     for (const districtGroup of districts ?? []) {
       if (districtGroup.neighborhoods.includes(values.district)) {
         return districtGroup.name;
@@ -132,15 +144,21 @@ export function PropertyDetailsEditableSections({
     }
 
     return "";
-  }, [districts, values.district]);
+  }, [districts, showDistrictFields, values.district]);
 
   useEffect(() => {
+    if (!showDistrictFields) {
+      manualDistrictGroupRef.current = false;
+      setSelectedDistrictGroup("");
+      return;
+    }
+
     if (manualDistrictGroupRef.current) {
       return;
     }
 
     setSelectedDistrictGroup(derivedDistrictGroup);
-  }, [derivedDistrictGroup]);
+  }, [derivedDistrictGroup, showDistrictFields]);
 
   if (!canEdit) {
     return (
@@ -186,26 +204,30 @@ export function PropertyDetailsEditableSections({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <EditableTextInput
+        <LabeledSelect
+          id="propertyCity"
           label="ქალაქი"
           value={values.city}
           onChange={(value) => onFieldChange("city", value)}
+          options={citySelectOptions}
         />
-        <DistrictNeighborhoodPicker
-          value={
-            selectedDistrictGroup || values.district
-              ? {
-                  group: selectedDistrictGroup,
-                  neighborhood: values.district,
-                }
-              : null
-          }
-          onChange={(next) => {
-            manualDistrictGroupRef.current = true;
-            setSelectedDistrictGroup(next?.group ?? "");
-            onFieldChange("district", next?.neighborhood ?? "");
-          }}
-        />
+        {showDistrictFields ? (
+          <DistrictNeighborhoodPicker
+            value={
+              selectedDistrictGroup || values.district
+                ? {
+                    group: selectedDistrictGroup,
+                    neighborhood: values.district,
+                  }
+                : null
+            }
+            onChange={(next) => {
+              manualDistrictGroupRef.current = true;
+              setSelectedDistrictGroup(next?.group ?? "");
+              onFieldChange("district", next?.neighborhood ?? "");
+            }}
+          />
+        ) : null}
       </div>
 
       <StreetAutocompleteField
@@ -226,8 +248,8 @@ export function PropertyDetailsEditableSections({
             label="საჯარო ფასი"
             value={values.pricePublic}
             onValueChange={(next) => onPriceChange("pricePublic", next)}
-            parse={parseDecimalInput}
-            inputMode="decimal"
+            parse={parseIntegerInput}
+            inputMode="numeric"
           />
           {pricePerSquareMeter !== null ? (
             <p className="text-xs font-medium text-muted-foreground">
@@ -240,8 +262,8 @@ export function PropertyDetailsEditableSections({
             label="შიდა ფასი"
             value={values.priceInternal}
             onValueChange={(next) => onPriceChange("priceInternal", next)}
-            parse={parseDecimalInput}
-            inputMode="decimal"
+            parse={parseIntegerInput}
+            inputMode="numeric"
           />
         )}
       </div>

@@ -206,7 +206,7 @@ export type CreatePropertyBase = {
   status?: PropertyStatus;
   reminderDate?: string;
   city: string;
-  district: string;
+  district?: string;
   address: string;
   cadastralCode?: string;
   pricePublic: number;

@@ -17,7 +17,12 @@ import {
   CLIENT_STATUS_LABELS,
 } from "@/features/clients/clientEnums";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
+import { GeorgianPhoneInput } from "@/shared/components/GeorgianPhoneInput";
+import { GEORGIAN_PHONE_PREFIX } from "@/shared/lib/normalizeGeorgianPhone";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
+
+const clientPhoneInputClassName =
+  "shadow-none block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary";
 
 type ClientCoreInfoSectionProps = {
   control: Control<ClientFormValues>;
@@ -71,8 +76,6 @@ export function ClientCoreInfoSection({
       value: clientStatus,
       label: CLIENT_STATUS_LABELS[clientStatus],
     }));
-  const firstPhoneRegistration = register("phones.0");
-  const whatsappRegistration = register("whatsapp");
 
   return (
     <section className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
@@ -103,22 +106,28 @@ export function ClientCoreInfoSection({
           </label>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <input
-                type="tel"
-                {...firstPhoneRegistration}
-                {...{
-                  onChange: (event) => {
-                    firstPhoneRegistration.onChange(event);
-                    if (!isWhatsappManuallyEdited) {
-                      setValue("whatsapp", event.target.value, {
-                        shouldDirty: true,
-                        shouldTouch: true,
-                        shouldValidate: true,
-                      });
-                    }
-                  },
-                }}
-                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              <Controller
+                name="phones.0"
+                control={control}
+                render={({ field }) => (
+                  <GeorgianPhoneInput
+                    id="phones.0"
+                    name={field.name}
+                    value={field.value ?? ""}
+                    className={clientPhoneInputClassName}
+                    onChange={(nextPhone) => {
+                      field.onChange(nextPhone);
+                      if (!isWhatsappManuallyEdited) {
+                        setValue("whatsapp", nextPhone, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                          shouldValidate: true,
+                        });
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
             </div>
 
@@ -127,10 +136,19 @@ export function ClientCoreInfoSection({
 
               return (
                 <div key={field.id} className="flex items-center gap-2">
-                  <input
-                    type="tel"
-                    {...register(`phones.${actualPhoneIndex}`)}
-                    className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                  <Controller
+                    name={`phones.${actualPhoneIndex}`}
+                    control={control}
+                    render={({ field: phoneField }) => (
+                      <GeorgianPhoneInput
+                        id={`phones.${actualPhoneIndex}`}
+                        name={phoneField.name}
+                        value={phoneField.value ?? ""}
+                        className={clientPhoneInputClassName}
+                        onChange={phoneField.onChange}
+                        onBlur={phoneField.onBlur}
+                      />
+                    )}
                   />
                   <button
                     type="button"
@@ -145,7 +163,7 @@ export function ClientCoreInfoSection({
             })}
             <button
               type="button"
-              onClick={() => appendPhone("+995")}
+              onClick={() => appendPhone(GEORGIAN_PHONE_PREFIX)}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -165,20 +183,26 @@ export function ClientCoreInfoSection({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">WhatsApp</label>
-            <input
-              type="tel"
-              {...whatsappRegistration}
-              {...{
-                onChange: (event) => {
-                  whatsappRegistration.onChange(event);
-                  if (event.target.value.trim() === "") {
-                    setIsWhatsappManuallyEdited(false);
-                    return;
-                  }
-                  setIsWhatsappManuallyEdited(true);
-                },
-              }}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+            <Controller
+              name="whatsapp"
+              control={control}
+              render={({ field }) => (
+                <GeorgianPhoneInput
+                  id="whatsapp"
+                  name={field.name}
+                  value={field.value ?? ""}
+                  className={clientPhoneInputClassName}
+                  onChange={(nextPhone) => {
+                    field.onChange(nextPhone);
+                    if (nextPhone === GEORGIAN_PHONE_PREFIX) {
+                      setIsWhatsappManuallyEdited(false);
+                      return;
+                    }
+                    setIsWhatsappManuallyEdited(true);
+                  }}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             {fieldDescriptions?.whatsapp ? (
               <p className="text-xs text-muted-foreground">{fieldDescriptions.whatsapp}</p>

@@ -1,3 +1,4 @@
+import { isTbilisiCity } from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
@@ -238,8 +239,9 @@ export function buildPropertyUpdatePayload(
     }
   }
 
+  const nextDistrict = isTbilisiCity(current.city) ? current.district : "";
   if (initial.city !== current.city) payload.city = current.city;
-  if (initial.district !== current.district) payload.district = current.district;
+  if (initial.district !== nextDistrict) payload.district = nextDistrict;
   if (initial.address !== current.address) payload.address = current.address;
   if (initial.pricePublic !== current.pricePublic) {
     if (current.pricePublic !== undefined) {

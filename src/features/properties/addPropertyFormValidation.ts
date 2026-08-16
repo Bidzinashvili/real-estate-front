@@ -1,5 +1,8 @@
 import type { AddPropertyActiveSubtype, FormState } from "@/features/properties/addPropertyFormState";
-import { GEORGIAN_CITY_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import {
+  GEORGIAN_CITY_OPTIONS,
+  isTbilisiCity,
+} from "@/features/properties/addPropertyFormOptions";
 import { isHotelScope } from "@/features/properties/types";
 import {
   invalidNumberMessage,
@@ -88,7 +91,9 @@ export function validateFormInputs(
   if (!GEORGIAN_CITY_OPTIONS.some((option) => option.value === form.city)) {
     errors.city = "ქალაქი უნდა იყოს თბილისი, ბათუმი, ქუთაისი ან ბორჯომი.";
   }
-  requireString("district", form.district, "უბანი");
+  if (isTbilisiCity(form.city)) {
+    requireString("district", form.district, "უბანი");
+  }
   requireString("address", form.address, "მისამართი");
   requireString("ownerName", form.ownerName, "მესაკუთრის სახელი");
   if (form.ownerPhones.length === 0) {

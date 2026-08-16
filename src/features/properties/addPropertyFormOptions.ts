@@ -35,6 +35,12 @@ export const GEORGIAN_CITY_OPTIONS = [
 
 export type GeorgianCity = (typeof GEORGIAN_CITY_OPTIONS)[number]["value"];
 
+export const TBILISI_CITY: GeorgianCity = "თბილისი";
+
+export function isTbilisiCity(city: string): boolean {
+  return city.trim() === TBILISI_CITY;
+}
+
 export const PROPERTY_TYPE_OPTIONS: ReadonlyArray<{
   value: PropertyType;
   label: string;

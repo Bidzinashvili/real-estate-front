@@ -1,6 +1,9 @@
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { CreatePropertyDto } from "@/features/properties/types";
-import { GEORGIAN_CITY_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import {
+  GEORGIAN_CITY_OPTIONS,
+  isTbilisiCity,
+} from "@/features/properties/addPropertyFormOptions";
 import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
 import type {
   AddPropertyActiveSubtype,
@@ -128,7 +131,7 @@ export function buildCreatePropertyPayload(
 ): { payload: CreatePropertyDto | null; errors: string[] } {
   const errors: string[] = [];
   const city = form.city.trim();
-  const district = form.district.trim();
+  const district = isTbilisiCity(city) ? form.district.trim() : "";
   const address = form.address.trim();
   const ownerName = form.ownerName.trim();
   const ownerPhones = form.ownerPhones
@@ -139,7 +142,9 @@ export function buildCreatePropertyPayload(
   if (city && !GEORGIAN_CITY_OPTIONS.some((option) => option.value === city)) {
     errors.push("ქალაქი უნდა იყოს თბილისი, ბათუმი, ქუთაისი ან ბორჯომი.");
   }
-  if (!district) errors.push("უბანი სავალდებულოა.");
+  if (isTbilisiCity(city) && !district) {
+    errors.push("უბანი სავალდებულოა.");
+  }
   if (!address) errors.push("მისამართი სავალდებულოა.");
   if (!ownerName) errors.push("მესაკუთრის სახელი სავალდებულოა.");
   if (ownerPhones.length === 0) errors.push("მესაკუთრის ტელეფონი სავალდებულოა.");
@@ -149,12 +154,14 @@ export function buildCreatePropertyPayload(
     propertyType: form.propertyType,
     dealType: form.dealType,
     city,
-    district,
     address,
     pricePublic,
     ownerName,
     ownerPhones,
   };
+  if (district !== "") {
+    payload.district = district;
+  }
   const labels = normalizeLabels(form.labels);
 
   if (form.cadastralCode.trim()) payload.cadastralCode = form.cadastralCode.trim();

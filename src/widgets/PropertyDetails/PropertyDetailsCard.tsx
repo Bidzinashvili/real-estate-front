@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  GEORGIAN_CITY_OPTIONS,
+  isTbilisiCity,
+} from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
 import {
   buildPropertyUpdatePayload,
@@ -16,6 +20,7 @@ import {
   isHotelScope,
   parseRenovationForForm,
 } from "@/features/properties/types";
+import { applyLinkedPropertyPriceChange } from "@/features/properties/linkedPropertyPrices";
 import { getApiBaseUrl } from "@/shared/lib/auth";
 import { requiredFieldMessage, wholeNumberAtLeastOneMessage } from "@/shared/i18n/ui";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
@@ -225,8 +230,17 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     addressChangeMeta?: { selectedStreetId: string | null },
   ) => {
     setValues((prev) => {
-      if (field === "city" || field === "district") {
-        return { ...prev, [field]: value, selectedStreetId: null };
+      if (field === "city") {
+        const keepTbilisiDistricts = isTbilisiCity(value);
+        return {
+          ...prev,
+          city: value,
+          district: keepTbilisiDistricts ? prev.district : "",
+          selectedStreetId: null,
+        };
+      }
+      if (field === "district") {
+        return { ...prev, district: value, selectedStreetId: null };
       }
       if (field === "address") {
         return {
@@ -243,7 +257,24 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     field: "pricePublic" | "priceInternal",
     value: number | undefined,
   ) => {
-    setValues((prev) => ({ ...prev, [field]: value }));
+    setValues((prev) => {
+      if (field === "pricePublic" && !canViewPrivateFields) {
+        return { ...prev, pricePublic: value };
+      }
+
+      const nextPrices = applyLinkedPropertyPriceChange({
+        changedField: field,
+        nextValue: value,
+        currentInternal: prev.priceInternal,
+        currentPublic: prev.pricePublic,
+      });
+
+      return {
+        ...prev,
+        priceInternal: nextPrices.priceInternal,
+        pricePublic: nextPrices.pricePublic,
+      };
+    });
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -252,6 +283,19 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     if (presentation !== "edit" || !canEdit || !onSubmit) return;
 
     setClientError(null);
+
+    if (
+      initialValues.city !== values.city &&
+      !GEORGIAN_CITY_OPTIONS.some((option) => option.value === values.city)
+    ) {
+      setClientError("ქალაქი უნდა იყოს თბილისი, ბათუმი, ქუთაისი ან ბორჯომი.");
+      return;
+    }
+
+    if (isTbilisiCity(values.city) && values.district.trim() === "") {
+      setClientError(requiredFieldMessage("უბანი"));
+      return;
+    }
 
     if (values.landPlot) {
       if (values.landPlot.landCategory === "" || values.landPlot.landUsage === "") {
