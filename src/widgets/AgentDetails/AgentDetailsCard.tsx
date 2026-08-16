@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type ChangeEvent } from "react";
 import type { Agent } from "@/features/agents/types";
+import { normalizeGeorgianAgentPhone } from "@/features/agents/normalizeAgentPhone";
+import { AgentPhoneInput } from "@/widgets/Agents/AgentPhoneInput";
 
 type FormValues = {
   fullName: string;
@@ -27,14 +29,14 @@ export function AgentDetailsCard({
   const [values, setValues] = useState<FormValues>({
     fullName: agent.fullName,
     email: agent.email,
-    phone: agent.phone ?? "",
+    phone: normalizeGeorgianAgentPhone(agent.phone ?? ""),
   });
 
   useEffect(() => {
     setValues({
       fullName: agent.fullName,
       email: agent.email,
-      phone: agent.phone ?? "",
+      phone: normalizeGeorgianAgentPhone(agent.phone ?? ""),
     });
   }, [agent.fullName, agent.email, agent.phone]);
 
@@ -49,7 +51,10 @@ export function AgentDetailsCard({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onSubmit(values);
+    onSubmit({
+      ...values,
+      phone: normalizeGeorgianAgentPhone(values.phone),
+    });
   };
 
   return (
@@ -85,14 +90,18 @@ export function AgentDetailsCard({
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-foreground">
+          <label htmlFor="phone" className="block text-sm font-medium text-foreground">
             ტელეფონი
           </label>
-          <input
-            type="tel"
+          <AgentPhoneInput
+            id="phone"
             value={values.phone}
-            onChange={handleChange("phone")}
-            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary"
+            onChange={(nextPhone) =>
+              setValues((currentValues) => ({
+                ...currentValues,
+                phone: nextPhone,
+              }))
+            }
           />
         </div>
 

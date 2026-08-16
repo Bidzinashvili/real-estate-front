@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCreateAgent } from "@/features/agents/useCreateAgent";
+import { normalizeGeorgianAgentPhone } from "@/features/agents/normalizeAgentPhone";
 import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
+import { AgentPhoneInput } from "@/widgets/Agents/AgentPhoneInput";
 
 const formSchema = z.object({
   fullName: z.string().min(2, "სახელი უნდა შეიცავდეს მინიმუმ 2 სიმბოლოს"),
@@ -27,24 +29,33 @@ export function AddAgentForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     reset,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: restoredDraft ?? {
-      fullName: "",
-      email: "",
-      phone: "",
-    },
+    defaultValues: restoredDraft
+      ? {
+          ...restoredDraft,
+          phone: normalizeGeorgianAgentPhone(restoredDraft.phone),
+        }
+      : {
+          fullName: "",
+          email: "",
+          phone: normalizeGeorgianAgentPhone(""),
+        },
   });
 
   const watchedFormValues = watch();
 
   useEffect(() => {
     if (restoredDraft) {
-      reset(restoredDraft);
+      reset({
+        ...restoredDraft,
+        phone: normalizeGeorgianAgentPhone(restoredDraft.phone),
+      });
     }
   }, [reset, restoredDraft]);
 
@@ -53,7 +64,10 @@ export function AddAgentForm() {
   }, [saveDraft, watchedFormValues]);
 
   const onSubmit = async (values: FormValues) => {
-    await create(values);
+    await create({
+      ...values,
+      phone: normalizeGeorgianAgentPhone(values.phone),
+    });
     clearDraft();
     router.push("/dashboard");
   };
@@ -118,11 +132,18 @@ export function AddAgentForm() {
             >
               ტელეფონი
             </label>
-            <input
-              id="phone"
-              type="tel"
-              {...register("phone")}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary"
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <AgentPhoneInput
+                  id="phone"
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             {errors.phone && (
               <p className="text-xs text-destructive" role="alert">
