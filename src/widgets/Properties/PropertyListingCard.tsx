@@ -113,7 +113,7 @@ export function PropertyListingCard({
   const addressLine = formatAddress(property);
   const areaSquareMeters = propertyAreaSquareMeters(property);
 
-  function handleCardKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+  function handleImageKeyDown(event: React.KeyboardEvent<HTMLElement>) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onView(property.id);
@@ -121,29 +121,32 @@ export function PropertyListingCard({
   }
 
   return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={() => onView(property.id)}
-      onKeyDown={handleCardKeyDown}
-      className="flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-3xl bg-card shadow-sm ring-1 ring-border transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-    >
-      <div className="relative aspect-[3/2] w-full overflow-hidden">
-        <PropertyCardImageCarousel
-          propertyId={property.id}
-          images={property.images}
-          apiBaseUrl={apiBaseUrl}
-          alt={addressLine}
-        />
-        <div className="absolute left-3 top-3 z-[15] flex max-w-[calc(100%-3.25rem)] flex-wrap gap-2">
-          <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
-            {formatDealTypeLabel(property.dealType)}
-          </span>
-          <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white ${lifecycleStatusBadgeClass(property.status)}`}
-          >
-            {formatPropertyStatusLabel(property.status)}
-          </span>
+    <article className="flex min-w-0 w-full flex-col overflow-hidden rounded-3xl bg-card shadow-sm ring-1 ring-border transition-shadow hover:shadow-md">
+      <div className="relative">
+        <div
+          role="link"
+          tabIndex={0}
+          aria-label="განცხადების ნახვა"
+          onClick={() => onView(property.id)}
+          onKeyDown={handleImageKeyDown}
+          className="relative aspect-[3/2] w-full cursor-pointer overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <PropertyCardImageCarousel
+            propertyId={property.id}
+            images={property.images}
+            apiBaseUrl={apiBaseUrl}
+            alt={addressLine}
+          />
+          <div className="absolute left-3 top-3 z-[15] flex max-w-[calc(100%-3.25rem)] flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
+              {formatDealTypeLabel(property.dealType)}
+            </span>
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white ${lifecycleStatusBadgeClass(property.status)}`}
+            >
+              {formatPropertyStatusLabel(property.status)}
+            </span>
+          </div>
         </div>
         {(canChangeStatus || canSetReminders) && onListingChanged ? (
           <PropertyListingCardManager

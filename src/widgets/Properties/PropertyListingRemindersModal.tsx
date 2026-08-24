@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { createReminder } from "@/features/reminders/remindersApi";
 import type { Property } from "@/features/properties/types";
 import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
@@ -51,15 +52,29 @@ export function PropertyListingRemindersModal({
   useEffect(() => {
     if (!open) return;
 
+    const overlayId = `reminders-overlay-${property.id}`;
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
 
+    const handleCapturedClick = (event: MouseEvent) => {
+      const targetNode = event.target;
+      if (!(targetNode instanceof Node)) return;
+      const overlay = document.getElementById(overlayId);
+      if (overlay && overlay.contains(targetNode)) return;
+      event.stopPropagation();
+    };
+
     window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [open, onClose]);
+    document.addEventListener("click", handleCapturedClick, true);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("click", handleCapturedClick, true);
+    };
+  }, [open, onClose, property.id]);
 
   if (!open) {
     return null;
@@ -126,11 +141,12 @@ export function PropertyListingRemindersModal({
     }
   };
 
-  return (
+  return createPortal(
     <div
+      id={`reminders-overlay-${property.id}`}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/40 px-4"
       role="presentation"
-      onMouseDown={(event) => {
+      onClick={(event) => {
         if (event.target === event.currentTarget) handleBackdropPointerDown();
       }}
     >
@@ -139,6 +155,7 @@ export function PropertyListingRemindersModal({
         aria-modal="true"
         aria-labelledby={`reminders-title-${property.id}`}
         className="max-h-[min(90vh,40rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-card p-5 shadow-lg ring-1 ring-border"
+        onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2
@@ -183,6 +200,8 @@ export function PropertyListingRemindersModal({
                   id={`reminder-when-${row.rowKey}`}
                   type="datetime-local"
                   value={row.notifyLocal}
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
                   onChange={(event) => {
                     const nextValue = event.target.value;
                     setReminderRows((previous) =>
@@ -258,6 +277,7 @@ export function PropertyListingRemindersModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

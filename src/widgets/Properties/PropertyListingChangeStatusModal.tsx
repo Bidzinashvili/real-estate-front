@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { getClients } from "@/features/clients/api";
 import type { Client } from "@/features/clients/types";
 import { updateProperty } from "@/features/properties/api";
@@ -165,15 +166,29 @@ export function PropertyListingChangeStatusModal({
   useEffect(() => {
     if (!open) return;
 
+    const overlayId = `change-status-overlay-${property.id}`;
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
 
+    const handleCapturedClick = (event: MouseEvent) => {
+      const targetNode = event.target;
+      if (!(targetNode instanceof Node)) return;
+      const overlay = document.getElementById(overlayId);
+      if (overlay && overlay.contains(targetNode)) return;
+      event.stopPropagation();
+    };
+
     window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [open, onClose]);
+    document.addEventListener("click", handleCapturedClick, true);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("click", handleCapturedClick, true);
+    };
+  }, [open, onClose, property.id]);
 
   if (!open) {
     return null;
@@ -231,11 +246,12 @@ export function PropertyListingChangeStatusModal({
     }
   };
 
-  return (
+  return createPortal(
     <div
+      id={`change-status-overlay-${property.id}`}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/40 px-4"
       role="presentation"
-      onMouseDown={(event) => {
+      onClick={(event) => {
         if (event.target === event.currentTarget) handleBackdropPointerDown();
       }}
     >
@@ -244,6 +260,7 @@ export function PropertyListingChangeStatusModal({
         aria-modal="true"
         aria-labelledby={`change-status-title-${property.id}`}
         className="max-h-[min(90vh,36rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-card p-5 shadow-lg ring-1 ring-border"
+        onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2
@@ -350,6 +367,8 @@ export function PropertyListingChangeStatusModal({
                 id={`modal-verification-reminder-${property.id}`}
                 type="datetime-local"
                 value={verificationReminderLocal}
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
                 onChange={(event) =>
                   setVerificationReminderLocal(event.target.value)
                 }
@@ -384,6 +403,7 @@ export function PropertyListingChangeStatusModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

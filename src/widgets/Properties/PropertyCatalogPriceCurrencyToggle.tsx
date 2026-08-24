@@ -14,6 +14,8 @@ export function PropertyCatalogPriceCurrencyToggle() {
       role="group"
       aria-label="განცხადების ფასის ვალუტა"
       className="relative inline-flex h-9 w-[5.5rem] shrink-0 items-stretch rounded-full border border-border/90 bg-card p-0.5 shadow-sm"
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
     >
       <span
         aria-hidden
@@ -24,7 +26,10 @@ export function PropertyCatalogPriceCurrencyToggle() {
       <button
         type="button"
         aria-pressed={isGelSelected}
-        onClick={() => setDisplayCurrency("GEL")}
+        onClick={(event) => {
+          event.stopPropagation();
+          setDisplayCurrency("GEL");
+        }}
         className={`relative z-10 flex flex-1 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
           isGelSelected ? "text-white" : "text-muted-foreground"
         }`}
@@ -34,7 +39,10 @@ export function PropertyCatalogPriceCurrencyToggle() {
       <button
         type="button"
         aria-pressed={!isGelSelected}
-        onClick={() => setDisplayCurrency("USD")}
+        onClick={(event) => {
+          event.stopPropagation();
+          setDisplayCurrency("USD");
+        }}
         className={`relative z-10 flex flex-1 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
           !isGelSelected ? "text-white" : "text-foreground"
         }`}

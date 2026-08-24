@@ -38,12 +38,23 @@ export function PropertyListingCardManager({
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [isActionMenuOpen]);
 
+  function stopOverlayEvent(event: React.SyntheticEvent) {
+    event.stopPropagation();
+  }
+
   return (
     <>
-      <div ref={menuContainerRef} className="absolute right-3 top-3 z-20">
+      <div
+        ref={menuContainerRef}
+        className="absolute right-3 top-3 z-20"
+        onClick={stopOverlayEvent}
+        onMouseDown={stopOverlayEvent}
+        onPointerDown={stopOverlayEvent}
+      >
         <button
           type="button"
           onClick={(event) => {
+            event.preventDefault();
             event.stopPropagation();
             setIsActionMenuOpen((previous) => !previous);
           }}
@@ -59,15 +70,20 @@ export function PropertyListingCardManager({
           <div
             role="menu"
             className="absolute right-0 top-full mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-border/60"
+            onClick={stopOverlayEvent}
+            onMouseDown={stopOverlayEvent}
           >
             {canChangeStatus ? (
               <button
                 type="button"
                 role="menuitem"
                 className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted"
+                onMouseDown={stopOverlayEvent}
                 onClick={(event) => {
+                  event.preventDefault();
                   event.stopPropagation();
                   setIsActionMenuOpen(false);
+                  setIsRemindersOpen(false);
                   setIsChangeStatusOpen(true);
                 }}
               >
@@ -79,9 +95,12 @@ export function PropertyListingCardManager({
                 type="button"
                 role="menuitem"
                 className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted"
+                onMouseDown={stopOverlayEvent}
                 onClick={(event) => {
+                  event.preventDefault();
                   event.stopPropagation();
                   setIsActionMenuOpen(false);
+                  setIsChangeStatusOpen(false);
                   setIsRemindersOpen(true);
                 }}
               >
