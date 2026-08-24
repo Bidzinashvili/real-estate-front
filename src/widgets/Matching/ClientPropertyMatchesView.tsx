@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useClientPropertyMatches } from "@/features/matching/useClientPropertyMatches";
 import {
@@ -9,23 +10,38 @@ import {
   type MatchScope,
   type TemporaryLockKey,
 } from "@/features/matching/matchingEnums";
+import { clientMatchesHref } from "@/features/matching/matchingRoutes";
+import { sortScoredMatchesByPercentageDesc } from "@/features/matching/sortScoredMatches";
+import { ui } from "@/shared/i18n/ui";
 import { MatchingScopeToggle } from "@/widgets/Matching/MatchingScopeToggle";
 import { TemporaryLocksPanel } from "@/widgets/Matching/TemporaryLocksPanel";
 import { PropertyMatchCard } from "@/widgets/Matching/PropertyMatchCard";
 
 type ClientPropertyMatchesViewProps = {
   clientId: string;
+  scope: MatchScope;
 };
 
-export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesViewProps) {
-  const [scope, setScope] = useState<MatchScope>("GLOBAL");
+export function ClientPropertyMatchesView({
+  clientId,
+  scope,
+}: ClientPropertyMatchesViewProps) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
+  const [appliedScope, setAppliedScope] = useState(scope);
   const [temporaryLockedFields, setTemporaryLockedFields] = useState<TemporaryLockKey[]>([]);
+
+  const requestPage = appliedScope !== scope ? 1 : page;
+  if (appliedScope !== scope) {
+    setAppliedScope(scope);
+    setPage(1);
+  }
+
   const { data, isLoading, error } = useClientPropertyMatches({
     clientId,
     scope,
     temporaryLockedFields,
-    page,
+    page: requestPage,
   });
 
   const totalPages = useMemo(() => {
@@ -34,6 +50,11 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
     }
     return Math.max(1, Math.ceil(data.total / data.limit));
   }, [data]);
+
+  const sortedProperties = useMemo(
+    () => (data ? sortScoredMatchesByPercentageDesc(data.properties) : []),
+    [data],
+  );
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
@@ -47,9 +68,10 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
         </Link>
         <MatchingScopeToggle
           value={scope}
+          globalLabel={ui.allListings}
+          mineLabel={ui.myListings}
           onChange={(nextScope) => {
-            setScope(nextScope);
-            setPage(1);
+            router.replace(clientMatchesHref(clientId, nextScope));
           }}
         />
       </div>
@@ -57,7 +79,7 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">შესაბამისი განცხადებები</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          შედეგები იყენებს სერვერის შესაბამისობის პროცენტს. თანმიმდევრობა API-დან უცვლელია.
+          შედეგები იყენებს სერვერის შესაბამისობის პროცენტს და ნაჩვენებია კლებადობით.
         </p>
       </div>
 
@@ -79,13 +101,13 @@ export function ClientPropertyMatchesView({ clientId }: ClientPropertyMatchesVie
       {!isLoading && !error && data && data.total === 0 ? (
         <p className="text-sm text-muted-foreground">შესაბამისი განცხადებები ვერ მოიძებნა.</p>
       ) : null}
-      {!isLoading && !error && data && data.properties.length > 0 ? (
+      {!isLoading && !error && data && sortedProperties.length > 0 ? (
         <>
           <p className="text-xs text-muted-foreground">
-            ნაჩვენებია {data.properties.length} / {data.total}
+            ნაჩვენებია {sortedProperties.length} / {data.total}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {data.properties.map((match) => (
+            {sortedProperties.map((match) => (
               <PropertyMatchCard key={match.id} match={match} />
             ))}
           </div>

@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientsList } from "@/features/clients/useClientsList";
+import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
+import { clientMatchesHref } from "@/features/matching/matchingRoutes";
+import { useCurrentUser } from "@/shared/hooks";
+import { ui } from "@/shared/i18n/ui";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import {
   DEAL_TYPES,
@@ -58,6 +63,7 @@ const DEFAULT_LIMIT = 20;
 
 export function ClientsView() {
   const router = useRouter();
+  const { user } = useCurrentUser();
 
   const [district, setDistrict] = useState("");
   const [debouncedDistrict, setDebouncedDistrict] = useState("");
@@ -293,13 +299,23 @@ export function ClientsView() {
                       {new Date(client.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/clients/${client.id}`)}
-                        className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
-                      >
-                        ნახვა
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        {canRunClientMatches(user, client.userId) ? (
+                          <MatchPercentActions
+                            allHref={clientMatchesHref(client.id, "GLOBAL")}
+                            mineHref={clientMatchesHref(client.id, "MINE")}
+                            allLabel={`${ui.matchAll}: ${ui.allListings}`}
+                            mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+                          />
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/clients/${client.id}`)}
+                          className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
+                        >
+                          ნახვა
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -318,7 +334,7 @@ export function ClientsView() {
             <button
               type="button"
               disabled={page === 1}
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              onClick={() => setPage((previousPage) => Math.max(1, previousPage - 1))}
               className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
               წინა
@@ -326,7 +342,7 @@ export function ClientsView() {
             <button
               type="button"
               disabled={page === totalPages}
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() => setPage((previousPage) => Math.min(totalPages, previousPage + 1))}
               className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
               შემდეგი

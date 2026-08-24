@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { ArrowLeft, Pencil } from "lucide-react";
 import type { Property } from "@/features/properties/types";
+import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { getApiBaseUrl } from "@/shared/lib/auth";
+import { ui } from "@/shared/i18n/ui";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { PropertyViewActionsCard } from "@/widgets/PropertyDetails/PropertyViewActionsCard";
 import { PropertyViewCharacteristics } from "@/widgets/PropertyDetails/PropertyViewCharacteristics";
 import {
@@ -85,12 +88,12 @@ export function PropertyDetailsViewContent({
 
           <div className="flex flex-wrap items-center gap-2">
             {property.propertyType === "APARTMENT" ? (
-              <Link
-                href={`/properties/${property.id}/matches`}
-                className="inline-flex items-center justify-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
-              >
-                შესაბამისი კლიენტების ძიება
-              </Link>
+              <MatchPercentActions
+                allHref={propertyMatchesHref(property.id, "GLOBAL")}
+                mineHref={propertyMatchesHref(property.id, "MINE")}
+                allLabel={`${ui.matchAll}: ${ui.allClients}`}
+                mineLabel={`${ui.matchMine}: ${ui.myClients}`}
+              />
             ) : null}
             {canEdit ? (
               <Link

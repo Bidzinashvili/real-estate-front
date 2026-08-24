@@ -1,5 +1,7 @@
 import { ArrowLeft, Pencil } from "lucide-react";
-import Link from "next/link";
+import { clientMatchesHref } from "@/features/matching/matchingRoutes";
+import { ui } from "@/shared/i18n/ui";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 
 type ClientDetailsTopBarProps = {
   clientId: string;
@@ -29,12 +31,12 @@ export function ClientDetailsTopBar({
 
       <div className="flex items-center gap-2">
         {canRunMatches ? (
-          <Link
-            href={`/clients/${clientId}/matches`}
-            className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
-          >
-            შესაბამისი განცხადებების ძიება
-          </Link>
+          <MatchPercentActions
+            allHref={clientMatchesHref(clientId, "GLOBAL")}
+            mineHref={clientMatchesHref(clientId, "MINE")}
+            allLabel={`${ui.matchAll}: ${ui.allListings}`}
+            mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+          />
         ) : null}
         <button
           type="button"

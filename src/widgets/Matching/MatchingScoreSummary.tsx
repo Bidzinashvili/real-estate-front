@@ -17,7 +17,13 @@ export function MatchingScoreSummary({
   scoredCriteriaCount,
   criteria,
 }: MatchingScoreSummaryProps) {
-  const mismatchCount = Math.max(0, scoredCriteriaCount - matchedCriteriaCount);
+  const mismatchCountFromCriteria = criteria.filter(
+    (criterion) => criterion.result === "MISMATCH",
+  ).length;
+  const mismatchCount =
+    criteria.length > 0
+      ? mismatchCountFromCriteria
+      : Math.max(0, scoredCriteriaCount - matchedCriteriaCount);
   const hardLockedCount = criteria.filter((criterion) => criterion.hardLocked).length;
 
   return (

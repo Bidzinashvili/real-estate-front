@@ -12,6 +12,9 @@ import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 import { PropertyListingCardManager } from "@/widgets/Properties/PropertyListingCardManager";
 import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListingCardPriceRow";
+import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
+import { ui } from "@/shared/i18n/ui";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 
 function formatAddress(property: Property) {
   const parts = [
@@ -198,17 +201,27 @@ export function PropertyListingCard({
         </div>
 
         <div className="space-y-2 pt-1">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onView(property.id);
-            }}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:w-auto sm:min-w-[7rem]"
-          >
-            <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            ნახვა
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onView(property.id);
+              }}
+              className="inline-flex h-9 min-w-[7rem] items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            >
+              <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              ნახვა
+            </button>
+            {property.propertyType === "APARTMENT" ? (
+              <MatchPercentActions
+                allHref={propertyMatchesHref(property.id, "GLOBAL")}
+                mineHref={propertyMatchesHref(property.id, "MINE")}
+                allLabel={`${ui.matchAll}: ${ui.allClients}`}
+                mineLabel={`${ui.matchMine}: ${ui.myClients}`}
+              />
+            ) : null}
+          </div>
           <p className="min-w-0 truncate text-xs text-muted-foreground">
             {formatOwnerLine(property)}
           </p>

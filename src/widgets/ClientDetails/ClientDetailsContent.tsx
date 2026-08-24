@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
 import { useCurrentUser } from "@/shared/hooks";
 import { useRouter } from "next/navigation";
 import { deleteClientComment } from "@/features/clients/api";
@@ -36,8 +37,7 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
   >(null);
 
   const { user } = useCurrentUser();
-  const canRunMatches =
-    user?.role === "ADMIN" || (user?.role === "AGENT" && user.id === client.userId);
+  const canRunMatches = canRunClientMatches(user, client.userId);
   const relatedPersons = client.relatedPersons ?? [];
 
   const [publicComments, setPublicComments] = useState<Comment[]>(

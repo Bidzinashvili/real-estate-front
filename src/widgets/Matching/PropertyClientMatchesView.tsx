@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { usePropertyClientMatches } from "@/features/matching/usePropertyClientMatches";
 import {
@@ -9,23 +10,38 @@ import {
   type MatchScope,
   type TemporaryLockKey,
 } from "@/features/matching/matchingEnums";
+import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
+import { sortScoredMatchesByPercentageDesc } from "@/features/matching/sortScoredMatches";
+import { ui } from "@/shared/i18n/ui";
 import { MatchingScopeToggle } from "@/widgets/Matching/MatchingScopeToggle";
 import { TemporaryLocksPanel } from "@/widgets/Matching/TemporaryLocksPanel";
 import { ClientMatchCard } from "@/widgets/Matching/ClientMatchCard";
 
 type PropertyClientMatchesViewProps = {
   propertyId: string;
+  scope: MatchScope;
 };
 
-export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesViewProps) {
-  const [scope, setScope] = useState<MatchScope>("GLOBAL");
+export function PropertyClientMatchesView({
+  propertyId,
+  scope,
+}: PropertyClientMatchesViewProps) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
+  const [appliedScope, setAppliedScope] = useState(scope);
   const [temporaryLockedFields, setTemporaryLockedFields] = useState<TemporaryLockKey[]>([]);
+
+  const requestPage = appliedScope !== scope ? 1 : page;
+  if (appliedScope !== scope) {
+    setAppliedScope(scope);
+    setPage(1);
+  }
+
   const { data, isLoading, error } = usePropertyClientMatches({
     propertyId,
     scope,
     temporaryLockedFields,
-    page,
+    page: requestPage,
   });
 
   const totalPages = useMemo(() => {
@@ -34,6 +50,11 @@ export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesV
     }
     return Math.max(1, Math.ceil(data.total / data.limit));
   }, [data]);
+
+  const sortedClients = useMemo(
+    () => (data ? sortScoredMatchesByPercentageDesc(data.clients) : []),
+    [data],
+  );
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
@@ -47,11 +68,10 @@ export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesV
         </Link>
         <MatchingScopeToggle
           value={scope}
-          globalLabel="ყველა კლიენტი"
-          mineLabel="ჩემი კლიენტები"
+          globalLabel={ui.allClients}
+          mineLabel={ui.myClients}
           onChange={(nextScope) => {
-            setScope(nextScope);
-            setPage(1);
+            router.replace(propertyMatchesHref(propertyId, nextScope));
           }}
         />
       </div>
@@ -81,13 +101,13 @@ export function PropertyClientMatchesView({ propertyId }: PropertyClientMatchesV
       {!isLoading && !error && data && data.total === 0 ? (
         <p className="text-sm text-muted-foreground">შესაბამისი კლიენტები ვერ მოიძებნა.</p>
       ) : null}
-      {!isLoading && !error && data && data.clients.length > 0 ? (
+      {!isLoading && !error && data && sortedClients.length > 0 ? (
         <>
           <p className="text-xs text-muted-foreground">
-            ნაჩვენებია {data.clients.length} / {data.total}
+            ნაჩვენებია {sortedClients.length} / {data.total}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {data.clients.map((match) => (
+            {sortedClients.map((match) => (
               <ClientMatchCard key={match.id} match={match} />
             ))}
           </div>

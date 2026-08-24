@@ -44,6 +44,8 @@ export const ui = {
   myListings: "ჩემი განცხადებები",
   allClients: "ყველა კლიენტი",
   myClients: "ჩემი კლიენტები",
+  matchAll: "ყველას შესაბამისობა",
+  matchMine: "ჩემის შესაბამისობა",
   matchingProperties: "შესაბამისი განცხადებები",
   matchingClients: "შესაბამისი კლიენტები",
   noMatchingProperties: "შესაბამისი განცხადებები ვერ მოიძებნა.",

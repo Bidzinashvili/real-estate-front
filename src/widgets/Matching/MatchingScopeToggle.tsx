@@ -21,7 +21,9 @@ export function MatchingScopeToggle({
         type="button"
         onClick={() => onChange("GLOBAL")}
         className={`rounded-full px-3 py-1.5 ${
-          value === "GLOBAL" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+          value === "GLOBAL"
+            ? "bg-success text-white"
+            : "text-success hover:bg-success-muted"
         }`}
       >
         {globalLabel}
@@ -30,7 +32,9 @@ export function MatchingScopeToggle({
         type="button"
         onClick={() => onChange("MINE")}
         className={`rounded-full px-3 py-1.5 ${
-          value === "MINE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+          value === "MINE"
+            ? "bg-violet-600 text-white"
+            : "text-violet-600 hover:bg-violet-600/10 dark:text-violet-400"
         }`}
       >
         {mineLabel}
