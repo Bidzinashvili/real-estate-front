@@ -4,11 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/shared/stores";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
+import { useCollaborationInboxCount } from "@/features/collaboration/useCollaborationInboxCount";
 
 export function AppHeader() {
   const pathname = usePathname();
   const user = useUserStore((state) => state.user);
   const isAdmin = user?.role === "ADMIN";
+  const { count: inboxCount } = useCollaborationInboxCount({
+    enabled: user !== null,
+    role: user?.role ?? null,
+  });
 
   return (
     <header className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-card/80 px-3 py-3 shadow-sm backdrop-blur-sm sm:gap-4 sm:px-6 max-[675px]:justify-center min-[676px]:justify-between">
@@ -62,6 +67,21 @@ export function AppHeader() {
             }`}
           >
             კლიენტები
+          </Link>
+          <Link
+            href="/collaborations"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/collaborations")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            თანამშრომლობა
+            {inboxCount > 0 ? (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                {inboxCount > 99 ? "99+" : inboxCount}
+              </span>
+            ) : null}
           </Link>
           <Link
             href="/properties"

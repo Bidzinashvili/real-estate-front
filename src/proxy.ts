@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/sign-in"];
-const ADMIN_ONLY_PATHS = ["/agents"];
+const ADMIN_ONLY_PATHS = ["/agents", "/collaborations/monitors"];
 const AUTH_COOKIE_KEY = "authToken";
 
 function isInvitePublicPath(pathname: string): boolean {

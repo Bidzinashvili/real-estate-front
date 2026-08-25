@@ -108,7 +108,7 @@ export function PropertyClientMatchesView({
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {sortedClients.map((match) => (
-              <ClientMatchCard key={match.id} match={match} />
+              <ClientMatchCard key={match.id} match={match} propertyId={propertyId} />
             ))}
           </div>
           <div className="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

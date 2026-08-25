@@ -5,6 +5,7 @@ import type { ScoredPropertyMatch } from "@/features/matching/matchingApi.types"
 import { getMatchImageUrl } from "@/features/matching/matchImageUrl";
 import { MatchingCriteriaList } from "@/widgets/Matching/MatchingCriteriaList";
 import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
+import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
 import {
   CLIENT_PREFERENCE_LABELS,
   isClientPreferenceValue,
@@ -13,6 +14,7 @@ import { DEAL_TYPE_LABELS, lookupEnumLabel, PROPERTY_STATUS_LABELS } from "@/sha
 
 type PropertyMatchCardProps = {
   match: ScoredPropertyMatch;
+  clientId?: string;
 };
 
 function formatPreference(value: string | boolean | null | undefined): string {
@@ -28,7 +30,7 @@ function formatPreference(value: string | boolean | null | undefined): string {
   return String(value);
 }
 
-export function PropertyMatchCard({ match }: PropertyMatchCardProps) {
+export function PropertyMatchCard({ match, clientId }: PropertyMatchCardProps) {
   const listing = match.property;
   const apartment = listing.apartment;
   const imageUrl = getMatchImageUrl(listing.images);
@@ -71,12 +73,15 @@ export function PropertyMatchCard({ match }: PropertyMatchCardProps) {
           {listing.pricePublic.toLocaleString()}
         </p>
         <MatchingCriteriaList criteria={match.criteria} />
-        <Link
-          href={`/properties/${listing.id}`}
-          className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
-        >
-          განცხადების გახსნა
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/properties/${listing.id}`}
+            className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
+          >
+            განცხადების გახსნა
+          </Link>
+          <RequestCollaborationButton propertyId={listing.id} clientId={clientId} />
+        </div>
       </div>
     </article>
   );

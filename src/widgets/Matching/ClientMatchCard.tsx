@@ -5,6 +5,7 @@ import type { ScoredClientMatch } from "@/features/matching/matchingApi.types";
 import { MatchingCriteriaList } from "@/widgets/Matching/MatchingCriteriaList";
 import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
 import { formatPreference } from "@/widgets/Matching/PropertyMatchCard";
+import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
 import {
   CLIENT_STATUS_LABELS,
   DEAL_TYPE_LABELS,
@@ -13,9 +14,10 @@ import {
 
 type ClientMatchCardProps = {
   match: ScoredClientMatch;
+  propertyId: string;
 };
 
-export function ClientMatchCard({ match }: ClientMatchCardProps) {
+export function ClientMatchCard({ match, propertyId }: ClientMatchCardProps) {
   const client = match.client;
   const requirements = client.requirements;
 
@@ -50,12 +52,15 @@ export function ClientMatchCard({ match }: ClientMatchCardProps) {
         შინაური ცხოველები: {client.pet ? "კი" : "არა"}
       </p>
       <MatchingCriteriaList criteria={match.criteria} />
-      <Link
-        href={`/clients/${client.id}`}
-        className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
-      >
-        კლიენტის გახსნა
-      </Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href={`/clients/${client.id}`}
+          className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
+        >
+          კლიენტის გახსნა
+        </Link>
+        <RequestCollaborationButton propertyId={propertyId} clientId={client.id} />
+      </div>
     </article>
   );
 }

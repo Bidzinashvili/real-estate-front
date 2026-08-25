@@ -47,6 +47,25 @@ export function DashboardActions({ isAdmin }: DashboardActionsProps) {
             </p>
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "/collaborations";
+          }}
+          className="group flex flex-col items-start gap-2 rounded-xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition hover:bg-muted"
+        >
+          <span className="inline-flex items-center rounded-full bg-warning-muted px-3 py-1 text-xs font-medium text-warning-foreground">
+            თანამშრომლობა
+          </span>
+          <p className="text-sm font-medium text-foreground">
+            {isAdmin ? "მოთხოვნების დამტკიცება" : "თანამშრომლობის მოთხოვნები"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isAdmin
+              ? "დაამტკიცეთ მიღებული მოთხოვნები და აკონტროლეთ განცხადებები."
+              : "ნახეთ შემოსული და გაგზავნილი თანამშრომლობის მოთხოვნები."}
+          </p>
+        </button>
       </div>
     </section>
   );
