@@ -1,22 +1,22 @@
-import { Lock } from "lucide-react";
 import type { LockState } from "@/features/clients/clientApi.types";
+import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 
 type ClientDetailsLockBadgeProps = {
   lock: LockState;
+  onChange?: (next: LockState) => void;
+  disabled?: boolean;
 };
 
-export function ClientDetailsLockBadge({ lock }: ClientDetailsLockBadgeProps) {
-  if (lock !== "frozen") {
-    return null;
-  }
-
+export function ClientDetailsLockBadge({
+  lock,
+  onChange,
+  disabled = false,
+}: ClientDetailsLockBadgeProps) {
   return (
-    <span
-      className="inline-flex items-center gap-0.5 rounded-md border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive"
-      title="გაყინული მკაცრი პირობა"
-    >
-      <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
-      გაყინული
-    </span>
+    <PreferenceLockButton
+      value={lock}
+      onChange={onChange ?? (() => {})}
+      disabled={disabled || !onChange}
+    />
   );
 }

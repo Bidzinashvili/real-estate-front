@@ -9,13 +9,16 @@ import {
 import type { LockState } from "@/features/clients/clientApi.types";
 import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
 
-const LOCK_STATES: [LockState, LockState] = ["none", "frozen"];
+const LOCK_STATES: [LockState, LockState, LockState] = ["none", "locked", "frozen"];
 
 export const lockStateSchema = z.enum(LOCK_STATES);
 
 const lockStateFieldSchema = z.preprocess((candidate): LockState => {
   if (candidate === "frozen") {
     return "frozen";
+  }
+  if (candidate === "locked") {
+    return "locked";
   }
   return "none";
 }, lockStateSchema);

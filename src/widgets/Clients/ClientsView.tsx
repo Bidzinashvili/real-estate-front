@@ -306,6 +306,8 @@ export function ClientsView() {
                             mineHref={clientMatchesHref(client.id, "MINE")}
                             allLabel={`${ui.matchAll}: ${ui.allListings}`}
                             mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+                            sessionKind="client"
+                            entityId={client.id}
                           />
                         ) : null}
                         <button

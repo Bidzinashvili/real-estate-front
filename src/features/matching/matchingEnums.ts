@@ -148,7 +148,14 @@ export const CLIENT_PERSISTABLE_LOCK_KEYS = [
 
 export type ClientPersistableLockKey = (typeof CLIENT_PERSISTABLE_LOCK_KEYS)[number];
 
+export function isClientPersistableLockKey(
+  value: string,
+): value is ClientPersistableLockKey {
+  return (CLIENT_PERSISTABLE_LOCK_KEYS as readonly string[]).includes(value);
+}
+
 export const TEMPORARY_LOCK_KEYS = [
+  "districts",
   "addresses",
   "street",
   "budgetMin",
@@ -198,6 +205,7 @@ export function isTemporaryLockKey(value: string): value is TemporaryLockKey {
 }
 
 export const CLIENT_SOURCE_TEMPORARY_LOCK_KEYS = [
+  "districts",
   "addresses",
   "budgetMin",
   "budgetMax",

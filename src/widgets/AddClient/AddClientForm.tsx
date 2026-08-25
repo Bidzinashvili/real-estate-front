@@ -15,6 +15,8 @@ import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSectio
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
 import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequirementsSection";
 import { ClientRelatedPersonsSection } from "@/widgets/ClientForm/ClientRelatedPersonsSection";
+import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { stripTemporaryLocksFromClientForm } from "@/features/matching/collectTemporaryLocks";
 
 const addClientDraftStorageKey = "draft:client:new";
 
@@ -64,16 +66,18 @@ export function AddClientForm() {
     }
 
     if (restoredDraft) {
-      reset({
-        ...emptyClientFormDefaults,
-        ...restoredDraft,
-        relatedPersons: restoredDraft.relatedPersons ?? [],
-        phones: (restoredDraft.phones?.length
-          ? restoredDraft.phones
-          : emptyClientFormDefaults.phones
-        ).map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
-        whatsapp: normalizeGeorgianPhone(restoredDraft.whatsapp ?? ""),
-      });
+      reset(
+        stripTemporaryLocksFromClientForm({
+          ...emptyClientFormDefaults,
+          ...restoredDraft,
+          relatedPersons: restoredDraft.relatedPersons ?? [],
+          phones: (restoredDraft.phones?.length
+            ? restoredDraft.phones
+            : emptyClientFormDefaults.phones
+          ).map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
+          whatsapp: normalizeGeorgianPhone(restoredDraft.whatsapp ?? ""),
+        }),
+      );
     }
 
     setIsDraftApplied(true);
@@ -88,7 +92,7 @@ export function AddClientForm() {
       return;
     }
 
-    saveDraft(watchedFormValues);
+    saveDraft(stripTemporaryLocksFromClientForm(watchedFormValues));
   }, [isDraftApplied, isDraftReady, saveDraft, watchedFormValues]);
 
   const onSubmit = async (values: ClientFormValues) => {
@@ -112,6 +116,7 @@ export function AddClientForm() {
       <div className="mb-6 space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">კლიენტის დამატება</h1>
         <p className="text-sm text-muted-foreground">შეავსეთ ქვემოთ მოცემული ველები ახალი კლიენტის დასამატებლად.</p>
+        <MatchingLockHint />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} className="space-y-8" noValidate>

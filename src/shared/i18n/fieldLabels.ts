@@ -29,6 +29,7 @@ export const MATCH_CRITERION_LABELS: Record<MatchCriterionKey, string> = {
 };
 
 export const TEMPORARY_LOCK_LABELS: Record<TemporaryLockKey, string> = {
+  districts: "უბნები",
   addresses: "მისამართები",
   street: "ქუჩა",
   budgetMin: "მინ. ბიუჯეტი",

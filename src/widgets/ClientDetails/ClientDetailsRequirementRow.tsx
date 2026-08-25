@@ -7,12 +7,14 @@ type ClientDetailsRequirementRowProps = {
   label: string;
   value: string | number | boolean | ClientPreferenceValue | null | undefined;
   lock?: LockState;
+  onLockChange?: (next: LockState) => void;
 };
 
 export function ClientDetailsRequirementRow({
   label,
   value,
   lock,
+  onLockChange,
 }: ClientDetailsRequirementRowProps) {
   const hasDisplayValue =
     value !== null &&
@@ -24,7 +26,7 @@ export function ClientDetailsRequirementRow({
     return null;
   }
   const displayValue =
-    !hasDisplayValue && showLockedOnly
+    !hasDisplayValue && (showLockedOnly || onLockChange)
       ? "—"
       : typeof value === "boolean"
         ? value
@@ -37,7 +39,9 @@ export function ClientDetailsRequirementRow({
     <div className="flex flex-col gap-0.5">
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-xs text-muted-foreground">{label}</span>
-        {lock !== undefined ? <ClientDetailsLockBadge lock={lock} /> : null}
+        {lock !== undefined ? (
+          <ClientDetailsLockBadge lock={lock} onChange={onLockChange} />
+        ) : null}
       </div>
       <span className="text-sm font-medium text-foreground">{displayValue}</span>
     </div>

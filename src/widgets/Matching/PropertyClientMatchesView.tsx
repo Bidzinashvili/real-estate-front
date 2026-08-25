@@ -5,16 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { usePropertyClientMatches } from "@/features/matching/usePropertyClientMatches";
-import {
-  PROPERTY_SOURCE_TEMPORARY_LOCK_KEYS,
-  type MatchScope,
-  type TemporaryLockKey,
-} from "@/features/matching/matchingEnums";
+import { type MatchScope } from "@/features/matching/matchingEnums";
+import { peekTemporaryLockSession } from "@/features/matching/temporaryLockSession";
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { sortScoredMatchesByPercentageDesc } from "@/features/matching/sortScoredMatches";
 import { ui } from "@/shared/i18n/ui";
 import { MatchingScopeToggle } from "@/widgets/Matching/MatchingScopeToggle";
-import { TemporaryLocksPanel } from "@/widgets/Matching/TemporaryLocksPanel";
+import { AppliedTemporaryLocksNotice } from "@/widgets/Matching/AppliedTemporaryLocksNotice";
 import { ClientMatchCard } from "@/widgets/Matching/ClientMatchCard";
 
 type PropertyClientMatchesViewProps = {
@@ -29,7 +26,9 @@ export function PropertyClientMatchesView({
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [appliedScope, setAppliedScope] = useState(scope);
-  const [temporaryLockedFields, setTemporaryLockedFields] = useState<TemporaryLockKey[]>([]);
+  const [temporaryLockedFields] = useState(() =>
+    peekTemporaryLockSession("property", propertyId),
+  );
 
   const requestPage = appliedScope !== scope ? 1 : page;
   if (appliedScope !== scope) {
@@ -83,14 +82,7 @@ export function PropertyClientMatchesView({
         </p>
       </div>
 
-      <TemporaryLocksPanel
-        availableKeys={PROPERTY_SOURCE_TEMPORARY_LOCK_KEYS}
-        selectedKeys={temporaryLockedFields}
-        onChange={(nextKeys) => {
-          setTemporaryLockedFields(nextKeys);
-          setPage(1);
-        }}
-      />
+      <AppliedTemporaryLocksNotice selectedKeys={temporaryLockedFields} />
 
       {isLoading ? <p className="text-sm text-muted-foreground">შესაბამისობები იტვირთება…</p> : null}
       {error ? (

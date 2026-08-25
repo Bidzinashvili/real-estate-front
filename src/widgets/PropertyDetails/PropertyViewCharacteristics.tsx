@@ -1,4 +1,6 @@
 import type { Property } from "@/features/properties/types";
+import type { LockState, PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import {
   OptionalTextFact,
   PropertyViewFactGrid,
@@ -17,14 +19,31 @@ import {
 
 type PropertyViewCharacteristicsProps = {
   property: Property;
+  fieldLocks?: PropertyFieldLocks;
+  onFieldLockChange?: (lockKey: PropertyFieldLockKey, nextLock: LockState) => void;
 };
 
 function needsVerificationIncludes(fields: string[] | undefined, fieldKey: string): boolean {
   return (fields ?? []).includes(fieldKey);
 }
 
-export function PropertyViewCharacteristics({ property }: PropertyViewCharacteristicsProps) {
+export function PropertyViewCharacteristics({
+  property,
+  fieldLocks,
+  onFieldLockChange,
+}: PropertyViewCharacteristicsProps) {
   const showRentPeriod = isRentalDeal(property);
+  const showLocks = Boolean(fieldLocks && onFieldLockChange);
+
+  function lockProps(lockKey: PropertyFieldLockKey) {
+    if (!showLocks || !fieldLocks || !onFieldLockChange) {
+      return {};
+    }
+    return {
+      lock: readPropertyFieldLock(fieldLocks, lockKey),
+      onLockChange: (nextLock: LockState) => onFieldLockChange(lockKey, nextLock),
+    };
+  }
 
   return (
     <div className="space-y-6">
@@ -37,26 +56,31 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
               value={property.apartment.totalArea}
               isToBeVerified={false}
               suffix="მ²"
+              {...lockProps("area")}
             />
             <VerifiableNumberFact
               label="ოთახები"
               value={property.apartment.rooms}
               isToBeVerified={false}
+              {...lockProps("rooms")}
             />
             <VerifiableNumberFact
               label="საძინებლები"
               value={property.apartment.bedrooms}
               isToBeVerified={false}
+              {...lockProps("bedrooms")}
             />
             <VerifiableNumberFact
               label="სველი წერტილები"
               value={property.apartment.bathrooms}
               isToBeVerified={false}
+              {...lockProps("bathrooms")}
             />
             <VerifiableNumberFact
               label="სართული"
               value={property.apartment.floor}
               isToBeVerified={false}
+              {...lockProps("floor")}
             />
             <VerifiableNumberFact
               label="სულ სართულები"
@@ -72,14 +96,17 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
             <OptionalTextFact
               label="რემონტი"
               value={formatRenovationLabel(property.apartment.renovation)}
+              {...lockProps("renovation")}
             />
             <OptionalTextFact
               label="შენობის მდგომარეობა"
               value={formatBuildingConditionLabel(property.apartment.buildingCondition)}
+              {...lockProps("buildingCondition")}
             />
             <OptionalTextFact
               label="სამზარეულოს ტიპი"
               value={formatKitchenTypeLabel(property.apartment.kitchenType)}
+              {...lockProps("kitchenType")}
             />
             <VerifiableNumberFact
               label="აივნის ფართობი"
@@ -89,6 +116,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 "balconyArea",
               )}
               suffix="მ²"
+              {...lockProps("balconyArea")}
             />
             {showRentPeriod ? (
               <VerifiableNumberFact
@@ -96,9 +124,14 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 value={property.apartment.minRentalPeriod}
                 isToBeVerified={false}
                 suffix="თვე"
+                {...lockProps("minRentalPeriod")}
               />
             ) : null}
-            <OptionalTextFact label="პროექტი" value={property.apartment.project} />
+            <OptionalTextFact
+              label="პროექტი"
+              value={property.apartment.project}
+              {...lockProps("project")}
+            />
             <OptionalTextFact label="კორპუსის ნომერი" value={property.apartment.buildingNumber} />
             <VerifiableNumberFact
               label="პარკინგი"
@@ -107,6 +140,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "parkingSpaces",
               )}
+              {...lockProps("parking")}
             />
           </PropertyViewFactGrid>
 
@@ -119,6 +153,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "elevator",
               )}
+              {...lockProps("elevator")}
             />
             <VerifiableBooleanFact
               label="კარგი ხედი"
@@ -127,6 +162,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "goodView",
               )}
+              {...lockProps("goodView")}
             />
             <VerifiableBooleanFact
               label="ცენტრალური გათბობა"
@@ -135,6 +171,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "centralHeating",
               )}
+              {...lockProps("centralHeating")}
             />
             <VerifiableBooleanFact
               label="კონდიციონერი"
@@ -143,6 +180,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "airConditioner",
               )}
+              {...lockProps("airConditioner")}
             />
             <VerifiableBooleanFact
               label="ავეჯი"
@@ -151,6 +189,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "furnished",
               )}
+              {...lockProps("furnished")}
             />
             <VerifiableBooleanFact
               label="შინაური ცხოველები"
@@ -159,6 +198,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
                 property.apartment.needsVerification,
                 "petsAllowed",
               )}
+              {...lockProps("petsAllowed")}
             />
           </PropertyViewFactGrid>
         </section>

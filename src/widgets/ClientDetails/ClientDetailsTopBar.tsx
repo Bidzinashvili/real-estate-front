@@ -1,11 +1,13 @@
 import { ArrowLeft, Pencil } from "lucide-react";
 import { clientMatchesHref } from "@/features/matching/matchingRoutes";
+import type { TemporaryLockKey } from "@/features/matching/matchingEnums";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 
 type ClientDetailsTopBarProps = {
   clientId: string;
   canRunMatches: boolean;
+  temporaryLockedFields: TemporaryLockKey[];
   onNavigateToList: () => void;
   onNavigateToEdit: () => void;
   onRequestDelete: () => void;
@@ -14,6 +16,7 @@ type ClientDetailsTopBarProps = {
 export function ClientDetailsTopBar({
   clientId,
   canRunMatches,
+  temporaryLockedFields,
   onNavigateToList,
   onNavigateToEdit,
   onRequestDelete,
@@ -36,6 +39,9 @@ export function ClientDetailsTopBar({
             mineHref={clientMatchesHref(clientId, "MINE")}
             allLabel={`${ui.matchAll}: ${ui.allListings}`}
             mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+            sessionKind="client"
+            entityId={clientId}
+            temporaryLockedFields={temporaryLockedFields}
           />
         ) : null}
         <button

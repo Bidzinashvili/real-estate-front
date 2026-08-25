@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Pencil } from "lucide-react";
 import type { Property } from "@/features/properties/types";
+import { collectPropertyTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
+import type { LockState, PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
+import { applyPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import { getApiBaseUrl } from "@/shared/lib/auth";
 import { ui } from "@/shared/i18n/ui";
+import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { PropertyViewActionsCard } from "@/widgets/PropertyDetails/PropertyViewActionsCard";
 import { PropertyViewCharacteristics } from "@/widgets/PropertyDetails/PropertyViewCharacteristics";
@@ -54,6 +59,22 @@ export function PropertyDetailsViewContent({
 }: PropertyDetailsViewContentProps) {
   const apiBaseUrl = getApiBaseUrl();
   const headline = formatPropertyHeadline(property);
+  const canManageLocks = property.propertyType === "APARTMENT" && canEdit;
+  const [fieldLockOverlay, setFieldLockOverlay] = useState<PropertyFieldLocks>(
+    () => property.fieldLocks ?? {},
+  );
+
+  useEffect(() => {
+    setFieldLockOverlay(property.fieldLocks ?? {});
+  }, [property.id, property.updatedAt]);
+
+  function handleFieldLockChange(lockKey: PropertyFieldLockKey, nextLock: LockState) {
+    setFieldLockOverlay((previousLocks) =>
+      applyPropertyFieldLock(previousLocks, lockKey, nextLock),
+    );
+  }
+
+  const temporaryLockedFields = collectPropertyTemporaryLocks(fieldLockOverlay);
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
@@ -93,6 +114,9 @@ export function PropertyDetailsViewContent({
                 mineHref={propertyMatchesHref(property.id, "MINE")}
                 allLabel={`${ui.matchAll}: ${ui.allClients}`}
                 mineLabel={`${ui.matchMine}: ${ui.myClients}`}
+                sessionKind="property"
+                entityId={property.id}
+                temporaryLockedFields={temporaryLockedFields}
               />
             ) : null}
             {canEdit ? (
@@ -120,11 +144,18 @@ export function PropertyDetailsViewContent({
           <PropertyViewSummaryCard
             property={property}
             canViewPrivateFields={canViewPrivateFields}
+            fieldLocks={canManageLocks ? fieldLockOverlay : undefined}
+            onFieldLockChange={canManageLocks ? handleFieldLockChange : undefined}
           />
         </div>
 
         <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1">
-          <PropertyViewCharacteristics property={property} />
+          {canManageLocks ? <MatchingLockHint /> : null}
+          <PropertyViewCharacteristics
+            property={property}
+            fieldLocks={canManageLocks ? fieldLockOverlay : undefined}
+            onFieldLockChange={canManageLocks ? handleFieldLockChange : undefined}
+          />
           <PropertyViewPublicComment property={property} />
         </div>
 

@@ -185,15 +185,6 @@ export function ClientLocationSection({
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
             <label className="block flex-1 text-sm font-medium text-foreground">ლეიბლები</label>
-            {showLockForPath("labels") ? (
-              <Controller
-                name="labels.lock"
-                control={control}
-                render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
-                )}
-              />
-            ) : null}
           </div>
           <Controller
             name={"labels.value" as never}

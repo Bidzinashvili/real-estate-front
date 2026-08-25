@@ -69,10 +69,14 @@ export async function getClientById(id: string): Promise<ClientDetail> {
     return normalizeClientDetail(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ კლიენტზე წვდომა არ გაქვთ"
+          : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
-        error.response?.status ?? 500,
+        status,
         fallback,
       );
       throw new ApiError(parsed, fallback);
@@ -118,10 +122,14 @@ export async function updateClient(
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.";
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ კლიენტზე წვდომა არ გაქვთ"
+          : "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
-        error.response?.status ?? 500,
+        status,
         fallback,
       );
       throw new ApiError(parsed, fallback);

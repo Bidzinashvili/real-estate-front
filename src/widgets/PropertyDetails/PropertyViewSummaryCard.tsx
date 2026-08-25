@@ -1,5 +1,8 @@
 import { MapPin } from "lucide-react";
 import type { Property } from "@/features/properties/types";
+import type { LockState, PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
@@ -17,11 +20,15 @@ import {
 type PropertyViewSummaryCardProps = {
   property: Property;
   canViewPrivateFields: boolean;
+  fieldLocks?: PropertyFieldLocks;
+  onFieldLockChange?: (lockKey: "price" | "street", nextLock: LockState) => void;
 };
 
 export function PropertyViewSummaryCard({
   property,
   canViewPrivateFields,
+  fieldLocks,
+  onFieldLockChange,
 }: PropertyViewSummaryCardProps) {
   const publicPrice = formatGelAmount(property.pricePublic);
   const internalPrice = formatGelAmount(property.priceInternal);
@@ -35,7 +42,15 @@ export function PropertyViewSummaryCard({
   return (
     <section className="h-auto overflow-visible rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border sm:p-6">
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">ფასი</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-xs text-muted-foreground">ფასი</p>
+          {fieldLocks && onFieldLockChange ? (
+            <PreferenceLockButton
+              value={readPropertyFieldLock(fieldLocks, "price")}
+              onChange={(nextLock) => onFieldLockChange("price", nextLock)}
+            />
+          ) : null}
+        </div>
         <p className="text-3xl font-semibold tracking-tight text-foreground">
           {publicPrice ?? "—"}
         </p>
@@ -81,7 +96,15 @@ export function PropertyViewSummaryCard({
       </dl>
 
       <div className="mt-4 border-t border-border pt-4">
-        <p className="text-xs text-muted-foreground">მისამართი</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-xs text-muted-foreground">მისამართი</p>
+          {fieldLocks && onFieldLockChange ? (
+            <PreferenceLockButton
+              value={readPropertyFieldLock(fieldLocks, "street")}
+              onChange={(nextLock) => onFieldLockChange("street", nextLock)}
+            />
+          ) : null}
+        </div>
         <p className="mt-1 flex items-start gap-1.5 text-sm font-medium text-foreground">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 break-words">{fullAddress || "—"}</span>

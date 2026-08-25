@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { useDistricts } from "@/features/districts/useDistricts";
 import type { LabelSelection } from "@/features/labels/labelTypes";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import type { LockState, PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
@@ -44,6 +44,8 @@ import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "@/features/properties/pricePerSquareMeter";
+import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
 
 type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
@@ -230,27 +232,63 @@ export function PropertyDetailsEditableSections({
         ) : null}
       </div>
 
-      <StreetAutocompleteField
-        id="propertyAddress"
-        label="მისამართი"
-        value={values.address}
-        onChange={(next, addressChangeMeta) =>
-          onFieldChange("address", next, addressChangeMeta)
-        }
-        inputClassName={propertyDetailsEditableInputClassName}
-      />
+      {values.propertyType === "APARTMENT" ? (
+        <FieldWithLock
+          lock={readPropertyFieldLock(values.fieldLocks, "street")}
+          onLockChange={(nextLock: LockState) =>
+            setFieldLocks(applyPropertyFieldLock(values.fieldLocks, "street", nextLock))
+          }
+        >
+          <StreetAutocompleteField
+            id="propertyAddress"
+            label="მისამართი"
+            value={values.address}
+            onChange={(next, addressChangeMeta) =>
+              onFieldChange("address", next, addressChangeMeta)
+            }
+            inputClassName={propertyDetailsEditableInputClassName}
+          />
+        </FieldWithLock>
+      ) : (
+        <StreetAutocompleteField
+          id="propertyAddress"
+          label="მისამართი"
+          value={values.address}
+          onChange={(next, addressChangeMeta) =>
+            onFieldChange("address", next, addressChangeMeta)
+          }
+          inputClassName={propertyDetailsEditableInputClassName}
+        />
+      )}
 
       <div
         className={`grid gap-4 sm:grid-cols-2 ${showInternalPrice ? "" : "max-w-md"}`}
       >
         <div className="space-y-1.5">
-          <EditableNumericTextInput
-            label="საჯარო ფასი"
-            value={values.pricePublic}
-            onValueChange={(next) => onPriceChange("pricePublic", next)}
-            parse={parseIntegerInput}
-            inputMode="numeric"
-          />
+          {values.propertyType === "APARTMENT" ? (
+            <FieldWithLock
+              lock={readPropertyFieldLock(values.fieldLocks, "price")}
+              onLockChange={(nextLock: LockState) =>
+                setFieldLocks(applyPropertyFieldLock(values.fieldLocks, "price", nextLock))
+              }
+            >
+              <EditableNumericTextInput
+                label="საჯარო ფასი"
+                value={values.pricePublic}
+                onValueChange={(next) => onPriceChange("pricePublic", next)}
+                parse={parseIntegerInput}
+                inputMode="numeric"
+              />
+            </FieldWithLock>
+          ) : (
+            <EditableNumericTextInput
+              label="საჯარო ფასი"
+              value={values.pricePublic}
+              onValueChange={(next) => onPriceChange("pricePublic", next)}
+              parse={parseIntegerInput}
+              inputMode="numeric"
+            />
+          )}
           {pricePerSquareMeter !== null ? (
             <p className="text-xs font-medium text-muted-foreground">
               {formatPricePerSquareMeter(pricePerSquareMeter)}

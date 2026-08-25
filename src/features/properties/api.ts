@@ -141,10 +141,14 @@ export async function updateProperty(
     });
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "განცხადების ცვლილებების შენახვა ვერ მოხერხდა.";
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ განცხადების შეცვლის უფლება არ გაქვთ"
+          : "განცხადების ცვლილებების შენახვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
-        error.response?.status ?? 500,
+        status,
         fallback,
       );
       throw new ApiError(parsed, fallback);

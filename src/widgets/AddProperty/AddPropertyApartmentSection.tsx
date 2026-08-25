@@ -25,8 +25,8 @@ import {
   type ApartmentBooleanVerifiableField,
 } from "@/features/properties/apartmentVerification";
 import type { PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
-import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
-import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { PreferenceLockButton, FieldWithLock, MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import type { LockState } from "@/features/matching/matchingEnums";
 
 type Props = {
@@ -47,6 +47,8 @@ function NumericVerificationRow({
   needsVerification,
   onValueChange,
   onNeedsVerificationChange,
+  lock,
+  onLockChange,
 }: {
   id: string;
   label: string;
@@ -56,32 +58,36 @@ function NumericVerificationRow({
   needsVerification: string[];
   onValueChange: (next: string) => void;
   onNeedsVerificationChange: (next: string[]) => void;
+  lock: LockState;
+  onLockChange: (next: LockState) => void;
 }) {
   return (
-    <div className="flex items-end gap-2">
-      <div className="flex-1">
-        <TextField
-          id={id}
-          label={label}
-          type="number"
-          value={value}
-          onChange={(nextValue) => {
-            onValueChange(nextValue);
-            if (nextValue.trim() !== "") {
-              onNeedsVerificationChange(
-                needsVerification.filter((activeField) => activeField !== fieldKey),
-              );
-            }
-          }}
-          error={error}
+    <FieldWithLock lock={lock} onLockChange={onLockChange}>
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <TextField
+            id={id}
+            label={label}
+            type="number"
+            value={value}
+            onChange={(nextValue) => {
+              onValueChange(nextValue);
+              if (nextValue.trim() !== "") {
+                onNeedsVerificationChange(
+                  needsVerification.filter((activeField) => activeField !== fieldKey),
+                );
+              }
+            }}
+            error={error}
+          />
+        </div>
+        <NeedsVerificationToggle
+          fieldKey={fieldKey}
+          activeFields={needsVerification}
+          onChange={onNeedsVerificationChange}
         />
       </div>
-      <NeedsVerificationToggle
-        fieldKey={fieldKey}
-        activeFields={needsVerification}
-        onChange={onNeedsVerificationChange}
-      />
-    </div>
+    </FieldWithLock>
   );
 }
 
@@ -129,15 +135,13 @@ export function AddPropertyApartmentSection({
   }
 
   function handleFieldLockChange(lockKey: PropertyFieldLockKey, nextLock: LockState) {
-    patchFieldLocks({
-      ...fieldLocks,
-      [lockKey]: nextLock === "frozen" ? "frozen" : "none",
-    });
+    patchFieldLocks(applyPropertyFieldLock(fieldLocks, lockKey, nextLock));
   }
 
   return (
     <section className="space-y-3 rounded-xl border border-border bg-muted p-4">
       <h2 className="text-sm font-semibold text-foreground">ბინის დეტალები</h2>
+      <MatchingLockHint />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex items-start gap-2">
           <div className="flex-1">
@@ -339,6 +343,8 @@ export function AddPropertyApartmentSection({
           onNeedsVerificationChange={(nextFields) =>
             patchApartment({ needsVerification: nextFields })
           }
+          lock={readPropertyFieldLock(fieldLocks, "balconyArea")}
+          onLockChange={(nextLock) => handleFieldLockChange("balconyArea", nextLock)}
         />
         <NumericVerificationRow
           id="aptParking"
@@ -351,6 +357,8 @@ export function AddPropertyApartmentSection({
           onNeedsVerificationChange={(nextFields) =>
             patchApartment({ needsVerification: nextFields })
           }
+          lock={readPropertyFieldLock(fieldLocks, "parking")}
+          onLockChange={(nextLock) => handleFieldLockChange("parking", nextLock)}
         />
         {(
           [

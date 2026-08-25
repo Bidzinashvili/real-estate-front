@@ -17,6 +17,13 @@ import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSectio
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
 import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequirementsSection";
 import { ClientRelatedPersonsSection } from "@/widgets/ClientForm/ClientRelatedPersonsSection";
+import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
+import { collectClientFormTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
+import { clientMatchesHref } from "@/features/matching/matchingRoutes";
+import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
+import { useCurrentUser } from "@/shared/hooks";
+import { ui } from "@/shared/i18n/ui";
 
 type EditClientFormProps = {
   clientId: string;
@@ -30,7 +37,9 @@ function EditClientFormInner({
   clientId: string;
 }) {
   const router = useRouter();
+  const { user } = useCurrentUser();
   const { update, isLoading, error } = useUpdateClient();
+  const canRunMatches = canRunClientMatches(user, client.userId);
 
   const {
     register,
@@ -62,7 +71,9 @@ function EditClientFormInner({
   } = useFieldArray({ control, name: "relatedPersons" });
 
   const selectedDealType = watch("dealType");
+  const watchedFormValues = watch();
   const isRentDeal = selectedDealType === "RENT" || selectedDealType === "DAILY_RENT";
+  const temporaryLockedFields = collectClientFormTemporaryLocks(watchedFormValues);
 
   const onSubmit = async (values: ClientFormValues) => {
     const dto = buildUpdateClientDto(values);
@@ -81,9 +92,23 @@ function EditClientFormInner({
         კლიენტზე დაბრუნება
       </button>
 
-      <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">კლიენტის რედაქტირება</h1>
-        <p className="text-sm text-muted-foreground">განაახლეთ კლიენტის მონაცემები.</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">კლიენტის რედაქტირება</h1>
+          <p className="text-sm text-muted-foreground">განაახლეთ კლიენტის მონაცემები.</p>
+          <MatchingLockHint />
+        </div>
+        {canRunMatches ? (
+          <MatchPercentActions
+            allHref={clientMatchesHref(clientId, "GLOBAL")}
+            mineHref={clientMatchesHref(clientId, "MINE")}
+            allLabel={`${ui.matchAll}: ${ui.allListings}`}
+            mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+            sessionKind="client"
+            entityId={clientId}
+            temporaryLockedFields={temporaryLockedFields}
+          />
+        ) : null}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>

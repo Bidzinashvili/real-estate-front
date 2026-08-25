@@ -1,4 +1,9 @@
 import Link from "next/link";
+import type { TemporaryLockKey } from "@/features/matching/matchingEnums";
+import {
+  writeTemporaryLockSession,
+  type TemporaryLockSessionKind,
+} from "@/features/matching/temporaryLockSession";
 import { cn } from "@/shared/lib/utils";
 
 type MatchPercentActionsProps = {
@@ -7,6 +12,9 @@ type MatchPercentActionsProps = {
   allLabel: string;
   mineLabel: string;
   className?: string;
+  sessionKind?: TemporaryLockSessionKind;
+  entityId?: string;
+  temporaryLockedFields?: TemporaryLockKey[];
 };
 
 const ACTION_BASE =
@@ -18,14 +26,27 @@ export function MatchPercentActions({
   allLabel,
   mineLabel,
   className,
+  sessionKind,
+  entityId,
+  temporaryLockedFields,
 }: MatchPercentActionsProps) {
+  function handleNavigate() {
+    if (!sessionKind || !entityId) {
+      return;
+    }
+    writeTemporaryLockSession(sessionKind, entityId, temporaryLockedFields ?? []);
+  }
+
   return (
     <div className={cn("inline-flex items-center gap-1.5", className)}>
       <Link
         href={allHref}
         aria-label={allLabel}
         title={allLabel}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          handleNavigate();
+        }}
         className={`${ACTION_BASE} bg-success hover:bg-success/90`}
       >
         %
@@ -34,7 +55,10 @@ export function MatchPercentActions({
         href={mineHref}
         aria-label={mineLabel}
         title={mineLabel}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          handleNavigate();
+        }}
         className={`${ACTION_BASE} bg-violet-600 hover:bg-violet-700`}
       >
         %

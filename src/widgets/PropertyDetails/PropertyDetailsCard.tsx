@@ -28,6 +28,10 @@ import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/Prope
 import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
 import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
+import { collectPropertyTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
+import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
+import { ui } from "@/shared/i18n/ui";
 
 type PropertyDetailsCardBaseProps = {
   property: Property;
@@ -559,12 +563,25 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             განაახლეთ განცხადების ინფორმაცია. აგენტებს მხოლოდ საკუთარი განცხადებების რედაქტირება შეუძლიათ.
           </p>
         </div>
-        <Link
-          href={`/properties/${property.id}`}
-          className="inline-flex items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
-        >
-          ობიექტის ნახვა
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {property.propertyType === "APARTMENT" ? (
+            <MatchPercentActions
+              allHref={propertyMatchesHref(property.id, "GLOBAL")}
+              mineHref={propertyMatchesHref(property.id, "MINE")}
+              allLabel={`${ui.matchAll}: ${ui.allClients}`}
+              mineLabel={`${ui.matchMine}: ${ui.myClients}`}
+              sessionKind="property"
+              entityId={property.id}
+              temporaryLockedFields={collectPropertyTemporaryLocks(values.fieldLocks)}
+            />
+          ) : null}
+          <Link
+            href={`/properties/${property.id}`}
+            className="inline-flex items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
+          >
+            ობიექტის ნახვა
+          </Link>
+        </div>
       </div>
       {!canViewPrivateFields && (
         <p className="mt-2 text-sm text-muted-foreground">

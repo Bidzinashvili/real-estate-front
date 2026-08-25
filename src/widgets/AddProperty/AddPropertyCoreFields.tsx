@@ -28,6 +28,9 @@ import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "@/features/properties/pricePerSquareMeter";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
 
 function parseFormNumber(value: string): number | null {
   const trimmedValue = value.trim();
@@ -62,6 +65,8 @@ type Props = {
   fieldErrors: FormErrors;
   images: File[];
   imageError: string | null;
+  fieldLocks: PropertyFieldLocks;
+  patchFieldLocks: (nextLocks: PropertyFieldLocks) => void;
   updateForm: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   updateAddress: (
     next: string,
@@ -79,6 +84,8 @@ export function AddPropertyCoreFields({
   fieldErrors,
   images,
   imageError,
+  fieldLocks,
+  patchFieldLocks,
   updateForm,
   updateAddress,
   onAddImages,
@@ -89,6 +96,7 @@ export function AddPropertyCoreFields({
 }: Props) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
   const isPersonalCommentEntryActiveRef = useRef(false);
+  const showMatchingLocks = form.propertyType === "APARTMENT";
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     parseFormNumber(form.pricePublic),
     getCreateAreaSquareMeters(form),
@@ -211,15 +219,34 @@ export function AddPropertyCoreFields({
         />
       ) : null}
       <div className={buildingNumber !== undefined ? undefined : "sm:col-span-2"}>
-        <StreetAutocompleteField
-          id="address"
-          label="მისამართი"
-          value={form.address}
-          onChange={updateAddress}
-          required
-          error={fieldErrors.address}
-          inputClassName={addPropertyInputClassName()}
-        />
+        {showMatchingLocks ? (
+          <FieldWithLock
+            lock={readPropertyFieldLock(fieldLocks, "street")}
+            onLockChange={(nextLock) =>
+              patchFieldLocks(applyPropertyFieldLock(fieldLocks, "street", nextLock))
+            }
+          >
+            <StreetAutocompleteField
+              id="address"
+              label="მისამართი"
+              value={form.address}
+              onChange={updateAddress}
+              required
+              error={fieldErrors.address}
+              inputClassName={addPropertyInputClassName()}
+            />
+          </FieldWithLock>
+        ) : (
+          <StreetAutocompleteField
+            id="address"
+            label="მისამართი"
+            value={form.address}
+            onChange={updateAddress}
+            required
+            error={fieldErrors.address}
+            inputClassName={addPropertyInputClassName()}
+          />
+        )}
       </div>
       {buildingNumber !== undefined && onBuildingNumberChange !== undefined && (
         <TextField
@@ -248,15 +275,34 @@ export function AddPropertyCoreFields({
         error={fieldErrors.priceInternal}
       />
       <div className="space-y-1.5">
-        <TextField
-          id="pricePublic"
-          label="საჯარო ფასი"
-          value={form.pricePublic}
-          onChange={handlePublicPriceChange}
-          type="number"
-          required
-          error={fieldErrors.pricePublic}
-        />
+        {showMatchingLocks ? (
+          <FieldWithLock
+            lock={readPropertyFieldLock(fieldLocks, "price")}
+            onLockChange={(nextLock) =>
+              patchFieldLocks(applyPropertyFieldLock(fieldLocks, "price", nextLock))
+            }
+          >
+            <TextField
+              id="pricePublic"
+              label="საჯარო ფასი"
+              value={form.pricePublic}
+              onChange={handlePublicPriceChange}
+              type="number"
+              required
+              error={fieldErrors.pricePublic}
+            />
+          </FieldWithLock>
+        ) : (
+          <TextField
+            id="pricePublic"
+            label="საჯარო ფასი"
+            value={form.pricePublic}
+            onChange={handlePublicPriceChange}
+            type="number"
+            required
+            error={fieldErrors.pricePublic}
+          />
+        )}
         {pricePerSquareMeter !== null ? (
           <p className="text-xs font-medium text-muted-foreground">
             {formatPricePerSquareMeter(pricePerSquareMeter)}
