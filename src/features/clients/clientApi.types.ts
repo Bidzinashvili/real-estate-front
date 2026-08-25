@@ -86,6 +86,7 @@ export interface CreateClientPayload {
 export type UpdateClientPayload = {
   name?: string;
   phones?: string[];
+  clientProfileId?: string | null;
   whatsapp?: string;
   dealType?: DealType;
   description?: string;
@@ -200,6 +201,12 @@ export type ClientApi = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
   name: string;
+  clientProfileId?: string | null;
+  clientProfile?: {
+    id: string;
+    blacklisted?: boolean;
+    occurrenceCount?: number;
+  } | null;
   phones: string[];
   whatsapp: string | null;
   budgetMin: Locked<number | null>;

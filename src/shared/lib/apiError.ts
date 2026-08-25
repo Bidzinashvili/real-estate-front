@@ -6,21 +6,26 @@ export type StandardApiError = {
   statusCode: number;
   code?: string;
   fieldErrors?: FieldErrors;
+  profileIds?: string[];
 };
 
 export class ApiError extends Error {
   statusCode: number;
   code?: string;
+  error: string;
   fieldErrors?: FieldErrors;
   rawMessage: string | string[];
+  profileIds?: string[];
 
   constructor(payload: StandardApiError, fallback: string) {
     super(getApiErrorMessage(payload, fallback));
     this.name = "ApiError";
     this.statusCode = payload.statusCode;
     this.code = payload.code;
+    this.error = payload.error;
     this.fieldErrors = payload.fieldErrors;
     this.rawMessage = payload.message;
+    this.profileIds = payload.profileIds;
   }
 }
 
@@ -87,6 +92,13 @@ export function parseStandardApiError(
     };
   }
 
+  const profileIds = Array.isArray(payload.profileIds)
+    ? payload.profileIds.filter(
+        (profileId): profileId is string =>
+          typeof profileId === "string" && profileId.trim() !== "",
+      )
+    : undefined;
+
   return {
     message: asMessage(payload.message) ?? fallback,
     error: typeof payload.error === "string" ? payload.error : "Error",
@@ -96,6 +108,7 @@ export function parseStandardApiError(
         : statusCode,
     code: typeof payload.code === "string" ? payload.code : undefined,
     fieldErrors: asFieldErrors(payload.fieldErrors),
+    profileIds: profileIds && profileIds.length > 0 ? profileIds : undefined,
   };
 }
 

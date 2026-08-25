@@ -7,6 +7,7 @@ import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
 import { isClientArchived } from "@/features/lifecycle/isClientArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { formatClientDetailsDate } from "./clientDetailsFormatters";
+import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
@@ -43,6 +44,12 @@ export function ClientDetailsSummaryCard({
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
+          </div>
+          <div className="mt-2">
+            <ClientProfileCompactIndicator
+              clientProfileId={client.clientProfileId}
+              clientProfile={client.clientProfile}
+            />
           </div>
         </div>
         <LifecycleStatusBadge

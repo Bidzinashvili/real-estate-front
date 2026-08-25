@@ -12,6 +12,7 @@ import type {
 } from "@/features/clients/clientApi.types";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
+import type { ClientProfileCompact } from "@/features/clientProfiles/types";
 
 export type RelatedPerson = {
   id: UUID;
@@ -103,6 +104,8 @@ export type Client = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
   name: string;
+  clientProfileId: string | null;
+  clientProfile: ClientProfileCompact | null;
   phones: string[];
   whatsapp: string | null;
   budgetMin: number | null;

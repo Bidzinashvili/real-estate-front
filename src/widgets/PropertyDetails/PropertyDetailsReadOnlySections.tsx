@@ -17,15 +17,18 @@ import {
   DetailYesNo,
   DetailVerification,
 } from "@/widgets/PropertyDetails/DetailDisplay";
+import { OwnerProfileNameLink } from "@/widgets/PropertyOwners/OwnerProfileNameLink";
 
 type PropertyDetailsReadOnlySectionsProps = {
   property: Property;
   showPrivateNotes: boolean;
+  hideOwnerFields?: boolean;
 };
 
 export function PropertyDetailsReadOnlySections({
   property,
   showPrivateNotes,
+  hideOwnerFields = false,
 }: PropertyDetailsReadOnlySectionsProps) {
   const activeExternalIds = property.externalIds.filter(
     (externalId) => externalId.archivedAt === null,
@@ -61,15 +64,28 @@ export function PropertyDetailsReadOnlySections({
           />
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="მესაკუთრის სახელი" value={property.ownerName} />
-          <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
-        </div>
+        {hideOwnerFields ? null : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {property.propertyOwner ? (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">მესაკუთრე</p>
+                <OwnerProfileNameLink propertyOwner={property.propertyOwner} />
+              </div>
+            ) : (
+              <DetailText label="მესაკუთრის სახელი" value={property.ownerName} />
+            )}
+            <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
+          </div>
+        )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailPhone label="მესაკუთრის WhatsApp" value={property.ownerWhatsapp} />
+        {hideOwnerFields ? (
           <DetailText label="გარე საიტის ID" value={property.ourSiteId} />
-        </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailPhone label="მესაკუთრის WhatsApp" value={property.ownerWhatsapp} />
+            <DetailText label="გარე საიტის ID" value={property.ourSiteId} />
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <DetailText label="MyHome ID" value={property.myHomeId} />

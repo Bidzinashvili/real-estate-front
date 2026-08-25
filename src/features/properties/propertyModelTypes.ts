@@ -4,6 +4,7 @@ import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
+import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
 
 export type { DealType };
 export type { PropertyStatus };
@@ -220,6 +221,8 @@ export type Property = EntityVerificationFields & {
   ownerName: string;
   ownerPhones: string[];
   ownerWhatsapp: string | null;
+  ownerId: string | null;
+  propertyOwner: PropertyOwnerSummary | null;
   ourSiteId: string | null;
   myHomeId: string | null;
   ssGeId: string | null;

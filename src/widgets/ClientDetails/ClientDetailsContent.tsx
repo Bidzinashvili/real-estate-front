@@ -24,6 +24,7 @@ import { ClientDetailsRelatedPersonsSection } from "./ClientDetailsRelatedPerson
 import { ClientDetailsRequirementsSection } from "./ClientDetailsRequirementsSection";
 import { ClientDetailsSummaryCard } from "./ClientDetailsSummaryCard";
 import { ClientDetailsTopBar } from "./ClientDetailsTopBar";
+import { ClientProfileLinkSection } from "@/widgets/ClientDetails/ClientProfileLinkSection";
 import { ClientChangeStatusModal } from "@/widgets/Clients/ClientChangeStatusModal";
 import { VerificationReminderPanel } from "@/widgets/Lifecycle/VerificationReminderPanel";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
@@ -199,6 +200,8 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
         getLock={getLock}
         onLockChange={handleLockChange}
       />
+
+      <ClientProfileLinkSection client={client} onLinked={onClientChanged} />
 
       <VerificationReminderPanel
         fields={client}

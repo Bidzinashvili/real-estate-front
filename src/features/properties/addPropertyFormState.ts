@@ -14,6 +14,8 @@ import type {
   PropertyType,
   Renovation,
 } from "@/features/properties/types";
+import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
+import { emptyOwnerAssignment } from "@/features/propertyOwners/ownerContactDrafts";
 
 export type AddPropertyActiveSubtype =
   | "apartment"
@@ -42,6 +44,7 @@ export type FormState = {
   selectedStreetId: string | null;
   labels: LabelSelection[];
   pricePublic: string;
+  ownerAssignment: PropertyOwnerAssignment;
   ownerName: string;
   ownerPhones: string[];
   cadastralCode: string;
@@ -146,6 +149,7 @@ export function initialFormState(): FormState {
     selectedStreetId: null,
     labels: [],
     pricePublic: "",
+    ownerAssignment: emptyOwnerAssignment(),
     ownerName: "",
     ownerPhones: ["+995"],
     cadastralCode: "",

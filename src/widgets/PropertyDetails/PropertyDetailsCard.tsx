@@ -32,6 +32,13 @@ import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { collectPropertyTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { ui } from "@/shared/i18n/ui";
+import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
+import {
+  assignmentFromProperty,
+  buildOwnerWritePayload,
+  isOwnerAssignmentDirty,
+} from "@/features/propertyOwners/ownerContactDrafts";
+import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
 
 type PropertyDetailsCardBaseProps = {
   property: Property;
@@ -188,10 +195,17 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
   }, [property]);
 
   const [values, setValues] = useState<PropertyFormValues>(initialValues);
+  const [ownerAssignment, setOwnerAssignment] = useState<PropertyOwnerAssignment>(() =>
+    assignmentFromProperty(property),
+  );
   const [clientError, setClientError] = useState<string | null>(null);
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
+
+  useEffect(() => {
+    setOwnerAssignment(assignmentFromProperty(property));
+  }, [property.id, property.updatedAt, property.propertyOwner, property.ownerName, property.ownerPhones]);
 
   const handleDealTypeChange = (value: DealType) => {
     const clearRentFields = value !== "RENT" && value !== "DAILY_RENT";
@@ -377,6 +391,19 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       property.propertyType,
     );
 
+    if (isOwnerAssignmentDirty(property, ownerAssignment)) {
+      const ownerWrite = buildOwnerWritePayload(ownerAssignment);
+      if (ownerWrite.error || !ownerWrite.payload) {
+        setClientError(ownerWrite.error ?? "მესაკუთრის მონაცემები არასრულია.");
+        return;
+      }
+      if ("ownerId" in ownerWrite.payload) {
+        payload.ownerId = ownerWrite.payload.ownerId;
+      } else {
+        payload.owner = ownerWrite.payload.owner;
+      }
+    }
+
     if (Object.keys(payload).length === 0) {
       return;
     }
@@ -500,9 +527,16 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             setCommercial={setCommercial}
           />
 
+          <PropertyOwnerPickerSection
+            assignment={ownerAssignment}
+            onChange={setOwnerAssignment}
+            disabled={!canEdit || isSaving}
+          />
+
           <PropertyDetailsReadOnlySections
             property={property}
             showPrivateNotes={canViewPrivateFields}
+            hideOwnerFields
           />
 
           {(clientError || getSaveErrorMessage(saveError)) && (

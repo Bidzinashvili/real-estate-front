@@ -10,6 +10,10 @@ import {
   type FormState,
 } from "@/features/properties/addPropertyFormState";
 import {
+  contactsFromLegacyPhones,
+  emptyOwnerAssignment,
+} from "@/features/propertyOwners/ownerContactDrafts";
+import {
   type FormErrors,
   validateAddPropertyImages,
   validateFormInputs,
@@ -38,9 +42,27 @@ function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
   void legacyListingLifecycleStatus;
   void legacyVerificationReminderLocal;
 
+  const restoredAssignment = restoredFields.ownerAssignment;
+  const ownerAssignment = restoredAssignment
+    ? {
+        ...emptyOwnerAssignment(),
+        ...restoredAssignment,
+        contacts:
+          restoredAssignment.contacts?.length > 0
+            ? restoredAssignment.contacts
+            : contactsFromLegacyPhones(restoredFields.ownerPhones),
+      }
+    : {
+        ...emptyOwnerAssignment(),
+        name: restoredFields.ownerName ?? "",
+        lookupPhone: restoredFields.ownerPhones?.[0] ?? "",
+        contacts: contactsFromLegacyPhones(restoredFields.ownerPhones),
+      };
+
   return {
     ...initialState,
     ...restoredFields,
+    ownerAssignment,
     apartment: { ...initialState.apartment, ...restoredFields.apartment },
     privateHouse: { ...initialState.privateHouse, ...restoredFields.privateHouse },
     landPlot: { ...initialState.landPlot, ...restoredFields.landPlot },

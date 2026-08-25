@@ -15,6 +15,7 @@ import {
   omitUnspecifiedBoolean,
   sanitizeNeedsVerification,
 } from "@/features/properties/apartmentVerification";
+import { buildOwnerWritePayload } from "@/features/propertyOwners/ownerContactDrafts";
 import {
   atLeastOneMessage,
   atLeastOneMonthMessage,
@@ -133,10 +134,7 @@ export function buildCreatePropertyPayload(
   const city = form.city.trim();
   const district = isTbilisiCity(city) ? form.district.trim() : "";
   const address = form.address.trim();
-  const ownerName = form.ownerName.trim();
-  const ownerPhones = form.ownerPhones
-    .map((ownerPhone) => ownerPhone.trim())
-    .filter((ownerPhone) => ownerPhone !== "");
+  const ownerWrite = buildOwnerWritePayload(form.ownerAssignment);
 
   if (!city) errors.push("ქალაქი სავალდებულოა.");
   if (city && !GEORGIAN_CITY_OPTIONS.some((option) => option.value === city)) {
@@ -146,8 +144,9 @@ export function buildCreatePropertyPayload(
     errors.push("უბანი სავალდებულოა.");
   }
   if (!address) errors.push("მისამართი სავალდებულოა.");
-  if (!ownerName) errors.push("მესაკუთრის სახელი სავალდებულოა.");
-  if (ownerPhones.length === 0) errors.push("მესაკუთრის ტელეფონი სავალდებულოა.");
+  if (ownerWrite.error || !ownerWrite.payload) {
+    errors.push(ownerWrite.error ?? "მესაკუთრის მონაცემები სავალდებულოა.");
+  }
 
   const pricePublic = parseNumber(form.pricePublic, "საჯარო ფასი", errors);
   const payload: CreatePropertyDto = {
@@ -156,16 +155,18 @@ export function buildCreatePropertyPayload(
     city,
     address,
     pricePublic,
-    ownerName,
-    ownerPhones,
   };
+  if (ownerWrite.payload && "ownerId" in ownerWrite.payload) {
+    payload.ownerId = ownerWrite.payload.ownerId;
+  } else if (ownerWrite.payload && "owner" in ownerWrite.payload) {
+    payload.owner = ownerWrite.payload.owner;
+  }
   if (district !== "") {
     payload.district = district;
   }
   const labels = normalizeLabels(form.labels);
 
   if (form.cadastralCode.trim()) payload.cadastralCode = form.cadastralCode.trim();
-  if (form.ownerWhatsapp.trim()) payload.ownerWhatsapp = form.ownerWhatsapp.trim();
   const externalIds = form.externalIds
     .filter((externalId) => externalId.archivedAt === null && externalId.value.trim() !== "")
     .map((externalId) => ({

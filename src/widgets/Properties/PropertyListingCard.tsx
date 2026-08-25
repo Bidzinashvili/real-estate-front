@@ -67,7 +67,8 @@ function propertyAreaSquareMeters(property: Property): number | null {
 }
 
 function formatOwnerLine(property: Property) {
-  const name = property.ownerName?.trim();
+  const profileName = property.propertyOwner?.name?.trim();
+  const name = profileName || property.ownerName?.trim();
   const phone = property.ownerPhones
     .map((ownerPhone) => ownerPhone.trim())
     .filter((ownerPhone) => ownerPhone !== "")
@@ -75,7 +76,7 @@ function formatOwnerLine(property: Property) {
   if (name && phone) return `${name} • ${phone}`;
   if (name) return name;
   if (phone) return phone;
-  return "—";
+  return "";
 }
 
 type PropertyListingCardProps = {
@@ -207,9 +208,11 @@ export function PropertyListingCard({
               />
             ) : null}
           </div>
-          <p className="min-w-0 truncate text-xs text-muted-foreground">
-            {formatOwnerLine(property)}
-          </p>
+          {formatOwnerLine(property) ? (
+            <p className="min-w-0 truncate text-xs text-muted-foreground">
+              {formatOwnerLine(property)}
+            </p>
+          ) : null}
           {formatLifecycleDate(property.lastVerifiedAt) ? (
             <p className="text-xs text-muted-foreground">
               გადამოწმებულია: {formatLifecycleDate(property.lastVerifiedAt)}

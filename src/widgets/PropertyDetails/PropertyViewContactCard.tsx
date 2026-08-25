@@ -1,5 +1,6 @@
 import { Phone } from "lucide-react";
 import type { Property } from "@/features/properties/types";
+import { OwnerProfileNameLink } from "@/widgets/PropertyOwners/OwnerProfileNameLink";
 
 type PropertyViewContactCardProps = {
   property: Property;
@@ -10,13 +11,19 @@ function formatPhoneHref(raw: string): string {
 }
 
 export function PropertyViewContactCard({ property }: PropertyViewContactCardProps) {
-  const ownerName = property.ownerName.trim();
+  const propertyOwner = property.propertyOwner ?? null;
+  const fallbackName = propertyOwner ? "" : property.ownerName.trim();
   const ownerPhones = property.ownerPhones
     .map((ownerPhone) => ownerPhone.trim())
     .filter((ownerPhone) => ownerPhone !== "");
   const ownerWhatsapp = property.ownerWhatsapp?.trim() ?? "";
 
-  if (!ownerName && ownerPhones.length === 0 && ownerWhatsapp === "") {
+  if (
+    !propertyOwner &&
+    !fallbackName &&
+    ownerPhones.length === 0 &&
+    ownerWhatsapp === ""
+  ) {
     return null;
   }
 
@@ -28,10 +35,17 @@ export function PropertyViewContactCard({ property }: PropertyViewContactCardPro
       <h2 className="mt-1 text-base font-semibold text-foreground">მესაკუთრე</h2>
 
       <div className="mt-4 space-y-3">
-        {ownerName ? (
+        {propertyOwner ? (
           <div>
             <p className="text-xs text-muted-foreground">სახელი</p>
-            <p className="mt-0.5 text-sm font-medium text-foreground">{ownerName}</p>
+            <p className="mt-0.5">
+              <OwnerProfileNameLink propertyOwner={propertyOwner} />
+            </p>
+          </div>
+        ) : fallbackName ? (
+          <div>
+            <p className="text-xs text-muted-foreground">სახელი</p>
+            <p className="mt-0.5 text-sm font-medium text-foreground">{fallbackName}</p>
           </div>
         ) : null}
 

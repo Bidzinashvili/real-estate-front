@@ -48,10 +48,7 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
   return {
     ...emptyClientFormDefaults,
     name: client.name,
-    phones:
-      client.phones.length > 0
-        ? client.phones.map((phoneNumber) => normalizeGeorgianPhone(phoneNumber))
-        : [normalizeGeorgianPhone("")],
+    phones: client.phones.length > 0 ? [...client.phones] : [""],
     whatsapp: client.whatsapp ? normalizeGeorgianPhone(client.whatsapp) : "",
     budgetMin: { value: client.budgetMin ?? undefined, lock: persistEntityLock(client.budgetMinLock ?? "none") },
     budgetMax: { value: client.budgetMax ?? undefined, lock: persistEntityLock(client.budgetMaxLock ?? "none") },

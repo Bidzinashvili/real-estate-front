@@ -84,7 +84,7 @@ export function AdminPropertiesSection({
                     {property.pricePublic.toLocaleString()}
                   </td>
                   <td className="hidden px-4 py-3 text-foreground lg:table-cell">
-                    {property.ownerName}
+                    {property.propertyOwner?.name ?? property.ownerName}
                   </td>
                   <td className="px-4 py-3 text-right text-foreground">
                     {new Date(property.createdAt).toLocaleDateString()}

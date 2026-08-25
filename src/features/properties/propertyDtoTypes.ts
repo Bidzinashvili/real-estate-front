@@ -12,6 +12,7 @@ import type {
   LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
+import type { NestedPropertyOwnerInput } from "@/features/propertyOwners/types";
 
 export type PropertyUpdatePayload = UpdatePropertyRequestBody;
 export type { LabelDto };
@@ -132,11 +133,13 @@ export type CreatePropertyDto = {
   district?: string;
   address: string;
   pricePublic: number;
-  ownerName: string;
-  ownerPhones: string[];
+  ownerName?: string;
+  ownerPhones?: string[];
   cadastralCode?: string;
   priceInternal?: number;
   ownerWhatsapp?: string;
+  ownerId?: string;
+  owner?: NestedPropertyOwnerInput;
   myHomeId?: string;
   ssGeId?: string;
   externalIds?: Array<{

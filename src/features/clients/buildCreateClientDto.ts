@@ -13,6 +13,12 @@ import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 
+function phonesForIdentitySubmit(phones: string[]): string[] {
+  return phones
+    .map((phoneNumber) => phoneNumber.trim())
+    .filter((phoneNumber) => phoneNumber !== "");
+}
+
 function toSubmittedWhatsapp(rawWhatsapp: string | undefined): string | undefined {
   const trimmedWhatsapp = rawWhatsapp?.trim() ?? "";
   if (!trimmedWhatsapp) {
@@ -233,7 +239,7 @@ function appendMatchingFields(
 export function buildCreateClientDto(values: ClientFormValues): CreateClientPayload {
   const dto: CreateClientPayload = {
     name: values.name,
-    phones: values.phones.map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
+    phones: phonesForIdentitySubmit(values.phones),
     dealType: values.dealType,
     description: values.description,
     districts: {
@@ -283,7 +289,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
 export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayload {
   const dto: UpdateClientPayload = {
     name: values.name,
-    phones: values.phones.map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
+    phones: phonesForIdentitySubmit(values.phones),
     dealType: values.dealType,
     description: values.description,
     districts: {

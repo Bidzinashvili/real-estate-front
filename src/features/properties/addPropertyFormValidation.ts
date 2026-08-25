@@ -10,12 +10,9 @@ import {
   wholeNumberMessage,
   atLeastOneMessage,
 } from "@/shared/i18n/ui";
+import { validateOwnerAssignment } from "@/features/propertyOwners/ownerContactDrafts";
 
 export type FormErrors = Partial<Record<string, string>>;
-
-const internationalPhoneRegex = /^\+\d{10,15}$/;
-const internationalPhoneError =
-  "ტელეფონი უნდა იყოს საერთაშორისო ფორმატში, მაგ. +995555111222";
 
 export function validateFormInputs(
   form: FormState,
@@ -70,23 +67,6 @@ export function validateFormInputs(
       errors[key] = "მინიმალური ქირის ვადა უნდა იყოს მინიმუმ 1 თვე.";
     }
   };
-  const requireInternationalPhone = (key: string, value: string) => {
-    const normalized = value.trim();
-    if (!normalized) {
-      errors[key] = "მესაკუთრის ტელეფონი სავალდებულოა.";
-      return;
-    }
-    if (!internationalPhoneRegex.test(normalized)) {
-      errors[key] = internationalPhoneError;
-    }
-  };
-  const optionalInternationalPhone = (key: string, value: string) => {
-    const normalized = value.trim();
-    if (!normalized) return;
-    if (!internationalPhoneRegex.test(normalized)) {
-      errors[key] = internationalPhoneError;
-    }
-  };
 
   if (!GEORGIAN_CITY_OPTIONS.some((option) => option.value === form.city)) {
     errors.city = "ქალაქი უნდა იყოს თბილისი, ბათუმი, ქუთაისი ან ბორჯომი.";
@@ -95,16 +75,10 @@ export function validateFormInputs(
     requireString("district", form.district, "უბანი");
   }
   requireString("address", form.address, "მისამართი");
-  requireString("ownerName", form.ownerName, "მესაკუთრის სახელი");
-  if (form.ownerPhones.length === 0) {
-    errors["ownerPhones"] = "საჭიროა მინიმუმ ერთი ტელეფონის ნომერი.";
-  } else {
-    requireInternationalPhone("ownerPhones.0", form.ownerPhones[0] ?? "");
-    form.ownerPhones.slice(1).forEach((phone, relativeIndex) => {
-      optionalInternationalPhone(`ownerPhones.${relativeIndex + 1}`, phone);
-    });
+  const ownerAssignmentError = validateOwnerAssignment(form.ownerAssignment);
+  if (ownerAssignmentError) {
+    errors.ownerAssignment = ownerAssignmentError;
   }
-  optionalInternationalPhone("ownerWhatsapp", form.ownerWhatsapp);
   requireNumber("pricePublic", form.pricePublic, "საჯარო ფასი");
   optionalNumber("priceInternal", form.priceInternal, "შიდა ფასი");
 

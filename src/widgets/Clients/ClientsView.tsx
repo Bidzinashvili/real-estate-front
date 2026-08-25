@@ -14,6 +14,7 @@ import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
 import { ClientRowArchiveActions } from "@/widgets/Clients/ClientRowArchiveActions";
 import type { Client } from "@/features/clients/types";
+import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import {
   DEAL_TYPES,
@@ -285,7 +286,14 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
                     className="border-t border-border hover:bg-muted/60"
                   >
                     <td className="px-4 py-3 font-medium text-foreground">
-                      {client.name}
+                      <div className="space-y-1">
+                        <span>{client.name}</span>
+                        <ClientProfileCompactIndicator
+                          clientProfileId={client.clientProfileId}
+                          clientProfile={client.clientProfile}
+                          compact
+                        />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-foreground">
                       {client.phones[0] ?? "—"}

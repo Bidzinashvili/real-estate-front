@@ -75,10 +75,9 @@ export function AddClientForm() {
           ...emptyClientFormDefaults,
           ...restoredDraft,
           relatedPersons: restoredDraft.relatedPersons ?? [],
-          phones: (restoredDraft.phones?.length
+          phones: restoredDraft.phones?.length
             ? restoredDraft.phones
-            : emptyClientFormDefaults.phones
-          ).map((phoneNumber) => normalizeGeorgianPhone(phoneNumber)),
+            : emptyClientFormDefaults.phones,
           whatsapp: normalizeGeorgianPhone(restoredDraft.whatsapp ?? ""),
         }),
       );

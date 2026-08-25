@@ -69,6 +69,16 @@ export function AppHeader() {
             კლიენტები
           </Link>
           <Link
+            href="/client-profiles"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/client-profiles")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            პროფილები
+          </Link>
+          <Link
             href="/collaborations"
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition ${
               pathname?.startsWith("/collaborations")
@@ -92,6 +102,16 @@ export function AppHeader() {
             }`}
           >
             განცხადებები
+          </Link>
+          <Link
+            href="/property-owners"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/property-owners")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            მეპატრონეები
           </Link>
           <Link
             href="/archive"

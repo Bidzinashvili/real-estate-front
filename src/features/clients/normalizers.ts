@@ -22,6 +22,7 @@ import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
 import { parseClientStatus } from "@/features/clients/clientEnums";
+import { normalizeClientProfileCompact } from "@/features/clientProfiles/normalizers";
 
 function mergeRequirementLock(
   parsedLock: LockState,
@@ -227,6 +228,11 @@ export function normalizeClient(client: ClientApi): Client {
 
   return {
     ...client,
+    clientProfileId:
+      asNullableString(record.clientProfileId) ??
+      normalizeClientProfileCompact(record.clientProfile)?.id ??
+      null,
+    clientProfile: normalizeClientProfileCompact(record.clientProfile),
     phones: client.phones ?? [],
     districts: client.districts.value ?? [],
     districtsLock: persistEntityLock(

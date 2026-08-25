@@ -23,6 +23,7 @@ import { GEORGIAN_PHONE_PREFIX } from "@/shared/lib/normalizeGeorgianPhone";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
+import { ClientProfileLookupSignals } from "@/widgets/ClientProfiles/ClientProfileLookupSignals";
 
 const clientPhoneInputClassName =
   "shadow-none block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary";
@@ -68,6 +69,7 @@ export function ClientCoreInfoSection({
 }: ClientCoreInfoSectionProps) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
   const selectedStatus = useWatch({ control, name: "status" });
+  const watchedPhones = useWatch({ control, name: "phones" }) ?? [];
   const dealOptions =
     dealTypeSelectOptions ??
     DEAL_TYPES.map((dealType) => ({
@@ -114,12 +116,17 @@ export function ClientCoreInfoSection({
                 name="phones.0"
                 control={control}
                 render={({ field }) => (
-                  <GeorgianPhoneInput
+                  <input
                     id="phones.0"
                     name={field.name}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="555555555 ან +77777777777"
                     value={field.value ?? ""}
                     className={clientPhoneInputClassName}
-                    onChange={(nextPhone) => {
+                    onChange={(event) => {
+                      const nextPhone = event.target.value;
                       field.onChange(nextPhone);
                       if (!isWhatsappManuallyEdited) {
                         setValue("whatsapp", nextPhone, {
@@ -144,9 +151,13 @@ export function ClientCoreInfoSection({
                     name={`phones.${actualPhoneIndex}`}
                     control={control}
                     render={({ field: phoneField }) => (
-                      <GeorgianPhoneInput
+                      <input
                         id={`phones.${actualPhoneIndex}`}
                         name={phoneField.name}
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="555555555 ან +77777777777"
                         value={phoneField.value ?? ""}
                         className={clientPhoneInputClassName}
                         onChange={phoneField.onChange}
@@ -167,7 +178,7 @@ export function ClientCoreInfoSection({
             })}
             <button
               type="button"
-              onClick={() => appendPhone(GEORGIAN_PHONE_PREFIX)}
+              onClick={() => appendPhone("")}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -182,6 +193,9 @@ export function ClientCoreInfoSection({
           {fieldDescriptions?.phones ? (
             <p className="text-xs text-muted-foreground">{fieldDescriptions.phones}</p>
           ) : null}
+          <ClientProfileLookupSignals
+            phones={Array.isArray(watchedPhones) ? watchedPhones : []}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

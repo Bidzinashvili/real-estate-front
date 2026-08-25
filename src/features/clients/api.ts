@@ -1,8 +1,11 @@
 import axios from "axios";
 import { getBearerAuthContext } from "@/shared/lib/auth";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
-import { toGetClientsSearchParams } from "@/features/clients/getClientsQuery";
-import type { GetClientsQuery } from "@/features/clients/getClientsQuery";
+import {
+  CLIENT_PROFILE_IDENTITY_CONFLICT,
+  IDENTITY_CONFLICT_MESSAGE,
+} from "@/features/clientProfiles/identityConflict";
+import { toGetClientsSearchParams, type GetClientsQuery } from "@/features/clients/getClientsQuery";
 import {
   normalizeClient,
   normalizeClientDetail,
@@ -29,6 +32,37 @@ import type {
 export type GetClientsRequestOptions = {
   signal?: AbortSignal;
 };
+
+function throwClientMutationError(
+  error: unknown,
+  fallbackByStatus: Record<number, string>,
+  fallback: string,
+): never {
+  if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
+    throw error;
+  }
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status ?? 500;
+    const parsed = parseStandardApiError(
+      error.response?.data,
+      status,
+      fallbackByStatus[status] ?? fallback,
+    );
+    const isIdentityConflict =
+      parsed.error === CLIENT_PROFILE_IDENTITY_CONFLICT ||
+      parsed.code === CLIENT_PROFILE_IDENTITY_CONFLICT;
+    throw new ApiError(
+      {
+        ...parsed,
+        message: isIdentityConflict ? IDENTITY_CONFLICT_MESSAGE : parsed.message,
+      },
+      isIdentityConflict
+        ? IDENTITY_CONFLICT_MESSAGE
+        : (fallbackByStatus[status] ?? fallback),
+    );
+  }
+  throw error;
+}
 
 export async function getClients(
   query?: GetClientsQuery,
@@ -97,18 +131,16 @@ export async function createClient(dto: CreateClientPayload): Promise<Client> {
     emitRemindersChangedEvent();
     return normalizeClient(res.data);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status ?? 500;
-      const fallback =
-        status === 403
-          ? "კლიენტების შექმნის უფლება არ გაქვთ."
-          : status === 401
-            ? "ავტორიზაცია საჭიროა."
-            : "კლიენტის შექმნა ვერ მოხერხდა.";
-      const parsed = parseStandardApiError(error.response?.data, status, fallback);
-      throw new ApiError(parsed, fallback);
-    }
-    throw error;
+    throwClientMutationError(
+      error,
+      {
+        400: "კლიენტის მონაცემები არასწორია.",
+        401: "ავტორიზაცია საჭიროა.",
+        403: "კლიენტების შექმნის უფლება არ გაქვთ.",
+        409: "ეს ნომერი უკვე სხვა კლიენტის პროფილთან არის დაკავშირებული.",
+      },
+      "კლიენტის შექმნა ვერ მოხერხდა.",
+    );
   }
 }
 
@@ -126,20 +158,16 @@ export async function updateClient(
     emitRecordsChangedEvent();
     return normalizeClient(res.data);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status ?? 500;
-      const fallback =
-        status === 403
-          ? "ამ კლიენტზე წვდომა არ გაქვთ"
-          : "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.";
-      const parsed = parseStandardApiError(
-        error.response?.data,
-        status,
-        fallback,
-      );
-      throw new ApiError(parsed, fallback);
-    }
-    throw error;
+    throwClientMutationError(
+      error,
+      {
+        400: "კლიენტის მონაცემები არასწორია.",
+        403: "ამ კლიენტზე წვდომა არ გაქვთ",
+        404: "კლიენტი ვერ მოიძებნა.",
+        409: "ეს ნომერი უკვე სხვა კლიენტის პროფილთან არის დაკავშირებული.",
+      },
+      "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.",
+    );
   }
 }
 

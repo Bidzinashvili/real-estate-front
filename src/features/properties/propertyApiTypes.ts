@@ -15,6 +15,8 @@ import type {
   OutcomeSource,
   ReminderConfigPayload,
 } from "@/features/lifecycle/lifecycleEnums";
+import type { NestedPropertyOwnerInput } from "@/features/propertyOwners/types";
+import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
 
 export type PropertySortBy = "createdAt" | "pricePublic";
 
@@ -172,6 +174,8 @@ export type PropertyApi = EntityVerificationFields & {
   ownerName: string;
   ownerPhones: string[];
   ownerWhatsapp: string | null;
+  ownerId?: string | null;
+  propertyOwner?: PropertyOwnerSummary | null;
   ourSiteId: string | null;
   myHomeId: string | null;
   ssGeId: string | null;
@@ -217,9 +221,11 @@ export type CreatePropertyBase = {
   cadastralCode?: string;
   pricePublic: number;
   priceInternal?: number;
-  ownerName: string;
-  ownerPhones: string[];
+  ownerName?: string;
+  ownerPhones?: string[];
   ownerWhatsapp?: string;
+  ownerId?: string;
+  owner?: NestedPropertyOwnerInput;
   myHomeId?: string;
   ssGeId?: string;
   externalIds?: Array<{
@@ -340,6 +346,11 @@ export type CreatePropertyResponse = Omit<
   Partial<Pick<PropertyApi, "apartment" | "privateHouse" | "landPlot" | "commercial">>;
 
 export type UpdatePropertyRequestBody = {
+  ownerId?: string;
+  owner?: NestedPropertyOwnerInput;
+  ownerName?: string;
+  ownerPhones?: string[];
+  ownerWhatsapp?: string;
   status?: PropertyStatus;
   outcomeSource?: OutcomeSource;
   reminder?: ReminderConfigPayload;

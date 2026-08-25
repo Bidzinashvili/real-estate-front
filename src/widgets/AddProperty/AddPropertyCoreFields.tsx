@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { useRef } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
 import {
@@ -31,6 +30,8 @@ import {
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
+import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
+import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
 
 function parseFormNumber(value: string): number | null {
   const trimmedValue = value.trim();
@@ -94,7 +95,6 @@ export function AddPropertyCoreFields({
   buildingNumber,
   onBuildingNumberChange,
 }: Props) {
-  const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
   const isPersonalCommentEntryActiveRef = useRef(false);
   const showMatchingLocks = form.propertyType === "APARTMENT";
   const pricePerSquareMeter = calculatePricePerSquareMeter(
@@ -124,32 +124,9 @@ export function AddPropertyCoreFields({
     updateForm("pricePublic", linkedPrices.pricePublic);
   }
 
-  function handleOwnerPhoneChange(phoneIndex: number, value: string) {
-    const updated = [...form.ownerPhones];
-    updated[phoneIndex] = value;
-    updateForm("ownerPhones", updated);
-    if (phoneIndex === 0 && !isWhatsappManuallyEdited) {
-      updateForm("ownerWhatsapp", value);
-    }
-  }
-
-  function handleAddOwnerPhone() {
-    updateForm("ownerPhones", [...form.ownerPhones, "+995"]);
-  }
-
-  function handleRemoveOwnerPhone(phoneIndex: number) {
-    const updated = form.ownerPhones.filter((_phone, idx) => idx !== phoneIndex);
-    updateForm("ownerPhones", updated);
-  }
-
-  function handleOwnerWhatsappChange(value: string) {
-    if (value.trim() === "") {
-      setIsWhatsappManuallyEdited(false);
-      updateForm("ownerWhatsapp", "");
-      return;
-    }
-    updateForm("ownerWhatsapp", value);
-    setIsWhatsappManuallyEdited(true);
+  function handleOwnerAssignmentChange(nextAssignment: PropertyOwnerAssignment) {
+    updateForm("ownerAssignment", nextAssignment);
+    updateForm("ownerName", nextAssignment.name);
   }
 
   function handlePrivateCommentChange(value: string) {
@@ -309,67 +286,10 @@ export function AddPropertyCoreFields({
           </p>
         ) : null}
       </div>
-      <TextField
-        id="ownerName"
-        label="მესაკუთრის სახელი"
-        value={form.ownerName}
-        onChange={(value) => updateForm("ownerName", value)}
-        required
-        error={fieldErrors.ownerName}
-      />
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-foreground">
-          მესაკუთრის ტელეფონი <span className="text-red-500">*</span>
-        </label>
-        <div className="space-y-2">
-          {form.ownerPhones.map((phone, phoneIndex) => (
-            <div key={phoneIndex} className="flex items-center gap-2">
-              <input
-                id={phoneIndex === 0 ? "ownerPhone" : undefined}
-                type="tel"
-                value={phone}
-                onChange={(event) => handleOwnerPhoneChange(phoneIndex, event.target.value)}
-                className={`${addPropertyInputClassName()} ${fieldErrors[`ownerPhones.${phoneIndex}`] ? "border-destructive focus:border-destructive" : ""}`}
-              />
-              {form.ownerPhones.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveOwnerPhone(phoneIndex)}
-                  className="flex-none text-muted-foreground transition hover:text-destructive"
-                  aria-label="ტელეფონის წაშლა"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={handleAddOwnerPhone}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            ტელეფონის დამატება
-          </button>
-        </div>
-        {fieldErrors["ownerPhones"] && (
-          <p className="text-xs text-destructive" role="alert">
-            {fieldErrors["ownerPhones"]}
-          </p>
-        )}
-        {form.ownerPhones.map((_phone, phoneIndex) =>
-          fieldErrors[`ownerPhones.${phoneIndex}`] ? (
-            <p key={phoneIndex} className="text-xs text-destructive" role="alert">
-              {fieldErrors[`ownerPhones.${phoneIndex}`]}
-            </p>
-          ) : null,
-        )}
-      </div>
-      <TextField
-        id="ownerWhatsapp"
-        label="მესაკუთრის WhatsApp"
-        value={form.ownerWhatsapp}
-        onChange={handleOwnerWhatsappChange}
+      <PropertyOwnerPickerSection
+        assignment={form.ownerAssignment}
+        onChange={handleOwnerAssignmentChange}
+        error={fieldErrors.ownerAssignment}
       />
       <TextField
         id="cadastralCode"

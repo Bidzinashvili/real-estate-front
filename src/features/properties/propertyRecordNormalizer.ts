@@ -35,6 +35,7 @@ import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { isPropertyFieldLockKey } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
+import { normalizePropertyOwnerSummary } from "@/features/propertyOwners/normalizers";
 
 function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
   const candidate = typeof value === "string" ? value.trim() : "";
@@ -350,6 +351,11 @@ export function normalizeProperty(value: unknown): Property | null {
     ownerName: asString(value.ownerName),
     ownerPhones: asStringArray(value.ownerPhones),
     ownerWhatsapp: asNullableString(value.ownerWhatsapp),
+    ownerId:
+      value.ownerId === undefined || value.ownerId === null
+        ? null
+        : asString(value.ownerId).trim() || null,
+    propertyOwner: normalizePropertyOwnerSummary(value.propertyOwner),
     ourSiteId: asNullableString(value.ourSiteId),
     myHomeId: asNullableString(value.myHomeId),
     ssGeId: asNullableString(value.ssGeId),
