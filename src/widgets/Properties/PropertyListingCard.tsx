@@ -3,11 +3,7 @@
 import { Eye, MapPin } from "lucide-react";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
-import {
-  formatPropertyStatusLabel,
-  type Property,
-  type PropertyStatus,
-} from "@/features/properties/types";
+import type { Property } from "@/features/properties/types";
 import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 import { PropertyListingCardManager } from "@/widgets/Properties/PropertyListingCardManager";
@@ -15,6 +11,8 @@ import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListin
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
 
 function formatAddress(property: Property) {
   const parts = [
@@ -80,22 +78,6 @@ function formatOwnerLine(property: Property) {
   return "—";
 }
 
-function lifecycleStatusBadgeClass(status: PropertyStatus): string {
-  if (status === "TO_BE_VERIFIED") {
-    return "bg-warning";
-  }
-  if (status === "AVAILABLE_SOON") {
-    return "bg-violet-600";
-  }
-  if (status === "RENTED") {
-    return "bg-muted-foreground";
-  }
-  if (status === "SOLD" || status === "ARCHIVED") {
-    return "bg-muted-foreground";
-  }
-  return "bg-teal-600";
-}
-
 type PropertyListingCardProps = {
   property: Property;
   apiBaseUrl: string | null;
@@ -144,11 +126,12 @@ export function PropertyListingCard({
             <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
               {formatDealTypeLabel(property.dealType)}
             </span>
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white ${lifecycleStatusBadgeClass(property.status)}`}
-            >
-              {formatPropertyStatusLabel(property.status)}
-            </span>
+            <LifecycleStatusBadge
+              kind="property"
+              status={property.status}
+              outcomeSource={property.outcomeSource}
+              verificationReason={property.verificationReason}
+            />
           </div>
         </div>
         {(canChangeStatus || canSetReminders) && onListingChanged ? (
@@ -227,6 +210,11 @@ export function PropertyListingCard({
           <p className="min-w-0 truncate text-xs text-muted-foreground">
             {formatOwnerLine(property)}
           </p>
+          {formatLifecycleDate(property.lastVerifiedAt) ? (
+            <p className="text-xs text-muted-foreground">
+              გადამოწმებულია: {formatLifecycleDate(property.lastVerifiedAt)}
+            </p>
+          ) : null}
         </div>
       </div>
     </article>

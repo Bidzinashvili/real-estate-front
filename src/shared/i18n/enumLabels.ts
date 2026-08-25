@@ -5,7 +5,9 @@ export const DEAL_TYPE_LABELS = {
 } as const;
 
 export const CLIENT_STATUS_LABELS = {
-  ACTIVE: "აქტიური",
+  ACTIVE: "აქტიურია",
+  INACTIVE: "არ არის აქტიური",
+  NEEDS_VERIFICATION: "გადასამოწმებელია",
   IN_PROGRESS: "პროცესში",
   ARCHIVED: "არქივში",
 } as const;
@@ -76,10 +78,10 @@ export const PROPERTY_STATUS_LABELS = {
   FOR_RENT: "ქირავდება",
   FOR_SALE: "იყიდება",
   AVAILABLE_SOON: "მალე ხელმისაწვდომი",
-  RENTED: "გაქირავებული",
-  SOLD: "გაყიდული",
+  RENTED: "გაქირავებულია",
+  SOLD: "გაიყიდა",
+  NEEDS_VERIFICATION: "გადასამოწმებელია",
   ARCHIVED: "არქივში",
-  TO_BE_VERIFIED: "გადასამოწმებელია",
 } as const;
 
 export const CLIENT_INVITE_LINK_STATUS_LABELS = {

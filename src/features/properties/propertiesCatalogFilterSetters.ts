@@ -44,6 +44,7 @@ export function createPropertiesCatalogFilterSetters(args: {
     setCommercialArea: (value: string) => bumpPage({ commercialArea: value }),
     setShowMyProperties: (value: boolean) =>
       bumpPage({ showMyProperties: value }),
+    setShowArchived: (value: boolean) => bumpPage({ showArchived: value }),
     setSortBy: (value: PropertySortBy) => bumpPage({ sortBy: value }),
     setOrder: (value: PropertyListSortOrder) => bumpPage({ order: value }),
     setPage: (value: number) => {

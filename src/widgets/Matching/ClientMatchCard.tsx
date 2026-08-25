@@ -7,10 +7,11 @@ import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
 import { formatPreference } from "@/widgets/Matching/PropertyMatchCard";
 import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
 import {
-  CLIENT_STATUS_LABELS,
   DEAL_TYPE_LABELS,
   lookupEnumLabel,
 } from "@/shared/i18n/enumLabels";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { isClientStatus } from "@/features/clients/clientEnums";
 
 type ClientMatchCardProps = {
   match: ScoredClientMatch;
@@ -26,9 +27,13 @@ export function ClientMatchCard({ match, propertyId }: ClientMatchCardProps) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            {lookupEnumLabel(DEAL_TYPE_LABELS, client.dealType)} ·{" "}
-            {lookupEnumLabel(CLIENT_STATUS_LABELS, client.status)}
+            {lookupEnumLabel(DEAL_TYPE_LABELS, client.dealType)}
           </p>
+          {isClientStatus(client.status) ? (
+            <div className="mt-1">
+              <LifecycleStatusBadge kind="client" status={client.status} size="sm" />
+            </div>
+          ) : null}
           <p className="text-xs text-muted-foreground">
             {(client.districts ?? []).join(", ") || "უბნები არ არის"}
           </p>

@@ -23,12 +23,12 @@ import { PropertyViewGallery } from "@/widgets/PropertyDetails/PropertyViewGalle
 import { PropertyViewMetaCard } from "@/widgets/PropertyDetails/PropertyViewMetaCard";
 import { PropertyViewSummaryCard } from "@/widgets/PropertyDetails/PropertyViewSummaryCard";
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
-import {
-  formatDealTypeLabel,
-  formatPropertyHeadline,
-  formatPropertyStatusLabel,
-  propertyStatusBadgeClass,
-} from "@/widgets/PropertyDetails/propertyViewFormatters";
+import { formatDealTypeLabel, formatPropertyHeadline } from "@/widgets/PropertyDetails/propertyViewFormatters";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { VerificationReminderPanel } from "@/widgets/Lifecycle/VerificationReminderPanel";
+import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
+import { isRentalDealType } from "@/features/properties/propertyStatus";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 
 type PropertyDetailsViewContentProps = {
   property: Property;
@@ -42,6 +42,12 @@ type PropertyDetailsViewContentProps = {
   onBeforeEditNavigation?: () => void;
   onOpenReminders: () => void;
   onArchive: () => void;
+  onOpenChangeStatus: () => void;
+  onSaveReminder: (payload: ReminderConfigPayload) => Promise<void>;
+  onVerifyNow: () => Promise<void>;
+  isSavingReminder: boolean;
+  isVerifying: boolean;
+  reminderError: string | null;
 };
 
 export function PropertyDetailsViewContent({
@@ -56,6 +62,12 @@ export function PropertyDetailsViewContent({
   onBeforeEditNavigation,
   onOpenReminders,
   onArchive,
+  onOpenChangeStatus,
+  onSaveReminder,
+  onVerifyNow,
+  isSavingReminder,
+  isVerifying,
+  reminderError,
 }: PropertyDetailsViewContentProps) {
   const apiBaseUrl = getApiBaseUrl();
   const headline = formatPropertyHeadline(property);
@@ -99,11 +111,12 @@ export function PropertyDetailsViewContent({
               <span className="inline-flex rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
                 {formatDealTypeLabel(property.dealType)}
               </span>
-              <span
-                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${propertyStatusBadgeClass(property.status)}`}
-              >
-                {formatPropertyStatusLabel(property.status)}
-              </span>
+              <LifecycleStatusBadge
+                kind="property"
+                status={property.status}
+                outcomeSource={property.outcomeSource}
+                verificationReason={property.verificationReason}
+              />
             </div>
           </div>
 
@@ -161,9 +174,21 @@ export function PropertyDetailsViewContent({
 
         <div className="order-4 flex min-w-0 flex-col gap-4 lg:col-start-2">
           <PropertyViewContactCard property={property} />
-          <PropertyDetailsLifecycleSection
-            lifecycleStatus={property.status}
-            verificationReminderIso={property.reminderDate}
+          <PropertyDetailsLifecycleSection property={property} />
+          <VerificationReminderPanel
+            fields={property}
+            presetSet={
+              isRentalDealType(property.dealType) &&
+              (property.status === "RENTED" || isPropertyArchived(property))
+                ? "rentalExpiry"
+                : "verification"
+            }
+            canEdit={canEdit}
+            isSaving={isSavingReminder}
+            isVerifying={isVerifying}
+            error={reminderError}
+            onSaveReminder={onSaveReminder}
+            onVerifyNow={onVerifyNow}
           />
           <PropertyViewPrivateComments
             property={property}
@@ -179,6 +204,7 @@ export function PropertyDetailsViewContent({
               matchPercentage={matchPercentage}
               onOpenReminders={onOpenReminders}
               onArchive={onArchive}
+              onOpenChangeStatus={onOpenChangeStatus}
             />
           ) : null}
         </div>

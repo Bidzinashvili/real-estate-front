@@ -270,7 +270,11 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
 
   const reminderIso = parseReminderDateToIso(values.reminderDate ?? "");
   if (reminderIso) {
-    dto.reminderDate = reminderIso;
+    dto.reminder = {
+      type: "CUSTOM_DATE",
+      notifyAt: reminderIso,
+      repeats: false,
+    };
   }
 
   return dto;
@@ -294,10 +298,11 @@ export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayl
       value: filterStringList(values.labels.value),
       lock: persistEntityLock(values.labels.lock),
     },
-    reminderDate: values.reminderDate?.trim()
-      ? parseReminderDateToIso(values.reminderDate)
-      : null,
     status: values.status ? values.status : undefined,
+    outcomeSource:
+      values.status === "INACTIVE" && values.outcomeSource
+        ? values.outcomeSource
+        : undefined,
   };
 
   const submittedWhatsapp = toSubmittedWhatsapp(values.whatsapp);

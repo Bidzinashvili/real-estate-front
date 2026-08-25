@@ -8,6 +8,7 @@ import {
   normalizeClientDetail,
   normalizeClientsListResponse,
 } from "@/features/clients/normalizers";
+import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 import type {
   Client,
   ClientDetail,
@@ -92,6 +93,7 @@ export async function createClient(dto: CreateClientPayload): Promise<Client> {
     const res = await axios.post<ClientApi>(`${baseUrl}/clients`, dto, {
       headers: { ...headers, "Content-Type": "application/json" },
     });
+    emitRemindersChangedEvent();
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -119,6 +121,7 @@ export async function updateClient(
     const res = await axios.patch<ClientApi>(`${baseUrl}/clients/${id}`, dto, {
       headers: { ...headers, "Content-Type": "application/json" },
     });
+    emitRemindersChangedEvent();
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -127,6 +130,37 @@ export async function updateClient(
         status === 403
           ? "ამ კლიენტზე წვდომა არ გაქვთ"
           : "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function verifyClient(id: string): Promise<Client> {
+  const { baseUrl, headers } = getBearerAuthContext();
+
+  try {
+    const res = await axios.post<ClientApi>(
+      `${baseUrl}/clients/${id}/verify`,
+      {},
+      {
+        headers: { ...headers, "Content-Type": "application/json" },
+      },
+    );
+    emitRemindersChangedEvent();
+    return normalizeClient(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ კლიენტის გადამოწმების უფლება არ გაქვთ"
+          : "კლიენტის გადამოწმება ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         status,

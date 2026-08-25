@@ -11,11 +11,10 @@ import {
   formatDealTypeLabel,
   formatGelAmount,
   formatPropertyFullAddress,
-  formatPropertyStatusLabel,
   propertyAreaSquareMeters,
-  propertyStatusBadgeClass,
   propertyTypeDisplayLabel,
 } from "@/widgets/PropertyDetails/propertyViewFormatters";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 
 type PropertyViewSummaryCardProps = {
   property: Property;
@@ -86,11 +85,12 @@ export function PropertyViewSummaryCard({
         <div className="min-w-0">
           <dt className="text-xs text-muted-foreground">სტატუსი</dt>
           <dd className="mt-1">
-            <span
-              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${propertyStatusBadgeClass(property.status)}`}
-            >
-              {formatPropertyStatusLabel(property.status)}
-            </span>
+            <LifecycleStatusBadge
+              kind="property"
+              status={property.status}
+              outcomeSource={property.outcomeSource}
+              verificationReason={property.verificationReason}
+            />
           </dd>
         </div>
       </dl>

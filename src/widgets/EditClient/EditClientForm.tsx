@@ -12,6 +12,11 @@ import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import type { ClientDetail } from "@/features/clients/types";
 import { buildUpdateClientDto } from "@/features/clients/buildCreateClientDto";
 import { mapClientDetailToFormValues } from "@/features/clients/mapClientToFormValues";
+import {
+  CLIENT_EDIT_STATUSES,
+  CLIENT_STATUS_LABELS,
+  type ClientStatus,
+} from "@/features/clients/clientEnums";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
 import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSection";
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
@@ -122,6 +127,16 @@ function EditClientFormInner({
           removePhone={removePhone}
           isRentDeal={isRentDeal}
           showReminderHint
+          showReminderDateField={false}
+          clientStatusSelectOptions={(CLIENT_EDIT_STATUSES.includes(
+            client.status as (typeof CLIENT_EDIT_STATUSES)[number],
+          )
+            ? [...CLIENT_EDIT_STATUSES]
+            : [client.status, ...CLIENT_EDIT_STATUSES]
+          ).map((clientStatus: ClientStatus) => ({
+            value: clientStatus,
+            label: CLIENT_STATUS_LABELS[clientStatus],
+          }))}
         />
 
         <ClientLocationSection control={control} />

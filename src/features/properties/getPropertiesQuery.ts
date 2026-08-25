@@ -36,6 +36,7 @@ export type GetPropertiesQuery = {
   page?: number;
   limit?: number;
   myProperties?: boolean;
+  archived?: boolean;
   labelIds?: string[];
   labelNames?: string[];
 };
@@ -133,6 +134,11 @@ export function toGetPropertiesSearchParams(
   if (query.sortBy) out.set("sortBy", query.sortBy);
   if (query.order) out.set("order", query.order);
   if (query.myProperties === true) out.set("myProperties", "true");
+  if (query.archived === true) {
+    out.set("archived", "true");
+  } else if (query.archived === false) {
+    out.set("archived", "false");
+  }
   appendArray(out, "labelIds", query.labelIds);
   appendArray(out, "labelNames", query.labelNames);
 

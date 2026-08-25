@@ -19,6 +19,8 @@ import {
 import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
+import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
+import { parseClientStatus } from "@/features/clients/clientEnums";
 
 function mergeRequirementLock(
   parsedLock: LockState,
@@ -249,6 +251,8 @@ export function normalizeClient(client: ClientApi): Client {
     petLock: persistEntityLock(coalesceLock(client.pet.lock, readParallelLock(record, "pet"))),
     relatedPersons: client.relatedPersons ?? [],
     requirements: normalizeRequirements(client.requirements, record),
+    status: parseClientStatus(client.status),
+    ...parseEntityVerificationFields(record),
   };
 }
 

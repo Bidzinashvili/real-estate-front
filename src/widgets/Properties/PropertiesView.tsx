@@ -86,6 +86,36 @@ export function PropertiesView() {
             isLoggedIn={isLoggedIn}
             isAuthLoading={isAuthLoading}
           />
+          <div
+            className="inline-flex rounded-full border border-border bg-muted/90 p-0.5 shadow-sm"
+            role="group"
+            aria-label="არქივი"
+          >
+            <button
+              type="button"
+              aria-pressed={!catalog.state.showArchived}
+              onClick={() => catalog.setShowArchived(false)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                !catalog.state.showArchived
+                  ? "bg-card text-foreground shadow-sm ring-1 ring-border/80"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              მიმდინარე
+            </button>
+            <button
+              type="button"
+              aria-pressed={catalog.state.showArchived}
+              onClick={() => catalog.setShowArchived(true)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                catalog.state.showArchived
+                  ? "bg-card text-foreground shadow-sm ring-1 ring-border/80"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              არქივი
+            </button>
+          </div>
           <div className="flex w-full items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 shadow-sm sm:w-72">
             <input
               type="search"
@@ -137,7 +167,11 @@ export function PropertiesView() {
           )}
 
           {!isLoading && !error && total === 0 && (
-            <p className="text-sm text-muted-foreground">განცხადებები ვერ მოიძებნა.</p>
+            <p className="text-sm text-muted-foreground">
+              {catalog.state.showArchived
+                ? "არქივში განცხადებები ვერ მოიძებნა."
+                : "განცხადებები ვერ მოიძებნა."}
+            </p>
           )}
 
           {!isLoading && !error && total > 0 && (

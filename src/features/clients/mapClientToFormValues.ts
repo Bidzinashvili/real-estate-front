@@ -62,6 +62,7 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     addresses: { value: client.addresses, lock: persistEntityLock(client.addressesLock ?? "none") },
     labels: { value: client.labels, lock: persistEntityLock(client.labelsLock ?? "none") },
     status: client.status,
+    outcomeSource: client.outcomeSource ?? "",
     reminderDate: isoToDatetimeLocal(client.reminderDate),
     relatedPersons: client.relatedPersons.map((person) => ({
       name: person.name,

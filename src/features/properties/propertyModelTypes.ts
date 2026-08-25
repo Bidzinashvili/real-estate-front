@@ -3,6 +3,7 @@ import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
 
 export type { DealType };
 export type { PropertyStatus };
@@ -202,7 +203,7 @@ export type PropertyCommercial = {
   minRentalPeriod: number | null;
 };
 
-export type Property = {
+export type Property = EntityVerificationFields & {
   id: string;
   propertyType: PropertyType;
   hotelScope?: HotelScope | null;
@@ -229,10 +230,10 @@ export type Property = {
   internalText: string | null;
   comment: string | null;
   internalComment: string | null;
-  reminderDate: string | null;
   commentDate: string | null;
   tenantClientId: string | null;
   rentalDurationMonths: number | null;
+  archivedAt: string | null;
   labels?: LabelDto[];
   images: PropertyListingImage[];
   createdAt: string;

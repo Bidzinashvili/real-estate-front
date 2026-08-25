@@ -441,10 +441,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
       {presentation === "view" ? (
         <div className="mt-6 space-y-6">
-          <PropertyDetailsLifecycleSection
-            lifecycleStatus={property.status}
-            verificationReminderIso={property.reminderDate}
-          />
+          <PropertyDetailsLifecycleSection property={property} />
 
           <PropertyDetailsEditableSections
             values={values}
@@ -471,10 +468,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          <PropertyDetailsLifecycleSection
-            lifecycleStatus={property.status}
-            verificationReminderIso={property.reminderDate}
-          />
+          <PropertyDetailsLifecycleSection property={property} />
 
           <PropertyDetailsEditableSections
             values={values}

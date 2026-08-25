@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
-import { formatPropertyStatusLabel } from "@/features/properties/types";
 import type { Property } from "@/features/properties/types";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 
 type AdminPropertiesSectionProps = {
   properties: Property[];
@@ -65,9 +65,15 @@ export function AdminPropertiesSection({
                       : ""}{" "}
                     • {formatDealTypeLabel(property.dealType)}
                   </td>
-                  <td className="hidden px-4 py-3 text-foreground sm:table-cell">
-                    {formatPropertyStatusLabel(property.status)}
-                  </td>
+                    <td className="hidden px-4 py-3 text-foreground sm:table-cell">
+                      <LifecycleStatusBadge
+                        kind="property"
+                        status={property.status}
+                        outcomeSource={property.outcomeSource}
+                        verificationReason={property.verificationReason}
+                        size="sm"
+                      />
+                    </td>
                   <td className="hidden px-4 py-3 text-foreground md:table-cell">
                     {property.city} / {property.district}
                   </td>

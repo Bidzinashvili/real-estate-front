@@ -9,6 +9,7 @@ import { clientMatchesHref } from "@/features/matching/matchingRoutes";
 import { useCurrentUser } from "@/shared/hooks";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import {
   DEAL_TYPES,
@@ -52,12 +53,6 @@ const STATUS_OPTIONS = [
     label: CLIENT_STATUS_LABELS[clientStatus],
   })),
 ];
-
-const STATUS_BADGE_CLASSES: Record<ClientStatus, string> = {
-  ACTIVE: "bg-success-muted text-success-foreground",
-  IN_PROGRESS: "bg-primary/15 text-primary",
-  ARCHIVED: "bg-muted text-muted-foreground",
-};
 
 const DEFAULT_LIMIT = 20;
 
@@ -276,11 +271,13 @@ export function ClientsView() {
                       {DEAL_TYPE_LABELS[client.dealType]}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE_CLASSES[client.status]}`}
-                      >
-                        {CLIENT_STATUS_LABELS[client.status]}
-                      </span>
+                      <LifecycleStatusBadge
+                        kind="client"
+                        status={client.status}
+                        outcomeSource={client.outcomeSource}
+                        verificationReason={client.verificationReason}
+                        size="sm"
+                      />
                     </td>
                     <td className="px-4 py-3 text-foreground">
                       {client.budgetMin !== null || client.budgetMax !== null

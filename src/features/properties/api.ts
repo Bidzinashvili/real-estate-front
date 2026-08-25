@@ -16,7 +16,10 @@ import {
   normalizeCreatePropertyResponse,
   normalizePropertiesListResponse,
 } from "@/features/properties/normalizers";
+import { normalizeProperty } from "@/features/properties/propertyRecordNormalizer";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
+import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
+
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
   const token = getStoredAuthToken();
@@ -37,7 +40,6 @@ function getAuthHeaders() {
   };
 }
 
-const PROPERTY_LIST_PAGE_SCAN = 100;
 const PROPERTY_LIST_SCAN_MAX_PAGES = 500;
 
 export type GetPropertiesRequestOptions = {
@@ -77,31 +79,44 @@ export async function getProperties(
   }
 }
 
+export async function getPropertyById(id: string): Promise<Property | null> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.get(`${baseUrl}/properties/${id}`, {
+      headers,
+    });
+    return normalizeProperty(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ განცხადებაზე წვდომა არ გაქვთ"
+          : "განცხადების ჩატვირთვა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
 export async function getPropertyFromListById(
   id: string,
 ): Promise<Property | null> {
-  let page = 1;
-
-  while (page <= PROPERTY_LIST_SCAN_MAX_PAGES) {
-    const { properties, total, limit } = await getProperties({
-      page,
-      limit: PROPERTY_LIST_PAGE_SCAN,
-    });
-
-    const found = properties.find((p) => p.id === id) ?? null;
-    if (found) return found;
-
-    const seenEnd = page * limit >= total || properties.length === 0;
-    if (seenEnd) return null;
-
-    page += 1;
-  }
-
-  return null;
+  return getPropertyById(id);
 }
 
 export async function getPropertiesBulk(options?: {
   maxItems?: number;
+  archived?: boolean;
 }): Promise<Property[]> {
   const maxItems = options?.maxItems ?? 2500;
   const pageLimit = 100;
@@ -115,6 +130,7 @@ export async function getPropertiesBulk(options?: {
     const { properties, total } = await getProperties({
       page,
       limit: pageLimit,
+      archived: options?.archived ?? false,
     });
 
     acc.push(...properties);
@@ -129,16 +145,18 @@ export async function getPropertiesBulk(options?: {
 export async function updateProperty(
   id: string,
   payload: PropertyUpdatePayload,
-): Promise<void> {
+): Promise<Property | null> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    await axios.patch(`${baseUrl}/properties/${id}`, payload, {
+    const res = await axios.patch(`${baseUrl}/properties/${id}`, payload, {
       headers: {
         ...headers,
         "Content-Type": "application/json",
       },
     });
+    emitRemindersChangedEvent();
+    return normalizeProperty(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status ?? 500;
@@ -146,6 +164,41 @@ export async function updateProperty(
         status === 403
           ? "ამ განცხადების შეცვლის უფლება არ გაქვთ"
           : "განცხადების ცვლილებების შენახვა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
+export async function verifyProperty(id: string): Promise<Property | null> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/properties/${id}/verify`,
+      {},
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    emitRemindersChangedEvent();
+    return normalizeProperty(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ განცხადების გადამოწმების უფლება არ გაქვთ"
+          : "განცხადების გადამოწმება ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         status,

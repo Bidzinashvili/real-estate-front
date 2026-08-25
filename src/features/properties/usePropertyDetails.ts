@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getPropertyFromListById } from "@/features/properties/api";
+import { getPropertyById } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
 
 type UsePropertyDetailsResult = {
@@ -29,7 +29,7 @@ export function usePropertyDetails(
     setError(null);
 
     try {
-      const next = await getPropertyFromListById(id);
+      const next = await getPropertyById(id);
       setProperty(next);
       if (!next) {
         setError("განცხადება ვერ მოიძებნა.");

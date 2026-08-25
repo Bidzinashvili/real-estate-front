@@ -6,6 +6,11 @@ import type {
   Renovation,
 } from "@/features/clients/clientEnums";
 import type { ClientPreferenceValue, LockState } from "@/features/matching/matchingEnums";
+import type {
+  EntityVerificationFields,
+  OutcomeSource,
+  ReminderConfigPayload,
+} from "@/features/lifecycle/lifecycleEnums";
 
 export type { LockState } from "@/features/matching/matchingEnums";
 
@@ -43,7 +48,7 @@ export interface CreateClientPayload {
   dealType: DealType;
   description: string;
   status?: ClientStatus;
-  reminderDate?: string | null;
+  reminder?: ReminderConfigPayload;
   relatedPersons?: CreateClientRelatedPersonPayload[];
   budgetMin?: LockedOptional<number>;
   budgetMax?: LockedOptional<number>;
@@ -85,7 +90,8 @@ export type UpdateClientPayload = {
   dealType?: DealType;
   description?: string;
   status?: ClientStatus;
-  reminderDate?: string | null;
+  outcomeSource?: OutcomeSource;
+  reminder?: ReminderConfigPayload;
   relatedPersons?: CreateClientRelatedPersonPayload[];
   budgetMin?: LockedOptional<number>;
   budgetMax?: LockedOptional<number>;
@@ -189,7 +195,7 @@ export type ClientCommentApi = {
   createdAt: ISODateString;
 };
 
-export type ClientApi = {
+export type ClientApi = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
   name: string;
@@ -204,8 +210,6 @@ export type ClientApi = {
   addresses: Locked<string[]>;
   labels?: Locked<string[]>;
   status: ClientStatus;
-  reminderDate: ISODateString | null;
-  reminderSentAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   deletedAt: ISODateString | null;

@@ -6,10 +6,12 @@ import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
-import { updateProperty } from "@/features/properties/api";
+import { updateProperty, verifyProperty } from "@/features/properties/api";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
+import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { calculateMatchScore } from "@/features/properties/matchScore";
 import { PropertyDetailsViewContent } from "@/widgets/PropertyDetails/PropertyDetailsViewContent";
+import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
@@ -26,8 +28,12 @@ export function PropertyDetailsReadOnlyBody({
   const { user } = useCurrentUser();
   const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+  const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [isSavingReminder, setIsSavingReminder] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
 
   const canEdit = useMemo(() => {
     if (!user || !property) return false;
@@ -113,6 +119,43 @@ export function PropertyDetailsReadOnlyBody({
     return { percentage: null, matched: 0, total: 0 };
   }, [property]);
 
+  async function handleSaveReminder(payload: ReminderConfigPayload) {
+    if (!property || !canEdit) {
+      return;
+    }
+    setIsSavingReminder(true);
+    setReminderError(null);
+    try {
+      await updateProperty(property.id, { reminder: payload });
+      await refetch();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "შეხსენების შენახვა ვერ მოხერხდა.";
+      setReminderError(message);
+      throw error;
+    } finally {
+      setIsSavingReminder(false);
+    }
+  }
+
+  async function handleVerifyNow() {
+    if (!property || !canEdit) {
+      return;
+    }
+    setIsVerifying(true);
+    setReminderError(null);
+    try {
+      await verifyProperty(property.id);
+      await refetch();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "განცხადების გადამოწმება ვერ მოხერხდა.";
+      setReminderError(message);
+    } finally {
+      setIsVerifying(false);
+    }
+  }
+
   async function handleArchiveProperty() {
     if (!property || !canEdit) {
       return;
@@ -185,9 +228,15 @@ export function PropertyDetailsReadOnlyBody({
         onGoBack={handleGoBack}
         onBeforeEditNavigation={onBeforeEditNavigation}
         onOpenReminders={() => setIsRemindersOpen(true)}
+        onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
         onArchive={() => {
           void handleArchiveProperty();
         }}
+        onSaveReminder={handleSaveReminder}
+        onVerifyNow={handleVerifyNow}
+        isSavingReminder={isSavingReminder}
+        isVerifying={isVerifying}
+        reminderError={reminderError}
       />
       <PropertyListingRemindersModal
         open={isRemindersOpen}
@@ -197,6 +246,16 @@ export function PropertyDetailsReadOnlyBody({
           void refetch();
         }}
       />
+      {canEdit ? (
+        <PropertyListingChangeStatusModal
+          open={isChangeStatusOpen}
+          property={property}
+          onClose={() => setIsChangeStatusOpen(false)}
+          onSaved={() => {
+            void refetch();
+          }}
+        />
+      ) : null}
     </>
   );
 }

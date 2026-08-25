@@ -7,19 +7,23 @@ import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 type ClientDetailsTopBarProps = {
   clientId: string;
   canRunMatches: boolean;
+  canEditStatus: boolean;
   temporaryLockedFields: TemporaryLockKey[];
   onNavigateToList: () => void;
   onNavigateToEdit: () => void;
   onRequestDelete: () => void;
+  onOpenChangeStatus: () => void;
 };
 
 export function ClientDetailsTopBar({
   clientId,
   canRunMatches,
+  canEditStatus,
   temporaryLockedFields,
   onNavigateToList,
   onNavigateToEdit,
   onRequestDelete,
+  onOpenChangeStatus,
 }: ClientDetailsTopBarProps) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -43,6 +47,15 @@ export function ClientDetailsTopBar({
             entityId={clientId}
             temporaryLockedFields={temporaryLockedFields}
           />
+        ) : null}
+        {canEditStatus ? (
+          <button
+            type="button"
+            onClick={onOpenChangeStatus}
+            className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
+          >
+            სტატუსის შეცვლა
+          </button>
         ) : null}
         <button
           type="button"

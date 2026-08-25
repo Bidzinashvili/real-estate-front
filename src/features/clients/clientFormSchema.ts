@@ -8,6 +8,7 @@ import {
 } from "@/features/clients/clientEnums";
 import type { LockState } from "@/features/clients/clientApi.types";
 import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
+import { OUTCOME_SOURCES } from "@/features/lifecycle/lifecycleEnums";
 
 const LOCK_STATES: [LockState, LockState, LockState] = ["none", "locked", "frozen"];
 
@@ -121,6 +122,7 @@ export const clientFormSchema = z
     addresses: lockedStringArrayFieldSchema,
     labels: lockedStringArrayFieldSchema,
     status: z.union([z.enum(CLIENT_STATUSES), z.literal("")]).optional(),
+    outcomeSource: z.union([z.enum(OUTCOME_SOURCES), z.literal("")]).optional(),
     reminderDate: z.string().optional().or(z.literal("")),
     relatedPersons: z.array(relatedPersonSchema).max(100).optional().default([]),
     minRooms: lockedIntNonNegFieldSchema,
@@ -252,6 +254,14 @@ export const clientFormSchema = z
         path: ["minRentalPeriod", "value"],
       });
     }
+
+    if (data.status === "INACTIVE" && (data.outcomeSource === undefined || data.outcomeSource === "")) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "აირჩიეთ: მე ან სხვამ",
+        path: ["outcomeSource"],
+      });
+    }
   });
 
 export type ClientFormValues = z.infer<typeof clientFormSchema>;
@@ -261,6 +271,7 @@ export const emptyClientFormDefaults: ClientFormValues = {
   phones: ["+995"],
   whatsapp: "+995",
   status: "",
+  outcomeSource: "",
   reminderDate: "",
   budgetMin: { value: undefined, lock: "none" },
   budgetMax: { value: undefined, lock: "none" },

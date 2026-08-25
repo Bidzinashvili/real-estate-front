@@ -1,6 +1,7 @@
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
+import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
@@ -126,7 +127,7 @@ export type CreatePropertyDto = {
   hotelScope?: HotelScope;
   dealType?: DealType;
   status?: PropertyStatus;
-  reminderDate?: string;
+  reminder?: ReminderConfigPayload;
   city: string;
   district?: string;
   address: string;

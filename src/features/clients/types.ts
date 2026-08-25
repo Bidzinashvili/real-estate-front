@@ -11,6 +11,7 @@ import type {
   UUID,
 } from "@/features/clients/clientApi.types";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
+import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
 
 export type RelatedPerson = {
   id: UUID;
@@ -98,7 +99,7 @@ export type Comment = {
   createdAt: ISODateString;
 };
 
-export type Client = {
+export type Client = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
   name: string;
@@ -113,8 +114,6 @@ export type Client = {
   addresses: string[];
   labels: string[];
   status: ClientStatus;
-  reminderDate: ISODateString | null;
-  reminderSentAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   deletedAt: ISODateString | null;

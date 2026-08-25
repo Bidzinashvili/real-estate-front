@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Archive, Bell, Tags } from "lucide-react";
+import { Archive, Bell, RefreshCw, Tags } from "lucide-react";
 import type { Property } from "@/features/properties/types";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 
 type PropertyViewActionsCardProps = {
   property: Property;
@@ -10,6 +11,7 @@ type PropertyViewActionsCardProps = {
   matchPercentage: number | null;
   onOpenReminders: () => void;
   onArchive: () => void;
+  onOpenChangeStatus: () => void;
 };
 
 export function PropertyViewActionsCard({
@@ -20,6 +22,7 @@ export function PropertyViewActionsCard({
   matchPercentage,
   onOpenReminders,
   onArchive,
+  onOpenChangeStatus,
 }: PropertyViewActionsCardProps) {
   return (
     <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
@@ -44,7 +47,17 @@ export function PropertyViewActionsCard({
         {canEdit ? (
           <button
             type="button"
-            disabled={isArchiving || property.status === "ARCHIVED"}
+            onClick={onOpenChangeStatus}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
+          >
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+            სტატუსის შეცვლა
+          </button>
+        ) : null}
+        {canEdit ? (
+          <button
+            type="button"
+            disabled={isArchiving || isPropertyArchived(property)}
             onClick={onArchive}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
           >

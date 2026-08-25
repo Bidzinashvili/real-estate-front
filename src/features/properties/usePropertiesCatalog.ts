@@ -159,6 +159,7 @@ export type UsePropertiesCatalogResult = {
   setLandArea: (value: string) => void;
   setCommercialArea: (value: string) => void;
   setShowMyProperties: (value: boolean) => void;
+  setShowArchived: (value: boolean) => void;
   setSortBy: (value: PropertySortBy) => void;
   setOrder: (value: PropertyListSortOrder) => void;
   setPage: (value: number) => void;
@@ -288,6 +289,7 @@ export function usePropertiesCatalog(
       state.page,
       state.limit,
       state.showMyProperties,
+      state.showArchived,
     ],
   );
 

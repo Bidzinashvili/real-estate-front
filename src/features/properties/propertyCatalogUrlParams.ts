@@ -21,6 +21,7 @@ export const CATALOG_LIMIT_OPTIONS = [10, 20, 50] as const;
 export type PropertyCatalogUrlState = {
   searchInput: string;
   showMyProperties: boolean;
+  showArchived: boolean;
   selectedLabelIds: string[];
   selectedLabelNames: string[];
   dealType: DealType | "";
@@ -87,6 +88,7 @@ export function pickCatalogDebouncedTextState(
 export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   searchInput: "",
   showMyProperties: false,
+  showArchived: false,
   selectedLabelIds: [],
   selectedLabelNames: [],
   dealType: "",
@@ -128,6 +130,11 @@ export function parsePropertyCatalogUrl(
   const myPropertiesRaw = searchParams.get("myProperties");
   if (myPropertiesRaw === "true" || myPropertiesRaw === "1") {
     next.showMyProperties = true;
+  }
+
+  const archivedRaw = searchParams.get("archived");
+  if (archivedRaw === "true" || archivedRaw === "1") {
+    next.showArchived = true;
   }
 
   const labelIds = searchParams
@@ -220,6 +227,9 @@ export function propertyCatalogUrlStateToSearchParams(
   if (!state.showMyProperties) {
     flat.delete("myProperties");
   }
+  if (!state.showArchived) {
+    flat.delete("archived");
+  }
 
   return flat;
 }
@@ -254,5 +264,6 @@ export function catalogStateToApiQuery(
     page: state.page,
     limit: state.limit,
     myProperties: state.showMyProperties ? true : undefined,
+    archived: state.showArchived ? true : false,
   };
 }

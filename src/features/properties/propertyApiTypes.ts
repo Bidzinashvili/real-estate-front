@@ -10,6 +10,11 @@ import type {
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import type {
+  EntityVerificationFields,
+  OutcomeSource,
+  ReminderConfigPayload,
+} from "@/features/lifecycle/lifecycleEnums";
 
 export type PropertySortBy = "createdAt" | "pricePublic";
 
@@ -39,6 +44,7 @@ export type GetPropertiesQueryApi = {
   limit?: number;
   labelIds?: string[];
   labelNames?: string[];
+  archived?: boolean;
 };
 
 export type PropertyImageEntry = {
@@ -149,7 +155,7 @@ export type CommercialApi = {
   minRentalPeriod: number | null;
 };
 
-export type PropertyApi = {
+export type PropertyApi = EntityVerificationFields & {
   id: string;
   propertyType: PropertyType;
   hotelScope?: HotelScope | null;
@@ -176,10 +182,10 @@ export type PropertyApi = {
   internalText: string | null;
   comment: string | null;
   internalComment: string | null;
-  reminderDate: string | null;
   commentDate: string | null;
   tenantClientId?: string | null;
   rentalDurationMonths?: number | null;
+  archivedAt: string | null;
   labels?: LabelDto[];
   images: PropertyImageEntry[];
   createdAt: string;
@@ -204,7 +210,7 @@ export type CreatePropertyBase = {
   propertyType?: PropertyType;
   dealType?: DealType;
   status?: PropertyStatus;
-  reminderDate?: string;
+  reminder?: ReminderConfigPayload;
   city: string;
   district?: string;
   address: string;
@@ -335,7 +341,8 @@ export type CreatePropertyResponse = Omit<
 
 export type UpdatePropertyRequestBody = {
   status?: PropertyStatus;
-  reminderDate?: string | null;
+  outcomeSource?: OutcomeSource;
+  reminder?: ReminderConfigPayload;
   tenantClientId?: string | null;
   rentalDurationMonths?: number | null;
   dealType?: DealType;

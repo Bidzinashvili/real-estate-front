@@ -85,7 +85,7 @@ export function propertyTypeDisplayLabel(property: Property): string {
 }
 
 export function propertyStatusBadgeClass(status: PropertyStatus): string {
-  if (status === "TO_BE_VERIFIED") {
+  if (status === "NEEDS_VERIFICATION") {
     return "bg-warning-muted text-warning-foreground";
   }
   if (status === "AVAILABLE_SOON") {

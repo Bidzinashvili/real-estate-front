@@ -34,6 +34,7 @@ import type { JsonValue } from "@/shared/lib/jsonValue";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { isPropertyFieldLockKey } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
+import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
 
 function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
   const candidate = typeof value === "string" ? value.trim() : "";
@@ -359,7 +360,6 @@ export function normalizeProperty(value: unknown): Property | null {
     internalText: asNullableString(value.internalText ?? value.internalComment),
     comment: asNullableString(value.comment ?? value.privateComment),
     internalComment: asNullableString(value.internalComment ?? value.internalText),
-    reminderDate: asNullableString(value.reminderDate),
     commentDate: asNullableString(value.commentDate),
     tenantClientId:
       value.tenantClientId === undefined || value.tenantClientId === null
@@ -369,6 +369,7 @@ export function normalizeProperty(value: unknown): Property | null {
       value.rentalDurationMonths === undefined || value.rentalDurationMonths === null
         ? null
         : asNullableNumber(value.rentalDurationMonths),
+    archivedAt: asNullableString(value.archivedAt),
     labels: normalizeLabels(value.labels),
     images,
     createdAt: asNullableString(value.createdAt) ?? "",
@@ -380,5 +381,6 @@ export function normalizeProperty(value: unknown): Property | null {
     landPlot: normalizeLandPlot(value.landPlot),
     commercial: normalizeCommercial(value.commercial),
     fieldLocks: parseFieldLocks(value.fieldLocks),
+    ...parseEntityVerificationFields(value),
   };
 }

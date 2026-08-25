@@ -1,24 +1,19 @@
 "use client";
 
-import {
-  formatPropertyStatusLabel,
-  type PropertyStatus,
-} from "@/features/properties/types";
-import {
-  formatPropertyDateTime,
-  propertyStatusBadgeClass,
-} from "@/widgets/PropertyDetails/propertyViewFormatters";
+import type { Property } from "@/features/properties/types";
+import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 
 type PropertyDetailsLifecycleSectionProps = {
-  lifecycleStatus: PropertyStatus;
-  verificationReminderIso?: string | null;
+  property: Property;
 };
 
 export function PropertyDetailsLifecycleSection({
-  lifecycleStatus,
-  verificationReminderIso = null,
+  property,
 }: PropertyDetailsLifecycleSectionProps) {
-  const reminderLabel = formatPropertyDateTime(verificationReminderIso);
+  const lastVerifiedLabel = formatLifecycleDate(property.lastVerifiedAt);
+  const archivedLabel = formatLifecycleDate(property.archivedAt);
 
   return (
     <section
@@ -29,21 +24,28 @@ export function PropertyDetailsLifecycleSection({
         სტატუსი
       </h2>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span
-          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${propertyStatusBadgeClass(lifecycleStatus)}`}
-        >
-          {formatPropertyStatusLabel(lifecycleStatus)}
-        </span>
+        <LifecycleStatusBadge
+          kind="property"
+          status={property.status}
+          outcomeSource={property.outcomeSource}
+          verificationReason={property.verificationReason}
+        />
+        {isPropertyArchived(property) ? (
+          <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+            არქივში
+          </span>
+        ) : null}
       </div>
-      {lifecycleStatus === "TO_BE_VERIFIED" && reminderLabel ? (
+      {lastVerifiedLabel ? (
         <p className="mt-3 text-sm text-foreground">
-          <span className="text-muted-foreground">შეხსენება: </span>
-          {reminderLabel}
+          <span className="text-muted-foreground">გადამოწმებულია: </span>
+          {lastVerifiedLabel}
         </p>
-      ) : reminderLabel ? (
-        <p className="mt-3 text-sm text-foreground">
-          <span className="text-muted-foreground">შეხსენება: </span>
-          {reminderLabel}
+      ) : null}
+      {archivedLabel ? (
+        <p className="mt-1 text-sm text-foreground">
+          <span className="text-muted-foreground">დაარქივებულია: </span>
+          {archivedLabel}
         </p>
       ) : null}
     </section>

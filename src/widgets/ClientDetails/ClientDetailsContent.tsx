@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
 import { useCurrentUser } from "@/shared/hooks";
 import { useRouter } from "next/navigation";
-import { deleteClientComment } from "@/features/clients/api";
+import { deleteClientComment, updateClient, verifyClient } from "@/features/clients/api";
 import { useAddClientComment } from "@/features/clients/useAddClientComment";
 import { useDeleteClient } from "@/features/clients/useDeleteClient";
 import type { ClientDetail, Comment } from "@/features/clients/types";
@@ -24,12 +24,16 @@ import { ClientDetailsRelatedPersonsSection } from "./ClientDetailsRelatedPerson
 import { ClientDetailsRequirementsSection } from "./ClientDetailsRequirementsSection";
 import { ClientDetailsSummaryCard } from "./ClientDetailsSummaryCard";
 import { ClientDetailsTopBar } from "./ClientDetailsTopBar";
+import { ClientChangeStatusModal } from "@/widgets/Clients/ClientChangeStatusModal";
+import { VerificationReminderPanel } from "@/widgets/Lifecycle/VerificationReminderPanel";
+import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 
 type ClientDetailsContentProps = {
   client: ClientDetail;
+  onClientChanged: () => void;
 };
 
-export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
+export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsContentProps) {
   const router = useRouter();
   const { remove, isLoading: isDeleting, error: deleteError } = useDeleteClient();
   const {
@@ -48,10 +52,16 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
 
   const { user } = useCurrentUser();
   const canRunMatches = canRunClientMatches(user, client.userId);
+  const canEditStatus =
+    user !== null && (user.role === "ADMIN" || user.id === client.userId);
   const relatedPersons = client.relatedPersons ?? [];
   const [lockOverlay, setLockOverlay] = useState<
     Partial<Record<ClientPersistableLockKey, LockState>>
   >({});
+  const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
+  const [isSavingReminder, setIsSavingReminder] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
 
   useEffect(() => {
     setLockOverlay({});
@@ -113,15 +123,54 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
 
   const temporaryLockedFields = collectClientDetailTemporaryLocks(lockOverlay, client);
 
+  async function handleSaveReminder(payload: ReminderConfigPayload) {
+    if (!canEditStatus) {
+      return;
+    }
+    setIsSavingReminder(true);
+    setReminderError(null);
+    try {
+      await updateClient(client.id, { reminder: payload });
+      onClientChanged();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "შეხსენების შენახვა ვერ მოხერხდა.";
+      setReminderError(message);
+      throw error;
+    } finally {
+      setIsSavingReminder(false);
+    }
+  }
+
+  async function handleVerifyNow() {
+    if (!canEditStatus) {
+      return;
+    }
+    setIsVerifying(true);
+    setReminderError(null);
+    try {
+      await verifyClient(client.id);
+      onClientChanged();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "კლიენტის გადამოწმება ვერ მოხერხდა.";
+      setReminderError(message);
+    } finally {
+      setIsVerifying(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <ClientDetailsTopBar
         clientId={client.id}
         canRunMatches={canRunMatches}
+        canEditStatus={canEditStatus}
         temporaryLockedFields={temporaryLockedFields}
         onNavigateToList={() => router.push("/clients")}
         onNavigateToEdit={() => router.push(`/clients/${client.id}/edit`)}
         onRequestDelete={() => setDeleteOpen(true)}
+        onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
       />
 
       <MatchingLockHint />
@@ -130,6 +179,17 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
         client={client}
         getLock={getLock}
         onLockChange={handleLockChange}
+      />
+
+      <VerificationReminderPanel
+        fields={client}
+        presetSet="verification"
+        canEdit={canEditStatus}
+        isSaving={isSavingReminder}
+        isVerifying={isVerifying}
+        error={reminderError}
+        onSaveReminder={handleSaveReminder}
+        onVerifyNow={handleVerifyNow}
       />
 
       {client.requirements && (
@@ -176,6 +236,12 @@ export function ClientDetailsContent({ client }: ClientDetailsContentProps) {
         isProcessing={isDeleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
+      />
+      <ClientChangeStatusModal
+        open={isChangeStatusOpen}
+        client={client}
+        onClose={() => setIsChangeStatusOpen(false)}
+        onSaved={onClientChanged}
       />
     </div>
   );

@@ -10,7 +10,9 @@ import {
   CLIENT_PREFERENCE_LABELS,
   isClientPreferenceValue,
 } from "@/features/matching/matchingEnums";
-import { DEAL_TYPE_LABELS, lookupEnumLabel, PROPERTY_STATUS_LABELS } from "@/shared/i18n/enumLabels";
+import { DEAL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { isPropertyStatus } from "@/features/properties/propertyStatus";
 
 type PropertyMatchCardProps = {
   match: ScoredPropertyMatch;
@@ -52,9 +54,13 @@ export function PropertyMatchCard({ match, clientId }: PropertyMatchCardProps) {
               {listing.city ? `, ${listing.city}` : ""}
             </p>
             <p className="text-xs text-muted-foreground">
-              {listing.district} · {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType)} ·{" "}
-              {lookupEnumLabel(PROPERTY_STATUS_LABELS, listing.status)}
+              {listing.district} · {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType)}
             </p>
+            {isPropertyStatus(listing.status) ? (
+              <div className="mt-1">
+                <LifecycleStatusBadge kind="property" status={listing.status} size="sm" />
+              </div>
+            ) : null}
           </div>
           <MatchingScoreSummary
             matchPercentage={match.matchPercentage}

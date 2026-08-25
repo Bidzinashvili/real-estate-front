@@ -8,6 +8,10 @@ import { useCreateClient } from "@/features/clients/useCreateClient";
 import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
+import {
+  CLIENT_CREATE_STATUSES,
+  CLIENT_STATUS_LABELS,
+} from "@/features/clients/clientEnums";
 import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
 import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
@@ -130,6 +134,10 @@ export function AddClientForm() {
           removePhone={removePhone}
           isRentDeal={isRentDeal}
           showDefaultStatusOption
+          clientStatusSelectOptions={CLIENT_CREATE_STATUSES.map((clientStatus) => ({
+            value: clientStatus,
+            label: CLIENT_STATUS_LABELS[clientStatus],
+          }))}
         />
 
         <ClientLocationSection control={control} />

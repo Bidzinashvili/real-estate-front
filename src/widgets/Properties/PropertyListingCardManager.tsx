@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MoreVertical } from "lucide-react";
+import { verifyProperty } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
 import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
@@ -23,6 +24,8 @@ export function PropertyListingCardManager({
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isActionMenuOpen) return;
@@ -90,6 +93,38 @@ export function PropertyListingCardManager({
                 სტატუსის შეცვლა
               </button>
             ) : null}
+            {canChangeStatus ? (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={isVerifying}
+                className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted disabled:opacity-60"
+                onMouseDown={stopOverlayEvent}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setIsActionMenuOpen(false);
+                  setVerifyError(null);
+                  setIsVerifying(true);
+                  void verifyProperty(property.id)
+                    .then(() => {
+                      onListingChanged();
+                    })
+                    .catch((error: unknown) => {
+                      const message =
+                        error instanceof Error
+                          ? error.message
+                          : "განცხადების გადამოწმება ვერ მოხერხდა.";
+                      setVerifyError(message);
+                    })
+                    .finally(() => {
+                      setIsVerifying(false);
+                    });
+                }}
+              >
+                {isVerifying ? "მოწმდება…" : "გადავამოწმე"}
+              </button>
+            ) : null}
             {canSetReminders ? (
               <button
                 type="button"
@@ -108,6 +143,11 @@ export function PropertyListingCardManager({
               </button>
             ) : null}
           </div>
+        ) : null}
+        {verifyError ? (
+          <p className="mt-1 max-w-[14rem] rounded-lg bg-card px-2 py-1 text-xs text-destructive shadow-sm">
+            {verifyError}
+          </p>
         ) : null}
       </div>
 

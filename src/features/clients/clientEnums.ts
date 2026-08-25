@@ -15,14 +15,25 @@ export const DEAL_TYPE_LABELS: Record<DealType, string> = {
   DAILY_RENT: DEAL_TYPE_DISPLAY_LABELS.DAILY_RENT,
 };
 
-export const CLIENT_STATUSES = ["ACTIVE", "IN_PROGRESS", "ARCHIVED"] as const;
+export const CLIENT_STATUSES = [
+  "ACTIVE",
+  "INACTIVE",
+  "NEEDS_VERIFICATION",
+  "IN_PROGRESS",
+  "ARCHIVED",
+] as const;
 export type ClientStatus = (typeof CLIENT_STATUSES)[number];
 
 export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
   ACTIVE: CLIENT_STATUS_DISPLAY_LABELS.ACTIVE,
+  INACTIVE: CLIENT_STATUS_DISPLAY_LABELS.INACTIVE,
+  NEEDS_VERIFICATION: CLIENT_STATUS_DISPLAY_LABELS.NEEDS_VERIFICATION,
   IN_PROGRESS: CLIENT_STATUS_DISPLAY_LABELS.IN_PROGRESS,
   ARCHIVED: CLIENT_STATUS_DISPLAY_LABELS.ARCHIVED,
 };
+
+export const CLIENT_CREATE_STATUSES = ["ACTIVE", "IN_PROGRESS", "ARCHIVED"] as const;
+export const CLIENT_EDIT_STATUSES = ["ACTIVE", "INACTIVE", "IN_PROGRESS", "ARCHIVED"] as const;
 
 export const RENOVATION_VALUES = [
   "NEW_RENOVATED",
@@ -72,6 +83,11 @@ export function isDealType(value: string): value is DealType {
 
 export function isClientStatus(value: string): value is ClientStatus {
   return (CLIENT_STATUSES as readonly string[]).includes(value);
+}
+
+export function parseClientStatus(value: string | null | undefined): ClientStatus {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  return isClientStatus(candidate) ? candidate : "ACTIVE";
 }
 
 export function isRentDealType(dealType: DealType): boolean {

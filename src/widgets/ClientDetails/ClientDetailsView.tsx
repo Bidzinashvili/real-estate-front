@@ -11,7 +11,7 @@ type ClientDetailsViewProps = {
 
 export function ClientDetailsView({ clientId }: ClientDetailsViewProps) {
   const router = useRouter();
-  const { client, isLoading, error } = useClientDetails(clientId);
+  const { client, isLoading, error, refetch } = useClientDetails(clientId);
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">კლიენტი იტვირთება…</p>;
@@ -35,5 +35,5 @@ export function ClientDetailsView({ clientId }: ClientDetailsViewProps) {
     );
   }
 
-  return <ClientDetailsContent client={client} />;
+  return <ClientDetailsContent client={client} onClientChanged={() => void refetch()} />;
 }

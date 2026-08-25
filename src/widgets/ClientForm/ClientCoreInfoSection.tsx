@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   Controller,
+  useWatch,
   type Control,
   type FieldErrors,
   type UseFormRegister,
@@ -12,7 +13,7 @@ import { Plus, Trash2 } from "lucide-react";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import {
   DEAL_TYPES,
-  CLIENT_STATUSES,
+  CLIENT_EDIT_STATUSES,
   DEAL_TYPE_LABELS,
   CLIENT_STATUS_LABELS,
 } from "@/features/clients/clientEnums";
@@ -20,6 +21,8 @@ import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHi
 import { GeorgianPhoneInput } from "@/shared/components/GeorgianPhoneInput";
 import { GEORGIAN_PHONE_PREFIX } from "@/shared/lib/normalizeGeorgianPhone";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
+import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
+import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 
 const clientPhoneInputClassName =
   "shadow-none block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary";
@@ -64,6 +67,7 @@ export function ClientCoreInfoSection({
   showLockForPath = () => true,
 }: ClientCoreInfoSectionProps) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
+  const selectedStatus = useWatch({ control, name: "status" });
   const dealOptions =
     dealTypeSelectOptions ??
     DEAL_TYPES.map((dealType) => ({
@@ -72,7 +76,7 @@ export function ClientCoreInfoSection({
     }));
   const statusSelectOptions =
     clientStatusSelectOptions ??
-    CLIENT_STATUSES.map((clientStatus) => ({
+    CLIENT_EDIT_STATUSES.map((clientStatus) => ({
       value: clientStatus,
       label: CLIENT_STATUS_LABELS[clientStatus],
     }));
@@ -286,6 +290,31 @@ export function ClientCoreInfoSection({
             </div>
           ) : null}
         </div>
+
+        {showClientStatusField && selectedStatus === "INACTIVE" ? (
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium text-foreground">ვინ დაასრულა</p>
+            <Controller
+              name="outcomeSource"
+              control={control}
+              render={({ field }) => {
+                const selectedOutcome = field.value ?? "";
+                return (
+                  <OutcomeSourcePicker
+                    variant="client"
+                    value={isOutcomeSource(selectedOutcome) ? selectedOutcome : ""}
+                    onChange={field.onChange}
+                  />
+                );
+              }}
+            />
+            {errors.outcomeSource ? (
+              <p className="text-xs text-destructive" role="alert">
+                {errors.outcomeSource.message}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-foreground">

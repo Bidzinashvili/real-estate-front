@@ -8,6 +8,7 @@ type UseClientDetailsResult = {
   client: ClientDetail | null;
   isLoading: boolean;
   error: string | null;
+  refetch: () => Promise<void>;
 };
 
 export function useClientDetails(id: string): UseClientDetailsResult {
@@ -15,12 +16,27 @@ export function useClientDetails(id: string): UseClientDetailsResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const refetch = async () => {
+    if (!id) return;
+    try {
+      const result = await getClientById(id);
+      setClient(result);
+      setError(null);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
+      setError(message);
+    }
+  };
+
   useEffect(() => {
     if (!id) return;
 
     let cancelled = false;
 
-    const loadClient = async () => {
+    const runLoad = async () => {
       setIsLoading(true);
       setError(null);
 
@@ -44,12 +60,12 @@ export function useClientDetails(id: string): UseClientDetailsResult {
       }
     };
 
-    void loadClient();
+    void runLoad();
 
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  return { client, isLoading, error };
+  return { client, isLoading, error, refetch };
 }

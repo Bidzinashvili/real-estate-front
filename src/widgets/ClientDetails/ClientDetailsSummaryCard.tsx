@@ -1,12 +1,10 @@
-import { DEAL_TYPE_LABELS, CLIENT_STATUS_LABELS } from "@/features/clients/clientEnums";
+import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
 import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientDetail } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
-import {
-  formatClientDetailsDate,
-  formatClientDetailsDateTime,
-} from "./clientDetailsFormatters";
-import { CLIENT_DETAILS_STATUS_BADGE_CLASSES } from "./clientDetailsStatusBadgeClasses";
+import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { formatClientDetailsDate } from "./clientDetailsFormatters";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
@@ -45,18 +43,19 @@ export function ClientDetailsSummaryCard({
             <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
           </div>
         </div>
-        <span
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${CLIENT_DETAILS_STATUS_BADGE_CLASSES[client.status]}`}
-        >
-          {CLIENT_STATUS_LABELS[client.status]}
-        </span>
+        <LifecycleStatusBadge
+          kind="client"
+          status={client.status}
+          outcomeSource={client.outcomeSource}
+          verificationReason={client.verificationReason}
+        />
       </div>
 
-      {client.reminderDate && (
-        <p className="mt-3 text-xs text-amber-700">
-          Reminder: {formatClientDetailsDateTime(client.reminderDate)}
+      {formatLifecycleDate(client.lastVerifiedAt) ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          გადამოწმებულია: {formatLifecycleDate(client.lastVerifiedAt)}
         </p>
-      )}
+      ) : null}
 
       <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2">
         <div>
