@@ -10,6 +10,10 @@ import { useCurrentUser } from "@/shared/hooks";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
+import { ClientRowArchiveActions } from "@/widgets/Clients/ClientRowArchiveActions";
+import type { Client } from "@/features/clients/types";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import {
   DEAL_TYPES,
@@ -56,9 +60,14 @@ const STATUS_OPTIONS = [
 
 const DEFAULT_LIMIT = 20;
 
-export function ClientsView() {
+type ClientsViewProps = {
+  listingScope?: "current" | "archived";
+};
+
+export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
+  const isArchiveScope = listingScope === "archived";
 
   const [district, setDistrict] = useState("");
   const [debouncedDistrict, setDebouncedDistrict] = useState("");
@@ -86,7 +95,7 @@ export function ClientsView() {
     };
   }, [district]);
 
-  const { clients, total, isLoading, error } = useClientsList({
+  const { clients, total, isLoading, error, refetch } = useClientsList({
     district: buildDistrictFilterParam(debouncedDistrict),
     budgetMin: buildBudgetFilterParam(budgetMinInput),
     budgetMax: buildBudgetFilterParam(budgetMaxInput),
@@ -96,6 +105,7 @@ export function ClientsView() {
     order,
     page,
     limit: DEFAULT_LIMIT,
+    archived: isArchiveScope ? true : undefined,
   });
 
   const totalPages = Math.max(1, Math.ceil(total / DEFAULT_LIMIT));
@@ -129,8 +139,15 @@ export function ClientsView() {
     setPage(1);
   };
 
+  function canManageClient(client: Client): boolean {
+    if (!user) return false;
+    if (user.role === "ADMIN") return true;
+    return user.role === "AGENT" && client.userId === user.id;
+  }
+
   return (
     <>
+      {isArchiveScope ? null : (
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -157,6 +174,7 @@ export function ClientsView() {
           </button>
         </div>
       </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         <input
@@ -237,7 +255,9 @@ export function ClientsView() {
         )}
 
         {!isLoading && !error && clients.length === 0 && (
-          <p className="text-sm text-muted-foreground">კლიენტები ვერ მოიძებნა.</p>
+          <p className="text-sm text-muted-foreground">
+            {isArchiveScope ? ARCHIVE_COPY.emptyClients : "კლიენტები ვერ მოიძებნა."}
+          </p>
         )}
 
         {!isLoading && !error && clients.length > 0 && (
@@ -249,6 +269,9 @@ export function ClientsView() {
                   <th className="px-4 py-3">ტელეფონი</th>
                   <th className="px-4 py-3">გარიგება</th>
                   <th className="px-4 py-3">სტატუსი</th>
+                  {isArchiveScope ? (
+                    <th className="px-4 py-3">დაარქივებულია</th>
+                  ) : null}
                   <th className="px-4 py-3">ბიუჯეტი</th>
                   <th className="px-4 py-3">უბანი</th>
                   <th className="px-4 py-3">შექმნილია</th>
@@ -279,6 +302,11 @@ export function ClientsView() {
                         size="sm"
                       />
                     </td>
+                    {isArchiveScope ? (
+                      <td className="px-4 py-3 text-foreground">
+                        {formatLifecycleDate(client.archivedAt) ?? "—"}
+                      </td>
+                    ) : null}
                     <td className="px-4 py-3 text-foreground">
                       {client.budgetMin !== null || client.budgetMax !== null
                         ? [
@@ -307,6 +335,11 @@ export function ClientsView() {
                             entityId={client.id}
                           />
                         ) : null}
+                        <ClientRowArchiveActions
+                          client={client}
+                          canManage={canManageClient(client)}
+                          onChanged={refetch}
+                        />
                         <button
                           type="button"
                           onClick={() => router.push(`/clients/${client.id}`)}

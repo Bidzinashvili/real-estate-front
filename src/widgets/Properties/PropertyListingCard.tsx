@@ -215,6 +215,11 @@ export function PropertyListingCard({
               გადამოწმებულია: {formatLifecycleDate(property.lastVerifiedAt)}
             </p>
           ) : null}
+          {formatLifecycleDate(property.archivedAt) ? (
+            <p className="text-xs text-muted-foreground">
+              დაარქივებულია: {formatLifecycleDate(property.archivedAt)}
+            </p>
+          ) : null}
         </div>
       </div>
     </article>

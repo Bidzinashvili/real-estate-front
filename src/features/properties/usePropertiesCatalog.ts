@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import { getProperties } from "@/features/properties/api";
 import type { DealType } from "@/features/properties/dealType";
@@ -30,6 +31,7 @@ import { useUserStore } from "@/shared/stores";
 type UsePropertiesCatalogOptions = {
   enabled?: boolean;
   syncUrl?: boolean;
+  archivedFilter?: boolean;
 };
 
 const CATALOG_TEXT_FILTER_DEBOUNCE_MS = 300;
@@ -171,7 +173,7 @@ export type UsePropertiesCatalogResult = {
 export function usePropertiesCatalog(
   options?: UsePropertiesCatalogOptions,
 ): UsePropertiesCatalogResult {
-  const { enabled = true, syncUrl = true } = options ?? {};
+  const { enabled = true, syncUrl = true, archivedFilter } = options ?? {};
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -201,6 +203,9 @@ export function usePropertiesCatalog(
       return;
     }
     const parsed = parsePropertyCatalogUrl(searchParams);
+    if (archivedFilter !== undefined) {
+      parsed.showArchived = archivedFilter;
+    }
     const fromOurReplace = urlChangeFromReplaceRef.current;
     urlChangeFromReplaceRef.current = false;
 
@@ -223,7 +228,7 @@ export function usePropertiesCatalog(
       });
     }
     allowUrlReplace.current = true;
-  }, [searchParams, syncUrl]);
+  }, [searchParams, syncUrl, archivedFilter]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -275,23 +280,27 @@ export function usePropertiesCatalog(
     });
   }, [state, syncUrl, pathname, router, searchParams]);
 
-  const catalogQuery = useMemo(
-    () => catalogStateToApiQuery(state, debouncedTextFilters),
-    [
-      debouncedTextFilters,
-      state.dealType,
-      state.lifecycleStatus,
-      state.propertyType,
-      state.selectedLabelIds,
-      state.selectedLabelNames,
-      state.sortBy,
-      state.order,
-      state.page,
-      state.limit,
-      state.showMyProperties,
-      state.showArchived,
-    ],
-  );
+  const catalogQuery = useMemo(() => {
+    const query = catalogStateToApiQuery(state, debouncedTextFilters);
+    if (archivedFilter === undefined) {
+      return query;
+    }
+    return { ...query, archived: archivedFilter };
+  }, [
+    debouncedTextFilters,
+    state.dealType,
+    state.lifecycleStatus,
+    state.propertyType,
+    state.selectedLabelIds,
+    state.selectedLabelNames,
+    state.sortBy,
+    state.order,
+    state.page,
+    state.limit,
+    state.showMyProperties,
+    state.showArchived,
+    archivedFilter,
+  ]);
 
   const wantsMyPropertiesFilter = state.showMyProperties === true;
   const myPropertiesCatalogDependency: string | false | null = wantsMyPropertiesFilter
@@ -361,6 +370,16 @@ export function usePropertiesCatalog(
   const refetch = useCallback(() => {
     setRefetchTick((previousTick) => previousTick + 1);
     return Promise.resolve();
+  }, []);
+
+  useEffect(() => {
+    const handleRecordsChanged = () => {
+      setRefetchTick((previousTick) => previousTick + 1);
+    };
+    window.addEventListener(recordsChangedEventName, handleRecordsChanged);
+    return () => {
+      window.removeEventListener(recordsChangedEventName, handleRecordsChanged);
+    };
   }, []);
 
   const bumpPage = useCallback((patch: Partial<PropertyCatalogUrlState>) => {

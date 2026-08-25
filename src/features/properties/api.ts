@@ -18,6 +18,7 @@ import {
 } from "@/features/properties/normalizers";
 import { normalizeProperty } from "@/features/properties/propertyRecordNormalizer";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
+import { emitRecordsChangedEvent } from "@/features/lifecycle/recordsChangedEvent";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 
 function getAuthHeaders() {
@@ -156,6 +157,7 @@ export async function updateProperty(
       },
     });
     emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
     return normalizeProperty(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -191,6 +193,7 @@ export async function verifyProperty(id: string): Promise<Property | null> {
       },
     );
     emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
     return normalizeProperty(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -209,6 +212,61 @@ export async function verifyProperty(id: string): Promise<Property | null> {
 
     throw error;
   }
+}
+
+async function postPropertyArchiveAction(
+  id: string,
+  action: "archive" | "unarchive",
+): Promise<Property | null> {
+  const { baseUrl, headers } = getAuthHeaders();
+  const isRestore = action === "unarchive";
+  const fallbackByStatus: Record<number, string> = {
+    403: isRestore
+      ? "ამ განცხადების არქივიდან დაბრუნების უფლება არ გაქვთ"
+      : "ამ განცხადების დაარქივების უფლება არ გაქვთ",
+    404: "განცხადება ვერ მოიძებნა.",
+  };
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/properties/${id}/${action}`,
+      {},
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
+    return normalizeProperty(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        fallbackByStatus[status] ??
+        (isRestore
+          ? "განცხადების არქივიდან დაბრუნება ვერ მოხერხდა."
+          : "განცხადების დაარქივება ვერ მოხერხდა.");
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
+export async function archiveProperty(id: string): Promise<Property | null> {
+  return postPropertyArchiveAction(id, "archive");
+}
+
+export async function unarchiveProperty(id: string): Promise<Property | null> {
+  return postPropertyArchiveAction(id, "unarchive");
 }
 
 export async function addPropertyExternalId(

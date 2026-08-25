@@ -38,10 +38,13 @@ type PropertyDetailsViewContentProps = {
   isArchiving: boolean;
   archiveError: string | null;
   matchPercentage: number | null;
+  canShowArchive: boolean;
+  canShowRestore: boolean;
   onGoBack: () => void;
   onBeforeEditNavigation?: () => void;
   onOpenReminders: () => void;
   onArchive: () => void;
+  onRestore: () => void;
   onOpenChangeStatus: () => void;
   onSaveReminder: (payload: ReminderConfigPayload) => Promise<void>;
   onVerifyNow: () => Promise<void>;
@@ -58,10 +61,13 @@ export function PropertyDetailsViewContent({
   isArchiving,
   archiveError,
   matchPercentage,
+  canShowArchive,
+  canShowRestore,
   onGoBack,
   onBeforeEditNavigation,
   onOpenReminders,
   onArchive,
+  onRestore,
   onOpenChangeStatus,
   onSaveReminder,
   onVerifyNow,
@@ -199,11 +205,14 @@ export function PropertyDetailsViewContent({
             <PropertyViewActionsCard
               property={property}
               canEdit={canEdit}
-              isArchiving={isArchiving}
+              isArchivePending={isArchiving}
               archiveError={archiveError}
               matchPercentage={matchPercentage}
+              canShowArchive={canShowArchive}
+              canShowRestore={canShowRestore}
               onOpenReminders={onOpenReminders}
-              onArchive={onArchive}
+              onRequestArchive={onArchive}
+              onRequestRestore={onRestore}
               onOpenChangeStatus={onOpenChangeStatus}
             />
           ) : null}

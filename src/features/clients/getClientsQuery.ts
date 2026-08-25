@@ -64,6 +64,11 @@ export function toGetClientsSearchParams(
   if (query.limit !== undefined && Number.isFinite(query.limit)) {
     out.limit = String(query.limit);
   }
+  if (query.archived === true) {
+    out.archived = "true";
+  } else if (query.archived === false) {
+    out.archived = "false";
+  }
 
   return out;
 }

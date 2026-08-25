@@ -8,6 +8,7 @@ import {
   normalizeClientDetail,
   normalizeClientsListResponse,
 } from "@/features/clients/normalizers";
+import { emitRecordsChangedEvent } from "@/features/lifecycle/recordsChangedEvent";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 import type {
   Client,
@@ -122,6 +123,7 @@ export async function updateClient(
       headers: { ...headers, "Content-Type": "application/json" },
     });
     emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -153,6 +155,7 @@ export async function verifyClient(id: string): Promise<Client> {
       },
     );
     emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -170,6 +173,60 @@ export async function verifyClient(id: string): Promise<Client> {
     }
     throw error;
   }
+}
+
+async function postClientArchiveAction(
+  id: string,
+  action: "archive" | "unarchive",
+): Promise<Client> {
+  const { baseUrl, headers } = getBearerAuthContext();
+  const isRestore = action === "unarchive";
+  const fallbackByStatus: Record<number, string> = {
+    403: isRestore
+      ? "ამ კლიენტის არქივიდან დაბრუნების უფლება არ გაქვთ"
+      : "ამ კლიენტის დაარქივების უფლება არ გაქვთ",
+    404: "კლიენტი ვერ მოიძებნა.",
+  };
+
+  try {
+    const res = await axios.post<ClientApi>(
+      `${baseUrl}/clients/${id}/${action}`,
+      {},
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
+    return normalizeClient(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        fallbackByStatus[status] ??
+        (isRestore
+          ? "კლიენტის არქივიდან დაბრუნება ვერ მოხერხდა."
+          : "კლიენტის დაარქივება ვერ მოხერხდა.");
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function archiveClient(id: string): Promise<Client> {
+  return postClientArchiveAction(id, "archive");
+}
+
+export async function unarchiveClient(id: string): Promise<Client> {
+  return postClientArchiveAction(id, "unarchive");
 }
 
 export async function deleteClient(id: string): Promise<DeleteClientResponse> {

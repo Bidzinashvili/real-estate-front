@@ -12,6 +12,7 @@ import type {
   LockState,
 } from "@/features/clients/clientApi.types";
 import type { JsonObject } from "@/shared/lib/jsonValue";
+import { asNullableString } from "@/shared/lib/jsonValue";
 import {
   coalesceLock,
   readParallelLock,
@@ -252,6 +253,7 @@ export function normalizeClient(client: ClientApi): Client {
     relatedPersons: client.relatedPersons ?? [],
     requirements: normalizeRequirements(client.requirements, record),
     status: parseClientStatus(client.status),
+    archivedAt: asNullableString(record.archivedAt),
     ...parseEntityVerificationFields(record),
   };
 }

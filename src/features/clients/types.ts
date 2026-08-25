@@ -114,6 +114,7 @@ export type Client = EntityVerificationFields & {
   addresses: string[];
   labels: string[];
   status: ClientStatus;
+  archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   deletedAt: ISODateString | null;

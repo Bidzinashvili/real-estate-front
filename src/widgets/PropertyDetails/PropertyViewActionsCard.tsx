@@ -1,27 +1,33 @@
 import Link from "next/link";
-import { Archive, Bell, RefreshCw, Tags } from "lucide-react";
+import { Archive, Bell, RefreshCw, Tags, Undo2 } from "lucide-react";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import type { Property } from "@/features/properties/types";
-import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 
 type PropertyViewActionsCardProps = {
   property: Property;
   canEdit: boolean;
-  isArchiving: boolean;
+  isArchivePending: boolean;
   archiveError: string | null;
   matchPercentage: number | null;
+  canShowArchive: boolean;
+  canShowRestore: boolean;
   onOpenReminders: () => void;
-  onArchive: () => void;
+  onRequestArchive: () => void;
+  onRequestRestore: () => void;
   onOpenChangeStatus: () => void;
 };
 
 export function PropertyViewActionsCard({
   property,
   canEdit,
-  isArchiving,
+  isArchivePending,
   archiveError,
   matchPercentage,
+  canShowArchive,
+  canShowRestore,
   onOpenReminders,
-  onArchive,
+  onRequestArchive,
+  onRequestRestore,
   onOpenChangeStatus,
 }: PropertyViewActionsCardProps) {
   return (
@@ -54,15 +60,26 @@ export function PropertyViewActionsCard({
             სტატუსის შეცვლა
           </button>
         ) : null}
-        {canEdit ? (
+        {canShowArchive ? (
           <button
             type="button"
-            disabled={isArchiving || isPropertyArchived(property)}
-            onClick={onArchive}
+            disabled={isArchivePending}
+            onClick={onRequestArchive}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-            {isArchiving ? "არქივდება..." : "დაარქივება"}
+            {isArchivePending ? ARCHIVE_COPY.archiving : ARCHIVE_COPY.moveToArchive}
+          </button>
+        ) : null}
+        {canShowRestore ? (
+          <button
+            type="button"
+            disabled={isArchivePending}
+            onClick={onRequestRestore}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+            {isArchivePending ? ARCHIVE_COPY.restoring : ARCHIVE_COPY.restoreFromArchive}
           </button>
         ) : null}
       </div>

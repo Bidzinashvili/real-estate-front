@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
 import { useCurrentUser } from "@/shared/hooks";
 import { useRouter } from "next/navigation";
-import { deleteClientComment, updateClient, verifyClient } from "@/features/clients/api";
+import { deleteClientComment, updateClient, verifyClient, archiveClient, unarchiveClient } from "@/features/clients/api";
 import { useAddClientComment } from "@/features/clients/useAddClientComment";
 import { useDeleteClient } from "@/features/clients/useDeleteClient";
 import type { ClientDetail, Comment } from "@/features/clients/types";
@@ -27,6 +27,10 @@ import { ClientDetailsTopBar } from "./ClientDetailsTopBar";
 import { ClientChangeStatusModal } from "@/widgets/Clients/ClientChangeStatusModal";
 import { VerificationReminderPanel } from "@/widgets/Lifecycle/VerificationReminderPanel";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
+import { canRestoreArchivedClient } from "@/features/lifecycle/canRestoreArchivedRecord";
+import { isClientArchived } from "@/features/lifecycle/isClientArchived";
+import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
+import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
 
 type ClientDetailsContentProps = {
   client: ClientDetail;
@@ -54,6 +58,14 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
   const canRunMatches = canRunClientMatches(user, client.userId);
   const canEditStatus =
     user !== null && (user.role === "ADMIN" || user.id === client.userId);
+  const archiveAction = useArchiveAction({
+    canManage: canEditStatus,
+    isArchived: isClientArchived(client),
+    canRestore: canRestoreArchivedClient(client),
+    onArchive: () => archiveClient(client.id),
+    onRestore: () => unarchiveClient(client.id),
+    onSuccess: onClientChanged,
+  });
   const relatedPersons = client.relatedPersons ?? [];
   const [lockOverlay, setLockOverlay] = useState<
     Partial<Record<ClientPersistableLockKey, LockState>>
@@ -166,11 +178,18 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
         clientId={client.id}
         canRunMatches={canRunMatches}
         canEditStatus={canEditStatus}
+        canShowArchive={archiveAction.canShowArchive}
+        canShowRestore={archiveAction.canShowRestore}
+        isArchivePending={archiveAction.isPending}
         temporaryLockedFields={temporaryLockedFields}
-        onNavigateToList={() => router.push("/clients")}
+        onNavigateToList={() =>
+          router.push(isClientArchived(client) ? "/archive?tab=clients" : "/clients")
+        }
         onNavigateToEdit={() => router.push(`/clients/${client.id}/edit`)}
         onRequestDelete={() => setDeleteOpen(true)}
         onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
+        onRequestArchive={archiveAction.requestArchive}
+        onRequestRestore={archiveAction.requestRestore}
       />
 
       <MatchingLockHint />
@@ -243,6 +262,18 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
         onClose={() => setIsChangeStatusOpen(false)}
         onSaved={onClientChanged}
       />
+      {archiveAction.confirmKind ? (
+        <ArchiveConfirmDialog
+          open
+          kind={archiveAction.confirmKind}
+          isProcessing={archiveAction.isPending}
+          error={archiveAction.error}
+          onConfirm={() => {
+            void archiveAction.confirm();
+          }}
+          onCancel={archiveAction.cancel}
+        />
+      ) : null}
     </div>
   );
 }

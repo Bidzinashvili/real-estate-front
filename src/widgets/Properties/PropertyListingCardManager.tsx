@@ -2,8 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MoreVertical } from "lucide-react";
-import { verifyProperty } from "@/features/properties/api";
+import { verifyProperty, archiveProperty, unarchiveProperty } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
+import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
 import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
 
@@ -26,6 +31,14 @@ export function PropertyListingCardManager({
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const archiveAction = useArchiveAction({
+    canManage: canChangeStatus,
+    isArchived: isPropertyArchived(property),
+    canRestore: canRestoreArchivedProperty(property),
+    onArchive: () => archiveProperty(property.id),
+    onRestore: () => unarchiveProperty(property.id),
+    onSuccess: onListingChanged,
+  });
 
   useEffect(() => {
     if (!isActionMenuOpen) return;
@@ -142,6 +155,38 @@ export function PropertyListingCardManager({
                 შეხსენებების დაყენება
               </button>
             ) : null}
+            {archiveAction.canShowArchive ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted"
+                onMouseDown={stopOverlayEvent}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setIsActionMenuOpen(false);
+                  archiveAction.requestArchive();
+                }}
+              >
+                {ARCHIVE_COPY.moveToArchive}
+              </button>
+            ) : null}
+            {archiveAction.canShowRestore ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full px-3 py-2 text-left text-foreground transition hover:bg-muted"
+                onMouseDown={stopOverlayEvent}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setIsActionMenuOpen(false);
+                  archiveAction.requestRestore();
+                }}
+              >
+                {ARCHIVE_COPY.restoreFromArchive}
+              </button>
+            ) : null}
           </div>
         ) : null}
         {verifyError ? (
@@ -166,6 +211,18 @@ export function PropertyListingCardManager({
           property={property}
           onClose={() => setIsRemindersOpen(false)}
           onScheduled={onListingChanged}
+        />
+      ) : null}
+      {archiveAction.confirmKind ? (
+        <ArchiveConfirmDialog
+          open
+          kind={archiveAction.confirmKind}
+          isProcessing={archiveAction.isPending}
+          error={archiveAction.error}
+          onConfirm={() => {
+            void archiveAction.confirm();
+          }}
+          onCancel={archiveAction.cancel}
         />
       ) : null}
     </>

@@ -140,6 +140,7 @@ export type GetClientsQuery = {
   order?: SortOrder;
   page?: number;
   limit?: number;
+  archived?: boolean;
 };
 
 export const DEFAULT_CLIENT_LIST_FILTER_LOCK: LockState = "locked";
@@ -210,6 +211,7 @@ export type ClientApi = EntityVerificationFields & {
   addresses: Locked<string[]>;
   labels?: Locked<string[]>;
   status: ClientStatus;
+  archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   deletedAt: ISODateString | null;

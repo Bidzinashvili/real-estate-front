@@ -1,7 +1,7 @@
 import { isRecordArchived } from "@/features/lifecycle/isRecordArchived";
 
-export function isPropertyArchived(property: {
+export function isClientArchived(client: {
   archivedAt?: string | null;
 }): boolean {
-  return isRecordArchived(property);
+  return isRecordArchived(client);
 }

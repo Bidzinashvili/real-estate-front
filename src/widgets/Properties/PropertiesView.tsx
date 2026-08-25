@@ -15,12 +15,21 @@ import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalog
 import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertCache";
 import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 
-export function PropertiesView() {
+type PropertiesViewProps = {
+  listingScope?: "current" | "archived";
+};
+
+export function PropertiesView({ listingScope = "current" }: PropertiesViewProps) {
   const router = useRouter();
   const apiBaseUrl = getApiBaseUrl();
   const { user, isLoading: isAuthLoading } = useCurrentUser();
-  const catalog = usePropertiesCatalog({ syncUrl: true });
+  const isArchiveScope = listingScope === "archived";
+  const catalog = usePropertiesCatalog({
+    syncUrl: !isArchiveScope,
+    archivedFilter: isArchiveScope,
+  });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const isLoggedIn = user !== null;
 
@@ -74,48 +83,20 @@ export function PropertiesView() {
 
       <div className="min-w-0 flex-1 space-y-4">
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-          <button
-            type="button"
-            onClick={() => router.push("/properties/new")}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
-          >
-            განცხადების დამატება
-          </button>
+          {isArchiveScope ? null : (
+            <button
+              type="button"
+              onClick={() => router.push("/properties/new")}
+              className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
+            >
+              განცხადების დამატება
+            </button>
+          )}
           <PropertyCatalogScopeToggle
             catalog={catalog}
             isLoggedIn={isLoggedIn}
             isAuthLoading={isAuthLoading}
           />
-          <div
-            className="inline-flex rounded-full border border-border bg-muted/90 p-0.5 shadow-sm"
-            role="group"
-            aria-label="არქივი"
-          >
-            <button
-              type="button"
-              aria-pressed={!catalog.state.showArchived}
-              onClick={() => catalog.setShowArchived(false)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                !catalog.state.showArchived
-                  ? "bg-card text-foreground shadow-sm ring-1 ring-border/80"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              მიმდინარე
-            </button>
-            <button
-              type="button"
-              aria-pressed={catalog.state.showArchived}
-              onClick={() => catalog.setShowArchived(true)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                catalog.state.showArchived
-                  ? "bg-card text-foreground shadow-sm ring-1 ring-border/80"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              არქივი
-            </button>
-          </div>
           <div className="flex w-full items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 shadow-sm sm:w-72">
             <input
               type="search"
@@ -168,8 +149,8 @@ export function PropertiesView() {
 
           {!isLoading && !error && total === 0 && (
             <p className="text-sm text-muted-foreground">
-              {catalog.state.showArchived
-                ? "არქივში განცხადებები ვერ მოიძებნა."
+              {isArchiveScope
+                ? ARCHIVE_COPY.emptyProperties
                 : "განცხადებები ვერ მოიძებნა."}
             </p>
           )}

@@ -6,12 +6,16 @@ import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
-import { updateProperty, verifyProperty } from "@/features/properties/api";
+import { updateProperty, verifyProperty, archiveProperty, unarchiveProperty } from "@/features/properties/api";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
 import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { calculateMatchScore } from "@/features/properties/matchScore";
 import { PropertyDetailsViewContent } from "@/widgets/PropertyDetails/PropertyDetailsViewContent";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
+import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
+import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
@@ -29,8 +33,6 @@ export function PropertyDetailsReadOnlyBody({
   const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
-  const [isArchiving, setIsArchiving] = useState(false);
-  const [archiveError, setArchiveError] = useState<string | null>(null);
   const [isSavingReminder, setIsSavingReminder] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
@@ -46,7 +48,32 @@ export function PropertyDetailsReadOnlyBody({
     return canViewPrivateListingFields(user, property);
   }, [property, user]);
 
+  const archiveAction = useArchiveAction({
+    canManage: canEdit,
+    isArchived: property ? isPropertyArchived(property) : false,
+    canRestore: property ? canRestoreArchivedProperty(property) : false,
+    onArchive: () => {
+      if (!property) {
+        return Promise.resolve();
+      }
+      return archiveProperty(property.id);
+    },
+    onRestore: () => {
+      if (!property) {
+        return Promise.resolve();
+      }
+      return unarchiveProperty(property.id);
+    },
+    onSuccess: () => {
+      void refetch();
+    },
+  });
+
   const handleGoBack = () => {
+    if (property && isPropertyArchived(property)) {
+      router.push("/archive");
+      return;
+    }
     router.push("/properties");
   };
 
@@ -156,25 +183,6 @@ export function PropertyDetailsReadOnlyBody({
     }
   }
 
-  async function handleArchiveProperty() {
-    if (!property || !canEdit) {
-      return;
-    }
-
-    setIsArchiving(true);
-    setArchiveError(null);
-    try {
-      await updateProperty(property.id, { status: "ARCHIVED" });
-      await refetch();
-    } catch (error) {
-      setArchiveError(
-        error instanceof Error ? error.message : "განცხადების დაარქივება ვერ მოხერხდა.",
-      );
-    } finally {
-      setIsArchiving(false);
-    }
-  }
-
   const loadingBlock = (
     <div className="flex min-h-[12rem] items-center justify-center text-muted-foreground">
       <p className="text-muted-foreground">განცხადების დეტალები იტვირთება…</p>
@@ -222,16 +230,17 @@ export function PropertyDetailsReadOnlyBody({
         canEdit={canEdit}
         canViewPrivateFields={canViewPrivateFields}
         layout={layout}
-        isArchiving={isArchiving}
-        archiveError={archiveError}
+        isArchiving={archiveAction.isPending}
+        archiveError={archiveAction.error}
         matchPercentage={matchScore.percentage}
+        canShowArchive={archiveAction.canShowArchive}
+        canShowRestore={archiveAction.canShowRestore}
         onGoBack={handleGoBack}
         onBeforeEditNavigation={onBeforeEditNavigation}
         onOpenReminders={() => setIsRemindersOpen(true)}
         onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
-        onArchive={() => {
-          void handleArchiveProperty();
-        }}
+        onArchive={archiveAction.requestArchive}
+        onRestore={archiveAction.requestRestore}
         onSaveReminder={handleSaveReminder}
         onVerifyNow={handleVerifyNow}
         isSavingReminder={isSavingReminder}
@@ -254,6 +263,18 @@ export function PropertyDetailsReadOnlyBody({
           onSaved={() => {
             void refetch();
           }}
+        />
+      ) : null}
+      {archiveAction.confirmKind ? (
+        <ArchiveConfirmDialog
+          open
+          kind={archiveAction.confirmKind}
+          isProcessing={archiveAction.isPending}
+          error={archiveAction.error}
+          onConfirm={() => {
+            void archiveAction.confirm();
+          }}
+          onCancel={archiveAction.cancel}
         />
       ) : null}
     </>

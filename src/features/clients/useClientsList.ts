@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getClients } from "@/features/clients/api";
 import type { GetClientsQuery } from "@/features/clients/getClientsQuery";
 import type { Client } from "@/features/clients/types";
+import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
 
 type UseClientsListResult = {
   clients: Client[];
@@ -12,6 +13,7 @@ type UseClientsListResult = {
   limit: number;
   isLoading: boolean;
   error: string | null;
+  refetch: () => void;
 };
 
 function lockedFieldKey(field: { value?: unknown; lock: string } | undefined): string {
@@ -25,6 +27,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const [limit, setLimit] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTick, setRefetchTick] = useState(0);
 
   const districtKey = lockedFieldKey(query?.district);
   const budgetMinKey = lockedFieldKey(query?.budgetMin);
@@ -35,6 +38,21 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const order = query?.order;
   const queryPage = query?.page;
   const queryLimit = query?.limit;
+  const archived = query?.archived;
+
+  const refetch = useCallback(() => {
+    setRefetchTick((previousTick) => previousTick + 1);
+  }, []);
+
+  useEffect(() => {
+    const handleRecordsChanged = () => {
+      setRefetchTick((previousTick) => previousTick + 1);
+    };
+    window.addEventListener(recordsChangedEventName, handleRecordsChanged);
+    return () => {
+      window.removeEventListener(recordsChangedEventName, handleRecordsChanged);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +86,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
             order,
             page: queryPage,
             limit: queryLimit,
+            archived,
           },
           { signal: controller.signal },
         );
@@ -78,10 +97,12 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
           setPage(result.page);
           setLimit(result.limit);
         }
-      } catch (err) {
+      } catch (loadError) {
         if (cancelled) return;
         const message =
-          err instanceof Error ? err.message : "კლიენტების ჩატვირთვა ვერ მოხერხდა.";
+          loadError instanceof Error
+            ? loadError.message
+            : "კლიენტების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
       } finally {
         if (!cancelled) {
@@ -106,7 +127,9 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
     order,
     queryPage,
     queryLimit,
+    archived,
+    refetchTick,
   ]);
 
-  return { clients, total, page, limit, isLoading, error };
+  return { clients, total, page, limit, isLoading, error, refetch };
 }

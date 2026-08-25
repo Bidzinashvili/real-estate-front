@@ -93,6 +93,16 @@ export function AppHeader() {
           >
             განცხადებები
           </Link>
+          <Link
+            href="/archive"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/archive")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            არქივი
+          </Link>
         </nav>
         <ThemeToggle />
       </div>

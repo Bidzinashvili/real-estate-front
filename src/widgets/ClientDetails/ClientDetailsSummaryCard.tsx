@@ -2,7 +2,9 @@ import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
 import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientDetail } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
+import { isClientArchived } from "@/features/lifecycle/isClientArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { formatClientDetailsDate } from "./clientDetailsFormatters";
 
@@ -49,11 +51,21 @@ export function ClientDetailsSummaryCard({
           outcomeSource={client.outcomeSource}
           verificationReason={client.verificationReason}
         />
+        {isClientArchived(client) ? (
+          <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+            {ARCHIVE_COPY.archivedBadge}
+          </span>
+        ) : null}
       </div>
 
       {formatLifecycleDate(client.lastVerifiedAt) ? (
         <p className="mt-3 text-xs text-muted-foreground">
           გადამოწმებულია: {formatLifecycleDate(client.lastVerifiedAt)}
+        </p>
+      ) : null}
+      {formatLifecycleDate(client.archivedAt) ? (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {ARCHIVE_COPY.archivedAtLabel}: {formatLifecycleDate(client.archivedAt)}
         </p>
       ) : null}
 
