@@ -4,7 +4,9 @@ import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
 import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 
 export type { DealType };
 export type { PropertyStatus };
@@ -41,6 +43,18 @@ export type BuildingCondition = (typeof BUILDING_CONDITIONS)[number];
 
 export function isBuildingCondition(value: string): value is BuildingCondition {
   return (BUILDING_CONDITIONS as readonly string[]).includes(value);
+}
+
+export const BUILDING_AGE_TYPES = ["NEW", "OLD"] as const;
+export type BuildingAgeType = (typeof BUILDING_AGE_TYPES)[number];
+
+export function isBuildingAgeType(value: string): value is BuildingAgeType {
+  return (BUILDING_AGE_TYPES as readonly string[]).includes(value);
+}
+
+export function parseBuildingAgeType(value: unknown): BuildingAgeType | null {
+  const stringCandidate = typeof value === "string" ? value.trim() : "";
+  return isBuildingAgeType(stringCandidate) ? stringCandidate : null;
 }
 
 export const KITCHEN_TYPES = ["SEPARATE", "STUDIO"] as const;
@@ -119,6 +133,7 @@ export type PropertyApartment = {
   propertyId: string;
   buildingNumber: string | null;
   buildingCondition: BuildingCondition;
+  buildingAgeType: BuildingAgeType | null;
   totalArea: number;
   project: string | null;
   renovation: string | null;
@@ -243,10 +258,14 @@ export type Property = EntityVerificationFields & {
   updatedAt: string;
   deletedAt: string | null;
   userId: string;
+  ownedByViewer: boolean | null;
+  hideFromOthers: boolean;
+  color?: RecordColor;
 
   apartment: PropertyApartment | null;
   privateHouse: PropertyPrivateHouse | null;
   landPlot: PropertyLandPlot | null;
   commercial: PropertyCommercial | null;
   fieldLocks?: PropertyFieldLocks;
+  reminderSummary: ReminderSummary;
 };

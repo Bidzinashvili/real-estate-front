@@ -1,7 +1,4 @@
 import type { Property } from "@/features/properties/types";
-import {
-  formatPropertyDateTime,
-} from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 type PropertyViewMetaCardProps = {
   property: Property;
@@ -12,8 +9,6 @@ export function PropertyViewMetaCard({ property }: PropertyViewMetaCardProps) {
   const activeExternalIds = property.externalIds.filter(
     (externalId) => externalId.archivedAt === null,
   );
-  const createdAt = formatPropertyDateTime(property.createdAt);
-  const updatedAt = formatPropertyDateTime(property.updatedAt);
   const cadastralCode = property.cadastralCode?.trim() ?? "";
   const ourSiteId = property.ourSiteId?.trim() ?? "";
   const myHomeId = property.myHomeId?.trim() ?? "";
@@ -25,9 +20,7 @@ export function PropertyViewMetaCard({ property }: PropertyViewMetaCardProps) {
     cadastralCode !== "" ||
     ourSiteId !== "" ||
     myHomeId !== "" ||
-    ssGeId !== "" ||
-    createdAt !== null ||
-    updatedAt !== null;
+    ssGeId !== "";
 
   if (!hasContent) {
     return null;
@@ -86,18 +79,6 @@ export function PropertyViewMetaCard({ property }: PropertyViewMetaCardProps) {
                 </p>
               ))}
             </dd>
-          </div>
-        ) : null}
-        {createdAt ? (
-          <div>
-            <dt className="text-xs text-muted-foreground">შექმნილია</dt>
-            <dd className="mt-0.5 text-sm text-foreground">{createdAt}</dd>
-          </div>
-        ) : null}
-        {updatedAt ? (
-          <div>
-            <dt className="text-xs text-muted-foreground">განახლებულია</dt>
-            <dd className="mt-0.5 text-sm text-foreground">{updatedAt}</dd>
           </div>
         ) : null}
       </dl>

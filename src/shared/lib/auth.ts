@@ -2,6 +2,7 @@ import axios from "axios";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
 
 const AUTH_TOKEN_KEY = "authToken";
+const AUTH_COOKIE_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
 
 function getApiBaseUrl(): string | null {
   return process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
@@ -12,7 +13,7 @@ function getStoredAuthToken(): string | null {
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-type AuthResponse = {
+export type AuthResponse = {
   accessToken?: string;
   tokenType?: "Bearer";
   expiresIn?: number;
@@ -20,9 +21,40 @@ type AuthResponse = {
     id: string;
     email: string;
     role: "ADMIN" | "AGENT";
+    passwordSet?: boolean;
   };
-  [key: string]: unknown;
 } | null;
+
+export function persistAccessToken(token: string): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  }
+
+  if (typeof document !== "undefined") {
+    document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(
+      token,
+    )}; Max-Age=${AUTH_COOKIE_MAX_AGE_SECONDS}; Path=/`;
+  }
+}
+
+export function clearAccessToken(): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+
+  if (typeof document !== "undefined") {
+    document.cookie = `${AUTH_TOKEN_KEY}=; Max-Age=0; Path=/`;
+  }
+}
+
+export function persistAuthResponse(data: AuthResponse): boolean {
+  const token = data?.accessToken;
+  if (!token) {
+    return false;
+  }
+  persistAccessToken(token);
+  return true;
+}
 
 async function authenticateWithGoogleIdToken(idToken: string) {
   const baseUrl = getApiBaseUrl();
@@ -37,23 +69,7 @@ async function authenticateWithGoogleIdToken(idToken: string) {
     });
 
     const data: AuthResponse = res.data ?? null;
-
-    if (res.status === 201 && data) {
-      const token = data.accessToken as string | undefined;
-
-      if (token) {
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(AUTH_TOKEN_KEY, token);
-        }
-
-        if (typeof document !== "undefined") {
-          const maxAgeSeconds = 14 * 24 * 60 * 60;
-          document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(
-            token,
-          )}; Max-Age=${maxAgeSeconds}; Path=/`;
-        }
-      }
-    }
+    persistAuthResponse(data);
 
     return { data, status: res.status };
   } catch (error: unknown) {

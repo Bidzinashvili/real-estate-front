@@ -13,6 +13,10 @@ import type {
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
 import type { ClientProfileCompact } from "@/features/clientProfiles/types";
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
 
 export type RelatedPerson = {
   id: UUID;
@@ -103,6 +107,8 @@ export type Comment = {
 export type Client = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
+  ownedByViewer: boolean | null;
+  hideFromOthers: boolean;
   name: string;
   clientProfileId: string | null;
   clientProfile: ClientProfileCompact | null;
@@ -121,6 +127,7 @@ export type Client = EntityVerificationFields & {
   createdAt: ISODateString;
   updatedAt: ISODateString;
   deletedAt: ISODateString | null;
+  color?: RecordColor;
   requirements: ClientRequirements | null;
   relatedPersons: RelatedPerson[];
   districtsLock?: LockState;
@@ -129,6 +136,7 @@ export type Client = EntityVerificationFields & {
   budgetMinLock?: LockState;
   budgetMaxLock?: LockState;
   petLock?: LockState;
+  reminderSummary: ReminderSummary;
 };
 
 export type ClientDetail = Client & {
@@ -140,13 +148,12 @@ export type ClientsListResponse = {
   total: number;
   page: number;
   limit: number;
+  activeCount: number;
+  scope: DatabaseListScope | null;
   clients: Client[];
 };
 
-export type DeleteClientResponse = {
-  id: UUID;
-  deleted: true;
-};
+export type DeleteClientResponse = SoftDeleteResponse;
 
 export type DeleteClientCommentResponse = {
   id: UUID;

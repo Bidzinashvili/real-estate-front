@@ -2,21 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MoreVertical } from "lucide-react";
-import { verifyProperty, archiveProperty, unarchiveProperty } from "@/features/properties/api";
+import { verifyProperty, archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { DELETE_COPY } from "@/features/lifecycle/deleteCopy";
 import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
+import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
 import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
+import { DeleteConfirmDialog } from "@/widgets/Lifecycle/DeleteConfirmDialog";
 import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import { RecordColorSwatches } from "@/widgets/RecordColor/RecordColorSwatches";
+import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
 
 type PropertyListingCardManagerProps = {
   property: Property;
   onListingChanged: () => void;
   canChangeStatus?: boolean;
   canSetReminders?: boolean;
+  canEditColor?: boolean;
+  onSelectColor?: (color: RecordColor) => void;
+  isSavingColor?: boolean;
+  colorError?: string | null;
+  canToggleHideFromOthers?: boolean;
+  onToggleHideFromOthers?: (nextHidden: boolean) => void;
+  isSavingHideFromOthers?: boolean;
+  hideFromOthersError?: string | null;
 };
 
 export function PropertyListingCardManager({
@@ -24,6 +38,14 @@ export function PropertyListingCardManager({
   onListingChanged,
   canChangeStatus = false,
   canSetReminders = false,
+  canEditColor = false,
+  onSelectColor,
+  isSavingColor = false,
+  colorError = null,
+  canToggleHideFromOthers = false,
+  onToggleHideFromOthers,
+  isSavingHideFromOthers = false,
+  hideFromOthersError = null,
 }: PropertyListingCardManagerProps) {
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -38,6 +60,13 @@ export function PropertyListingCardManager({
     onArchive: () => archiveProperty(property.id),
     onRestore: () => unarchiveProperty(property.id),
     onSuccess: onListingChanged,
+  });
+  const deleteAction = useSoftDeleteAction({
+    canManage: canChangeStatus,
+    onDelete: () => deleteProperty(property.id),
+    onRestore: () => restoreProperty(property.id),
+    onSuccess: onListingChanged,
+    onDeleted: onListingChanged,
   });
 
   useEffect(() => {
@@ -85,7 +114,7 @@ export function PropertyListingCardManager({
         {isActionMenuOpen ? (
           <div
             role="menu"
-            className="absolute right-0 top-full mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-border/60"
+            className="absolute right-0 top-full mt-1 min-w-[13rem] overflow-hidden rounded-xl border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-border/60"
             onClick={stopOverlayEvent}
             onMouseDown={stopOverlayEvent}
           >
@@ -187,11 +216,65 @@ export function PropertyListingCardManager({
                 {ARCHIVE_COPY.restoreFromArchive}
               </button>
             ) : null}
+            {deleteAction.canShowDelete ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full px-3 py-2 text-left text-destructive transition hover:bg-muted"
+                onMouseDown={stopOverlayEvent}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setIsActionMenuOpen(false);
+                  deleteAction.requestDelete();
+                }}
+              >
+                {DELETE_COPY.actionLabel}
+              </button>
+            ) : null}
+            {canToggleHideFromOthers && onToggleHideFromOthers ? (
+              <HideFromOthersToggle
+                isHidden={property.hideFromOthers}
+                disabled={isSavingHideFromOthers}
+                variant="menuitem"
+                onToggle={(nextHidden) => {
+                  setIsActionMenuOpen(false);
+                  onToggleHideFromOthers(nextHidden);
+                }}
+              />
+            ) : null}
+            {canEditColor && property.color !== undefined && onSelectColor ? (
+              <div
+                className="border-t border-border px-3 py-2"
+                onClick={stopOverlayEvent}
+                onMouseDown={stopOverlayEvent}
+              >
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground">ფერი</p>
+                <RecordColorSwatches
+                  value={property.color}
+                  disabled={isSavingColor}
+                  onSelect={(nextColor) => {
+                    setIsActionMenuOpen(false);
+                    onSelectColor(nextColor);
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         ) : null}
         {verifyError ? (
           <p className="mt-1 max-w-[14rem] rounded-lg bg-card px-2 py-1 text-xs text-destructive shadow-sm">
             {verifyError}
+          </p>
+        ) : null}
+        {colorError ? (
+          <p className="mt-1 max-w-[14rem] rounded-lg bg-card px-2 py-1 text-xs text-destructive shadow-sm">
+            {colorError}
+          </p>
+        ) : null}
+        {hideFromOthersError ? (
+          <p className="mt-1 max-w-[14rem] rounded-lg bg-card px-2 py-1 text-xs text-destructive shadow-sm">
+            {hideFromOthersError}
           </p>
         ) : null}
       </div>
@@ -223,6 +306,17 @@ export function PropertyListingCardManager({
             void archiveAction.confirm();
           }}
           onCancel={archiveAction.cancel}
+        />
+      ) : null}
+      {deleteAction.isConfirmOpen ? (
+        <DeleteConfirmDialog
+          open
+          isProcessing={deleteAction.isPending}
+          error={deleteAction.error}
+          onConfirm={() => {
+            void deleteAction.confirm();
+          }}
+          onCancel={deleteAction.cancel}
         />
       ) : null}
     </>

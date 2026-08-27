@@ -7,22 +7,30 @@ import type {
 import type {
   ClientApi,
   ClientDetailApi,
-  ClientRequirementsApi,
   GetClientsResponse,
   LockState,
 } from "@/features/clients/clientApi.types";
-import type { JsonObject } from "@/shared/lib/jsonValue";
-import { asNullableString } from "@/shared/lib/jsonValue";
+import type { JsonObject, JsonValue } from "@/shared/lib/jsonValue";
+import { asBoolean, asNullableString, asNumber, asString, isJsonObject } from "@/shared/lib/jsonValue";
 import {
   coalesceLock,
+  parseLockedBoolean,
+  parseLockedBuildingCondition,
+  parseLockedKitchenType,
+  parseLockedNumberNullable,
+  parseLockedPreference,
+  parseLockedRenovations,
+  parseLockedStringArray,
+  parseLockedStringNullable,
   readParallelLock,
 } from "@/features/clients/parseClientApiLocks";
-import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
-import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
-import { parseClientStatus } from "@/features/clients/clientEnums";
+import { isDealType, parseClientStatus } from "@/features/clients/clientEnums";
 import { normalizeClientProfileCompact } from "@/features/clientProfiles/normalizers";
+import { parseReminderSummary } from "@/features/reminders/reminderSummary";
+import { parseRecordColor } from "@/features/recordColor/recordColor";
+import { isDatabaseListScope } from "@/features/databaseList/databaseListScope";
 
 function mergeRequirementLock(
   parsedLock: LockState,
@@ -39,227 +47,323 @@ function mergeRequirementLock(
   );
 }
 
-function readPreferenceValue(
-  value: ClientPreferenceValue | string | undefined | null,
-): ClientPreferenceValue {
-  if (typeof value === "string" && isClientPreferenceValue(value)) {
-    return value;
+function readRequirementRaw(
+  requirementsRecord: JsonObject,
+  clientRecord: JsonObject | undefined,
+  fieldKey: string,
+): JsonValue | undefined {
+  if (requirementsRecord[fieldKey] !== undefined) {
+    return requirementsRecord[fieldKey];
   }
-  return "NOT_SET";
+  return clientRecord?.[fieldKey];
+}
+
+function resolveRequirementsRecord(
+  requirements: JsonValue | null | undefined,
+  clientRecord: JsonObject,
+): JsonObject | null {
+  if (isJsonObject(requirements)) {
+    return requirements;
+  }
+  const rootRequirementKeys = [
+    "minRooms",
+    "maxRooms",
+    "minBedrooms",
+    "maxBedrooms",
+    "minFloor",
+    "maxFloor",
+    "minArea",
+    "maxArea",
+  ];
+  const hasRootRequirements = rootRequirementKeys.some(
+    (fieldKey) => clientRecord[fieldKey] !== undefined,
+  );
+  return hasRootRequirements ? clientRecord : null;
 }
 
 function normalizeRequirements(
-  requirements: ClientRequirementsApi | null,
-  clientRecord: JsonObject | undefined,
+  requirements: JsonValue | null | undefined,
+  clientRecord: JsonObject,
 ): ClientRequirements | null {
-  if (!requirements) {
+  const record = resolveRequirementsRecord(requirements, clientRecord);
+  if (!record) {
     return null;
   }
-  const record: JsonObject = requirements as JsonObject;
+
+  const minRooms = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "minRooms"),
+  );
+  const maxRooms = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "maxRooms"),
+  );
+  const minBedrooms = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "minBedrooms"),
+  );
+  const maxBedrooms = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "maxBedrooms"),
+  );
+  const minFloor = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "minFloor"),
+  );
+  const maxFloor = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "maxFloor"),
+  );
+  const excludeLastFloor = parseLockedBoolean(
+    readRequirementRaw(record, clientRecord, "excludeLastFloor"),
+    false,
+  );
+  const renovations = parseLockedRenovations(
+    readRequirementRaw(record, clientRecord, "renovations"),
+  );
+  const buildingCondition = parseLockedBuildingCondition(
+    readRequirementRaw(record, clientRecord, "buildingCondition"),
+  );
+  const projectExclude = parseLockedStringArray(
+    readRequirementRaw(record, clientRecord, "projectExclude"),
+  );
+  const minArea = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "minArea"),
+  );
+  const maxArea = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "maxArea"),
+  );
+  const hasBalcony = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "hasBalcony"),
+  );
+  const balconyAreaMin = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "balconyAreaMin"),
+  );
+  const balconyAreaMax = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "balconyAreaMax"),
+  );
+  const goodView = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "goodView"),
+  );
+  const elevator = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "elevator"),
+  );
+  const centralHeating = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "centralHeating"),
+  );
+  const airConditioner = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "airConditioner"),
+  );
+  const kitchenType = parseLockedKitchenType(
+    readRequirementRaw(record, clientRecord, "kitchenType"),
+  );
+  const furnished = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "furnished"),
+  );
+  const minBathrooms = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "minBathrooms"),
+  );
+  const maxBathrooms = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "maxBathrooms"),
+  );
+  const parking = parseLockedPreference(
+    readRequirementRaw(record, clientRecord, "parking"),
+  );
+  const minRentalPeriod = parseLockedNumberNullable(
+    readRequirementRaw(record, clientRecord, "minRentalPeriod"),
+  );
 
   return {
-    ...requirements,
-    minRooms: requirements.minRooms.value,
-    minRoomsLock: mergeRequirementLock(requirements.minRooms.lock, record, clientRecord, "minRooms"),
-    maxRooms: requirements.maxRooms?.value ?? null,
-    maxRoomsLock: mergeRequirementLock(
-      requirements.maxRooms?.lock ?? "none",
-      record,
-      clientRecord,
-      "maxRooms",
-    ),
-    minBedrooms: requirements.minBedrooms.value,
+    id: asString(record.id),
+    clientId: asString(record.clientId) || asString(clientRecord.id),
+    minRooms: minRooms.value,
+    minRoomsLock: mergeRequirementLock(minRooms.lock, record, clientRecord, "minRooms"),
+    maxRooms: maxRooms.value,
+    maxRoomsLock: mergeRequirementLock(maxRooms.lock, record, clientRecord, "maxRooms"),
+    minBedrooms: minBedrooms.value,
     minBedroomsLock: mergeRequirementLock(
-      requirements.minBedrooms.lock,
+      minBedrooms.lock,
       record,
       clientRecord,
       "minBedrooms",
     ),
-    maxBedrooms: requirements.maxBedrooms?.value ?? null,
+    maxBedrooms: maxBedrooms.value,
     maxBedroomsLock: mergeRequirementLock(
-      requirements.maxBedrooms?.lock ?? "none",
+      maxBedrooms.lock,
       record,
       clientRecord,
       "maxBedrooms",
     ),
-    minFloor: requirements.minFloor.value,
-    minFloorLock: mergeRequirementLock(requirements.minFloor.lock, record, clientRecord, "minFloor"),
-    maxFloor: requirements.maxFloor.value,
-    maxFloorLock: mergeRequirementLock(requirements.maxFloor.lock, record, clientRecord, "maxFloor"),
-    excludeLastFloor: requirements.excludeLastFloor.value ?? false,
+    minFloor: minFloor.value,
+    minFloorLock: mergeRequirementLock(minFloor.lock, record, clientRecord, "minFloor"),
+    maxFloor: maxFloor.value,
+    maxFloorLock: mergeRequirementLock(maxFloor.lock, record, clientRecord, "maxFloor"),
+    excludeLastFloor: excludeLastFloor.value,
     excludeLastFloorLock: persistEntityLock(
       mergeRequirementLock(
-        requirements.excludeLastFloor.lock,
+        excludeLastFloor.lock,
         record,
         clientRecord,
         "excludeLastFloor",
       ),
     ),
-    renovations: Array.isArray(requirements.renovations?.value)
-      ? requirements.renovations.value
-      : [],
+    renovations: renovations.value,
     renovationsLock: persistEntityLock(
-      mergeRequirementLock(
-        requirements.renovations?.lock ?? "none",
-        record,
-        clientRecord,
-        "renovations",
-      ),
+      mergeRequirementLock(renovations.lock, record, clientRecord, "renovations"),
     ),
-    buildingCondition: requirements.buildingCondition.value,
+    buildingCondition: buildingCondition.value,
     buildingConditionLock: mergeRequirementLock(
-      requirements.buildingCondition.lock,
+      buildingCondition.lock,
       record,
       clientRecord,
       "buildingCondition",
     ),
-    projectExclude: requirements.projectExclude.value ?? [],
+    projectExclude: projectExclude.value,
     projectExcludeLock: mergeRequirementLock(
-      requirements.projectExclude.lock,
+      projectExclude.lock,
       record,
       clientRecord,
       "projectExclude",
     ),
-    minArea: requirements.minArea.value,
-    minAreaLock: mergeRequirementLock(requirements.minArea.lock, record, clientRecord, "minArea"),
-    maxArea: requirements.maxArea?.value ?? null,
-    maxAreaLock: mergeRequirementLock(
-      requirements.maxArea?.lock ?? "none",
-      record,
-      clientRecord,
-      "maxArea",
-    ),
-    hasBalcony: readPreferenceValue(requirements.hasBalcony?.value),
+    minArea: minArea.value,
+    minAreaLock: mergeRequirementLock(minArea.lock, record, clientRecord, "minArea"),
+    maxArea: maxArea.value,
+    maxAreaLock: mergeRequirementLock(maxArea.lock, record, clientRecord, "maxArea"),
+    hasBalcony: hasBalcony.value,
     hasBalconyLock: mergeRequirementLock(
-      requirements.hasBalcony?.lock ?? "none",
+      hasBalcony.lock,
       record,
       clientRecord,
       "hasBalcony",
     ),
-    balconyAreaMin: requirements.balconyAreaMin.value,
+    balconyAreaMin: balconyAreaMin.value,
     balconyAreaMinLock: mergeRequirementLock(
-      requirements.balconyAreaMin.lock,
+      balconyAreaMin.lock,
       record,
       clientRecord,
       "balconyAreaMin",
     ),
-    balconyAreaMax: requirements.balconyAreaMax.value,
+    balconyAreaMax: balconyAreaMax.value,
     balconyAreaMaxLock: mergeRequirementLock(
-      requirements.balconyAreaMax.lock,
+      balconyAreaMax.lock,
       record,
       clientRecord,
       "balconyAreaMax",
     ),
-    goodView: readPreferenceValue(requirements.goodView?.value),
-    goodViewLock: mergeRequirementLock(
-      requirements.goodView?.lock ?? "none",
-      record,
-      clientRecord,
-      "goodView",
-    ),
-    elevator: readPreferenceValue(requirements.elevator?.value),
-    elevatorLock: mergeRequirementLock(
-      requirements.elevator?.lock ?? "none",
-      record,
-      clientRecord,
-      "elevator",
-    ),
-    centralHeating: readPreferenceValue(requirements.centralHeating?.value),
+    goodView: goodView.value,
+    goodViewLock: mergeRequirementLock(goodView.lock, record, clientRecord, "goodView"),
+    elevator: elevator.value,
+    elevatorLock: mergeRequirementLock(elevator.lock, record, clientRecord, "elevator"),
+    centralHeating: centralHeating.value,
     centralHeatingLock: mergeRequirementLock(
-      requirements.centralHeating?.lock ?? "none",
+      centralHeating.lock,
       record,
       clientRecord,
       "centralHeating",
     ),
-    airConditioner: readPreferenceValue(requirements.airConditioner?.value),
+    airConditioner: airConditioner.value,
     airConditionerLock: mergeRequirementLock(
-      requirements.airConditioner?.lock ?? "none",
+      airConditioner.lock,
       record,
       clientRecord,
       "airConditioner",
     ),
-    kitchenType: requirements.kitchenType.value,
+    kitchenType: kitchenType.value,
     kitchenTypeLock: mergeRequirementLock(
-      requirements.kitchenType.lock,
+      kitchenType.lock,
       record,
       clientRecord,
       "kitchenType",
     ),
-    furnished: readPreferenceValue(requirements.furnished?.value),
-    furnishedLock: mergeRequirementLock(
-      requirements.furnished?.lock ?? "none",
-      record,
-      clientRecord,
-      "furnished",
-    ),
-    minBathrooms: requirements.minBathrooms.value,
+    furnished: furnished.value,
+    furnishedLock: mergeRequirementLock(furnished.lock, record, clientRecord, "furnished"),
+    minBathrooms: minBathrooms.value,
     minBathroomsLock: mergeRequirementLock(
-      requirements.minBathrooms.lock,
+      minBathrooms.lock,
       record,
       clientRecord,
       "minBathrooms",
     ),
-    maxBathrooms: requirements.maxBathrooms?.value ?? null,
+    maxBathrooms: maxBathrooms.value,
     maxBathroomsLock: mergeRequirementLock(
-      requirements.maxBathrooms?.lock ?? "none",
+      maxBathrooms.lock,
       record,
       clientRecord,
       "maxBathrooms",
     ),
-    parking: readPreferenceValue(requirements.parking?.value),
-    parkingLock: mergeRequirementLock(
-      requirements.parking?.lock ?? "none",
-      record,
-      clientRecord,
-      "parking",
-    ),
-    minRentalPeriod: requirements.minRentalPeriod.value,
+    parking: parking.value,
+    parkingLock: mergeRequirementLock(parking.lock, record, clientRecord, "parking"),
+    minRentalPeriod: minRentalPeriod.value,
     minRentalPeriodLock: mergeRequirementLock(
-      requirements.minRentalPeriod.lock,
+      minRentalPeriod.lock,
       record,
       clientRecord,
       "minRentalPeriod",
     ),
+    createdAt: asString(record.createdAt),
+    updatedAt: asString(record.updatedAt),
   };
+}
+
+function parseClientDealType(value: JsonValue | undefined): Client["dealType"] {
+  if (typeof value === "string" && isDealType(value)) {
+    return value;
+  }
+  return "SALE";
 }
 
 export function normalizeClient(client: ClientApi): Client {
   const record: JsonObject = client as JsonObject;
+  const districts = parseLockedStringArray(record.districts);
+  const addresses = parseLockedStringArray(record.addresses);
+  const labels = parseLockedStringArray(record.labels);
+  const budgetMin = parseLockedNumberNullable(record.budgetMin);
+  const budgetMax = parseLockedNumberNullable(record.budgetMax);
+  const pet = parseLockedStringNullable(record.pet);
+  const phones = Array.isArray(client.phones)
+    ? client.phones.filter((phone): phone is string => typeof phone === "string")
+    : [];
 
   return {
     ...client,
+    userId: asString(record.userId),
+    ownedByViewer: typeof record.ownedByViewer === "boolean" ? record.ownedByViewer : null,
+    hideFromOthers: asBoolean(record.hideFromOthers),
+    color: parseRecordColor(record.color),
+    name: asString(record.name),
+    description: asString(record.description),
+    whatsapp: asNullableString(record.whatsapp),
+    dealType: parseClientDealType(record.dealType),
     clientProfileId:
       asNullableString(record.clientProfileId) ??
       normalizeClientProfileCompact(record.clientProfile)?.id ??
       null,
     clientProfile: normalizeClientProfileCompact(record.clientProfile),
-    phones: client.phones ?? [],
-    districts: client.districts.value ?? [],
+    phones,
+    districts: districts.value,
     districtsLock: persistEntityLock(
-      coalesceLock(client.districts.lock, readParallelLock(record, "districts")),
+      coalesceLock(districts.lock, readParallelLock(record, "districts")),
     ),
-    addresses: client.addresses.value ?? [],
+    addresses: addresses.value,
     addressesLock: persistEntityLock(
-      coalesceLock(client.addresses.lock, readParallelLock(record, "addresses")),
+      coalesceLock(addresses.lock, readParallelLock(record, "addresses")),
     ),
-    labels: client.labels?.value ?? [],
-    labelsLock: client.labels
-      ? persistEntityLock(coalesceLock(client.labels.lock, readParallelLock(record, "labels")))
-      : undefined,
-    budgetMin: client.budgetMin.value,
+    labels: labels.value,
+    labelsLock:
+      record.labels === undefined
+        ? undefined
+        : persistEntityLock(
+            coalesceLock(labels.lock, readParallelLock(record, "labels")),
+          ),
+    budgetMin: budgetMin.value,
     budgetMinLock: persistEntityLock(
-      coalesceLock(client.budgetMin.lock, readParallelLock(record, "budgetMin")),
+      coalesceLock(budgetMin.lock, readParallelLock(record, "budgetMin")),
     ),
-    budgetMax: client.budgetMax.value,
+    budgetMax: budgetMax.value,
     budgetMaxLock: persistEntityLock(
-      coalesceLock(client.budgetMax.lock, readParallelLock(record, "budgetMax")),
+      coalesceLock(budgetMax.lock, readParallelLock(record, "budgetMax")),
     ),
-    pet: client.pet.value,
-    petLock: persistEntityLock(coalesceLock(client.pet.lock, readParallelLock(record, "pet"))),
+    pet: pet.value,
+    petLock: persistEntityLock(coalesceLock(pet.lock, readParallelLock(record, "pet"))),
     relatedPersons: client.relatedPersons ?? [],
-    requirements: normalizeRequirements(client.requirements, record),
+    requirements: normalizeRequirements(record.requirements, record),
     status: parseClientStatus(client.status),
     archivedAt: asNullableString(record.archivedAt),
+    reminderSummary: parseReminderSummary(record.reminderSummary),
     ...parseEntityVerificationFields(record),
   };
 }
@@ -276,8 +380,14 @@ export function normalizeClientDetail(detail: ClientDetailApi): ClientDetail {
 export function normalizeClientsListResponse(
   response: GetClientsResponse,
 ): ClientsListResponse {
+  const activeCountRaw = asNumber(response.activeCount, 0);
   return {
     ...response,
+    activeCount: activeCountRaw < 0 ? 0 : Math.floor(activeCountRaw),
+    scope:
+      typeof response.scope === "string" && isDatabaseListScope(response.scope)
+        ? response.scope
+        : null,
     clients: response.clients.map((client) => normalizeClient(client)),
   };
 }

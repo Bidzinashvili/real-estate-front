@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
+import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import { getProperties } from "@/features/properties/api";
 import type { DealType } from "@/features/properties/dealType";
@@ -13,8 +14,10 @@ import type {
   PropertySortBy,
 } from "@/features/properties/getPropertiesQuery";
 import {
+  countAdvancedCatalogFilters,
   countActiveCatalogFilters,
   createPropertiesCatalogFilterSetters,
+  hasClearableCatalogFilters,
 } from "@/features/properties/propertiesCatalogFilterSetters";
 import {
   catalogStateToApiQuery,
@@ -23,10 +26,13 @@ import {
   pickCatalogDebouncedTextState,
   propertyCatalogUrlStateToSearchParams,
   type CatalogDebouncedTextState,
+  type PropertyBalconyFilter,
   type PropertyCatalogUrlState,
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { Property, PropertyType } from "@/features/properties/types";
 import { useUserStore } from "@/shared/stores";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import { parseDatabaseListScope } from "@/features/databaseList/databaseListScope";
 
 type UsePropertiesCatalogOptions = {
   enabled?: boolean;
@@ -48,9 +54,12 @@ function areCatalogDebouncedTextFiltersEqual(
     previous.maxPrice === next.maxPrice &&
     previous.minArea === next.minArea &&
     previous.maxArea === next.maxArea &&
-    previous.rooms === next.rooms &&
+    previous.roomsFrom === next.roomsFrom &&
+    previous.roomsTo === next.roomsTo &&
     previous.bedrooms === next.bedrooms &&
-    previous.floor === next.floor &&
+    previous.floorFrom === next.floorFrom &&
+    previous.floorTo === next.floorTo &&
+    previous.totalFloors === next.totalFloors &&
     previous.yardArea === next.yardArea &&
     previous.houseArea === next.houseArea &&
     previous.landArea === next.landArea &&
@@ -136,6 +145,8 @@ export type UsePropertiesCatalogResult = {
   page: number;
   limit: number;
   totalPages: number;
+  activeCount: number;
+  appliedScope: DatabaseListScope;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -153,21 +164,32 @@ export type UsePropertiesCatalogResult = {
   setMaxPrice: (value: string) => void;
   setMinArea: (value: string) => void;
   setMaxArea: (value: string) => void;
-  setRooms: (value: string) => void;
+  setRoomsFrom: (value: string) => void;
+  setRoomsTo: (value: string) => void;
   setBedrooms: (value: string) => void;
-  setFloor: (value: string) => void;
+  setFloorFrom: (value: string) => void;
+  setFloorTo: (value: string) => void;
+  setTotalFloors: (value: string) => void;
+  setBalcony: (value: PropertyBalconyFilter) => void;
   setYardArea: (value: string) => void;
   setHouseArea: (value: string) => void;
   setLandArea: (value: string) => void;
   setCommercialArea: (value: string) => void;
+  setCreatedFrom: (value: string) => void;
+  setCreatedTo: (value: string) => void;
+  setCreatedDateRange: (value: { createdFrom: string; createdTo: string }) => void;
   setShowMyProperties: (value: boolean) => void;
+  setListScope: (value: DatabaseListScope) => void;
   setShowArchived: (value: boolean) => void;
   setSortBy: (value: PropertySortBy) => void;
   setOrder: (value: PropertyListSortOrder) => void;
   setPage: (value: number) => void;
   setLimit: (value: number) => void;
+  resetAdvancedFilters: () => void;
   resetFilters: () => void;
   activeFilterCount: number;
+  advancedFilterCount: number;
+  hasClearableFilters: boolean;
 };
 
 export function usePropertiesCatalog(
@@ -190,6 +212,10 @@ export function usePropertiesCatalog(
   const [selectedLabels, setSelectedLabelsState] = useState<LabelSelection[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [total, setTotal] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [appliedScope, setAppliedScope] = useState<DatabaseListScope>(
+    DEFAULT_CATALOG_URL_STATE.listScope,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refetchTick, setRefetchTick] = useState(0);
@@ -200,6 +226,13 @@ export function usePropertiesCatalog(
   useEffect(() => {
     if (!syncUrl) {
       allowUrlReplace.current = true;
+      const parsedScope = parseDatabaseListScope(searchParams.get("scope"));
+      setState((previous) => {
+        if (previous.listScope === parsedScope) {
+          return previous;
+        }
+        return { ...previous, listScope: parsedScope };
+      });
       return;
     }
     const parsed = parsePropertyCatalogUrl(searchParams);
@@ -249,9 +282,12 @@ export function usePropertiesCatalog(
     state.maxPrice,
     state.minArea,
     state.maxArea,
-    state.rooms,
+    state.roomsFrom,
+    state.roomsTo,
     state.bedrooms,
-    state.floor,
+    state.floorFrom,
+    state.floorTo,
+    state.totalFloors,
     state.yardArea,
     state.houseArea,
     state.landArea,
@@ -259,12 +295,28 @@ export function usePropertiesCatalog(
   ]);
 
   useEffect(() => {
+    if (syncUrl || !allowUrlReplace.current) return;
+    const currentScope = parseDatabaseListScope(searchParams.get("scope"));
+    if (currentScope === state.listScope) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (state.listScope === "ALL") {
+      params.delete("scope");
+    } else {
+      params.set("scope", "MINE");
+    }
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
+  }, [state.listScope, syncUrl, pathname, router, searchParams]);
+
+  useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (useUserStore.getState().isLoading) return;
       if (useUserStore.getState().user) return;
       setState((previous) => {
-        if (!previous.showMyProperties) return previous;
-        return { ...previous, showMyProperties: false, page: 1 };
+        if (!previous.showMyProperties && previous.listScope === "ALL") return previous;
+        return { ...previous, showMyProperties: false, listScope: "ALL", page: 1 };
       });
     });
     return () => window.cancelAnimationFrame(frame);
@@ -298,7 +350,11 @@ export function usePropertiesCatalog(
     state.page,
     state.limit,
     state.showMyProperties,
+    state.listScope,
     state.showArchived,
+    state.createdFrom,
+    state.createdTo,
+    state.balcony,
     archivedFilter,
   ]);
 
@@ -340,6 +396,20 @@ export function usePropertiesCatalog(
         }
         setProperties(res.properties);
         setTotal(res.total);
+        setActiveCount(res.activeCount);
+        if (res.scope) {
+          const echoedScope = res.scope;
+          setAppliedScope(echoedScope);
+          if (echoedScope !== state.listScope) {
+            setState((previousState) =>
+              previousState.listScope === echoedScope
+                ? previousState
+                : { ...previousState, listScope: echoedScope },
+            );
+          }
+        } else {
+          setAppliedScope(state.listScope);
+        }
 
         const lastPage = Math.max(1, Math.ceil(res.total / res.limit) || 1);
         if (res.total > 0 && state.page > lastPage) {
@@ -352,8 +422,6 @@ export function usePropertiesCatalog(
         const message =
           error instanceof Error ? error.message : "განცხადებების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
-        setProperties([]);
-        setTotal(0);
       } finally {
         if (effectCommitted) {
           setIsLoading(false);
@@ -377,8 +445,10 @@ export function usePropertiesCatalog(
       setRefetchTick((previousTick) => previousTick + 1);
     };
     window.addEventListener(recordsChangedEventName, handleRecordsChanged);
+    window.addEventListener(remindersChangedEventName, handleRecordsChanged);
     return () => {
       window.removeEventListener(recordsChangedEventName, handleRecordsChanged);
+      window.removeEventListener(remindersChangedEventName, handleRecordsChanged);
     };
   }, []);
 
@@ -419,6 +489,14 @@ export function usePropertiesCatalog(
     () => countActiveCatalogFilters(state),
     [state],
   );
+  const advancedFilterCount = useMemo(
+    () => countAdvancedCatalogFilters(state),
+    [state],
+  );
+  const hasClearableFilters = useMemo(
+    () => hasClearableCatalogFilters(state),
+    [state],
+  );
 
   const limit = state.limit;
   const totalPages = Math.max(1, Math.ceil(total / limit) || 1);
@@ -430,6 +508,8 @@ export function usePropertiesCatalog(
     page,
     limit,
     totalPages,
+    activeCount,
+    appliedScope,
     isLoading,
     error,
     refetch,
@@ -438,6 +518,16 @@ export function usePropertiesCatalog(
     debouncedTextFilters,
     ...setters,
     setSelectedLabels,
+    resetAdvancedFilters: () => {
+      setters.resetAdvancedFilters();
+      setSelectedLabelsState([]);
+    },
+    resetFilters: () => {
+      setters.resetFilters();
+      setSelectedLabelsState([]);
+    },
     activeFilterCount,
+    advancedFilterCount,
+    hasClearableFilters,
   };
 }

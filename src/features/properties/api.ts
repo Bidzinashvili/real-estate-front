@@ -18,8 +18,12 @@ import {
 } from "@/features/properties/normalizers";
 import { normalizeProperty } from "@/features/properties/propertyRecordNormalizer";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
-import { emitRecordsChangedEvent } from "@/features/lifecycle/recordsChangedEvent";
+import {
+  emitRecordMutationEvents,
+  emitRecordsChangedEvent,
+} from "@/features/lifecycle/recordsChangedEvent";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
+import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
 
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
@@ -238,8 +242,7 @@ async function postPropertyArchiveAction(
         },
       },
     );
-    emitRemindersChangedEvent();
-    emitRecordsChangedEvent();
+    emitRecordMutationEvents();
     return normalizeProperty(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -267,6 +270,71 @@ export async function archiveProperty(id: string): Promise<Property | null> {
 
 export async function unarchiveProperty(id: string): Promise<Property | null> {
   return postPropertyArchiveAction(id, "unarchive");
+}
+
+export async function deleteProperty(id: string): Promise<SoftDeleteResponse> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.delete<SoftDeleteResponse>(
+      `${baseUrl}/properties/${id}`,
+      { headers },
+    );
+    emitRecordMutationEvents();
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallbackByStatus: Record<number, string> = {
+        403: "ამ განცხადების წაშლის უფლება არ გაქვთ",
+        404: "განცხადება ვერ მოიძებნა.",
+      };
+      const fallback = fallbackByStatus[status] ?? "განცხადების წაშლა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function restoreProperty(id: string): Promise<Property | null> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/properties/${id}/restore`,
+      {},
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    emitRecordMutationEvents();
+    return normalizeProperty(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallbackByStatus: Record<number, string> = {
+        403: "ამ განცხადების აღდგენის უფლება არ გაქვთ",
+        404: "განცხადება ვერ მოიძებნა.",
+      };
+      const fallback =
+        fallbackByStatus[status] ?? "განცხადების აღდგენა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
 }
 
 export async function addPropertyExternalId(
@@ -370,6 +438,8 @@ export async function createProperty(
           },
         });
 
+    emitRemindersChangedEvent();
+    emitRecordsChangedEvent();
     return normalizeCreatePropertyResponse(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {

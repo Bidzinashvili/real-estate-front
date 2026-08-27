@@ -35,6 +35,13 @@ export const BUILDING_CONDITION_LABELS = {
   UNDER_CONSTRUCTION: "მშენებარე",
 } as const;
 
+export const BUILDING_AGE_TYPE_LABELS = {
+  NEW: "ახალი",
+  OLD: "ძველი",
+} as const;
+
+export const BUILDING_AGE_TYPE_FIELD_LABEL = "კორპუსის ტიპი";
+
 export const KITCHEN_TYPE_LABELS = {
   SEPARATE: "გამოყოფილი",
   STUDIO: "სტუდიო",

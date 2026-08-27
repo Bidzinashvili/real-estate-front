@@ -123,6 +123,18 @@ export function AppHeader() {
           >
             არქივი
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin/trash"
+              className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+                pathname?.startsWith("/admin/trash")
+                  ? "bg-card text-foreground shadow-sm"
+                  : "hover:text-foreground"
+              }`}
+            >
+              ნაგვის ყუთი
+            </Link>
+          )}
         </nav>
         <ThemeToggle />
       </div>

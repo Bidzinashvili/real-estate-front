@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getPropertyOwnerById } from "@/features/propertyOwners/api";
 import type { PropertyOwner } from "@/features/propertyOwners/types";
 import { ApiError } from "@/shared/lib/apiError";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type UsePropertyOwnerDetailsResult = {
   owner: PropertyOwner | null;
@@ -40,6 +41,8 @@ export function usePropertyOwnerDetails(
       setOwner(null);
     }
   }, [ownerId]);
+
+  useRecordsChangedListener(refetch);
 
   useEffect(() => {
     if (!ownerId) {

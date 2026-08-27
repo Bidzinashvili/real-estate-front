@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchPropertyClientMatches } from "@/features/matching/matchingApi";
 import type { MatchRequest, PropertyToClientMatchResponse } from "@/features/matching/matchingApi.types";
 import type { MatchScope, TemporaryLockKey } from "@/features/matching/matchingEnums";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type UsePropertyClientMatchesArgs = {
   propertyId: string;
@@ -29,7 +30,13 @@ export function usePropertyClientMatches({
   const [data, setData] = useState<PropertyToClientMatchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTick, setRefetchTick] = useState(0);
   const temporaryLockKey = temporaryLockedFields.join(",");
+  const bumpRefetch = useCallback(() => {
+    setRefetchTick((previousTick) => previousTick + 1);
+  }, []);
+
+  useRecordsChangedListener(bumpRefetch);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +83,7 @@ export function usePropertyClientMatches({
       cancelled = true;
       controller.abort();
     };
-  }, [propertyId, scope, temporaryLockKey, page, limit]);
+  }, [propertyId, scope, temporaryLockKey, page, limit, refetchTick]);
 
   return { data, isLoading, error };
 }

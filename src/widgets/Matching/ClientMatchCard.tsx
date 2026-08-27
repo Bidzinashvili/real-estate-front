@@ -16,9 +16,14 @@ import { isClientStatus } from "@/features/clients/clientEnums";
 type ClientMatchCardProps = {
   match: ScoredClientMatch;
   propertyId: string;
+  canRequestCollaboration?: boolean;
 };
 
-export function ClientMatchCard({ match, propertyId }: ClientMatchCardProps) {
+export function ClientMatchCard({
+  match,
+  propertyId,
+  canRequestCollaboration = true,
+}: ClientMatchCardProps) {
   const client = match.client;
   const requirements = client.requirements;
 
@@ -64,7 +69,11 @@ export function ClientMatchCard({ match, propertyId }: ClientMatchCardProps) {
         >
           კლიენტის გახსნა
         </Link>
-        <RequestCollaborationButton propertyId={propertyId} clientId={client.id} />
+        <RequestCollaborationButton
+          propertyId={propertyId}
+          clientId={client.id}
+          canRequest={canRequestCollaboration}
+        />
       </div>
     </article>
   );

@@ -5,6 +5,7 @@ import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAgentsList } from "@/features/agents/useAgentsList";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { PasswordSetBadge } from "@/widgets/Agents/PasswordSetBadge";
 
 const PAGE_SIZE = 10;
 
@@ -167,7 +168,10 @@ export function AgentsView() {
                     className="border-t border-border hover:bg-muted/60"
                   >
                     <td className="px-4 py-3 text-foreground">
-                      {agent.fullName}
+                      <div className="flex flex-col gap-1">
+                        <span>{agent.fullName}</span>
+                        <PasswordSetBadge passwordSet={agent.passwordSet} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-foreground">
                       {agent.email}

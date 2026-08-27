@@ -8,9 +8,11 @@ import type {
   PropertyCommercialUpdate,
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
-import { parseRenovationForForm } from "@/features/properties/types";
+import { isBuildingAgeType, parseRenovationForForm } from "@/features/properties/types";
 import { HashtagPicker } from "@/shared/components/HashtagPicker";
 import {
+  BUILDING_AGE_TYPE_FIELD_LABEL,
+  BUILDING_AGE_TYPE_SELECT_OPTIONS,
   LAND_CATEGORY_SELECT_OPTIONS,
   LAND_USAGE_SELECT_OPTIONS,
   RENOVATION_SELECT_OPTIONS,
@@ -250,6 +252,17 @@ export function ApartmentEditSection({
             options={BUILDING_CONDITION_OPTIONS}
           />
         </FieldWithLock>
+        <SelectField
+          id="editAptBuildingAgeType"
+          label={BUILDING_AGE_TYPE_FIELD_LABEL}
+          value={apartment.buildingAgeType ?? ""}
+          onChange={(next) =>
+            setApartment({
+              buildingAgeType: isBuildingAgeType(next) ? next : null,
+            })
+          }
+          options={BUILDING_AGE_TYPE_SELECT_OPTIONS}
+        />
         <FieldWithLock
           lock={readPropertyFieldLock(fieldLocks, "kitchenType")}
           onLockChange={(nextLock) => handleFieldLockChange("kitchenType", nextLock)}

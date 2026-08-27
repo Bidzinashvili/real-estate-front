@@ -6,8 +6,13 @@ import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
 import { isClientArchived } from "@/features/lifecycle/isClientArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
-import { formatClientDetailsDate } from "./clientDetailsFormatters";
+import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
+import { isPrivacySafeSharedClient } from "@/features/databaseList/viewerOwnership";
+import { isCustomRecordColor } from "@/features/recordColor/recordColor";
+import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
+import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
+import { cn } from "@/shared/lib/utils";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
@@ -36,7 +41,14 @@ export function ClientDetailsSummaryCard({
   const showPetBlock = isRentDeal || Boolean(client.pet) || petLock !== "none";
 
   return (
-    <div className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
+    <div
+      className={cn(
+        "rounded-xl p-6 shadow-sm ring-1",
+        isCustomRecordColor(client.color)
+          ? recordColorSurfaceClassName(client.color)
+          : "bg-card ring-border",
+      )}
+    >
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1 space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -58,6 +70,7 @@ export function ClientDetailsSummaryCard({
           outcomeSource={client.outcomeSource}
           verificationReason={client.verificationReason}
         />
+        <HideFromOthersBadge isHidden={client.hideFromOthers} />
         {isClientArchived(client) ? (
           <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
             {ARCHIVE_COPY.archivedBadge}
@@ -136,22 +149,22 @@ export function ClientDetailsSummaryCard({
           </div>
         )}
 
-        <div>
-          <p className="text-xs text-muted-foreground">შექმნილია</p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {formatClientDetailsDate(client.createdAt)}
-          </p>
+        <div className="sm:col-span-2">
+          <RecordTimestamp
+            createdAt={client.createdAt}
+            updatedAt={client.updatedAt}
+          />
         </div>
       </div>
 
-      {client.description && (
+      {!isPrivacySafeSharedClient(client) && client.description ? (
         <div className="mt-4 border-t border-border pt-4">
           <p className="text-xs text-muted-foreground">აღწერა</p>
           <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
             {client.description}
           </p>
         </div>
-      )}
+      ) : null}
 
       {showAddressesBlock && (
         <div className="mt-4 border-t border-border pt-4">

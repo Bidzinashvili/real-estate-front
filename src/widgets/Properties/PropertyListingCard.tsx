@@ -1,8 +1,11 @@
 "use client";
 
-import { Eye, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Bell, Eye, MapPin } from "lucide-react";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
+import { formatPropertyCardTitle, formatPropertyStreetLine } from "@/features/properties/formatPropertyCardTitle";
+import { propertyCompactStats } from "@/features/properties/propertyCompactStats";
 import type { Property } from "@/features/properties/types";
 import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
@@ -13,58 +16,24 @@ import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
-
-function formatAddress(property: Property) {
-  const parts = [
-    property.address,
-    property.district ? `(${property.district})` : null,
-    property.city,
-  ].filter(Boolean);
-
-  return parts.join(" ");
-}
-
-function cardTitle(property: Property) {
-  if (property.publicComment?.trim()) return property.publicComment.trim();
-  if (property.description?.trim()) return property.description.trim();
-  return formatAddress(property);
-}
-
-function cardRooms(property: Property) {
-  const roomsCount = property.apartment?.rooms ?? property.privateHouse?.rooms;
-  return roomsCount !== undefined && Number.isFinite(roomsCount)
-    ? String(roomsCount)
-    : "—";
-}
-
-function cardBedrooms(property: Property) {
-  const bedroomsCount =
-    property.apartment?.bedrooms ?? property.privateHouse?.bedrooms;
-  return bedroomsCount !== undefined && Number.isFinite(bedroomsCount)
-    ? String(bedroomsCount)
-    : "—";
-}
-
-function cardAreaM2(property: Property) {
-  const areaSquareMeters =
-    property.apartment?.totalArea ??
-    property.privateHouse?.totalArea ??
-    property.landPlot?.landArea ??
-    property.commercial?.area;
-  return areaSquareMeters !== undefined && Number.isFinite(areaSquareMeters)
-    ? String(areaSquareMeters)
-    : "—";
-}
-
-function propertyAreaSquareMeters(property: Property): number | null {
-  return (
-    property.apartment?.totalArea ??
-    property.privateHouse?.totalArea ??
-    property.landPlot?.landArea ??
-    property.commercial?.area ??
-    null
-  );
-}
+import { NoteReminderIndicator } from "@/widgets/Reminders/NoteReminderIndicator";
+import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
+import { formatReminderScheduleLabel } from "@/features/reminders/formatReminderSchedule";
+import {
+  canEditRecordColor,
+  isCustomRecordColor,
+  type RecordColor,
+} from "@/features/recordColor/recordColor";
+import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
+import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColor";
+import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
+import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
+import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
+import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
+import { ClosedRecordStatChips } from "@/widgets/DatabaseList/ClosedRecordStatChips";
+import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
+import { cn } from "@/shared/lib/utils";
+import { propertyAreaSquareMeters } from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 function formatOwnerLine(property: Property) {
   const profileName = property.propertyOwner?.name?.trim();
@@ -96,32 +65,71 @@ export function PropertyListingCard({
   canSetReminders = false,
   onListingChanged,
 }: PropertyListingCardProps) {
-  const addressLine = formatAddress(property);
+  const generatedTitle = formatPropertyCardTitle(property);
+  const streetLine = formatPropertyStreetLine(property);
   const areaSquareMeters = propertyAreaSquareMeters(property);
+  const compactStats = propertyCompactStats(property);
+  const ownerLine = canChangeStatus ? formatOwnerLine(property) : "";
+  const nextReminderLabel =
+    property.reminderSummary &&
+    property.reminderSummary.activeCount > 0 &&
+    property.reminderSummary.nextReminderAt
+      ? formatReminderScheduleLabel(property.reminderSummary.nextReminderAt)
+      : null;
+  const [isReminderPickerOpen, setIsReminderPickerOpen] = useState(false);
+  const { saveColor, isSaving: isSavingColor, error: colorError } =
+    useUpdateRecordColor();
+  const {
+    saveHideFromOthers,
+    isSaving: isSavingHideFromOthers,
+    error: hideFromOthersError,
+  } = useUpdateHideFromOthers();
+  const canEditColor = canEditRecordColor(canChangeStatus, property.color);
+  const hasCustomColor = isCustomRecordColor(property.color);
+  const canToggleHideFromOthers = canChangeStatus && Boolean(onListingChanged);
 
-  function handleImageKeyDown(event: React.KeyboardEvent<HTMLElement>) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onView(property.id);
+  async function handleSelectColor(nextColor: RecordColor) {
+    if (!onListingChanged || property.color === undefined) {
+      return;
+    }
+    try {
+      await saveColor("property", property.id, nextColor);
+      onListingChanged();
+    } catch {
+      return;
+    }
+  }
+
+  async function handleToggleHideFromOthers(nextHidden: boolean) {
+    if (!onListingChanged) {
+      return;
+    }
+    try {
+      await saveHideFromOthers("property", property.id, nextHidden);
+      onListingChanged();
+    } catch {
+      return;
     }
   }
 
   return (
-    <article className="flex min-w-0 w-full flex-col overflow-hidden rounded-3xl bg-card shadow-sm ring-1 ring-border transition-shadow hover:shadow-md">
+    <>
+    <article
+      onClick={() => onView(property.id)}
+      className={cn(
+        "flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-3xl shadow-sm ring-1 transition-shadow hover:shadow-md",
+        hasCustomColor
+          ? recordColorSurfaceClassName(property.color)
+          : "bg-card ring-border",
+      )}
+    >
       <div className="relative">
-        <div
-          role="link"
-          tabIndex={0}
-          aria-label="განცხადების ნახვა"
-          onClick={() => onView(property.id)}
-          onKeyDown={handleImageKeyDown}
-          className="relative aspect-[3/2] w-full cursor-pointer overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
+        <div className="relative aspect-[3/2] w-full overflow-hidden">
           <PropertyCardImageCarousel
             propertyId={property.id}
             images={property.images}
             apiBaseUrl={apiBaseUrl}
-            alt={addressLine}
+            alt={generatedTitle}
           />
           <div className="absolute left-3 top-3 z-[15] flex max-w-[calc(100%-3.25rem)] flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
@@ -133,6 +141,10 @@ export function PropertyListingCard({
               outcomeSource={property.outcomeSource}
               verificationReason={property.verificationReason}
             />
+            {canSetReminders ? (
+              <NoteReminderIndicator summary={property.reminderSummary} />
+            ) : null}
+            <HideFromOthersBadge isHidden={property.hideFromOthers} />
           </div>
         </div>
         {(canChangeStatus || canSetReminders) && onListingChanged ? (
@@ -141,6 +153,14 @@ export function PropertyListingCard({
             onListingChanged={onListingChanged}
             canChangeStatus={canChangeStatus}
             canSetReminders={canSetReminders}
+            canEditColor={canEditColor}
+            onSelectColor={handleSelectColor}
+            isSavingColor={isSavingColor}
+            colorError={colorError}
+            canToggleHideFromOthers={canToggleHideFromOthers}
+            onToggleHideFromOthers={handleToggleHideFromOthers}
+            isSavingHideFromOthers={isSavingHideFromOthers}
+            hideFromOthersError={hideFromOthersError}
           />
         ) : null}
       </div>
@@ -163,28 +183,34 @@ export function PropertyListingCard({
           </span>
         </div>
 
-        <p className="line-clamp-2 text-lg font-semibold text-foreground">
-          {cardTitle(property)}
+        <p className="line-clamp-2 text-lg font-semibold leading-snug text-foreground">
+          {generatedTitle}
         </p>
 
-        <p className="inline-flex items-center gap-1.5 text-sm text-foreground">
-          <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="min-w-0">{addressLine}</span>
-        </p>
+        {streetLine ? (
+          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="min-w-0">{streetLine}</span>
+          </p>
+        ) : null}
 
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="rounded-full bg-success-muted px-2.5 py-1 text-foreground">
-            {cardRooms(property)} ოთახი
-          </span>
-          <span className="rounded-full bg-success-muted px-2.5 py-1 text-foreground">
-            {cardBedrooms(property)} საძინებელი
-          </span>
-          <span className="rounded-full bg-success-muted px-2.5 py-1 text-foreground">
-            {cardAreaM2(property)} მ²
-          </span>
-        </div>
+        <ClosedRecordStatChips items={compactStats} />
 
-        <div className="space-y-2 pt-1">
+        {canSetReminders && nextReminderLabel ? (
+          <p className="text-xs text-muted-foreground">
+            შეხსენება: {nextReminderLabel}
+          </p>
+        ) : null}
+
+        <RecordTimestamp
+          createdAt={property.createdAt}
+          updatedAt={property.updatedAt}
+        />
+
+        <div
+          className="space-y-2 pt-1"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -197,6 +223,40 @@ export function PropertyListingCard({
               <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
               ნახვა
             </button>
+            {canSetReminders && onListingChanged ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsReminderPickerOpen(true);
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition hover:bg-muted"
+                aria-label="შეხსენების დაყენება"
+                title="შეხსენების დაყენება"
+              >
+                <Bell className="h-4 w-4" aria-hidden />
+              </button>
+            ) : null}
+            {canEditColor && property.color !== undefined ? (
+              <RecordColorPicker
+                value={property.color}
+                disabled={isSavingColor}
+                triggerClassName="h-9 w-9"
+                onSelect={(nextColor) => {
+                  void handleSelectColor(nextColor);
+                }}
+              />
+            ) : null}
+            {canToggleHideFromOthers ? (
+              <HideFromOthersToggle
+                isHidden={property.hideFromOthers}
+                disabled={isSavingHideFromOthers}
+                variant="icon"
+                onToggle={(nextHidden) => {
+                  void handleToggleHideFromOthers(nextHidden);
+                }}
+              />
+            ) : null}
             {property.propertyType === "APARTMENT" ? (
               <MatchPercentActions
                 allHref={propertyMatchesHref(property.id, "GLOBAL")}
@@ -208,9 +268,19 @@ export function PropertyListingCard({
               />
             ) : null}
           </div>
-          {formatOwnerLine(property) ? (
+          {colorError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {colorError}
+            </p>
+          ) : null}
+          {hideFromOthersError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {hideFromOthersError}
+            </p>
+          ) : null}
+          {ownerLine ? (
             <p className="min-w-0 truncate text-xs text-muted-foreground">
-              {formatOwnerLine(property)}
+              {ownerLine}
             </p>
           ) : null}
           {formatLifecycleDate(property.lastVerifiedAt) ? (
@@ -226,5 +296,15 @@ export function PropertyListingCard({
         </div>
       </div>
     </article>
+    {canSetReminders && onListingChanged ? (
+      <ReminderPickerModal
+        mode="create"
+        open={isReminderPickerOpen}
+        target={{ targetType: "PROPERTY", propertyId: property.id }}
+        onClose={() => setIsReminderPickerOpen(false)}
+        onSaved={onListingChanged}
+      />
+    ) : null}
+    </>
   );
 }

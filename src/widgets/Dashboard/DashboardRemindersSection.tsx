@@ -93,6 +93,12 @@ export function DashboardRemindersSection({
     <section className="mt-8">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-foreground">შეხსენებები</h2>
+        <Link
+          href="/reminders"
+          className="text-xs font-medium text-teal-800 underline-offset-2 hover:underline"
+        >
+          შეხსენებების ცენტრი
+        </Link>
       </div>
 
       {deleteError ? (
@@ -162,26 +168,30 @@ export function DashboardRemindersSection({
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <div className="inline-flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditingRow(row)}
-                          title="შეხსენების რედაქტირება"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-foreground"
-                          aria-label="შეხსენების რედაქტირება"
-                        >
-                          <Pencil className="h-4 w-4" aria-hidden />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDeleteError(null);
-                            setDeleteTargetRow(row);
-                          }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                          aria-label="შეხსენების წაშლა"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden />
-                        </button>
+                        {row.actions.canUpdate ? (
+                          <button
+                            type="button"
+                            onClick={() => setEditingRow(row)}
+                            title="შეხსენების რედაქტირება"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                            aria-label="შეხსენების რედაქტირება"
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden />
+                          </button>
+                        ) : null}
+                        {row.actions.canDelete ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteError(null);
+                              setDeleteTargetRow(row);
+                            }}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                            aria-label="შეხსენების წაშლა"
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden />
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>

@@ -1,4 +1,5 @@
 import {
+  formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
   formatHotelScopeLabel,
   formatKitchenTypeLabel,
@@ -98,6 +99,7 @@ export function propertyStatusBadgeClass(status: PropertyStatus): string {
 }
 
 export {
+  formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
   formatDealTypeLabel,
   formatKitchenTypeLabel,

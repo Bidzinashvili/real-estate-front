@@ -12,6 +12,10 @@ import type {
   ReminderConfigPayload,
 } from "@/features/lifecycle/lifecycleEnums";
 
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+
 export type { LockState } from "@/features/matching/matchingEnums";
 
 export function cycleLockState(lock: LockState): LockState {
@@ -49,6 +53,8 @@ export interface CreateClientPayload {
   description: string;
   status?: ClientStatus;
   reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   relatedPersons?: CreateClientRelatedPersonPayload[];
   budgetMin?: LockedOptional<number>;
   budgetMax?: LockedOptional<number>;
@@ -93,6 +99,8 @@ export type UpdateClientPayload = {
   status?: ClientStatus;
   outcomeSource?: OutcomeSource;
   reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   relatedPersons?: CreateClientRelatedPersonPayload[];
   budgetMin?: LockedOptional<number>;
   budgetMax?: LockedOptional<number>;
@@ -132,6 +140,7 @@ export type ClientSortBy = "createdAt" | "updatedAt" | "name";
 export type SortOrder = "asc" | "desc";
 
 export type GetClientsQuery = {
+  search?: string;
   district?: Locked<string>;
   budgetMin?: LockedPartial<number>;
   budgetMax?: LockedPartial<number>;
@@ -142,6 +151,9 @@ export type GetClientsQuery = {
   page?: number;
   limit?: number;
   archived?: boolean;
+  scope?: DatabaseListScope;
+  createdFrom?: string;
+  createdTo?: string;
 };
 
 export const DEFAULT_CLIENT_LIST_FILTER_LOCK: LockState = "locked";
@@ -199,31 +211,35 @@ export type ClientCommentApi = {
 
 export type ClientApi = EntityVerificationFields & {
   id: UUID;
-  userId: UUID;
-  name: string;
+  userId?: UUID;
+  ownedByViewer?: boolean;
+  hideFromOthers?: boolean;
+  name?: string;
   clientProfileId?: string | null;
   clientProfile?: {
     id: string;
     blacklisted?: boolean;
     occurrenceCount?: number;
   } | null;
-  phones: string[];
-  whatsapp: string | null;
-  budgetMin: Locked<number | null>;
-  budgetMax: Locked<number | null>;
+  phones?: string[];
+  whatsapp?: string | null;
+  budgetMin?: Locked<number | null> | number | null;
+  budgetMax?: Locked<number | null> | number | null;
   dealType: DealType;
-  description: string;
-  pet: Locked<string | null>;
-  districts: Locked<string[]>;
-  addresses: Locked<string[]>;
-  labels?: Locked<string[]>;
+  description?: string;
+  pet?: Locked<string | null> | string | null;
+  districts?: Locked<string[]> | string[];
+  addresses?: Locked<string[]> | string[];
+  labels?: Locked<string[]> | string[];
   status: ClientStatus;
   archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   deletedAt: ISODateString | null;
-  requirements: ClientRequirementsApi | null;
+  color?: RecordColor;
+  requirements?: ClientRequirementsApi | Record<string, unknown> | null;
   relatedPersons?: ClientRelatedPersonApi[];
+  reminderSummary?: ReminderSummary;
 };
 
 export type ClientDetailApi = ClientApi & {
@@ -235,5 +251,7 @@ export type GetClientsResponse = {
   total: number;
   page: number;
   limit: number;
+  activeCount?: number;
+  scope?: DatabaseListScope;
   clients: ClientApi[];
 };

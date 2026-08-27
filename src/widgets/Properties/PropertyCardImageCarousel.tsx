@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { Camera, ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { resolveApiMediaUrl } from "@/features/properties/resolveApiMediaUrl";
 
-const PLACEHOLDER_IMAGE =
-  "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80";
+const SWIPE_THRESHOLD_PX = 40;
 
 type ImageItem = { url: string; originalName: string };
 
@@ -23,38 +22,110 @@ export function PropertyCardImageCarousel({
   alt,
 }: PropertyCardImageCarouselProps) {
   const [index, setIndex] = useState(0);
+  const pointerStartX = useRef<number | null>(null);
+  const didSwipe = useRef(false);
+  const imageSignature = images.map((image) => image.url).join("|");
 
   useEffect(() => {
     setIndex(0);
-  }, [propertyId]);
+  }, [propertyId, imageSignature]);
 
   const resolved =
     images.length > 0
-      ? images.map((img) => resolveApiMediaUrl(img.url, apiBaseUrl)).filter(Boolean)
+      ? images
+          .map((image) => resolveApiMediaUrl(image.url, apiBaseUrl))
+          .filter((imageUrl) => imageUrl !== "")
       : [];
 
   const activeIndex =
     resolved.length > 0
       ? ((index % resolved.length) + resolved.length) % resolved.length
       : 0;
-  const src = resolved.length > 0 ? resolved[activeIndex]! : PLACEHOLDER_IMAGE;
+  const src = resolved.length > 0 ? resolved[activeIndex]! : "";
   const canNavigate = resolved.length > 1;
+  const photoCountLabel =
+    resolved.length > 0 ? `${activeIndex + 1} / ${resolved.length}` : null;
 
-  const goPrev = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
+  function goToOffset(offset: number) {
     if (!canNavigate) return;
-    setIndex((i) => (i - 1 + resolved.length) % resolved.length);
+    setIndex((currentIndex) => (currentIndex + offset + resolved.length) % resolved.length);
+  }
+
+  function stopCardOpen(event: { stopPropagation: () => void; preventDefault: () => void }) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  const goPrev = (event: { stopPropagation: () => void; preventDefault: () => void }) => {
+    stopCardOpen(event);
+    goToOffset(-1);
   };
 
-  const goNext = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    if (!canNavigate) return;
-    setIndex((i) => (i + 1) % resolved.length);
+  const goNext = (event: { stopPropagation: () => void; preventDefault: () => void }) => {
+    stopCardOpen(event);
+    goToOffset(1);
   };
+
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (!canNavigate) return;
+    const eventTarget = event.target;
+    if (eventTarget instanceof HTMLElement && eventTarget.closest("button")) {
+      pointerStartX.current = null;
+      return;
+    }
+    pointerStartX.current = event.clientX;
+    didSwipe.current = false;
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (!canNavigate || pointerStartX.current === null) {
+      pointerStartX.current = null;
+      return;
+    }
+    const deltaX = event.clientX - pointerStartX.current;
+    pointerStartX.current = null;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) {
+      return;
+    }
+    didSwipe.current = true;
+    stopCardOpen(event);
+    if (deltaX > 0) {
+      goToOffset(-1);
+    } else {
+      goToOffset(1);
+    }
+  }
+
+  function handleClick(event: { stopPropagation: () => void; preventDefault: () => void }) {
+    if (!didSwipe.current) {
+      return;
+    }
+    stopCardOpen(event);
+    didSwipe.current = false;
+  }
 
   return (
-    <div className="relative h-full w-full">
-      <img src={src} alt={alt} className="h-full w-full object-cover" />
+    <div
+      className="relative h-full w-full"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onClick={handleClick}
+    >
+      {src ? (
+        <img src={src} alt={alt} className="h-full w-full object-cover" draggable={false} />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-muted text-muted-foreground">
+          <ImageOff className="h-7 w-7" aria-hidden />
+          <span className="text-xs font-medium">ფოტო არ არის</span>
+        </div>
+      )}
+
+      {photoCountLabel ? (
+        <span className="pointer-events-none absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-[2px]">
+          <Camera className="h-3 w-3" aria-hidden />
+          {photoCountLabel}
+        </span>
+      ) : null}
 
       {canNavigate && (
         <>
@@ -74,12 +145,19 @@ export function PropertyCardImageCarousel({
           >
             <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
-          <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
-            {resolved.map((_, dotIndex) => (
-              <span
-                key={dotIndex}
-                className={`h-1.5 w-1.5 rounded-full transition ${
-                  dotIndex === activeIndex ? "bg-card" : "bg-card/40"
+          <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-1">
+            {resolved.map((imageUrl, dotIndex) => (
+              <button
+                key={`${propertyId}-${imageUrl}-${dotIndex}`}
+                type="button"
+                aria-label={`ფოტო ${dotIndex + 1}`}
+                aria-current={dotIndex === activeIndex}
+                onClick={(event) => {
+                  stopCardOpen(event);
+                  setIndex(dotIndex);
+                }}
+                className={`h-1.5 rounded-full transition ${
+                  dotIndex === activeIndex ? "w-3 bg-card" : "w-1.5 bg-card/40"
                 }`}
               />
             ))}

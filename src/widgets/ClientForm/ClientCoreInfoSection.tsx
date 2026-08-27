@@ -24,6 +24,7 @@ import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton"
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 import { ClientProfileLookupSignals } from "@/widgets/ClientProfiles/ClientProfileLookupSignals";
+import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 
 const clientPhoneInputClassName =
   "shadow-none block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary";
@@ -330,24 +331,22 @@ export function ClientCoreInfoSection({
           </div>
         ) : null}
 
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-foreground">
-            აღწერა <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            {...register("description")}
-            rows={4}
-            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
-          {errors.description && (
-            <p className="text-xs text-destructive" role="alert">
-              {errors.description.message}
-            </p>
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <HistoryNoteField
+              id="description"
+              label="აღწერა"
+              required
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              error={errors.description?.message}
+              hint={fieldDescriptions?.description}
+              textareaClassName="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+            />
           )}
-          {fieldDescriptions?.description ? (
-            <p className="text-xs text-muted-foreground">{fieldDescriptions.description}</p>
-          ) : null}
-        </div>
+        />
 
         {showReminderDateField ? (
           <div className="space-y-1.5">

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DashboardReminderRow } from "@/features/reminders/dashboardReminderNormalizer";
-import { patchReminder } from "@/features/reminders/remindersApi";
+import { dismissReminder, snoozeReminder } from "@/features/reminders/remindersApi";
 
 type UseReminderCallAlertsOptions = {
   reminders: DashboardReminderRow[];
@@ -22,11 +22,7 @@ function isReminderDuePending(reminder: DashboardReminderRow): boolean {
   if (reminder.dismissedAtIso) {
     return false;
   }
-  const dueAtTime = new Date(reminder.dueAtIso).getTime();
-  if (!Number.isFinite(dueAtTime)) {
-    return false;
-  }
-  return dueAtTime <= Date.now();
+  return reminder.isDue;
 }
 
 function sortByMostRecentDue(left: DashboardReminderRow, right: DashboardReminderRow): number {
@@ -79,7 +75,7 @@ export function useReminderCallAlerts({
     setIsDismissing(true);
 
     try {
-      await patchReminder(reminderId, { dismissedAt: new Date().toISOString() });
+      await dismissReminder(reminderId);
     } catch (errorUnknown) {
       dismissedReminderIdsRef.current.delete(reminderId);
       setActiveReminderId(reminderId);
@@ -105,8 +101,7 @@ export function useReminderCallAlerts({
       setIsSnoozing(true);
       setError(null);
       try {
-        const notifyAtIso = new Date(Date.now() + minutes * 60_000).toISOString();
-        await patchReminder(activeReminder.id, { notifyAt: notifyAtIso });
+        await snoozeReminder(activeReminder.id, minutes);
         setActiveReminderId(null);
       } catch (errorUnknown) {
         const message =

@@ -58,6 +58,7 @@ export function PropertyViewModal({ propertyId, onClose }: PropertyViewModalProp
           propertyId={propertyId}
           layout="embedded"
           onBeforeEditNavigation={onClose}
+          onDeleted={onClose}
         />
       </div>
     </div>

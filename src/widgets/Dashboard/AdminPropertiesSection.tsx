@@ -3,6 +3,7 @@ import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOpti
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { Property } from "@/features/properties/types";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 
 type AdminPropertiesSectionProps = {
   properties: Property[];
@@ -66,13 +67,16 @@ export function AdminPropertiesSection({
                     • {formatDealTypeLabel(property.dealType)}
                   </td>
                     <td className="hidden px-4 py-3 text-foreground sm:table-cell">
-                      <LifecycleStatusBadge
-                        kind="property"
-                        status={property.status}
-                        outcomeSource={property.outcomeSource}
-                        verificationReason={property.verificationReason}
-                        size="sm"
-                      />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <LifecycleStatusBadge
+                          kind="property"
+                          status={property.status}
+                          outcomeSource={property.outcomeSource}
+                          verificationReason={property.verificationReason}
+                          size="sm"
+                        />
+                        <HideFromOthersBadge isHidden={property.hideFromOthers} />
+                      </div>
                     </td>
                   <td className="hidden px-4 py-3 text-foreground md:table-cell">
                     {property.city} / {property.district}

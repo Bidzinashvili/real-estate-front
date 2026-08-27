@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useHideClientProperty } from "@/features/clientHiddenProperties/useHideClientProperty";
 import { useClientPropertyMatches } from "@/features/matching/useClientPropertyMatches";
 import { type MatchScope } from "@/features/matching/matchingEnums";
 import { peekTemporaryLockSession } from "@/features/matching/temporaryLockSession";
@@ -13,6 +14,13 @@ import { ui } from "@/shared/i18n/ui";
 import { MatchingScopeToggle } from "@/widgets/Matching/MatchingScopeToggle";
 import { AppliedTemporaryLocksNotice } from "@/widgets/Matching/AppliedTemporaryLocksNotice";
 import { PropertyMatchCard } from "@/widgets/Matching/PropertyMatchCard";
+import { useClientDetails } from "@/features/clients/useClientDetails";
+import { useCurrentUser } from "@/shared/hooks";
+import { viewerCanManageRecord } from "@/features/databaseList/viewerOwnership";
+import {
+  canSharePropertyToClient,
+  collectClientSharePhones,
+} from "@/features/propertyShare/clientPropertyShare";
 
 type ClientPropertyMatchesViewProps = {
   clientId: string;
@@ -24,6 +32,13 @@ export function ClientPropertyMatchesView({
   scope,
 }: ClientPropertyMatchesViewProps) {
   const router = useRouter();
+  const { user } = useCurrentUser();
+  const { client } = useClientDetails(clientId);
+  const canShareToClient = client ? canSharePropertyToClient(user, client) : false;
+  const canHideProperty = client ? viewerCanManageRecord(client, user) : false;
+  const sharePhones = client ? collectClientSharePhones(client) : [];
+  const { hideProperty, isPropertyPending } = useHideClientProperty(clientId);
+  const [locallyHiddenIds, setLocallyHiddenIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [appliedScope, setAppliedScope] = useState(scope);
   const [temporaryLockedFields] = useState(() =>
@@ -36,12 +51,26 @@ export function ClientPropertyMatchesView({
     setPage(1);
   }
 
+  useEffect(() => {
+    setLocallyHiddenIds([]);
+  }, [clientId]);
+
   const { data, isLoading, error } = useClientPropertyMatches({
     clientId,
     scope,
     temporaryLockedFields,
     page: requestPage,
   });
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+    const presentIds = new Set(data.properties.map((match) => match.property.id));
+    setLocallyHiddenIds((currentIds) =>
+      currentIds.filter((propertyId) => presentIds.has(propertyId)),
+    );
+  }, [data]);
 
   const totalPages = useMemo(() => {
     if (!data || data.limit <= 0) {
@@ -54,6 +83,24 @@ export function ClientPropertyMatchesView({
     () => (data ? sortScoredMatchesByPercentageDesc(data.properties) : []),
     [data],
   );
+  const visibleProperties = useMemo(
+    () =>
+      sortedProperties.filter((match) => !locallyHiddenIds.includes(match.property.id)),
+    [sortedProperties, locallyHiddenIds],
+  );
+
+  async function handleHideProperty(propertyId: string) {
+    setLocallyHiddenIds((currentIds) =>
+      currentIds.includes(propertyId) ? currentIds : [...currentIds, propertyId],
+    );
+    const didHide = await hideProperty(propertyId);
+    if (didHide) {
+      return;
+    }
+    setLocallyHiddenIds((currentIds) =>
+      currentIds.filter((hiddenId) => hiddenId !== propertyId),
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
@@ -90,17 +137,29 @@ export function ClientPropertyMatchesView({
           {error}
         </p>
       ) : null}
-      {!isLoading && !error && data && data.total === 0 ? (
+      {!isLoading && !error && data && visibleProperties.length === 0 ? (
         <p className="text-sm text-muted-foreground">შესაბამისი განცხადებები ვერ მოიძებნა.</p>
       ) : null}
-      {!isLoading && !error && data && sortedProperties.length > 0 ? (
+      {!isLoading && !error && data && visibleProperties.length > 0 ? (
         <>
           <p className="text-xs text-muted-foreground">
-            ნაჩვენებია {sortedProperties.length} / {data.total}
+            ნაჩვენებია {visibleProperties.length} / {Math.max(0, data.total - locallyHiddenIds.length)}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {sortedProperties.map((match) => (
-              <PropertyMatchCard key={match.id} match={match} clientId={clientId} />
+            {visibleProperties.map((match) => (
+              <PropertyMatchCard
+                key={match.id}
+                match={match}
+                clientId={clientId}
+                canShareToClient={canShareToClient}
+                sharePhones={sharePhones}
+                canHideProperty={canHideProperty}
+                isHidePending={isPropertyPending(match.property.id)}
+                onHideProperty={(propertyId) => {
+                  void handleHideProperty(propertyId);
+                }}
+                canRequestCollaboration={client !== null && !client.hideFromOthers}
+              />
             ))}
           </div>
           <div className="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
 import {
@@ -21,7 +20,6 @@ import type { FormErrors } from "@/features/properties/addPropertyFormValidation
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 import { ImageUploadField } from "@/widgets/AddProperty/ImageUploadField";
 import { ExternalIdList } from "@/shared/components/ExternalIdList";
-import { applyDatedPersonalCommentEntry } from "@/shared/lib/personalCommentEntry";
 import { applyLinkedPropertyPriceInputChange } from "@/features/properties/linkedPropertyPrices";
 import {
   calculatePricePerSquareMeter,
@@ -30,6 +28,7 @@ import {
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
+import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
 
@@ -95,7 +94,6 @@ export function AddPropertyCoreFields({
   buildingNumber,
   onBuildingNumberChange,
 }: Props) {
-  const isPersonalCommentEntryActiveRef = useRef(false);
   const showMatchingLocks = form.propertyType === "APARTMENT";
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     parseFormNumber(form.pricePublic),
@@ -127,16 +125,6 @@ export function AddPropertyCoreFields({
   function handleOwnerAssignmentChange(nextAssignment: PropertyOwnerAssignment) {
     updateForm("ownerAssignment", nextAssignment);
     updateForm("ownerName", nextAssignment.name);
-  }
-
-  function handlePrivateCommentChange(value: string) {
-    const result = applyDatedPersonalCommentEntry({
-      previousValue: form.privateComment,
-      rawValue: value,
-      isEntryActive: isPersonalCommentEntryActiveRef.current,
-    });
-    isPersonalCommentEntryActiveRef.current = result.isEntryActive;
-    updateForm("privateComment", result.nextValue);
   }
 
   return (
@@ -325,22 +313,13 @@ export function AddPropertyCoreFields({
           className={addPropertyInputClassName()}
         />
       </div>
-      <div className="space-y-1.5 sm:col-span-2">
-        <label
-          htmlFor="privateComment"
-          className="block text-sm font-medium text-foreground"
-        >
-          კომენტარი ჩემთვის
-        </label>
-        <textarea
+      <div className="sm:col-span-2">
+        <HistoryNoteField
           id="privateComment"
-          rows={4}
+          label="კომენტარი ჩემთვის"
           value={form.privateComment}
-          onChange={(event) => handlePrivateCommentChange(event.target.value)}
-          onBlur={() => {
-            isPersonalCommentEntryActiveRef.current = false;
-          }}
-          className={addPropertyInputClassName()}
+          onChange={(nextValue) => updateForm("privateComment", nextValue)}
+          textareaClassName={addPropertyInputClassName()}
         />
       </div>
 

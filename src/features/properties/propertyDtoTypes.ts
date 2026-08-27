@@ -1,10 +1,12 @@
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
@@ -43,6 +45,7 @@ export type PropertyImageInput =
 
 export type PropertyApartmentCreate = {
   buildingCondition: BuildingCondition;
+  buildingAgeType?: BuildingAgeType | null;
   totalArea: number;
   rooms: number;
   bedrooms: number;
@@ -129,6 +132,8 @@ export type CreatePropertyDto = {
   dealType?: DealType;
   status?: PropertyStatus;
   reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   city: string;
   district?: string;
   address: string;

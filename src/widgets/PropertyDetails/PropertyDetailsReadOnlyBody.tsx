@@ -5,8 +5,8 @@ import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
-import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
-import { updateProperty, verifyProperty, archiveProperty, unarchiveProperty } from "@/features/properties/api";
+import { canManageProperty, canViewPrivateListingFields } from "@/features/properties/listingVisibility";
+import { updateProperty, verifyProperty, archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
 import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { calculateMatchScore } from "@/features/properties/matchScore";
@@ -15,18 +15,25 @@ import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums"
 import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
+import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
 import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
+import { DeleteConfirmDialog } from "@/widgets/Lifecycle/DeleteConfirmDialog";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColor";
+import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
   layout: "page" | "embedded";
   onBeforeEditNavigation?: () => void;
+  onDeleted?: () => void;
 };
 
 export function PropertyDetailsReadOnlyBody({
   propertyId,
   layout,
   onBeforeEditNavigation,
+  onDeleted,
 }: PropertyDetailsReadOnlyBodyProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
@@ -36,11 +43,17 @@ export function PropertyDetailsReadOnlyBody({
   const [isSavingReminder, setIsSavingReminder] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
+  const { saveColor, isSaving: isSavingColor, error: colorError } =
+    useUpdateRecordColor();
+  const {
+    saveHideFromOthers,
+    isSaving: isSavingHideFromOthers,
+    error: hideFromOthersError,
+  } = useUpdateHideFromOthers();
 
   const canEdit = useMemo(() => {
     if (!user || !property) return false;
-    if (user.role === "ADMIN") return true;
-    return user.role === "AGENT" && property.userId === user.id;
+    return canManageProperty(user, property);
   }, [property, user]);
 
   const canViewPrivateFields = useMemo(() => {
@@ -66,6 +79,35 @@ export function PropertyDetailsReadOnlyBody({
     },
     onSuccess: () => {
       void refetch();
+    },
+  });
+  const deleteAction = useSoftDeleteAction({
+    canManage: canEdit,
+    onDelete: () => {
+      if (!property) {
+        return Promise.resolve();
+      }
+      return deleteProperty(property.id);
+    },
+    onRestore: () => {
+      if (!property) {
+        return Promise.resolve(null);
+      }
+      return restoreProperty(property.id);
+    },
+    onSuccess: () => {
+      void refetch();
+    },
+    onDeleted: () => {
+      onDeleted?.();
+      if (layout === "embedded") {
+        return;
+      }
+      if (property && isPropertyArchived(property)) {
+        router.push("/archive");
+        return;
+      }
+      router.push("/properties");
     },
   });
 
@@ -145,6 +187,30 @@ export function PropertyDetailsReadOnlyBody({
 
     return { percentage: null, matched: 0, total: 0 };
   }, [property]);
+
+  async function handleSelectColor(nextColor: RecordColor) {
+    if (!property || !canEdit || property.color === undefined) {
+      return;
+    }
+    try {
+      await saveColor("property", property.id, nextColor);
+      await refetch();
+    } catch {
+      return;
+    }
+  }
+
+  async function handleToggleHideFromOthers(nextHidden: boolean) {
+    if (!property || !canEdit) {
+      return;
+    }
+    try {
+      await saveHideFromOthers("property", property.id, nextHidden);
+      await refetch();
+    } catch {
+      return;
+    }
+  }
 
   async function handleSaveReminder(payload: ReminderConfigPayload) {
     if (!property || !canEdit) {
@@ -235,17 +301,30 @@ export function PropertyDetailsReadOnlyBody({
         matchPercentage={matchScore.percentage}
         canShowArchive={archiveAction.canShowArchive}
         canShowRestore={archiveAction.canShowRestore}
+        canShowDelete={deleteAction.canShowDelete}
+        isDeletePending={deleteAction.isPending}
         onGoBack={handleGoBack}
         onBeforeEditNavigation={onBeforeEditNavigation}
         onOpenReminders={() => setIsRemindersOpen(true)}
         onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
         onArchive={archiveAction.requestArchive}
         onRestore={archiveAction.requestRestore}
+        onRequestDelete={deleteAction.requestDelete}
         onSaveReminder={handleSaveReminder}
         onVerifyNow={handleVerifyNow}
         isSavingReminder={isSavingReminder}
         isVerifying={isVerifying}
         reminderError={reminderError}
+        isSavingColor={isSavingColor}
+        colorError={colorError}
+        onSelectColor={(nextColor) => {
+          void handleSelectColor(nextColor);
+        }}
+        isSavingHideFromOthers={isSavingHideFromOthers}
+        hideFromOthersError={hideFromOthersError}
+        onToggleHideFromOthers={(nextHidden) => {
+          void handleToggleHideFromOthers(nextHidden);
+        }}
       />
       <PropertyListingRemindersModal
         open={isRemindersOpen}
@@ -275,6 +354,17 @@ export function PropertyDetailsReadOnlyBody({
             void archiveAction.confirm();
           }}
           onCancel={archiveAction.cancel}
+        />
+      ) : null}
+      {deleteAction.isConfirmOpen ? (
+        <DeleteConfirmDialog
+          open
+          isProcessing={deleteAction.isPending}
+          error={deleteAction.error}
+          onConfirm={() => {
+            void deleteAction.confirm();
+          }}
+          onCancel={deleteAction.cancel}
         />
       ) : null}
     </>

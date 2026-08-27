@@ -9,7 +9,7 @@ import { useUpdateProperty } from "@/features/properties/useUpdateProperty";
 import { PropertyDetailsCard } from "@/widgets/PropertyDetails/PropertyDetailsCard";
 import { useEffect, useMemo, useState } from "react";
 import type { Property, PropertyUpdatePayload } from "@/features/properties/types";
-import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
+import { canManageProperty, canViewPrivateListingFields } from "@/features/properties/listingVisibility";
 import { refetchUpdatedProperty } from "@/features/properties/saveFlow";
 
 type PropertyDetailsEditViewProps = {
@@ -34,8 +34,7 @@ export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewP
 
   const canEdit = useMemo(() => {
     if (!user || !activeProperty) return false;
-    if (user.role === "ADMIN") return true;
-    return user.role === "AGENT" && activeProperty.userId === user.id;
+    return canManageProperty(user, activeProperty);
   }, [activeProperty, user]);
 
   const canViewPrivateFields = useMemo(() => {

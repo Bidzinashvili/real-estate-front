@@ -4,6 +4,7 @@ export type OutcomeSource = (typeof OUTCOME_SOURCES)[number];
 export const VERIFICATION_REASONS = [
   "REGULAR_VERIFICATION_OVERDUE",
   "RENTAL_EXPIRY_RECHECK",
+  "MANUAL_REMINDER_DUE",
 ] as const;
 export type VerificationReason = (typeof VERIFICATION_REASONS)[number];
 

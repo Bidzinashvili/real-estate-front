@@ -4,7 +4,11 @@ import {
   GEORGIAN_CITY_OPTIONS,
   isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
-import { isCommercialStatus, isLandCategory } from "@/features/properties/types";
+import {
+  isBuildingAgeType,
+  isCommercialStatus,
+  isLandCategory,
+} from "@/features/properties/types";
 import type {
   AddPropertyActiveSubtype,
   FormState,
@@ -257,6 +261,9 @@ export function buildCreatePropertyPayload(
     if (bathroomsValue !== undefined) payload.apartment.bathrooms = bathroomsValue;
     if (createNeedsVerification.length > 0) {
       payload.apartment.needsVerification = createNeedsVerification;
+    }
+    if (isBuildingAgeType(apartment.buildingAgeType)) {
+      payload.apartment.buildingAgeType = apartment.buildingAgeType;
     }
     if (apartment.buildingNumber.trim()) {
       payload.apartment.buildingNumber = apartment.buildingNumber.trim();

@@ -7,6 +7,7 @@ import {
   isHotelScope,
   isKitchenType,
   isLandCategory,
+  parseBuildingAgeType,
   parsePropertyType,
 } from "@/features/properties/propertyModelTypes";
 import type {
@@ -36,6 +37,8 @@ import { isPropertyFieldLockKey } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
 import { normalizePropertyOwnerSummary } from "@/features/propertyOwners/normalizers";
+import { parseReminderSummary } from "@/features/reminders/reminderSummary";
+import { parseRecordColor } from "@/features/recordColor/recordColor";
 
 function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
   const candidate = typeof value === "string" ? value.trim() : "";
@@ -221,6 +224,7 @@ function normalizeApartment(value: unknown): PropertyApartment | null {
     propertyId: asString(value.propertyId),
     buildingNumber: asNullableString(value.buildingNumber),
     buildingCondition: parseBuildingCondition(value.buildingCondition),
+    buildingAgeType: parseBuildingAgeType(value.buildingAgeType),
     totalArea: asNumber(value.totalArea),
     project: asNullableString(value.project),
     renovation: asNullableString(value.renovation),
@@ -382,11 +386,16 @@ export function normalizeProperty(value: unknown): Property | null {
     updatedAt: asNullableString(value.updatedAt) ?? "",
     deletedAt: asNullableString(value.deletedAt),
     userId: asString(value.userId),
+    ownedByViewer:
+      typeof value.ownedByViewer === "boolean" ? value.ownedByViewer : null,
+    hideFromOthers: asBoolean(value.hideFromOthers),
+    color: parseRecordColor(value.color),
     apartment: normalizeApartment(value.apartment),
     privateHouse: normalizePrivateHouse(value.privateHouse),
     landPlot: normalizeLandPlot(value.landPlot),
     commercial: normalizeCommercial(value.commercial),
     fieldLocks: parseFieldLocks(value.fieldLocks),
+    reminderSummary: parseReminderSummary(value.reminderSummary),
     ...parseEntityVerificationFields(value),
   };
 }

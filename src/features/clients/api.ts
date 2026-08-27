@@ -11,8 +11,7 @@ import {
   normalizeClientDetail,
   normalizeClientsListResponse,
 } from "@/features/clients/normalizers";
-import { emitRecordsChangedEvent } from "@/features/lifecycle/recordsChangedEvent";
-import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
+import { emitRecordMutationEvents } from "@/features/lifecycle/recordsChangedEvent";
 import type {
   Client,
   ClientDetail,
@@ -128,7 +127,7 @@ export async function createClient(dto: CreateClientPayload): Promise<Client> {
     const res = await axios.post<ClientApi>(`${baseUrl}/clients`, dto, {
       headers: { ...headers, "Content-Type": "application/json" },
     });
-    emitRemindersChangedEvent();
+    emitRecordMutationEvents();
     return normalizeClient(res.data);
   } catch (error) {
     throwClientMutationError(
@@ -154,8 +153,7 @@ export async function updateClient(
     const res = await axios.patch<ClientApi>(`${baseUrl}/clients/${id}`, dto, {
       headers: { ...headers, "Content-Type": "application/json" },
     });
-    emitRemindersChangedEvent();
-    emitRecordsChangedEvent();
+    emitRecordMutationEvents();
     return normalizeClient(res.data);
   } catch (error) {
     throwClientMutationError(
@@ -182,8 +180,7 @@ export async function verifyClient(id: string): Promise<Client> {
         headers: { ...headers, "Content-Type": "application/json" },
       },
     );
-    emitRemindersChangedEvent();
-    emitRecordsChangedEvent();
+    emitRecordMutationEvents();
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -227,8 +224,7 @@ async function postClientArchiveAction(
         },
       },
     );
-    emitRemindersChangedEvent();
-    emitRecordsChangedEvent();
+    emitRecordMutationEvents();
     return normalizeClient(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -265,13 +261,54 @@ export async function deleteClient(id: string): Promise<DeleteClientResponse> {
       `${baseUrl}/clients/${id}`,
       { headers },
     );
+    emitRecordMutationEvents();
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "კლიენტის წაშლა ვერ მოხერხდა.";
+      const status = error.response?.status ?? 500;
+      const fallbackByStatus: Record<number, string> = {
+        403: "ამ კლიენტის წაშლის უფლება არ გაქვთ",
+        404: "კლიენტი ვერ მოიძებნა.",
+      };
+      const fallback = fallbackByStatus[status] ?? "კლიენტის წაშლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
-        error.response?.status ?? 500,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function restoreClient(id: string): Promise<Client> {
+  const { baseUrl, headers } = getBearerAuthContext();
+
+  try {
+    const res = await axios.post<ClientApi>(
+      `${baseUrl}/clients/${id}/restore`,
+      {},
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    emitRecordMutationEvents();
+    return normalizeClient(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallbackByStatus: Record<number, string> = {
+        403: "ამ კლიენტის აღდგენის უფლება არ გაქვთ",
+        404: "კლიენტი ვერ მოიძებნა.",
+      };
+      const fallback = fallbackByStatus[status] ?? "კლიენტის აღდგენა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
         fallback,
       );
       throw new ApiError(parsed, fallback);

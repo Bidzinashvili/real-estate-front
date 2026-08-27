@@ -3,10 +3,13 @@
 import { useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import {
+  BUILDING_AGE_TYPE_FIELD_LABEL,
+  BUILDING_AGE_TYPE_SELECT_OPTIONS,
   BUILDING_CONDITION_OPTIONS,
   KITCHEN_TYPE_OPTIONS,
   RENOVATION_SELECT_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
+import { isBuildingAgeType } from "@/features/properties/types";
 import { SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
 import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import { VerifiableBooleanField } from "@/widgets/AddProperty/VerifiableBooleanField";
@@ -160,6 +163,17 @@ export function AddPropertyApartmentSection({
             />
           </div>
         </div>
+        <SelectField
+          id="aptBuildingAgeType"
+          label={BUILDING_AGE_TYPE_FIELD_LABEL}
+          value={apartment.buildingAgeType}
+          onChange={(value) =>
+            patchApartment({
+              buildingAgeType: isBuildingAgeType(value) ? value : "",
+            })
+          }
+          options={BUILDING_AGE_TYPE_SELECT_OPTIONS}
+        />
         <div className="flex items-start gap-2">
           <div className="flex-1">
             <SelectField

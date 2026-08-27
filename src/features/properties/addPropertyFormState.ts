@@ -6,6 +6,7 @@ import {
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
@@ -59,6 +60,7 @@ export type FormState = {
   fieldLocks: PropertyFieldLocks;
   apartment: {
     buildingCondition: BuildingCondition;
+    buildingAgeType: BuildingAgeType | "";
     totalArea: string;
     rooms: string;
     bedrooms: string;
@@ -164,6 +166,7 @@ export function initialFormState(): FormState {
     fieldLocks: {},
     apartment: {
       buildingCondition: "NEW",
+      buildingAgeType: "",
       totalArea: "",
       rooms: "",
       bedrooms: "",

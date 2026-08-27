@@ -5,12 +5,16 @@ import { getClients } from "@/features/clients/api";
 import type { GetClientsQuery } from "@/features/clients/getClientsQuery";
 import type { Client } from "@/features/clients/types";
 import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
+import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 
 type UseClientsListResult = {
   clients: Client[];
   total: number;
   page: number;
   limit: number;
+  activeCount: number;
+  appliedScope: DatabaseListScope | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -25,6 +29,8 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [activeCount, setActiveCount] = useState(0);
+  const [appliedScope, setAppliedScope] = useState<DatabaseListScope | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refetchTick, setRefetchTick] = useState(0);
@@ -33,12 +39,16 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const budgetMinKey = lockedFieldKey(query?.budgetMin);
   const budgetMaxKey = lockedFieldKey(query?.budgetMax);
   const statusKey = lockedFieldKey(query?.status);
+  const search = query?.search;
+  const createdFrom = query?.createdFrom;
+  const createdTo = query?.createdTo;
   const dealType = query?.dealType;
   const sortBy = query?.sortBy;
   const order = query?.order;
   const queryPage = query?.page;
   const queryLimit = query?.limit;
   const archived = query?.archived;
+  const scope = query?.scope;
 
   const refetch = useCallback(() => {
     setRefetchTick((previousTick) => previousTick + 1);
@@ -49,8 +59,10 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
       setRefetchTick((previousTick) => previousTick + 1);
     };
     window.addEventListener(recordsChangedEventName, handleRecordsChanged);
+    window.addEventListener(remindersChangedEventName, handleRecordsChanged);
     return () => {
       window.removeEventListener(recordsChangedEventName, handleRecordsChanged);
+      window.removeEventListener(remindersChangedEventName, handleRecordsChanged);
     };
   }, []);
 
@@ -65,6 +77,9 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
       try {
         const result = await getClients(
           {
+            search,
+            createdFrom,
+            createdTo,
             district:
               districtKey === ""
                 ? undefined
@@ -87,6 +102,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
             page: queryPage,
             limit: queryLimit,
             archived,
+            scope,
           },
           { signal: controller.signal },
         );
@@ -96,6 +112,8 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
           setTotal(result.total);
           setPage(result.page);
           setLimit(result.limit);
+          setActiveCount(result.activeCount);
+          setAppliedScope(result.scope);
         }
       } catch (loadError) {
         if (cancelled) return;
@@ -118,6 +136,9 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
       controller.abort();
     };
   }, [
+    search,
+    createdFrom,
+    createdTo,
     districtKey,
     budgetMinKey,
     budgetMaxKey,
@@ -128,8 +149,19 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
     queryPage,
     queryLimit,
     archived,
+    scope,
     refetchTick,
   ]);
 
-  return { clients, total, page, limit, isLoading, error, refetch };
+  return {
+    clients,
+    total,
+    page,
+    limit,
+    activeCount,
+    appliedScope,
+    isLoading,
+    error,
+    refetch,
+  };
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Agent } from "@/features/agents/types";
+import { PasswordSetBadge } from "@/widgets/Agents/PasswordSetBadge";
 
 type AdminAgentsSectionProps = {
   agents: Agent[];
@@ -56,7 +57,12 @@ export function AdminAgentsSection({
             <tbody>
               {agents.map((agent) => (
                 <tr key={agent.id} className="border-t border-border">
-                  <td className="px-4 py-3 text-foreground">{agent.fullName}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    <div className="flex flex-col gap-1">
+                      <span>{agent.fullName}</span>
+                      <PasswordSetBadge passwordSet={agent.passwordSet} />
+                    </div>
+                  </td>
                   <td className="hidden px-4 py-3 text-foreground md:table-cell">
                     {agent.email}
                   </td>

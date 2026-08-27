@@ -5,6 +5,7 @@ import type {
   AgentDetails,
   AgentsResponse,
   AgentCreatePayload,
+  AgentCreateResult,
   AgentUpdatePayload,
 } from "@/features/agents/types";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
@@ -88,11 +89,11 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
   }
 }
 
-export async function createAgent(payload: AgentCreatePayload): Promise<Agent> {
+export async function createAgent(payload: AgentCreatePayload): Promise<AgentCreateResult> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.post<Agent>(`${baseUrl}/admin/agents`, payload, {
+    const res = await axios.post<AgentCreateResult>(`${baseUrl}/admin/agents`, payload, {
       headers,
     });
     return res.data;
@@ -158,6 +159,61 @@ export async function deleteAgents(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "აგენტის წაშლა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
+export async function resendAgentSetupEmail(
+  agentId: string,
+): Promise<{ message?: string }> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post<{ message?: string }>(
+      `${baseUrl}/admin/agents/${agentId}/resend-setup`,
+      {},
+      { headers },
+    );
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "პაროლის დაყენების ბმულის გაგზავნა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
+export async function resetAgentPassword(
+  agentId: string,
+  newPassword: string,
+): Promise<{ message?: string }> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post<{ message?: string }>(
+      `${baseUrl}/admin/agents/${agentId}/reset-password`,
+      { newPassword },
+      { headers },
+    );
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "პაროლის შეცვლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,

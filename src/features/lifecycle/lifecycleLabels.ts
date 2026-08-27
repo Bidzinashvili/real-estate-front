@@ -18,6 +18,7 @@ export const CLIENT_OUTCOME_SOURCE_LABELS: Record<OutcomeSource, string> = {
 export const VERIFICATION_REASON_LABELS: Record<VerificationReason, string> = {
   REGULAR_VERIFICATION_OVERDUE: "გადამოწმების ვადა გავიდა",
   RENTAL_EXPIRY_RECHECK: "ქირის ვადის გადამოწმება",
+  MANUAL_REMINDER_DUE: "შეხსენების ვადა ამოვიდა",
 };
 
 export function formatReminderTypeLabel(

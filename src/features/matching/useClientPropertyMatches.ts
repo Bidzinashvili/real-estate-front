@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useClientHiddenPropertiesChangedListener } from "@/features/clientHiddenProperties/hiddenPropertyEvents";
 import { fetchClientPropertyMatches } from "@/features/matching/matchingApi";
 import type { ClientToPropertyMatchResponse, MatchRequest } from "@/features/matching/matchingApi.types";
 import type { MatchScope, TemporaryLockKey } from "@/features/matching/matchingEnums";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type UseClientPropertyMatchesArgs = {
   clientId: string;
@@ -17,6 +19,7 @@ type UseClientPropertyMatchesResult = {
   data: ClientToPropertyMatchResponse | null;
   isLoading: boolean;
   error: string | null;
+  refetch: () => void;
 };
 
 export function useClientPropertyMatches({
@@ -29,7 +32,16 @@ export function useClientPropertyMatches({
   const [data, setData] = useState<ClientToPropertyMatchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTick, setRefetchTick] = useState(0);
   const temporaryLockKey = temporaryLockedFields.join(",");
+  const requestSignature = `${clientId}|${scope}|${temporaryLockKey}|${page}|${limit}`;
+  const loadedSignatureRef = useRef<string | null>(null);
+  const bumpRefetch = useCallback(() => {
+    setRefetchTick((previousTick) => previousTick + 1);
+  }, []);
+
+  useRecordsChangedListener(bumpRefetch);
+  useClientHiddenPropertiesChangedListener(clientId, bumpRefetch);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,15 +54,20 @@ export function useClientPropertyMatches({
     if (temporaryLockedFields.length > 0) {
       request.temporaryLockedFields = temporaryLockedFields;
     }
+    const isRequestChanged = loadedSignatureRef.current !== requestSignature;
 
     const loadMatches = async () => {
-      setIsLoading(true);
+      if (isRequestChanged) {
+        setIsLoading(true);
+        setData(null);
+      }
       setError(null);
       try {
         const result = await fetchClientPropertyMatches(clientId, request, {
           signal: controller.signal,
         });
         if (!cancelled) {
+          loadedSignatureRef.current = requestSignature;
           setData(result);
         }
       } catch (loadError) {
@@ -62,7 +79,9 @@ export function useClientPropertyMatches({
             ? loadError.message
             : "შესაბამისი განცხადებების ჩატვირთვა ვერ მოხერხდა.";
         setError(message);
-        setData(null);
+        if (isRequestChanged) {
+          setData(null);
+        }
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -76,7 +95,7 @@ export function useClientPropertyMatches({
       cancelled = true;
       controller.abort();
     };
-  }, [clientId, scope, temporaryLockKey, page, limit]);
+  }, [clientId, scope, temporaryLockKey, page, limit, refetchTick, requestSignature]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch: bumpRefetch };
 }

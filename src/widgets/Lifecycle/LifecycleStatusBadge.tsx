@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CalendarClock, Check, CircleHelp, X } from "lucide-react";
+import { Bell, CalendarClock, Check, CircleHelp, X } from "lucide-react";
 import type { ClientStatus } from "@/features/clients/clientEnums";
 import { CLIENT_STATUS_LABELS } from "@/features/clients/clientEnums";
 import type {
@@ -63,6 +63,12 @@ function propertyVisual(
         className: "bg-amber-100 text-amber-800",
       };
     }
+    if (verificationReason === "MANUAL_REMINDER_DUE") {
+      return {
+        icon: <Bell className="h-3.5 w-3.5 text-orange-700" aria-hidden />,
+        className: "bg-orange-100 text-orange-800",
+      };
+    }
     return {
       icon: <CircleHelp className="h-3.5 w-3.5 text-warning-foreground" aria-hidden />,
       className: "bg-warning-muted text-warning-foreground",
@@ -114,6 +120,12 @@ function clientVisual(
       return {
         icon: <CalendarClock className="h-3.5 w-3.5 text-amber-700" aria-hidden />,
         className: "bg-amber-100 text-amber-800",
+      };
+    }
+    if (verificationReason === "MANUAL_REMINDER_DUE") {
+      return {
+        icon: <Bell className="h-3.5 w-3.5 text-orange-700" aria-hidden />,
+        className: "bg-orange-100 text-orange-800",
       };
     }
     return {

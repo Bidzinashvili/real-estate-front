@@ -6,6 +6,8 @@ import { getMatchImageUrl } from "@/features/matching/matchImageUrl";
 import { MatchingCriteriaList } from "@/widgets/Matching/MatchingCriteriaList";
 import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
 import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
+import { PropertyMatchWhatsAppButton } from "@/widgets/PropertyShare/PropertyMatchWhatsAppButton";
+import { HidePropertyMatchButton } from "@/widgets/Matching/HidePropertyMatchButton";
 import {
   CLIENT_PREFERENCE_LABELS,
   isClientPreferenceValue,
@@ -17,6 +19,12 @@ import { isPropertyStatus } from "@/features/properties/propertyStatus";
 type PropertyMatchCardProps = {
   match: ScoredPropertyMatch;
   clientId?: string;
+  canShareToClient?: boolean;
+  sharePhones?: string[];
+  canHideProperty?: boolean;
+  isHidePending?: boolean;
+  onHideProperty?: (propertyId: string) => void;
+  canRequestCollaboration?: boolean;
 };
 
 function formatPreference(value: string | boolean | null | undefined): string {
@@ -32,7 +40,16 @@ function formatPreference(value: string | boolean | null | undefined): string {
   return String(value);
 }
 
-export function PropertyMatchCard({ match, clientId }: PropertyMatchCardProps) {
+export function PropertyMatchCard({
+  match,
+  clientId,
+  canShareToClient = false,
+  sharePhones = [],
+  canHideProperty = false,
+  isHidePending = false,
+  onHideProperty,
+  canRequestCollaboration = true,
+}: PropertyMatchCardProps) {
   const listing = match.property;
   const apartment = listing.apartment;
   const imageUrl = getMatchImageUrl(listing.images);
@@ -86,7 +103,28 @@ export function PropertyMatchCard({ match, clientId }: PropertyMatchCardProps) {
           >
             განცხადების გახსნა
           </Link>
-          <RequestCollaborationButton propertyId={listing.id} clientId={clientId} />
+          {canShareToClient ? (
+            <PropertyMatchWhatsAppButton
+              propertyId={listing.id}
+              dealType={listing.dealType}
+              propertyType={listing.propertyType}
+              district={listing.district}
+              city={listing.city}
+              listingStatus={listing.status}
+              phones={sharePhones}
+            />
+          ) : null}
+          <RequestCollaborationButton
+            propertyId={listing.id}
+            clientId={clientId}
+            canRequest={canRequestCollaboration}
+          />
+          {canHideProperty && onHideProperty ? (
+            <HidePropertyMatchButton
+              isPending={isHidePending}
+              onHide={() => onHideProperty(listing.id)}
+            />
+          ) : null}
         </div>
       </div>
     </article>

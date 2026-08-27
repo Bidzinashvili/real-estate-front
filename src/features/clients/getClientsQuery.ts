@@ -37,6 +37,16 @@ export function toGetClientsSearchParams(
 
   const out: Record<string, string> = {};
 
+  const trimmedSearch = query.search?.trim() ?? "";
+  if (trimmedSearch !== "") {
+    out.search = trimmedSearch;
+  }
+  if (query.createdFrom) {
+    out.createdFrom = query.createdFrom;
+  }
+  if (query.createdTo) {
+    out.createdTo = query.createdTo;
+  }
   if (query.district !== undefined) {
     out.district = toLockedQueryJson(query.district);
   }
@@ -68,6 +78,9 @@ export function toGetClientsSearchParams(
     out.archived = "true";
   } else if (query.archived === false) {
     out.archived = "false";
+  }
+  if (query.scope) {
+    out.scope = query.scope;
   }
 
   return out;

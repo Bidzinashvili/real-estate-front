@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getClientProfiles } from "@/features/clientProfiles/api";
 import type { GetClientProfilesQuery } from "@/features/clientProfiles/getClientProfilesQuery";
 import type { ClientProfileListItem } from "@/features/clientProfiles/types";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type UseClientProfilesListResult = {
   profiles: ClientProfileListItem[];
@@ -34,6 +35,8 @@ export function useClientProfilesList(
   const refetch = useCallback(() => {
     setRefetchTick((previousTick) => previousTick + 1);
   }, []);
+
+  useRecordsChangedListener(refetch);
 
   useEffect(() => {
     let cancelled = false;

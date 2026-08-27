@@ -2,12 +2,14 @@
 
 import { formatPropertyStatusLabel, type Property } from "@/features/properties/types";
 import {
+  formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
   formatHotelScopeLabel,
   formatKitchenTypeLabel,
   formatPropertyTypeLabel,
   formatRenovationLabel,
 } from "@/features/properties/addPropertyFormOptions";
+import { BUILDING_AGE_TYPE_FIELD_LABEL } from "@/shared/i18n/enumLabels";
 import {
   DetailDateTime,
   DetailMultiline,
@@ -71,10 +73,12 @@ export function PropertyDetailsReadOnlySections({
                 <p className="text-xs text-muted-foreground">მესაკუთრე</p>
                 <OwnerProfileNameLink propertyOwner={property.propertyOwner} />
               </div>
-            ) : (
+            ) : property.ownerName.trim() ? (
               <DetailText label="მესაკუთრის სახელი" value={property.ownerName} />
-            )}
-            <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
+            ) : null}
+            {ownerPhones ? (
+              <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
+            ) : null}
           </div>
         )}
 
@@ -102,10 +106,6 @@ export function PropertyDetailsReadOnlySections({
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailDateTime label="შექმნის თარიღი" value={property.createdAt} />
-          <DetailDateTime label="განახლების თარიღი" value={property.updatedAt} />
-        </div>
       </section>
 
       <section className="space-y-3 pt-2" aria-labelledby="notes-heading">
@@ -135,9 +135,11 @@ export function PropertyDetailsReadOnlySections({
           </p>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="მიმაგრებული აგენტი" value={property.userId} />
-        </div>
+        {property.userId.trim() ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailText label="მიმაგრებული აგენტი" value={property.userId} />
+          </div>
+        ) : null}
       </section>
 
       {property.apartment && (
@@ -154,6 +156,10 @@ export function PropertyDetailsReadOnlySections({
             <DetailText
               label="შენობის მდგომარეობა"
               value={formatBuildingConditionLabel(property.apartment.buildingCondition)}
+            />
+            <DetailText
+              label={BUILDING_AGE_TYPE_FIELD_LABEL}
+              value={formatBuildingAgeTypeLabel(property.apartment.buildingAgeType)}
             />
           </div>
 

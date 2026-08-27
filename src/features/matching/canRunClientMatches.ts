@@ -3,9 +3,14 @@ type MatchRunner = {
   role: "ADMIN" | "AGENT";
 };
 
+type MatchClientRef = {
+  ownedByViewer?: boolean | null;
+  userId?: string;
+};
+
 export function canRunClientMatches(
   user: MatchRunner | null | undefined,
-  clientUserId: string,
+  client: MatchClientRef | string,
 ): boolean {
   if (!user) {
     return false;
@@ -13,5 +18,14 @@ export function canRunClientMatches(
   if (user.role === "ADMIN") {
     return true;
   }
-  return user.role === "AGENT" && user.id === clientUserId;
+  if (typeof client === "string") {
+    return user.role === "AGENT" && user.id === client;
+  }
+  if (client.ownedByViewer === true) {
+    return true;
+  }
+  if (client.ownedByViewer === false) {
+    return false;
+  }
+  return user.role === "AGENT" && client.userId !== undefined && user.id === client.userId;
 }

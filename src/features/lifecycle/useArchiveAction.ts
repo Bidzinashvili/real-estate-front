@@ -1,6 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { UNDO_COPY } from "@/features/recordUndo/undoCopy";
+import {
+  showFeedbackSnackbar,
+  showUndoSnackbar,
+} from "@/features/recordUndo/undoSnackbarStore";
 import type { ArchiveConfirmKind } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
 
 type UseArchiveActionOptions = {
@@ -54,11 +59,37 @@ export function useArchiveAction({
     try {
       if (confirmKind === "archive") {
         await onArchive();
+        setConfirmKind(null);
+        onSuccess();
+        showUndoSnackbar({
+          message: UNDO_COPY.archivedMessage,
+          onUndo: async () => {
+            try {
+              await onRestore();
+              onSuccess();
+              showFeedbackSnackbar({
+                kind: "success",
+                message: UNDO_COPY.unarchived,
+              });
+            } catch (restoreError) {
+              onSuccess();
+              const message =
+                restoreError instanceof Error
+                  ? restoreError.message
+                  : UNDO_COPY.undoFailed;
+              showFeedbackSnackbar({
+                kind: "error",
+                message,
+              });
+              throw restoreError;
+            }
+          },
+        });
       } else {
         await onRestore();
+        setConfirmKind(null);
+        onSuccess();
       }
-      setConfirmKind(null);
-      onSuccess();
     } catch (actionError) {
       const message =
         actionError instanceof Error

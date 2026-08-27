@@ -4,13 +4,16 @@ import type { Property } from "@/features/properties/types";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
 
 type PropertyDetailsLifecycleSectionProps = {
   property: Property;
+  showRecordTimestamp?: boolean;
 };
 
 export function PropertyDetailsLifecycleSection({
   property,
+  showRecordTimestamp = false,
 }: PropertyDetailsLifecycleSectionProps) {
   const lastVerifiedLabel = formatLifecycleDate(property.lastVerifiedAt);
   const archivedLabel = formatLifecycleDate(property.archivedAt);
@@ -36,6 +39,13 @@ export function PropertyDetailsLifecycleSection({
           </span>
         ) : null}
       </div>
+      {showRecordTimestamp ? (
+        <RecordTimestamp
+          className="mt-3"
+          createdAt={property.createdAt}
+          updatedAt={property.updatedAt}
+        />
+      ) : null}
       {lastVerifiedLabel ? (
         <p className="mt-3 text-sm text-foreground">
           <span className="text-muted-foreground">გადამოწმებულია: </span>

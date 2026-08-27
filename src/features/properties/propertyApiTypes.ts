@@ -2,6 +2,7 @@ import type { DealType } from "@/features/properties/dealType";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
@@ -15,12 +16,20 @@ import type {
   OutcomeSource,
   ReminderConfigPayload,
 } from "@/features/lifecycle/lifecycleEnums";
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
 import type { NestedPropertyOwnerInput } from "@/features/propertyOwners/types";
 import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 
 export type PropertySortBy = "createdAt" | "pricePublic";
 
 export type SortOrder = "asc" | "desc";
+
+export type NumericRangeQuery = {
+  from?: number;
+  to?: number;
+};
 
 export type GetPropertiesQueryApi = {
   search?: string;
@@ -32,10 +41,14 @@ export type GetPropertiesQueryApi = {
   minPrice?: number;
   maxPrice?: number;
   rooms?: number;
+  roomsRange?: NumericRangeQuery;
   bedrooms?: number;
   minArea?: number;
   maxArea?: number;
   floor?: number;
+  floorRange?: NumericRangeQuery;
+  totalFloors?: number;
+  balcony?: boolean;
   yardArea?: number;
   houseArea?: number;
   landArea?: number;
@@ -47,6 +60,10 @@ export type GetPropertiesQueryApi = {
   labelIds?: string[];
   labelNames?: string[];
   archived?: boolean;
+  myProperties?: boolean;
+  scope?: DatabaseListScope;
+  createdFrom?: string;
+  createdTo?: string;
 };
 
 export type PropertyImageEntry = {
@@ -72,6 +89,7 @@ export type ApartmentApi = {
   propertyId: string;
   buildingNumber: string | null;
   buildingCondition: BuildingCondition;
+  buildingAgeType: BuildingAgeType | null;
   totalArea: number;
   project: string | null;
   renovation: string | null;
@@ -171,9 +189,9 @@ export type PropertyApi = EntityVerificationFields & {
   cadastralCode: string | null;
   pricePublic: number;
   priceInternal: number | null;
-  ownerName: string;
-  ownerPhones: string[];
-  ownerWhatsapp: string | null;
+  ownerName?: string;
+  ownerPhones?: string[];
+  ownerWhatsapp?: string | null;
   ownerId?: string | null;
   propertyOwner?: PropertyOwnerSummary | null;
   ourSiteId: string | null;
@@ -181,9 +199,9 @@ export type PropertyApi = EntityVerificationFields & {
   ssGeId: string | null;
   externalIds: PropertyExternalIdApi[];
   description: string | null;
-  publicComment: string | null;
-  privateComment: string | null;
-  internalText: string | null;
+  publicComment?: string | null;
+  privateComment?: string | null;
+  internalText?: string | null;
   comment: string | null;
   internalComment: string | null;
   commentDate: string | null;
@@ -195,19 +213,27 @@ export type PropertyApi = EntityVerificationFields & {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
-  userId: string;
+  userId?: string;
+  ownedByViewer?: boolean;
+  hideFromOthers?: boolean;
+  color?: RecordColor;
   apartment: ApartmentApi | null;
   privateHouse: PrivateHouseApi | null;
   landPlot: LandPlotApi | null;
   commercial: CommercialApi | null;
   fieldLocks?: PropertyFieldLocks;
+  reminderSummary?: ReminderSummary;
 };
 
 export type PropertyListResponse = {
   total: number;
   page: number;
   limit: number;
+  activeCount?: number;
+  scope?: DatabaseListScope;
+  appliedLocks?: Record<string, unknown>;
   properties: PropertyApi[];
+  items?: PropertyApi[];
 };
 
 export type CreatePropertyBase = {
@@ -215,6 +241,8 @@ export type CreatePropertyBase = {
   dealType?: DealType;
   status?: PropertyStatus;
   reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   city: string;
   district?: string;
   address: string;
@@ -244,6 +272,7 @@ export type CreatePropertyBase = {
 export type CreateApartmentPayload = {
   buildingNumber?: string;
   buildingCondition: BuildingCondition;
+  buildingAgeType?: BuildingAgeType | null;
   totalArea: number;
   project?: string;
   renovation?: string;
@@ -354,6 +383,8 @@ export type UpdatePropertyRequestBody = {
   status?: PropertyStatus;
   outcomeSource?: OutcomeSource;
   reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   tenantClientId?: string | null;
   rentalDurationMonths?: number | null;
   dealType?: DealType;
@@ -381,6 +412,7 @@ export type UpdatePropertyRequestBody = {
     floor?: number;
     renovation?: string;
     buildingCondition?: BuildingCondition;
+    buildingAgeType?: BuildingAgeType | null;
     furnished?: boolean | null;
     parkingSpaces?: number | null;
     minRentalPeriod?: number | null;

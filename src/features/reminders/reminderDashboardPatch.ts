@@ -46,7 +46,10 @@ export function buildDashboardReminderPatch(
     return { patch: clientPatch };
   }
 
-  if (row.reminderVariant !== "SCHEDULED_PROPERTY") {
+  if (
+    row.reminderVariant !== "SCHEDULED_PROPERTY" &&
+    row.reminderVariant !== "SCHEDULED_CLIENT"
+  ) {
     return { errorMessage: "ამ შეხსენების რედაქტირება აქ შეუძლებელია." };
   }
 

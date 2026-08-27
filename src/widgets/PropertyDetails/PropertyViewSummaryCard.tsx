@@ -15,6 +15,10 @@ import {
   propertyTypeDisplayLabel,
 } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { isCustomRecordColor } from "@/features/recordColor/recordColor";
+import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
+import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
+import { cn } from "@/shared/lib/utils";
 
 type PropertyViewSummaryCardProps = {
   property: Property;
@@ -39,7 +43,14 @@ export function PropertyViewSummaryCard({
   const fullAddress = formatPropertyFullAddress(property);
 
   return (
-    <section className="h-auto overflow-visible rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border sm:p-6">
+    <section
+      className={cn(
+        "h-auto overflow-visible rounded-2xl p-5 shadow-sm ring-1 sm:p-6",
+        isCustomRecordColor(property.color)
+          ? recordColorSurfaceClassName(property.color)
+          : "bg-card ring-border",
+      )}
+    >
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs text-muted-foreground">ფასი</p>
@@ -110,6 +121,12 @@ export function PropertyViewSummaryCard({
           <span className="min-w-0 break-words">{fullAddress || "—"}</span>
         </p>
       </div>
+
+      <RecordTimestamp
+        className="mt-4"
+        createdAt={property.createdAt}
+        updatedAt={property.updatedAt}
+      />
     </section>
   );
 }

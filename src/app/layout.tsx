@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_Georgian } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "@/shared/theme/ThemeProvider";
+import { AuthSessionGuard } from "@/widgets/AuthSessionGuard/AuthSessionGuard";
 import { THEME_INIT_SCRIPT } from "@/shared/theme/themeStorage";
 import "./globals.css";
 
@@ -33,7 +34,10 @@ function RootLayout({
           defer
           strategy="beforeInteractive"
         />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthSessionGuard />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

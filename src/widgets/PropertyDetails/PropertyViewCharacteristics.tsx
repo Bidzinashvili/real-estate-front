@@ -1,6 +1,7 @@
 import type { Property } from "@/features/properties/types";
 import type { LockState, PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { BUILDING_AGE_TYPE_FIELD_LABEL } from "@/shared/i18n/enumLabels";
 import {
   OptionalTextFact,
   PropertyViewFactGrid,
@@ -8,6 +9,7 @@ import {
   VerifiableNumberFact,
 } from "@/widgets/PropertyDetails/PropertyViewFact";
 import {
+  formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
   formatCommercialStatusLabel,
   formatKitchenTypeLabel,
@@ -102,6 +104,10 @@ export function PropertyViewCharacteristics({
               label="შენობის მდგომარეობა"
               value={formatBuildingConditionLabel(property.apartment.buildingCondition)}
               {...lockProps("buildingCondition")}
+            />
+            <OptionalTextFact
+              label={BUILDING_AGE_TYPE_FIELD_LABEL}
+              value={formatBuildingAgeTypeLabel(property.apartment.buildingAgeType)}
             />
             <OptionalTextFact
               label="სამზარეულოს ტიპი"

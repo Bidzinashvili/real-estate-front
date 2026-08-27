@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getReminders,
   type GetRemindersQuery,
@@ -16,6 +16,9 @@ type UseRemindersListOptions = {
 
 type UseRemindersListResult = {
   reminders: DashboardReminderRow[];
+  total: number;
+  page: number;
+  limit: number;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<DashboardReminderRow[]>;
@@ -27,8 +30,18 @@ export function useRemindersList({
   pollIntervalMs,
 }: UseRemindersListOptions): UseRemindersListResult {
   const [reminders, setReminders] = useState<DashboardReminderRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(query?.page ?? 1);
+  const [limit, setLimit] = useState(query?.limit ?? 20);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryKey = JSON.stringify(query ?? {});
+  const parsedQuery = useMemo((): GetRemindersQuery | undefined => {
+    if (queryKey === "{}") {
+      return undefined;
+    }
+    return JSON.parse(queryKey) as GetRemindersQuery;
+  }, [queryKey]);
 
   const fetchRows = useCallback(
     async (showLoadingState: boolean): Promise<DashboardReminderRow[]> => {
@@ -36,27 +49,31 @@ export function useRemindersList({
         setIsLoading(true);
       }
       setError(null);
-    try {
-      const rows = await getReminders(query);
-      setReminders(rows);
-      return rows;
-    } catch (errorUnknown) {
-      const message =
-        errorUnknown instanceof Error
-          ? errorUnknown.message
-          : "შეხსენებების ჩატვირთვა ვერ მოხერხდა.";
-      setError(message);
-      if (showLoadingState) {
-        setReminders([]);
+      try {
+        const result = await getReminders(parsedQuery);
+        setReminders(result.reminders);
+        setTotal(result.total);
+        setPage(result.page);
+        setLimit(result.limit);
+        return result.reminders;
+      } catch (errorUnknown) {
+        const message =
+          errorUnknown instanceof Error
+            ? errorUnknown.message
+            : "შეხსენებების ჩატვირთვა ვერ მოხერხდა.";
+        setError(message);
+        if (showLoadingState) {
+          setReminders([]);
+          setTotal(0);
+        }
+        return [];
+      } finally {
+        if (showLoadingState) {
+          setIsLoading(false);
+        }
       }
-      return [];
-    } finally {
-      if (showLoadingState) {
-        setIsLoading(false);
-      }
-    }
     },
-    [query],
+    [parsedQuery],
   );
 
   const refetch = useCallback(async (): Promise<DashboardReminderRow[]> => {
@@ -68,7 +85,7 @@ export function useRemindersList({
       return;
     }
     void refetch();
-  }, [enabled, query, refetch]);
+  }, [enabled, parsedQuery, refetch]);
 
   useEffect(() => {
     if (!enabled) {
@@ -100,5 +117,5 @@ export function useRemindersList({
     };
   }, [enabled, fetchRows, pollIntervalMs]);
 
-  return { reminders, isLoading, error, refetch };
+  return { reminders, total, page, limit, isLoading, error, refetch };
 }

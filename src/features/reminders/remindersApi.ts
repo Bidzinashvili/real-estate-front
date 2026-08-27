@@ -3,7 +3,7 @@ import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
 import {
   normalizeDashboardRemindersList,
-  type DashboardReminderRow,
+  type NormalizedRemindersList,
 } from "@/features/reminders/dashboardReminderNormalizer";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 import type {
@@ -30,11 +30,19 @@ export type CreateCustomPropertyReminderPayload = {
   note?: string | null;
 };
 
+export type CreateClientReminderPayload = {
+  clientId: UUID;
+  notifyAt: ISODateString;
+  note?: string | null;
+};
+
 export type CreateReminderPayload =
   | CreateRentalEndingReminderPayload
-  | CreateCustomPropertyReminderPayload;
+  | CreateCustomPropertyReminderPayload
+  | CreateClientReminderPayload;
 
 export type { GetRemindersQuery } from "@/features/reminders/remindersApiTypes";
+export type { NormalizedRemindersList };
 
 function getAuthContext() {
   const baseUrl = getApiBaseUrl();
@@ -91,9 +99,22 @@ function encodeReminderPathSegment(reminderId: string): string {
   return encodeURIComponent(reminderId);
 }
 
+async function throwReminderApiError(error: unknown, fallback: string): Promise<never> {
+  if (axios.isAxiosError(error)) {
+    const parsed = parseStandardApiError(
+      error.response?.data,
+      error.response?.status ?? 500,
+      fallback,
+    );
+    throw new ApiError(parsed, fallback);
+  }
+
+  throw error;
+}
+
 export async function getReminders(
   query?: GetRemindersQuery,
-): Promise<DashboardReminderRow[]> {
+): Promise<NormalizedRemindersList> {
   const { baseUrl, headers } = getAuthContext();
 
   try {
@@ -103,17 +124,7 @@ export async function getReminders(
     });
     return normalizeDashboardRemindersList(response.data);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const fallback = "შეხსენებების ჩატვირთვა ვერ მოხერხდა.";
-      const parsed = parseStandardApiError(
-        error.response?.data,
-        error.response?.status ?? 500,
-        fallback,
-      );
-      throw new ApiError(parsed, fallback);
-    }
-
-    throw error;
+    return throwReminderApiError(error, "შეხსენებების ჩატვირთვა ვერ მოხერხდა.");
   }
 }
 
@@ -131,17 +142,7 @@ export async function createReminder(
     });
     emitRemindersChangedEvent();
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const fallback = "შეხსენების დაყენება ვერ მოხერხდა.";
-      const parsed = parseStandardApiError(
-        error.response?.data,
-        error.response?.status ?? 500,
-        fallback,
-      );
-      throw new ApiError(parsed, fallback);
-    }
-
-    throw error;
+    return throwReminderApiError(error, "შეხსენების დაყენება ვერ მოხერხდა.");
   }
 }
 
@@ -161,17 +162,7 @@ export async function patchReminder(
     });
     emitRemindersChangedEvent();
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const fallback = "შეხსენების განახლება ვერ მოხერხდა.";
-      const parsed = parseStandardApiError(
-        error.response?.data,
-        error.response?.status ?? 500,
-        fallback,
-      );
-      throw new ApiError(parsed, fallback);
-    }
-
-    throw error;
+    return throwReminderApiError(error, "შეხსენების განახლება ვერ მოხერხდა.");
   }
 }
 
@@ -185,17 +176,45 @@ export async function deleteReminder(reminderId: string): Promise<void> {
     });
     emitRemindersChangedEvent();
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const fallback = "შეხსენების წაშლა ვერ მოხერხდა.";
-      const parsed = parseStandardApiError(
-        error.response?.data,
-        error.response?.status ?? 500,
-        fallback,
-      );
-      throw new ApiError(parsed, fallback);
-    }
-
-    throw error;
+    return throwReminderApiError(error, "შეხსენების წაშლა ვერ მოხერხდა.");
   }
 }
 
+export async function dismissReminder(reminderId: string): Promise<void> {
+  const { baseUrl, headers } = getAuthContext();
+  const encodedId = encodeReminderPathSegment(reminderId);
+
+  try {
+    await axios.post(`${baseUrl}/reminders/${encodedId}/dismiss`, undefined, {
+      headers,
+    });
+    emitRemindersChangedEvent();
+  } catch (error) {
+    return throwReminderApiError(error, "შეხსენების დამალვა ვერ მოხერხდა.");
+  }
+}
+
+export async function snoozeReminder(
+  reminderId: string,
+  minutes: number,
+): Promise<void> {
+  const { baseUrl, headers } = getAuthContext();
+  const encodedId = encodeReminderPathSegment(reminderId);
+  const roundedMinutes = Math.round(minutes);
+
+  try {
+    await axios.post(
+      `${baseUrl}/reminders/${encodedId}/snooze`,
+      { minutes: roundedMinutes },
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    emitRemindersChangedEvent();
+  } catch (error) {
+    return throwReminderApiError(error, "შეხსენების გადადება ვერ მოხერხდა.");
+  }
+}

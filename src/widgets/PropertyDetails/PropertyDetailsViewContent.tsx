@@ -24,11 +24,17 @@ import { PropertyViewMetaCard } from "@/widgets/PropertyDetails/PropertyViewMeta
 import { PropertyViewSummaryCard } from "@/widgets/PropertyDetails/PropertyViewSummaryCard";
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
 import { formatDealTypeLabel, formatPropertyHeadline } from "@/widgets/PropertyDetails/propertyViewFormatters";
+import { PropertyDetailWhatsAppButton } from "@/widgets/PropertyShare/PropertyDetailWhatsAppButton";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { VerificationReminderPanel } from "@/widgets/Lifecycle/VerificationReminderPanel";
+import { NoteRemindersSection } from "@/widgets/Reminders/NoteRemindersSection";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { isRentalDealType } from "@/features/properties/propertyStatus";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { canEditRecordColor, type RecordColor } from "@/features/recordColor/recordColor";
+import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
+import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
+import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
 
 type PropertyDetailsViewContentProps = {
   property: Property;
@@ -40,17 +46,26 @@ type PropertyDetailsViewContentProps = {
   matchPercentage: number | null;
   canShowArchive: boolean;
   canShowRestore: boolean;
+  canShowDelete: boolean;
+  isDeletePending: boolean;
   onGoBack: () => void;
   onBeforeEditNavigation?: () => void;
   onOpenReminders: () => void;
   onArchive: () => void;
   onRestore: () => void;
+  onRequestDelete: () => void;
   onOpenChangeStatus: () => void;
   onSaveReminder: (payload: ReminderConfigPayload) => Promise<void>;
   onVerifyNow: () => Promise<void>;
   isSavingReminder: boolean;
   isVerifying: boolean;
   reminderError: string | null;
+  isSavingColor: boolean;
+  colorError: string | null;
+  onSelectColor: (color: RecordColor) => void;
+  isSavingHideFromOthers: boolean;
+  hideFromOthersError: string | null;
+  onToggleHideFromOthers: (nextHidden: boolean) => void;
 };
 
 export function PropertyDetailsViewContent({
@@ -63,17 +78,26 @@ export function PropertyDetailsViewContent({
   matchPercentage,
   canShowArchive,
   canShowRestore,
+  canShowDelete,
+  isDeletePending,
   onGoBack,
   onBeforeEditNavigation,
   onOpenReminders,
   onArchive,
   onRestore,
+  onRequestDelete,
   onOpenChangeStatus,
   onSaveReminder,
   onVerifyNow,
   isSavingReminder,
   isVerifying,
   reminderError,
+  isSavingColor,
+  colorError,
+  onSelectColor,
+  isSavingHideFromOthers,
+  hideFromOthersError,
+  onToggleHideFromOthers,
 }: PropertyDetailsViewContentProps) {
   const apiBaseUrl = getApiBaseUrl();
   const headline = formatPropertyHeadline(property);
@@ -123,10 +147,27 @@ export function PropertyDetailsViewContent({
                 outcomeSource={property.outcomeSource}
                 verificationReason={property.verificationReason}
               />
+              <HideFromOthersBadge isHidden={property.hideFromOthers} />
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {canEditRecordColor(canEdit, property.color) && property.color !== undefined ? (
+              <RecordColorPicker
+                value={property.color}
+                disabled={isSavingColor}
+                onSelect={onSelectColor}
+              />
+            ) : null}
+            {canEdit ? (
+              <HideFromOthersToggle
+                isHidden={property.hideFromOthers}
+                disabled={isSavingHideFromOthers}
+                variant="icon"
+                onToggle={onToggleHideFromOthers}
+              />
+            ) : null}
+            <PropertyDetailWhatsAppButton property={property} />
             {property.propertyType === "APARTMENT" ? (
               <MatchPercentActions
                 allHref={propertyMatchesHref(property.id, "GLOBAL")}
@@ -152,6 +193,16 @@ export function PropertyDetailsViewContent({
             ) : null}
           </div>
         </div>
+        {colorError ? (
+          <p className="text-xs text-destructive" role="alert">
+            {colorError}
+          </p>
+        ) : null}
+        {hideFromOthersError ? (
+          <p className="text-xs text-destructive" role="alert">
+            {hideFromOthersError}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.9fr)] lg:items-start">
@@ -179,7 +230,9 @@ export function PropertyDetailsViewContent({
         </div>
 
         <div className="order-4 flex min-w-0 flex-col gap-4 lg:col-start-2">
-          <PropertyViewContactCard property={property} />
+          {canViewPrivateFields ? (
+            <PropertyViewContactCard property={property} />
+          ) : null}
           <PropertyDetailsLifecycleSection property={property} />
           <VerificationReminderPanel
             fields={property}
@@ -196,6 +249,11 @@ export function PropertyDetailsViewContent({
             onSaveReminder={onSaveReminder}
             onVerifyNow={onVerifyNow}
           />
+          <NoteRemindersSection
+            targetType="PROPERTY"
+            propertyId={property.id}
+            canCreate={canEdit}
+          />
           <PropertyViewPrivateComments
             property={property}
             canViewPrivateFields={canViewPrivateFields}
@@ -210,10 +268,18 @@ export function PropertyDetailsViewContent({
               matchPercentage={matchPercentage}
               canShowArchive={canShowArchive}
               canShowRestore={canShowRestore}
+              canShowDelete={canShowDelete}
+              isDeletePending={isDeletePending}
+              isSavingColor={isSavingColor}
               onOpenReminders={onOpenReminders}
               onRequestArchive={onArchive}
               onRequestRestore={onRestore}
+              onRequestDelete={onRequestDelete}
               onOpenChangeStatus={onOpenChangeStatus}
+              onSelectColor={onSelectColor}
+              isSavingHideFromOthers={isSavingHideFromOthers}
+              hideFromOthersError={hideFromOthersError}
+              onToggleHideFromOthers={onToggleHideFromOthers}
             />
           ) : null}
         </div>

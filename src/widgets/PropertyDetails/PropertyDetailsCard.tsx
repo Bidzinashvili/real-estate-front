@@ -142,6 +142,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             project: property.apartment.project ?? "",
             renovation: parseRenovationForForm(property.apartment.renovation),
             buildingCondition: property.apartment.buildingCondition,
+            buildingAgeType: property.apartment.buildingAgeType,
             furnished: property.apartment.furnished,
             parkingSpaces: property.apartment.parkingSpaces,
             minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
@@ -468,7 +469,10 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
       {presentation === "view" ? (
         <div className="mt-6 space-y-6">
-          <PropertyDetailsLifecycleSection property={property} />
+          <PropertyDetailsLifecycleSection
+            property={property}
+            showRecordTimestamp
+          />
 
           <PropertyDetailsEditableSections
             values={values}
@@ -495,7 +499,10 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          <PropertyDetailsLifecycleSection property={property} />
+          <PropertyDetailsLifecycleSection
+            property={property}
+            showRecordTimestamp
+          />
 
           <PropertyDetailsEditableSections
             values={values}

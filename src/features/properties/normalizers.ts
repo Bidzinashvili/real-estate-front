@@ -1,3 +1,4 @@
+import { isDatabaseListScope } from "@/features/databaseList/databaseListScope";
 import type { PropertiesListResult } from "@/features/properties/getPropertiesQuery";
 import type {
   CreatePropertyResponse,
@@ -10,19 +11,26 @@ import { asNumber } from "@/shared/lib/jsonValue";
 export function normalizePropertiesListResponse(
   data: PropertyListResponse,
 ): PropertiesListResult {
-  const properties = data.properties
+  const sourceRows = data.properties ?? data.items ?? [];
+  const properties = sourceRows
     .map((item) => normalizeProperty(item))
     .filter((item): item is Property => item !== null);
 
   const total = asNumber(data.total, properties.length);
   const page = asNumber(data.page, 1);
   const limitRaw = asNumber(data.limit, Math.max(properties.length, 1));
+  const activeCountRaw = asNumber(data.activeCount, 0);
 
   return {
     properties,
     total,
     page: page < 1 ? 1 : page,
     limit: limitRaw < 1 ? 1 : limitRaw,
+    activeCount: activeCountRaw < 0 ? 0 : Math.floor(activeCountRaw),
+    scope:
+      typeof data.scope === "string" && isDatabaseListScope(data.scope)
+        ? data.scope
+        : null,
   };
 }
 

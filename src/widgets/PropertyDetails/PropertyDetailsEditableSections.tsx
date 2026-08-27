@@ -39,7 +39,7 @@ import {
 import { PropertyListingFieldsView } from "@/widgets/PropertyDetails/PropertyListingFieldsView";
 import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
-import { applyDatedPersonalCommentEntry } from "@/shared/lib/personalCommentEntry";
+import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
@@ -118,7 +118,6 @@ export function PropertyDetailsEditableSections({
 }: PropertyDetailsEditableSectionsProps) {
   const { districts } = useDistricts();
   const manualDistrictGroupRef = useRef(false);
-  const isPersonalCommentEntryActiveRef = useRef(false);
   const [selectedDistrictGroup, setSelectedDistrictGroup] = useState("");
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     values.pricePublic,
@@ -170,16 +169,6 @@ export function PropertyDetailsEditableSections({
         readOnlyPrivateHouseBalcony={readOnlyPrivateHouseBalcony}
       />
     );
-  }
-
-  function handlePrivateCommentChange(value: string) {
-    const result = applyDatedPersonalCommentEntry({
-      previousValue: values.privateComment,
-      rawValue: value,
-      isEntryActive: isPersonalCommentEntryActiveRef.current,
-    });
-    isPersonalCommentEntryActiveRef.current = result.isEntryActive;
-    onCommentChange("privateComment", result.nextValue);
   }
 
   return (
@@ -328,20 +317,13 @@ export function PropertyDetailsEditableSections({
       </div>
       {showInternalPrice ? (
         <>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-foreground">
-              კომენტარი ჩემთვის
-            </label>
-            <textarea
-              value={values.privateComment}
-              onChange={(event) => handlePrivateCommentChange(event.target.value)}
-              onBlur={() => {
-                isPersonalCommentEntryActiveRef.current = false;
-              }}
-              className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
-              rows={4}
-            />
-          </div>
+          <HistoryNoteField
+            id="privateComment"
+            label="კომენტარი ჩემთვის"
+            value={values.privateComment}
+            onChange={(nextValue) => onCommentChange("privateComment", nextValue)}
+            textareaClassName="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
+          />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
               ატვირთვის ტექსტი

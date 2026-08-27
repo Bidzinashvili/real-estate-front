@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getClientProfileById } from "@/features/clientProfiles/api";
 import type { ClientProfile } from "@/features/clientProfiles/types";
 import { ApiError } from "@/shared/lib/apiError";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type UseClientProfileDetailsResult = {
   profile: ClientProfile | null;
@@ -40,6 +41,8 @@ export function useClientProfileDetails(
       setProfile(null);
     }
   }, [profileId]);
+
+  useRecordsChangedListener(refetch);
 
   useEffect(() => {
     if (!profileId) {

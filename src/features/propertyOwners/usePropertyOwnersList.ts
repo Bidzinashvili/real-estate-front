@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getPropertyOwners } from "@/features/propertyOwners/api";
 import type { GetPropertyOwnersQuery } from "@/features/propertyOwners/getPropertyOwnersQuery";
 import type { PropertyOwner } from "@/features/propertyOwners/types";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type UsePropertyOwnersListResult = {
   owners: PropertyOwner[];
@@ -33,6 +34,8 @@ export function usePropertyOwnersList(
   const refetch = useCallback(() => {
     setRefetchTick((previousTick) => previousTick + 1);
   }, []);
+
+  useRecordsChangedListener(refetch);
 
   useEffect(() => {
     let cancelled = false;

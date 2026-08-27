@@ -7,16 +7,18 @@ import { CreateCollaborationModal } from "@/widgets/Collaboration/CreateCollabor
 type RequestCollaborationButtonProps = {
   propertyId: string;
   clientId?: string;
+  canRequest?: boolean;
 };
 
 export function RequestCollaborationButton({
   propertyId,
   clientId,
+  canRequest = true,
 }: RequestCollaborationButtonProps) {
   const { user } = useCurrentUser();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!user || user.role !== "AGENT") {
+  if (!canRequest || !user || user.role !== "AGENT") {
     return null;
   }
 

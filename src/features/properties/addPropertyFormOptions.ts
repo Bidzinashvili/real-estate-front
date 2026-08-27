@@ -1,4 +1,5 @@
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
@@ -8,6 +9,7 @@ import type {
   Renovation,
 } from "@/features/properties/types";
 import {
+  isBuildingAgeType,
   isBuildingCondition,
   isCommercialStatus,
   isKitchenType,
@@ -17,7 +19,10 @@ import {
   LAND_CATEGORIES,
 } from "@/features/properties/types";
 import {
+  BUILDING_AGE_TYPE_FIELD_LABEL,
+  BUILDING_AGE_TYPE_LABELS,
   BUILDING_CONDITION_LABELS,
+  CLIENT_PREFERENCE_LABELS,
   COMMERCIAL_STATUS_LABELS,
   HOTEL_SCOPE_LABELS,
   KITCHEN_TYPE_LABELS,
@@ -25,6 +30,8 @@ import {
   PROPERTY_TYPE_LABELS,
   RENOVATION_LABELS,
 } from "@/shared/i18n/enumLabels";
+
+export { BUILDING_AGE_TYPE_FIELD_LABEL };
 
 export const GEORGIAN_CITY_OPTIONS = [
   { value: "თბილისი", label: "თბილისი" },
@@ -79,6 +86,15 @@ export const BUILDING_CONDITION_OPTIONS: ReadonlyArray<{
   { value: "OLD", label: BUILDING_CONDITION_LABELS.OLD },
   { value: "NEW", label: BUILDING_CONDITION_LABELS.NEW },
   { value: "UNDER_CONSTRUCTION", label: BUILDING_CONDITION_LABELS.UNDER_CONSTRUCTION },
+];
+
+export const BUILDING_AGE_TYPE_SELECT_OPTIONS: ReadonlyArray<{
+  value: BuildingAgeType | "";
+  label: string;
+}> = [
+  { value: "", label: CLIENT_PREFERENCE_LABELS.NOT_SET },
+  { value: "NEW", label: BUILDING_AGE_TYPE_LABELS.NEW },
+  { value: "OLD", label: BUILDING_AGE_TYPE_LABELS.OLD },
 ];
 
 export const KITCHEN_TYPE_OPTIONS: ReadonlyArray<{
@@ -197,6 +213,17 @@ export function formatBuildingConditionLabel(
     return BUILDING_CONDITION_LABELS[trimmed];
   }
   return trimmed;
+}
+
+export function formatBuildingAgeTypeLabel(
+  raw: string | null | undefined,
+): string | null {
+  if (raw === null || raw === undefined || raw.trim() === "") return null;
+  const trimmed = raw.trim();
+  if (isBuildingAgeType(trimmed)) {
+    return BUILDING_AGE_TYPE_LABELS[trimmed];
+  }
+  return null;
 }
 
 export function formatKitchenTypeLabel(

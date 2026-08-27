@@ -15,6 +15,20 @@ function parseArchiveTab(value: string | null): ArchiveTab {
 export function ArchiveView() {
   const searchParams = useSearchParams();
   const activeTab = parseArchiveTab(searchParams.get("tab"));
+  const scopeQuery =
+    searchParams.get("scope") === "MINE" ? "scope=MINE" : "";
+
+  function archiveHref(tab: ArchiveTab): string {
+    const params = new URLSearchParams();
+    if (tab === "clients") {
+      params.set("tab", "clients");
+    }
+    if (scopeQuery) {
+      params.set("scope", "MINE");
+    }
+    const queryString = params.toString();
+    return queryString ? `/archive?${queryString}` : "/archive";
+  }
 
   return (
     <div className="space-y-5">
@@ -33,7 +47,7 @@ export function ArchiveView() {
         aria-label={ARCHIVE_COPY.pageTitle}
       >
         <Link
-          href="/archive"
+          href={archiveHref("properties")}
           role="tab"
           aria-selected={activeTab === "properties"}
           className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${
@@ -45,7 +59,7 @@ export function ArchiveView() {
           {ARCHIVE_COPY.propertiesTab}
         </Link>
         <Link
-          href="/archive?tab=clients"
+          href={archiveHref("clients")}
           role="tab"
           aria-selected={activeTab === "clients"}
           className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${

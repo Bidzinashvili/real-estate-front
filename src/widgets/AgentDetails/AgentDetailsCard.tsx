@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent } from "react";
-import type { Agent } from "@/features/agents/types";
+import type { AgentDetails } from "@/features/agents/types";
 import { normalizeGeorgianAgentPhone } from "@/features/agents/normalizeAgentPhone";
 import { AgentPhoneInput } from "@/widgets/Agents/AgentPhoneInput";
 
@@ -12,7 +12,7 @@ type FormValues = {
 };
 
 type AgentDetailsCardProps = {
-  agent: Agent;
+  agent: AgentDetails;
   isSaving: boolean;
   saveError: string | null;
   onSubmit: (values: FormValues) => void;

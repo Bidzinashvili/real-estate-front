@@ -58,7 +58,8 @@ export function DashboardReminderEditModal({
   }, [onClose, isSaving]);
 
   const showNoteField =
-    row.reminderVariant === "SCHEDULED_PROPERTY" &&
+    (row.reminderVariant === "SCHEDULED_PROPERTY" ||
+      row.reminderVariant === "SCHEDULED_CLIENT") &&
     row.scheduledKind !== "RENTAL_PERIOD_ENDING";
 
   const showRentalFields =

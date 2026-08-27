@@ -57,6 +57,8 @@ const BACKEND_MESSAGE_LABELS: Record<string, string> = {
     "25% გაყოფისთვის საჭიროა ზუსტად 2 დამატებითი აგენტი.",
   "You cannot request collaboration on your own property":
     "საკუთარ განცხადებაზე თანამშრომლობის მოთხოვნა შეუძლებელია.",
+  "This property is private and is not available for collaboration":
+    "ეს განცხადება პირადია და თანამშრომლობისთვის ხელმისაწვდომი არ არის.",
   "Additional participants cannot include the requester or listing agent":
     "დამატებითი აგენტები არ უნდა იყვნენ მომთხოვნი ან განცხადების აგენტი.",
   "An active collaboration request already exists for this property":

@@ -1,9 +1,14 @@
+"use client";
+
 import { ArrowLeft, Pencil, Archive, Undo2 } from "lucide-react";
 import { clientMatchesHref } from "@/features/matching/matchingRoutes";
 import type { TemporaryLockKey } from "@/features/matching/matchingEnums";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { canEditRecordColor, type RecordColor } from "@/features/recordColor/recordColor";
+import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
+import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
 
 type ClientDetailsTopBarProps = {
   clientId: string;
@@ -13,12 +18,20 @@ type ClientDetailsTopBarProps = {
   canShowRestore: boolean;
   isArchivePending: boolean;
   temporaryLockedFields: TemporaryLockKey[];
+  recordColor?: RecordColor;
+  isSavingColor: boolean;
+  colorError: string | null;
+  hideFromOthers: boolean;
+  isSavingHideFromOthers: boolean;
+  hideFromOthersError: string | null;
   onNavigateToList: () => void;
   onNavigateToEdit: () => void;
   onRequestDelete: () => void;
   onOpenChangeStatus: () => void;
   onRequestArchive: () => void;
   onRequestRestore: () => void;
+  onSelectColor: (color: RecordColor) => void;
+  onToggleHideFromOthers: (nextHidden: boolean) => void;
 };
 
 export function ClientDetailsTopBar({
@@ -29,12 +42,20 @@ export function ClientDetailsTopBar({
   canShowRestore,
   isArchivePending,
   temporaryLockedFields,
+  recordColor,
+  isSavingColor,
+  colorError,
+  hideFromOthers,
+  isSavingHideFromOthers,
+  hideFromOthersError,
   onNavigateToList,
   onNavigateToEdit,
   onRequestDelete,
   onOpenChangeStatus,
   onRequestArchive,
   onRequestRestore,
+  onSelectColor,
+  onToggleHideFromOthers,
 }: ClientDetailsTopBarProps) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -47,7 +68,22 @@ export function ClientDetailsTopBar({
         ყველა კლიენტი
       </button>
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+        {canEditRecordColor(canEditStatus, recordColor) && recordColor !== undefined ? (
+          <RecordColorPicker
+            value={recordColor}
+            disabled={isSavingColor}
+            onSelect={onSelectColor}
+          />
+        ) : null}
+        {canEditStatus ? (
+          <HideFromOthersToggle
+            isHidden={hideFromOthers}
+            disabled={isSavingHideFromOthers}
+            onToggle={onToggleHideFromOthers}
+          />
+        ) : null}
         {canRunMatches ? (
           <MatchPercentActions
             allHref={clientMatchesHref(clientId, "GLOBAL")}
@@ -109,6 +145,17 @@ export function ClientDetailsTopBar({
             წაშლა
           </button>
         ) : null}
+      </div>
+      {colorError ? (
+        <p className="text-xs text-destructive" role="alert">
+          {colorError}
+        </p>
+      ) : null}
+      {hideFromOthersError ? (
+        <p className="text-xs text-destructive" role="alert">
+          {hideFromOthersError}
+        </p>
+      ) : null}
       </div>
     </div>
   );
