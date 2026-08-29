@@ -9,6 +9,7 @@ import {
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
 import { calculatePricePerSquareMeter } from "@/features/properties/pricePerSquareMeter";
+import { CANONICAL_AREA_MISSING_LABEL, canonicalPropertyArea } from "@/features/properties/propertyArea";
 import {
   DetailMultiline,
   DetailNumber,
@@ -19,24 +20,17 @@ import {
 type PropertyListingFieldsViewProps = {
   values: PropertyFormValues;
   showInternalPrice: boolean;
+  showPrivateNotes: boolean;
   readOnlyPrivateHouseBalcony?: number | null;
 };
 
 export function PropertyListingFieldsView({
   values,
   showInternalPrice,
+  showPrivateNotes,
   readOnlyPrivateHouseBalcony,
 }: PropertyListingFieldsViewProps) {
-  const privateHouseTotalArea =
-    values.privateHouse?.houseArea !== undefined &&
-    values.privateHouse.yardArea !== undefined
-      ? values.privateHouse.houseArea + values.privateHouse.yardArea
-      : undefined;
-  const areaSquareMeters =
-    values.apartment?.totalArea ??
-    privateHouseTotalArea ??
-    values.landPlot?.landArea ??
-    values.commercial?.area;
+  const areaSquareMeters = canonicalPropertyArea(values);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     values.pricePublic,
     areaSquareMeters,
@@ -94,10 +88,10 @@ export function PropertyListingFieldsView({
         </div>
 
         <DetailMultiline label="კომენტარი" value={values.publicComment} />
-        {showInternalPrice ? (
+        {showPrivateNotes ? (
           <>
             <DetailMultiline
-              label="შიდა კომენტარი"
+              label="კომენტარი ჩემთვის"
               value={values.privateComment}
             />
             <DetailMultiline label="ატვირთვის ტექსტი" value={values.internalText} />
@@ -115,6 +109,8 @@ export function PropertyListingFieldsView({
               label="საერთო ფართობი"
               value={values.apartment.totalArea}
               suffix="მ²"
+              requirePositive
+              empty={CANONICAL_AREA_MISSING_LABEL}
             />
             <DetailNumber label="ოთახები" value={values.apartment.rooms} />
             <DetailNumber label="სართული" value={values.apartment.floor} />
@@ -166,6 +162,13 @@ export function PropertyListingFieldsView({
               value={values.privateHouse.yardArea}
               suffix="მ²"
             />
+            <DetailNumber
+              label="საერთო ფართობი"
+              value={values.privateHouse.totalArea}
+              suffix="მ²"
+              requirePositive
+              empty={CANONICAL_AREA_MISSING_LABEL}
+            />
             {readOnlyPrivateHouseBalcony !== undefined ? (
               <DetailNumber label="აივნის ფართობი" value={readOnlyPrivateHouseBalcony} />
             ) : null}
@@ -202,6 +205,8 @@ export function PropertyListingFieldsView({
               label="მიწის ფართობი"
               value={values.landPlot.landArea}
               suffix="მ²"
+              requirePositive
+              empty={CANONICAL_AREA_MISSING_LABEL}
             />
             <DetailText
               label="მიწის კატეგორია"
@@ -239,6 +244,8 @@ export function PropertyListingFieldsView({
               label="ფართობი"
               value={values.commercial.area}
               suffix="მ²"
+              requirePositive
+              empty={CANONICAL_AREA_MISSING_LABEL}
             />
             <DetailNumber
               label="სართულიანობა"

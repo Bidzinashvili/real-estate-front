@@ -17,7 +17,7 @@ export type PropertiesListResult = {
   scope: DatabaseListScope | null;
 };
 
-export type PropertySortBy = "createdAt" | "pricePublic";
+export type PropertySortBy = "createdAt" | "pricePublic" | "noteLastOpenedAt";
 
 export type PropertyListSortOrder = "asc" | "desc";
 
@@ -54,12 +54,17 @@ export type GetPropertiesQuery = {
   archived?: boolean;
   createdFrom?: string;
   createdTo?: string;
+  lastOpenedFrom?: string;
+  lastOpenedTo?: string;
+  neverOpened?: boolean;
+  readyToUpload?: boolean;
   labelIds?: string[];
   labelNames?: string[];
+  adminMode?: boolean;
 };
 
 export function isPropertySortBy(s: string): s is PropertySortBy {
-  return s === "createdAt" || s === "pricePublic";
+  return s === "createdAt" || s === "pricePublic" || s === "noteLastOpenedAt";
 }
 
 export function isPropertyListSortOrder(s: string): s is PropertyListSortOrder {
@@ -163,6 +168,12 @@ export function toGetPropertiesSearchParams(
   appendLockedValue(out, "district", query.district);
   appendString(out, "createdFrom", query.createdFrom);
   appendString(out, "createdTo", query.createdTo);
+  if (query.neverOpened === true) {
+    out.set("neverOpened", "true");
+  } else {
+    appendString(out, "lastOpenedFrom", query.lastOpenedFrom);
+    appendString(out, "lastOpenedTo", query.lastOpenedTo);
+  }
 
   appendLockedValue(out, "minPrice", query.minPrice);
   appendLockedValue(out, "maxPrice", query.maxPrice);
@@ -201,6 +212,12 @@ export function toGetPropertiesSearchParams(
   }
   appendArray(out, "labelIds", query.labelIds);
   appendArray(out, "labelNames", query.labelNames);
+  if (query.adminMode === true) {
+    out.set("adminMode", "true");
+  }
+  if (query.readyToUpload === true) {
+    out.set("readyToUpload", "true");
+  }
 
   return out;
 }

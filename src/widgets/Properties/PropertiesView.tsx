@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/shared/hooks";
 import { PropertyCatalogAdvancedSearch } from "@/widgets/Properties/propertyCatalogFilters";
 import { PropertyCatalogBasicFilters } from "@/widgets/Properties/propertyCatalogBasicFilters";
 import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalogScopeToggle";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertCache";
 import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
@@ -16,6 +17,7 @@ import { canManageProperty } from "@/features/properties/listingVisibility";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { DatabaseListSearchInput } from "@/widgets/DatabaseList/DatabaseListSearchInput";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 import {
   isPropertyListSortOrder,
   isPropertySortBy,
@@ -24,11 +26,17 @@ import {
 const SORT_OPTIONS = [
   { value: "createdAt", label: "ატვირთვის თარიღი" },
   { value: "pricePublic", label: "ფასი" },
+  { value: "noteLastOpenedAt", label: NOTE_LAST_OPENED_COPY.sortBy },
 ] as const;
 
 const ORDER_OPTIONS = [
   { value: "desc", label: "კლებადობით" },
   { value: "asc", label: "ზრდადობით" },
+] as const;
+
+const LAST_OPENED_ORDER_OPTIONS = [
+  { value: "desc", label: NOTE_LAST_OPENED_COPY.sortDesc },
+  { value: "asc", label: NOTE_LAST_OPENED_COPY.sortAsc },
 ] as const;
 
 type PropertiesViewProps = {
@@ -118,6 +126,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
             isLoggedIn={isLoggedIn}
             isAuthLoading={isAuthLoading}
           />
+          <AdminModeToggle />
           <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
             <span className="hidden font-medium sm:inline">სორტირება</span>
             <InlineSelect
@@ -135,7 +144,11 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
               onChange={(selectedValue) => {
                 if (isPropertyListSortOrder(selectedValue)) catalog.setOrder(selectedValue);
               }}
-              options={ORDER_OPTIONS}
+              options={
+                state.sortBy === "noteLastOpenedAt"
+                  ? LAST_OPENED_ORDER_OPTIONS
+                  : ORDER_OPTIONS
+              }
             />
           </div>
         </div>

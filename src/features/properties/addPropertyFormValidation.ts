@@ -5,6 +5,7 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import { isHotelScope } from "@/features/properties/types";
 import {
+  greaterThanZeroMessage,
   invalidNumberMessage,
   requiredFieldMessage,
   wholeNumberMessage,
@@ -30,6 +31,16 @@ export function validateFormInputs(
     }
     if (!Number.isFinite(Number(value))) {
       errors[key] = invalidNumberMessage(label);
+    }
+  };
+  const requirePositiveNumber = (key: string, value: string, label: string) => {
+    requireNumber(key, value, label);
+    if (errors[key]) {
+      return;
+    }
+    const parsedValue = Number(value);
+    if (parsedValue <= 0) {
+      errors[key] = greaterThanZeroMessage(label);
     }
   };
   const requireIntegerAtLeastOne = (key: string, value: string, label: string) => {
@@ -89,7 +100,7 @@ export function validateFormInputs(
   }
 
   if (activeSubtype === "apartment") {
-    requireNumber("apartment.totalArea", form.apartment.totalArea, "ბინის საერთო ფართობი");
+    requirePositiveNumber("apartment.totalArea", form.apartment.totalArea, "ბინის საერთო ფართობი");
     requireNumber("apartment.rooms", form.apartment.rooms, "ბინის ოთახები");
     requireNumber("apartment.bedrooms", form.apartment.bedrooms, "ბინის საძინებლები");
     requireNumber("apartment.floor", form.apartment.floor, "ბინის სართული");
@@ -125,7 +136,7 @@ export function validateFormInputs(
   if (activeSubtype === "privateHouse") {
     requireNumber("privateHouse.houseArea", form.privateHouse.houseArea, "სახლის ფართობი");
     requireNumber("privateHouse.yardArea", form.privateHouse.yardArea, "ეზოს ფართობი");
-    requireNumber("privateHouse.totalArea", form.privateHouse.totalArea, "საერთო ფართობი");
+    requirePositiveNumber("privateHouse.totalArea", form.privateHouse.totalArea, "საერთო ფართობი");
     requireNumber("privateHouse.rooms", form.privateHouse.rooms, "კერძო სახლის ოთახები");
     requireNumber(
       "privateHouse.bedrooms",
@@ -151,7 +162,7 @@ export function validateFormInputs(
   }
 
   if (activeSubtype === "landPlot") {
-    requireNumber("landPlot.landArea", form.landPlot.landArea, "მიწის ფართობი");
+    requirePositiveNumber("landPlot.landArea", form.landPlot.landArea, "მიწის ფართობი");
     if (form.landPlot.landCategory === "") {
       errors["landPlot.landCategory"] = "მიწის კატეგორია სავალდებულოა.";
     }
@@ -167,7 +178,7 @@ export function validateFormInputs(
   }
 
   if (activeSubtype === "commercial") {
-    requireNumber("commercial.area", form.commercial.area, "კომერციული ფართობი");
+    requirePositiveNumber("commercial.area", form.commercial.area, "კომერციული ფართობი");
     requireNumber("commercial.floor", form.commercial.floor, "კომერციული სართული");
     requireIntegerAtLeastOne(
       "commercial.totalFloors",

@@ -12,6 +12,7 @@ import {
   normalizeClientsListResponse,
 } from "@/features/clients/normalizers";
 import { emitRecordMutationEvents } from "@/features/lifecycle/recordsChangedEvent";
+import { emitNoteOpenedEvent } from "@/features/noteLastOpened/noteOpenedEvent";
 import type {
   Client,
   ClientDetail,
@@ -109,6 +110,40 @@ export async function getClientById(id: string): Promise<ClientDetail> {
         status === 403
           ? "ამ კლიენტზე წვდომა არ გაქვთ"
           : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function markClientOpened(
+  id: string,
+): Promise<{ id: string; noteLastOpenedAt: string | null }> {
+  const { baseUrl, headers } = getBearerAuthContext();
+
+  try {
+    const res = await axios.post(`${baseUrl}/clients/${id}/opened`, undefined, {
+      headers,
+    });
+    emitNoteOpenedEvent();
+    const payload = res.data as { id?: unknown; noteLastOpenedAt?: unknown };
+    return {
+      id: typeof payload.id === "string" ? payload.id : id,
+      noteLastOpenedAt:
+        typeof payload.noteLastOpenedAt === "string" ? payload.noteLastOpenedAt : null,
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ კლიენტის გახსნის აღნიშვნის უფლება არ გაქვთ"
+          : "კლიენტის გახსნის აღნიშვნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         status,

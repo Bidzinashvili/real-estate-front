@@ -11,6 +11,7 @@ import type { UsePropertiesCatalogResult } from "@/features/properties/useProper
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
 import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
+import { READY_TO_UPLOAD_COPY } from "@/features/readyToUpload/readyToUploadCopy";
 
 function parseDealTypeSelectValue(raw: string): DealType | "" {
   if (raw === "") return "";
@@ -99,6 +100,15 @@ export function PropertyCatalogBasicFilters({
           appliedCount={catalog.advancedFilterCount}
           onOpen={onOpenAdvanced}
         />
+        <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-foreground shadow-sm">
+          <input
+            type="checkbox"
+            checked={state.readyToUpload}
+            onChange={(event) => catalog.setReadyToUpload(event.target.checked)}
+            className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+          />
+          {READY_TO_UPLOAD_COPY.filterLabel}
+        </label>
         {catalog.hasClearableFilters ? (
           <button
             type="button"

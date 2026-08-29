@@ -2,6 +2,12 @@
 
 import { formatPropertyStatusLabel, type Property } from "@/features/properties/types";
 import {
+  hasAuthorizedOwnerInformation,
+  hasAuthorizedPrivateNotes,
+  readAuthorizedInternalText,
+  readAuthorizedPrivateComment,
+} from "@/features/properties/authorizedPropertyFields";
+import {
   formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
   formatHotelScopeLabel,
@@ -32,13 +38,19 @@ export function PropertyDetailsReadOnlySections({
   showPrivateNotes,
   hideOwnerFields = false,
 }: PropertyDetailsReadOnlySectionsProps) {
-  const activeExternalIds = property.externalIds.filter(
+  const activeExternalIds = (property.externalIds ?? []).filter(
     (externalId) => externalId.archivedAt === null,
   );
-  const ownerPhones = property.ownerPhones
+  const ownerPhones = (property.ownerPhones ?? [])
     .map((ownerPhone) => ownerPhone.trim())
     .filter((ownerPhone) => ownerPhone !== "")
     .join(", ");
+  const showOwnerBlock =
+    !hideOwnerFields && hasAuthorizedOwnerInformation(property);
+  const authorizedPrivateComment = readAuthorizedPrivateComment(property);
+  const authorizedInternalText = readAuthorizedInternalText(property);
+  const shouldShowPrivateNotes =
+    showPrivateNotes && hasAuthorizedPrivateNotes(property);
 
   return (
     <>
@@ -66,35 +78,47 @@ export function PropertyDetailsReadOnlySections({
           />
         ) : null}
 
-        {hideOwnerFields ? null : (
+        {showOwnerBlock ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {property.propertyOwner ? (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">მესაკუთრე</p>
                 <OwnerProfileNameLink propertyOwner={property.propertyOwner} />
               </div>
-            ) : property.ownerName.trim() ? (
+            ) : property.ownerName?.trim() ? (
               <DetailText label="მესაკუთრის სახელი" value={property.ownerName} />
             ) : null}
             {ownerPhones ? (
               <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
             ) : null}
           </div>
-        )}
+        ) : null}
 
         {hideOwnerFields ? (
-          <DetailText label="გარე საიტის ID" value={property.ourSiteId} />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DetailPhone label="მესაკუთრის WhatsApp" value={property.ownerWhatsapp} />
+          property.ourSiteId?.trim() ? (
             <DetailText label="გარე საიტის ID" value={property.ourSiteId} />
+          ) : null
+        ) : property.ownerWhatsapp !== undefined || property.ourSiteId?.trim() ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {property.ownerWhatsapp !== undefined ? (
+              <DetailPhone label="მესაკუთრის WhatsApp" value={property.ownerWhatsapp} />
+            ) : null}
+            {property.ourSiteId?.trim() ? (
+              <DetailText label="გარე საიტის ID" value={property.ourSiteId} />
+            ) : null}
           </div>
-        )}
+        ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailText label="MyHome ID" value={property.myHomeId} />
-          <DetailText label="SS.ge ID" value={property.ssGeId} />
-        </div>
+        {property.myHomeId || property.ssGeId ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {property.myHomeId ? (
+              <DetailText label="MyHome ID" value={property.myHomeId} />
+            ) : null}
+            {property.ssGeId ? (
+              <DetailText label="SS.ge ID" value={property.ssGeId} />
+            ) : null}
+          </div>
+        ) : null}
         {activeExternalIds.length > 0 ? (
           <div className="space-y-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
             <p className="font-medium text-foreground">გარე ID-ები</p>
@@ -108,39 +132,41 @@ export function PropertyDetailsReadOnlySections({
 
       </section>
 
-      <section className="space-y-3 pt-2" aria-labelledby="notes-heading">
-        <h2 id="notes-heading" className="text-sm font-semibold text-foreground">
-          შენიშვნები და დანართები
-        </h2>
+      {shouldShowPrivateNotes || property.userId?.trim() ? (
+        <section className="space-y-3 pt-2" aria-labelledby="notes-heading">
+          <h2 id="notes-heading" className="text-sm font-semibold text-foreground">
+            შენიშვნები და დანართები
+          </h2>
 
-        {showPrivateNotes ? (
-          <>
-            <DetailMultiline
-              label="შიდა კომენტარი"
-              value={property.privateComment ?? property.comment}
-            />
-            <DetailMultiline
-              label="ატვირთვის ტექსტი"
-              value={property.internalText ?? property.internalComment}
-            />
+          {shouldShowPrivateNotes ? (
+            <>
+              {authorizedPrivateComment ? (
+                <DetailMultiline
+                  label="კომენტარი ჩემთვის"
+                  value={authorizedPrivateComment}
+                />
+              ) : null}
+              {authorizedInternalText ? (
+                <DetailMultiline
+                  label="ატვირთვის ტექსტი"
+                  value={authorizedInternalText}
+                />
+              ) : null}
 
+              <div className="grid gap-4 sm:grid-cols-2">
+                <DetailDateTime label="შეხსენების თარიღი" value={property.reminderDate} />
+                <DetailDateTime label="კომენტარის თარიღი" value={property.commentDate} />
+              </div>
+            </>
+          ) : null}
+
+          {property.userId?.trim() ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              <DetailDateTime label="შეხსენების თარიღი" value={property.reminderDate} />
-              <DetailDateTime label="კომენტარის თარიღი" value={property.commentDate} />
+              <DetailText label="მიმაგრებული აგენტი" value={property.userId} />
             </div>
-          </>
-        ) : (
-          <p className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
-            კომენტარები და შიდა შენიშვნები მხოლოდ განცხადების აგენტსა და ადმინისტრატორებს ეჩვენებათ.
-          </p>
-        )}
-
-        {property.userId.trim() ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DetailText label="მიმაგრებული აგენტი" value={property.userId} />
-          </div>
-        ) : null}
-      </section>
+          ) : null}
+        </section>
+      ) : null}
 
       {property.apartment && (
         <section className="space-y-3 pt-2" aria-labelledby="ro-apt-heading">
@@ -149,10 +175,12 @@ export function PropertyDetailsReadOnlySections({
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailText
-              label="კორპუსის ნომერი"
-              value={property.apartment.buildingNumber}
-            />
+            {property.apartment.buildingNumber !== undefined ? (
+              <DetailText
+                label="კორპუსის ნომერი"
+                value={property.apartment.buildingNumber}
+              />
+            ) : null}
             <DetailText
               label="შენობის მდგომარეობა"
               value={formatBuildingConditionLabel(property.apartment.buildingCondition)}

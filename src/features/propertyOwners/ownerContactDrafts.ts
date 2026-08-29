@@ -179,12 +179,12 @@ export function buildOwnerWritePayload(
 }
 
 export function assignmentFromProperty(property: {
-  propertyOwner: { id: string; name: string } | null;
-  ownerName: string;
-  ownerPhones: string[];
+  propertyOwner?: { id: string; name: string } | null;
+  ownerName?: string;
+  ownerPhones?: string[];
 }): PropertyOwnerAssignment {
   const base = emptyOwnerAssignment();
-  const ownerName = property.propertyOwner?.name ?? property.ownerName;
+  const ownerName = property.propertyOwner?.name ?? property.ownerName ?? "";
   const contacts = contactsFromLegacyPhones(property.ownerPhones);
 
   if (property.propertyOwner) {
@@ -205,7 +205,7 @@ export function assignmentFromProperty(property: {
 }
 
 export function isOwnerAssignmentDirty(
-  property: { propertyOwner: { id: string; name: string } | null },
+  property: { propertyOwner?: { id: string; name: string } | null },
   assignment: PropertyOwnerAssignment,
 ): boolean {
   const currentOwnerId = property.propertyOwner?.id ?? null;

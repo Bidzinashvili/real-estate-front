@@ -6,7 +6,7 @@ type PropertyViewMetaCardProps = {
 
 export function PropertyViewMetaCard({ property }: PropertyViewMetaCardProps) {
   const labels = property.labels ?? [];
-  const activeExternalIds = property.externalIds.filter(
+  const activeExternalIds = (property.externalIds ?? []).filter(
     (externalId) => externalId.archivedAt === null,
   );
   const cadastralCode = property.cadastralCode?.trim() ?? "";

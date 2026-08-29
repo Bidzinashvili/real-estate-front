@@ -3,6 +3,10 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useClientDetails } from "@/features/clients/useClientDetails";
+import { markClientOpened } from "@/features/clients/api";
+import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
+import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
+import { useCurrentUser } from "@/shared/hooks";
 import { ClientDetailsContent } from "./ClientDetailsContent";
 
 type ClientDetailsViewProps = {
@@ -11,7 +15,17 @@ type ClientDetailsViewProps = {
 
 export function ClientDetailsView({ clientId }: ClientDetailsViewProps) {
   const router = useRouter();
-  const { client, isLoading, error, refetch } = useClientDetails(clientId);
+  const { user } = useCurrentUser();
+  const { client, isLoading, error, refetch, applyNoteLastOpenedAt } =
+    useClientDetails(clientId);
+
+  useMarkNoteOpened({
+    kind: "client",
+    recordId: client?.id ?? null,
+    canMark: canMarkNoteOpened(client, user),
+    markOpened: markClientOpened,
+    onOpened: applyNoteLastOpenedAt,
+  });
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">კლიენტი იტვირთება…</p>;

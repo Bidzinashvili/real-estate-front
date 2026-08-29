@@ -160,6 +160,20 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     (value: { createdFrom: string; createdTo: string }) => bumpPage(value),
     [bumpPage],
   );
+  const setLastOpenedDateRange = useCallback(
+    (value: { lastOpenedFrom: string; lastOpenedTo: string }) =>
+      bumpPage({ ...value, neverOpened: false }),
+    [bumpPage],
+  );
+  const setNeverOpened = useCallback(
+    (value: boolean) =>
+      bumpPage(
+        value
+          ? { neverOpened: true, lastOpenedFrom: "", lastOpenedTo: "" }
+          : { neverOpened: false },
+      ),
+    [bumpPage],
+  );
   const setSortBy = useCallback(
     (value: ClientSortBy) => bumpPage({ sortBy: value }),
     [bumpPage],
@@ -183,7 +197,12 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
   }, [setListScope, state.listScope]);
 
   const resetAdvancedFilters = useCallback(() => {
-    bumpPage({ status: "" });
+    bumpPage({
+      status: "",
+      lastOpenedFrom: "",
+      lastOpenedTo: "",
+      neverOpened: false,
+    });
   }, [bumpPage]);
 
   const resetFilters = useCallback(() => {
@@ -222,6 +241,8 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     setDealType,
     setStatus,
     setCreatedDateRange,
+    setLastOpenedDateRange,
+    setNeverOpened,
     setSortBy,
     setOrder,
     setPage,

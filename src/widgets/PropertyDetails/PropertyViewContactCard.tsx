@@ -1,5 +1,6 @@
 import { Phone } from "lucide-react";
 import type { Property } from "@/features/properties/types";
+import { hasAuthorizedOwnerInformation } from "@/features/properties/authorizedPropertyFields";
 import { OwnerProfileNameLink } from "@/widgets/PropertyOwners/OwnerProfileNameLink";
 
 type PropertyViewContactCardProps = {
@@ -11,9 +12,13 @@ function formatPhoneHref(raw: string): string {
 }
 
 export function PropertyViewContactCard({ property }: PropertyViewContactCardProps) {
+  if (!hasAuthorizedOwnerInformation(property)) {
+    return null;
+  }
+
   const propertyOwner = property.propertyOwner ?? null;
-  const fallbackName = propertyOwner ? "" : property.ownerName.trim();
-  const ownerPhones = property.ownerPhones
+  const fallbackName = propertyOwner ? "" : property.ownerName?.trim() ?? "";
+  const ownerPhones = (property.ownerPhones ?? [])
     .map((ownerPhone) => ownerPhone.trim())
     .filter((ownerPhone) => ownerPhone !== "");
   const ownerWhatsapp = property.ownerWhatsapp?.trim() ?? "";

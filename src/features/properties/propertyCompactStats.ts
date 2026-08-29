@@ -1,3 +1,4 @@
+import { positiveAreaOrNull } from "@/features/properties/propertyArea";
 import type { Property } from "@/features/properties/types";
 
 export type CompactStatChip = {
@@ -25,7 +26,7 @@ export function propertyCompactStats(property: Property): CompactStatChip[] {
     if (Number.isFinite(apartment.bedrooms)) {
       chips.push({ key: "bedrooms", label: `${apartment.bedrooms} საძინებელი` });
     }
-    if (Number.isFinite(apartment.totalArea)) {
+    if (positiveAreaOrNull(apartment.totalArea) !== null) {
       chips.push({ key: "area", label: `${apartment.totalArea} მ²` });
     }
     if (Number.isFinite(apartment.floor)) {
@@ -46,7 +47,7 @@ export function propertyCompactStats(property: Property): CompactStatChip[] {
     if (Number.isFinite(house.bedrooms)) {
       chips.push({ key: "bedrooms", label: `${house.bedrooms} საძინებელი` });
     }
-    if (Number.isFinite(house.totalArea)) {
+    if (positiveAreaOrNull(house.totalArea) !== null) {
       chips.push({ key: "area", label: `${house.totalArea} მ²` });
     }
     if (Number.isFinite(house.yardArea)) {
@@ -57,7 +58,7 @@ export function propertyCompactStats(property: Property): CompactStatChip[] {
 
   if (property.landPlot) {
     const plot = property.landPlot;
-    if (Number.isFinite(plot.landArea)) {
+    if (positiveAreaOrNull(plot.landArea) !== null) {
       return [{ key: "area", label: `${plot.landArea} მ²` }];
     }
     return [];
@@ -66,7 +67,7 @@ export function propertyCompactStats(property: Property): CompactStatChip[] {
   if (property.commercial) {
     const commercial = property.commercial;
     const chips: CompactStatChip[] = [];
-    if (Number.isFinite(commercial.area)) {
+    if (positiveAreaOrNull(commercial.area) !== null) {
       chips.push({ key: "area", label: `${commercial.area} მ²` });
     }
     if (Number.isFinite(commercial.floor)) {

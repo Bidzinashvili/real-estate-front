@@ -1,10 +1,9 @@
 import type { Property } from "@/features/properties/types";
 import { formatPropertyDateTime } from "@/widgets/PropertyDetails/propertyViewFormatters";
-
-type PropertyViewCommentsProps = {
-  property: Property;
-  canViewPrivateFields: boolean;
-};
+import {
+  readAuthorizedInternalText,
+  readAuthorizedPrivateComment,
+} from "@/features/properties/authorizedPropertyFields";
 
 function CommentBlock({
   title,
@@ -45,28 +44,22 @@ export function PropertyViewPublicComment({ property }: { property: Property }) 
 
 export function PropertyViewPrivateComments({
   property,
-  canViewPrivateFields,
-}: PropertyViewCommentsProps) {
-  if (!canViewPrivateFields) {
-    return (
-      <section className="rounded-2xl border border-dashed border-border bg-muted/50 p-5">
-        <p className="text-sm text-muted-foreground">
-          პირადი კომენტარი და შიდა ინფორმაცია მხოლოდ განცხადების აგენტსა და ადმინისტრატორებს
-          ეჩვენებათ.
-        </p>
-      </section>
-    );
-  }
-
-  const privateComment = (property.privateComment ?? property.comment ?? "").trim();
-  const internalText = (property.internalText ?? property.internalComment ?? "").trim();
+}: {
+  property: Property;
+}) {
+  const privateComment = readAuthorizedPrivateComment(property);
+  const internalText = readAuthorizedInternalText(property);
   const commentDate = formatPropertyDateTime(property.commentDate);
+
+  if (!privateComment && !internalText) {
+    return null;
+  }
 
   return (
     <div className="space-y-4">
       {privateComment ? (
         <div className="space-y-2">
-          <CommentBlock title="პირადი კომენტარი" value={privateComment} variant="private" />
+          <CommentBlock title="კომენტარი ჩემთვის" value={privateComment} variant="private" />
           {commentDate ? (
             <p className="px-1 text-xs text-muted-foreground">კომენტარის თარიღი: {commentDate}</p>
           ) : null}

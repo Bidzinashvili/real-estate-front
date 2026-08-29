@@ -8,6 +8,7 @@ import type { Property } from "@/features/properties/types";
 import { canEditRecordColor, type RecordColor } from "@/features/recordColor/recordColor";
 import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
 import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
+import { ReadyToUploadToggle } from "@/widgets/ReadyToUpload/ReadyToUploadToggle";
 
 type PropertyViewActionsCardProps = {
   property: Property;
@@ -29,6 +30,9 @@ type PropertyViewActionsCardProps = {
   onOpenChangeStatus: () => void;
   onSelectColor: (color: RecordColor) => void;
   onToggleHideFromOthers: (nextHidden: boolean) => void;
+  isSavingReadyToUpload: boolean;
+  readyToUploadError: string | null;
+  onToggleReadyToUpload: (nextReady: boolean) => void;
 };
 
 export function PropertyViewActionsCard({
@@ -51,6 +55,9 @@ export function PropertyViewActionsCard({
   onOpenChangeStatus,
   onSelectColor,
   onToggleHideFromOthers,
+  isSavingReadyToUpload,
+  readyToUploadError,
+  onToggleReadyToUpload,
 }: PropertyViewActionsCardProps) {
   return (
     <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
@@ -63,21 +70,30 @@ export function PropertyViewActionsCard({
             onSelect={onSelectColor}
           />
         ) : null}
-        {canEdit ? (
+        {canEdit && property.hideFromOthers !== undefined ? (
           <HideFromOthersToggle
             isHidden={property.hideFromOthers}
             disabled={isSavingHideFromOthers}
             onToggle={onToggleHideFromOthers}
           />
         ) : null}
-        <button
-          type="button"
-          onClick={onOpenReminders}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
-        >
-          <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-          შეხსენება
-        </button>
+        {canEdit && property.readyToUpload !== undefined ? (
+          <ReadyToUploadToggle
+            isReady={property.readyToUpload}
+            disabled={isSavingReadyToUpload}
+            onToggle={onToggleReadyToUpload}
+          />
+        ) : null}
+        {canEdit ? (
+          <button
+            type="button"
+            onClick={onOpenReminders}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
+          >
+            <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+            შეხსენება
+          </button>
+        ) : null}
         {canEdit ? (
           <Link
             href={`/properties/${property.id}/edit`}
@@ -144,6 +160,11 @@ export function PropertyViewActionsCard({
       {hideFromOthersError ? (
         <p className="mt-2 text-xs text-destructive" role="alert">
           {hideFromOthersError}
+        </p>
+      ) : null}
+      {readyToUploadError ? (
+        <p className="mt-2 text-xs text-destructive" role="alert">
+          {readyToUploadError}
         </p>
       ) : null}
     </section>

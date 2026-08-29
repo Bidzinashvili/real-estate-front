@@ -23,6 +23,10 @@ import type {
   PropertyFormLandPlot,
   PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
+import {
+  CANONICAL_AREA_MISSING_LABEL,
+  nextPrivateHouseTotalArea,
+} from "@/features/properties/propertyArea";
 import { SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
@@ -92,6 +96,7 @@ export function ApartmentEditSection({
             onValueChange={(next) => setApartment({ totalArea: next })}
             parse={parseDecimalInput}
             inputMode="decimal"
+            placeholder={CANONICAL_AREA_MISSING_LABEL}
           />
         </FieldWithLock>
         <FieldWithLock
@@ -358,16 +363,34 @@ export function PrivateHouseEditSection({
         <EditableNumericTextInput
           label="სახლის ფართობი"
           value={privateHouse.houseArea}
-          onValueChange={(next) => setPrivateHouse({ houseArea: next })}
+          onValueChange={(next) =>
+            setPrivateHouse({
+              houseArea: next,
+              totalArea: nextPrivateHouseTotalArea(next, privateHouse.yardArea),
+            })
+          }
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
           label="ეზოს ფართობი"
           value={privateHouse.yardArea}
-          onValueChange={(next) => setPrivateHouse({ yardArea: next })}
+          onValueChange={(next) =>
+            setPrivateHouse({
+              yardArea: next,
+              totalArea: nextPrivateHouseTotalArea(privateHouse.houseArea, next),
+            })
+          }
           parse={parseDecimalInput}
           inputMode="decimal"
+        />
+        <EditableNumericTextInput
+          label="საერთო ფართობი"
+          value={privateHouse.totalArea}
+          onValueChange={(next) => setPrivateHouse({ totalArea: next })}
+          parse={parseDecimalInput}
+          inputMode="decimal"
+          placeholder={CANONICAL_AREA_MISSING_LABEL}
         />
         <EditableNumericTextInput
           label="აივნის ფართობი"
@@ -447,6 +470,7 @@ export function LandPlotEditSection({ dealType, landPlot, setLandPlot }: LandPlo
           onValueChange={(next) => setLandPlot({ landArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+          placeholder={CANONICAL_AREA_MISSING_LABEL}
         />
         <SelectField
           id="editLpLandCategory"
@@ -506,6 +530,7 @@ export function CommercialEditSection({
           onValueChange={(next) => setCommercial({ area: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+          placeholder={CANONICAL_AREA_MISSING_LABEL}
         />
         <EditableTwoDigitNumericInput
           label="სართულიანობა"

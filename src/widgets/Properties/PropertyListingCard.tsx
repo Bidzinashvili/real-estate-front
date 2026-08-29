@@ -14,8 +14,13 @@ import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListin
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
-import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { canVerifyPropertyListing } from "@/features/lifecycle/propertyVerification";
+import { useVerifyProperty } from "@/features/lifecycle/useVerifyProperty";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { PropertyVerificationStatus } from "@/widgets/Lifecycle/PropertyVerificationStatus";
 import { NoteReminderIndicator } from "@/widgets/Reminders/NoteReminderIndicator";
 import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
 import { formatReminderScheduleLabel } from "@/features/reminders/formatReminderSchedule";
@@ -29,6 +34,7 @@ import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColo
 import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
 import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
+import { ReadyToUploadBadge } from "@/widgets/ReadyToUpload/ReadyToUploadBadge";
 import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
 import { ClosedRecordStatChips } from "@/widgets/DatabaseList/ClosedRecordStatChips";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
@@ -38,7 +44,7 @@ import { propertyAreaSquareMeters } from "@/widgets/PropertyDetails/propertyView
 function formatOwnerLine(property: Property) {
   const profileName = property.propertyOwner?.name?.trim();
   const name = profileName || property.ownerName?.trim();
-  const phone = property.ownerPhones
+  const phone = (property.ownerPhones ?? [])
     .map((ownerPhone) => ownerPhone.trim())
     .filter((ownerPhone) => ownerPhone !== "")
     .join(", ");
@@ -86,7 +92,33 @@ export function PropertyListingCard({
   } = useUpdateHideFromOthers();
   const canEditColor = canEditRecordColor(canChangeStatus, property.color);
   const hasCustomColor = isCustomRecordColor(property.color);
-  const canToggleHideFromOthers = canChangeStatus && Boolean(onListingChanged);
+  const canToggleHideFromOthers =
+    canChangeStatus &&
+    Boolean(onListingChanged) &&
+    property.hideFromOthers !== undefined;
+  const listingOurSiteId = property.ourSiteId?.trim() ?? "";
+  const listingPublicComment = property.publicComment?.trim() ?? "";
+  const isArchivedListing = isPropertyArchived(property);
+  const {
+    verifyListing,
+    isVerifying,
+    error: verifyError,
+    successMessage: verifySuccessMessage,
+  } = useVerifyProperty();
+  const canShowVerify =
+    canChangeStatus &&
+    Boolean(onListingChanged) &&
+    canVerifyPropertyListing(property);
+
+  async function handleVerifyListing() {
+    if (!onListingChanged) {
+      return;
+    }
+    const didVerify = await verifyListing(property.id);
+    if (didVerify) {
+      onListingChanged();
+    }
+  }
 
   async function handleSelectColor(nextColor: RecordColor) {
     if (!onListingChanged || property.color === undefined) {
@@ -140,11 +172,18 @@ export function PropertyListingCard({
               status={property.status}
               outcomeSource={property.outcomeSource}
               verificationReason={property.verificationReason}
+              isArchived={isArchivedListing}
             />
-            {canSetReminders ? (
+            {isArchivedListing ? (
+              <span className="inline-flex rounded-full bg-black/55 px-2.5 py-0.5 text-xs font-semibold text-white">
+                {ARCHIVE_COPY.archivedBadge}
+              </span>
+            ) : null}
+            {canSetReminders && property.reminderSummary ? (
               <NoteReminderIndicator summary={property.reminderSummary} />
             ) : null}
-            <HideFromOthersBadge isHidden={property.hideFromOthers} />
+            <HideFromOthersBadge isHidden={property.hideFromOthers === true} />
+            <ReadyToUploadBadge isReady={property.readyToUpload} />
           </div>
         </div>
         {(canChangeStatus || canSetReminders) && onListingChanged ? (
@@ -161,6 +200,11 @@ export function PropertyListingCard({
             onToggleHideFromOthers={handleToggleHideFromOthers}
             isSavingHideFromOthers={isSavingHideFromOthers}
             hideFromOthersError={hideFromOthersError}
+            canVerify={canShowVerify}
+            isVerifying={isVerifying}
+            onVerify={() => {
+              void handleVerifyListing();
+            }}
           />
         ) : null}
       </div>
@@ -187,6 +231,10 @@ export function PropertyListingCard({
           {generatedTitle}
         </p>
 
+        {listingOurSiteId ? (
+          <p className="text-xs text-muted-foreground">ID: {listingOurSiteId}</p>
+        ) : null}
+
         {streetLine ? (
           <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -195,6 +243,29 @@ export function PropertyListingCard({
         ) : null}
 
         <ClosedRecordStatChips items={compactStats} />
+
+        <PropertyVerificationStatus
+          status={property.status}
+          archivedAt={property.archivedAt}
+          lastVerifiedAt={property.lastVerifiedAt}
+          canManage={canShowVerify}
+          isVerifying={isVerifying}
+          error={verifyError}
+          successMessage={verifySuccessMessage}
+          onVerify={
+            canShowVerify
+              ? () => {
+                  void handleVerifyListing();
+                }
+              : undefined
+          }
+        />
+
+        {listingPublicComment ? (
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            {listingPublicComment}
+          </p>
+        ) : null}
 
         {canSetReminders && nextReminderLabel ? (
           <p className="text-xs text-muted-foreground">
@@ -247,7 +318,7 @@ export function PropertyListingCard({
                 }}
               />
             ) : null}
-            {canToggleHideFromOthers ? (
+            {canToggleHideFromOthers && property.hideFromOthers !== undefined ? (
               <HideFromOthersToggle
                 isHidden={property.hideFromOthers}
                 disabled={isSavingHideFromOthers}
@@ -281,11 +352,6 @@ export function PropertyListingCard({
           {ownerLine ? (
             <p className="min-w-0 truncate text-xs text-muted-foreground">
               {ownerLine}
-            </p>
-          ) : null}
-          {formatLifecycleDate(property.lastVerifiedAt) ? (
-            <p className="text-xs text-muted-foreground">
-              გადამოწმებულია: {formatLifecycleDate(property.lastVerifiedAt)}
             </p>
           ) : null}
           {formatLifecycleDate(property.archivedAt) ? (

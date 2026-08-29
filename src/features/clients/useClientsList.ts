@@ -5,6 +5,7 @@ import { getClients } from "@/features/clients/api";
 import type { GetClientsQuery } from "@/features/clients/getClientsQuery";
 import type { Client } from "@/features/clients/types";
 import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
+import { noteOpenedEventName } from "@/features/noteLastOpened/noteOpenedEvent";
 import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 
@@ -42,6 +43,9 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const search = query?.search;
   const createdFrom = query?.createdFrom;
   const createdTo = query?.createdTo;
+  const lastOpenedFrom = query?.lastOpenedFrom;
+  const lastOpenedTo = query?.lastOpenedTo;
+  const neverOpened = query?.neverOpened;
   const dealType = query?.dealType;
   const sortBy = query?.sortBy;
   const order = query?.order;
@@ -60,9 +64,11 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
     };
     window.addEventListener(recordsChangedEventName, handleRecordsChanged);
     window.addEventListener(remindersChangedEventName, handleRecordsChanged);
+    window.addEventListener(noteOpenedEventName, handleRecordsChanged);
     return () => {
       window.removeEventListener(recordsChangedEventName, handleRecordsChanged);
       window.removeEventListener(remindersChangedEventName, handleRecordsChanged);
+      window.removeEventListener(noteOpenedEventName, handleRecordsChanged);
     };
   }, []);
 
@@ -80,6 +86,9 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
             search,
             createdFrom,
             createdTo,
+            lastOpenedFrom,
+            lastOpenedTo,
+            neverOpened,
             district:
               districtKey === ""
                 ? undefined
@@ -139,6 +148,9 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
     search,
     createdFrom,
     createdTo,
+    lastOpenedFrom,
+    lastOpenedTo,
+    neverOpened,
     districtKey,
     budgetMinKey,
     budgetMaxKey,

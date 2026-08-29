@@ -115,7 +115,7 @@ export function parseRenovationForForm(
 }
 
 export type PropertyListingImage = {
-  id: string;
+  id?: string;
   url: string;
   originalName: string;
 };
@@ -131,10 +131,10 @@ export type PropertyExternalId = {
 export type PropertyApartment = {
   id: string;
   propertyId: string;
-  buildingNumber: string | null;
+  buildingNumber?: string | null;
   buildingCondition: BuildingCondition;
   buildingAgeType: BuildingAgeType | null;
-  totalArea: number;
+  totalArea: number | null;
   project: string | null;
   renovation: string | null;
   rooms: number;
@@ -160,9 +160,9 @@ export type PropertyPrivateHouse = {
   id: string;
   propertyId: string;
   buildingCondition: BuildingCondition;
-  houseArea: number;
+  houseArea: number | null;
   yardArea: number;
-  totalArea: number;
+  totalArea: number | null;
   renovation: string | null;
   rooms: number;
   bedrooms: number;
@@ -185,7 +185,7 @@ export type PropertyPrivateHouse = {
 export type PropertyLandPlot = {
   id: string;
   propertyId: string;
-  landArea: number;
+  landArea: number | null;
   landCategory: LandCategory;
   landUsage: CommercialStatus;
   forInvestment: boolean;
@@ -202,7 +202,7 @@ export type PropertyLandPlot = {
 export type PropertyCommercial = {
   id: string;
   propertyId: string;
-  area: number;
+  area: number | null;
   status: CommercialStatus;
   floor: number;
   totalFloors: number | null;
@@ -229,25 +229,25 @@ export type Property = EntityVerificationFields & {
   district: string;
   address: string;
   streetId: string | null;
-  title: string | null;
+  title?: string | null;
   cadastralCode: string | null;
   pricePublic: number;
-  priceInternal: number | null;
-  ownerName: string;
-  ownerPhones: string[];
-  ownerWhatsapp: string | null;
-  ownerId: string | null;
-  propertyOwner: PropertyOwnerSummary | null;
+  priceInternal?: number | null;
+  ownerName?: string;
+  ownerPhones?: string[];
+  ownerWhatsapp?: string | null;
+  ownerId?: string | null;
+  propertyOwner?: PropertyOwnerSummary | null;
   ourSiteId: string | null;
-  myHomeId: string | null;
-  ssGeId: string | null;
-  externalIds: PropertyExternalId[];
+  myHomeId?: string | null;
+  ssGeId?: string | null;
+  externalIds?: PropertyExternalId[];
   description: string | null;
   publicComment: string | null;
-  privateComment: string | null;
-  internalText: string | null;
-  comment: string | null;
-  internalComment: string | null;
+  privateComment?: string | null;
+  internalText?: string | null;
+  comment?: string | null;
+  internalComment?: string | null;
   commentDate: string | null;
   tenantClientId: string | null;
   rentalDurationMonths: number | null;
@@ -256,10 +256,12 @@ export type Property = EntityVerificationFields & {
   images: PropertyListingImage[];
   createdAt: string;
   updatedAt: string;
+  noteLastOpenedAt?: string | null;
   deletedAt: string | null;
-  userId: string;
+  userId?: string;
   ownedByViewer: boolean | null;
-  hideFromOthers: boolean;
+  hideFromOthers?: boolean;
+  readyToUpload?: boolean;
   color?: RecordColor;
 
   apartment: PropertyApartment | null;
@@ -267,5 +269,5 @@ export type Property = EntityVerificationFields & {
   landPlot: PropertyLandPlot | null;
   commercial: PropertyCommercial | null;
   fieldLocks?: PropertyFieldLocks;
-  reminderSummary: ReminderSummary;
+  reminderSummary?: ReminderSummary;
 };

@@ -110,6 +110,8 @@ type VerifiableNumberFactProps = {
   value: number | null | undefined;
   isToBeVerified: boolean;
   suffix?: string;
+  emptyLabel?: string;
+  requirePositive?: boolean;
   lock?: LockState;
   onLockChange?: (next: LockState) => void;
 };
@@ -119,6 +121,8 @@ export function VerifiableNumberFact({
   value,
   isToBeVerified,
   suffix,
+  emptyLabel = "—",
+  requirePositive = false,
   lock,
   onLockChange,
 }: VerifiableNumberFactProps) {
@@ -133,8 +137,21 @@ export function VerifiableNumberFact({
       />
     );
   }
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return <PropertyViewFact label={label} value="—" lock={lock} onLockChange={onLockChange} />;
+  const isMissing =
+    value === null ||
+    value === undefined ||
+    Number.isNaN(value) ||
+    (requirePositive && value <= 0);
+  if (isMissing) {
+    return (
+      <PropertyViewFact
+        label={label}
+        value={emptyLabel}
+        tone="no"
+        lock={lock}
+        onLockChange={onLockChange}
+      />
+    );
   }
   const formatted = suffix ? `${value.toLocaleString()} ${suffix}` : value.toLocaleString();
   return <PropertyViewFact label={label} value={formatted} lock={lock} onLockChange={onLockChange} />;

@@ -363,6 +363,11 @@ export function normalizeClient(client: ClientApi): Client {
     requirements: normalizeRequirements(record.requirements, record),
     status: parseClientStatus(client.status),
     archivedAt: asNullableString(record.archivedAt),
+    createdAt: asString(record.createdAt),
+    updatedAt: asString(record.updatedAt),
+    ...(Object.prototype.hasOwnProperty.call(record, "noteLastOpenedAt")
+      ? { noteLastOpenedAt: asNullableString(record.noteLastOpenedAt) }
+      : {}),
     reminderSummary: parseReminderSummary(record.reminderSummary),
     ...parseEntityVerificationFields(record),
   };

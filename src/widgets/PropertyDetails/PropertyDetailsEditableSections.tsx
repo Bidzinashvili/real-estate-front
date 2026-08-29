@@ -24,6 +24,7 @@ import type {
   PropertyFormLandPlot,
   PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
+import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import { LabeledSelect } from "@/shared/ui/LabeledSelect";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
@@ -46,11 +47,14 @@ import {
 } from "@/features/properties/pricePerSquareMeter";
 import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
+import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
+import { buildGeneratePublicTextDraftFromEditForm } from "@/features/properties/generatePublicTextDraft";
 
 type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
   canEdit: boolean;
   showInternalPrice: boolean;
+  showPrivateNotes: boolean;
   readOnlyPrivateHouseBalcony?: number | null;
   onDealTypeChange: (value: DealType) => void;
   onHotelScopeChange: (raw: string) => void;
@@ -73,36 +77,31 @@ type PropertyDetailsEditableSectionsProps = {
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
   setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
   setCommercial: (patch: PropertyCommercialUpdate) => void;
+  ourSiteId?: string | null;
 };
 
 function getEditableAreaSquareMeters(values: PropertyFormValues): number | null {
-  if (values.propertyType === "APARTMENT") {
-    return values.apartment?.totalArea ?? null;
-  }
-  if (
-    values.propertyType === "PRIVATE_HOUSE" ||
-    values.propertyType === "COTTAGE" ||
-    values.propertyType === "HOTEL"
-  ) {
-    const houseArea = values.privateHouse?.houseArea;
-    const yardArea = values.privateHouse?.yardArea;
-    if (houseArea === undefined || yardArea === undefined) return null;
-    return houseArea + yardArea;
-  }
-  if (values.propertyType === "COMMERCIAL") {
-    return values.commercial?.area ?? null;
-  }
-  if (values.propertyType === "LAND_PLOT") {
-    return values.landPlot?.landArea ?? null;
-  }
-
-  return null;
+  return canonicalPropertyArea({
+    apartment: values.apartment
+      ? { totalArea: values.apartment.totalArea ?? null }
+      : null,
+    privateHouse: values.privateHouse
+      ? { totalArea: values.privateHouse.totalArea ?? null }
+      : null,
+    landPlot: values.landPlot
+      ? { landArea: values.landPlot.landArea ?? null }
+      : null,
+    commercial: values.commercial
+      ? { area: values.commercial.area ?? null }
+      : null,
+  });
 }
 
 export function PropertyDetailsEditableSections({
   values,
   canEdit,
   showInternalPrice,
+  showPrivateNotes,
   readOnlyPrivateHouseBalcony,
   onDealTypeChange,
   onHotelScopeChange,
@@ -115,6 +114,7 @@ export function PropertyDetailsEditableSections({
   setPrivateHouse,
   setLandPlot,
   setCommercial,
+  ourSiteId = null,
 }: PropertyDetailsEditableSectionsProps) {
   const { districts } = useDistricts();
   const manualDistrictGroupRef = useRef(false);
@@ -166,6 +166,7 @@ export function PropertyDetailsEditableSections({
       <PropertyListingFieldsView
         values={values}
         showInternalPrice={showInternalPrice}
+        showPrivateNotes={showPrivateNotes}
         readOnlyPrivateHouseBalcony={readOnlyPrivateHouseBalcony}
       />
     );
@@ -306,16 +307,17 @@ export function PropertyDetailsEditableSections({
         />
       </div>
 
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-foreground">კომენტარი</label>
-        <textarea
-          value={values.publicComment}
-          onChange={(event) => onCommentChange("publicComment", event.target.value)}
-          className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
-          rows={4}
-        />
-      </div>
-      {showInternalPrice ? (
+      <PublicCommentGenerateField
+        id="publicComment"
+        value={values.publicComment}
+        onChange={(nextValue) => onCommentChange("publicComment", nextValue)}
+        buildDraft={() =>
+          buildGeneratePublicTextDraftFromEditForm(values, ourSiteId)
+        }
+        textareaClassName="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
+        disabled={!canEdit}
+      />
+      {showPrivateNotes ? (
         <>
           <HistoryNoteField
             id="privateComment"

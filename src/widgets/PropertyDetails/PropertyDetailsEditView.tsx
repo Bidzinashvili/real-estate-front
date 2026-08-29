@@ -7,9 +7,13 @@ import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { useUpdateProperty } from "@/features/properties/useUpdateProperty";
 import { PropertyDetailsCard } from "@/widgets/PropertyDetails/PropertyDetailsCard";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { useEffect, useMemo, useState } from "react";
 import type { Property, PropertyUpdatePayload } from "@/features/properties/types";
-import { canManageProperty, canViewPrivateListingFields } from "@/features/properties/listingVisibility";
+import { canManageProperty } from "@/features/properties/listingVisibility";
+import { markPropertyOpened } from "@/features/properties/api";
+import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
+import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
 import { refetchUpdatedProperty } from "@/features/properties/saveFlow";
 
 type PropertyDetailsEditViewProps = {
@@ -19,7 +23,8 @@ type PropertyDetailsEditViewProps = {
 export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
-  const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
+  const { property, isLoading, error, refetch, applyNoteLastOpenedAt } =
+    usePropertyDetails(propertyId);
   const { update, isLoading: isSaving, error: saveError } = useUpdateProperty();
   const [latestProperty, setLatestProperty] = useState<Property | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -37,10 +42,13 @@ export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewP
     return canManageProperty(user, activeProperty);
   }, [activeProperty, user]);
 
-  const canViewPrivateFields = useMemo(() => {
-    if (!user || !activeProperty) return false;
-    return canViewPrivateListingFields(user, activeProperty);
-  }, [activeProperty, user]);
+  useMarkNoteOpened({
+    kind: "property",
+    recordId: activeProperty?.id ?? null,
+    canMark: canMarkNoteOpened(activeProperty, user),
+    markOpened: markPropertyOpened,
+    onOpened: applyNoteLastOpenedAt,
+  });
 
   useEffect(() => {
     if (!activeProperty || !user) return;
@@ -130,13 +138,13 @@ export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewP
             <Eye className="h-4 w-4" aria-hidden="true" />
             ობიექტის ნახვა
           </Link>
+          <AdminModeToggle />
         </div>
 
         <PropertyDetailsCard
           property={activeProperty}
           presentation="edit"
           canEdit={canEdit}
-          canViewPrivateFields={canViewPrivateFields}
           isSaving={isSaving}
           saveError={saveError}
           onSubmit={handleSubmit}

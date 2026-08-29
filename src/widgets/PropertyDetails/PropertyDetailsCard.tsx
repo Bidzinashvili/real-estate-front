@@ -23,7 +23,12 @@ import {
 } from "@/features/properties/types";
 import { applyLinkedPropertyPriceChange } from "@/features/properties/linkedPropertyPrices";
 import { getApiBaseUrl } from "@/shared/lib/auth";
-import { requiredFieldMessage, wholeNumberAtLeastOneMessage } from "@/shared/i18n/ui";
+import { requiredFieldMessage, wholeNumberAtLeastOneMessage, greaterThanZeroMessage } from "@/shared/i18n/ui";
+import {
+  CANONICAL_AREA_MISSING_LABEL,
+  hydratePositiveArea,
+  nextPrivateHouseTotalArea,
+} from "@/features/properties/propertyArea";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
 import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
@@ -39,10 +44,13 @@ import {
   isOwnerAssignmentDirty,
 } from "@/features/propertyOwners/ownerContactDrafts";
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
+import {
+  hasAuthorizedInternalPrice,
+  hasAuthorizedPrivateNotes,
+} from "@/features/properties/authorizedPropertyFields";
 
 type PropertyDetailsCardBaseProps = {
   property: Property;
-  canViewPrivateFields: boolean;
 };
 
 type PropertyDetailsCardEditProps = PropertyDetailsCardBaseProps & {
@@ -87,6 +95,19 @@ function getMinRentalPeriodErrorMessage(months: number | undefined): string | nu
   return null;
 }
 
+function getCanonicalAreaErrorMessage(
+  area: number | undefined,
+  label: string,
+): string | null {
+  if (area === undefined || Number.isNaN(area)) {
+    return `${CANONICAL_AREA_MISSING_LABEL}. ${greaterThanZeroMessage(label)}`;
+  }
+  if (area <= 0) {
+    return greaterThanZeroMessage(label);
+  }
+  return null;
+}
+
 function getTotalFloorsErrorMessage(
   totalFloors: number | undefined,
   label: string,
@@ -102,12 +123,14 @@ function getTotalFloorsErrorMessage(
 }
 
 export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
-  const { property, canViewPrivateFields, presentation } = props;
+  const { property, presentation } = props;
   const canEdit = presentation === "edit" ? props.canEdit : false;
   const isSaving = presentation === "edit" ? props.isSaving : false;
   const saveError = presentation === "edit" ? props.saveError : null;
   const onSubmit = presentation === "edit" ? props.onSubmit : undefined;
   const onImagesChanged = presentation === "edit" ? props.onImagesChanged : undefined;
+  const showInternalPrice = hasAuthorizedInternalPrice(property);
+  const showPrivateNotes = hasAuthorizedPrivateNotes(property);
 
   const apiBaseUrl = getApiBaseUrl();
   const initialValues = useMemo<PropertyFormValues>(() => {
@@ -131,7 +154,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       })),
       apartment: property.apartment
         ? {
-            totalArea: property.apartment.totalArea,
+            totalArea: hydratePositiveArea(property.apartment.totalArea),
             rooms: property.apartment.rooms,
             bedrooms: property.apartment.bedrooms,
             totalFloors: property.apartment.totalFloors,
@@ -157,8 +180,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         : null,
       privateHouse: property.privateHouse
         ? {
-            houseArea: property.privateHouse.houseArea,
+            houseArea: hydratePositiveArea(property.privateHouse.houseArea),
             yardArea: property.privateHouse.yardArea,
+            totalArea: hydratePositiveArea(property.privateHouse.totalArea),
             balconyArea: property.privateHouse.balconyArea,
             parkingSpaces: property.privateHouse.parkingSpaces,
             needsVerification: property.privateHouse.needsVerification,
@@ -171,7 +195,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         : null,
       landPlot: property.landPlot
         ? {
-            landArea: property.landPlot.landArea,
+            landArea: hydratePositiveArea(property.landPlot.landArea),
             landCategory: property.landPlot.landCategory,
             landUsage: property.landPlot.landUsage,
             forInvestment: property.landPlot.forInvestment,
@@ -181,7 +205,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         : null,
       commercial: property.commercial
         ? {
-            area: property.commercial.area,
+            area: hydratePositiveArea(property.commercial.area),
             totalFloors: property.commercial.totalFloors ?? undefined,
             ceilingHeight: property.commercial.ceilingHeight ?? undefined,
             parkingSpaces: property.commercial.parkingSpaces,
@@ -278,7 +302,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     value: number | undefined,
   ) => {
     setValues((prev) => {
-      if (field === "pricePublic" && !canViewPrivateFields) {
+      if (field === "pricePublic" && !showInternalPrice) {
         return { ...prev, pricePublic: value };
       }
 
@@ -325,6 +349,14 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     }
 
     if (values.apartment) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.apartment.totalArea,
+        "ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
       const message = getTotalFloorsErrorMessage(
         values.apartment.totalFloors,
         "ბინის სართულიანობა",
@@ -335,7 +367,37 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       }
     }
 
+    if (values.privateHouse) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.privateHouse.totalArea,
+        "საერთო ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
+    }
+
+    if (values.landPlot) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.landPlot.landArea,
+        "მიწის ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
+    }
+
     if (values.commercial) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.commercial.area,
+        "ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
       const message = getTotalFloorsErrorMessage(
         values.commercial.totalFloors,
         "კომერციული სართულიანობა",
@@ -477,7 +539,8 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           <PropertyDetailsEditableSections
             values={values}
             canEdit={false}
-            showInternalPrice={canViewPrivateFields}
+            showInternalPrice={showInternalPrice}
+            showPrivateNotes={showPrivateNotes}
             readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={() => {}}
@@ -494,7 +557,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
           <PropertyDetailsReadOnlySections
             property={property}
-            showPrivateNotes={canViewPrivateFields}
+            showPrivateNotes={showPrivateNotes}
           />
         </div>
       ) : (
@@ -507,7 +570,8 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           <PropertyDetailsEditableSections
             values={values}
             canEdit={canEdit}
-            showInternalPrice={canViewPrivateFields}
+            showInternalPrice={showInternalPrice}
+            showPrivateNotes={showPrivateNotes}
             readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={(raw) => {
@@ -532,6 +596,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}
+            ourSiteId={property.ourSiteId}
           />
 
           <PropertyOwnerPickerSection
@@ -542,7 +607,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
           <PropertyDetailsReadOnlySections
             property={property}
-            showPrivateNotes={canViewPrivateFields}
+            showPrivateNotes={showPrivateNotes}
             hideOwnerFields
           />
 
@@ -579,11 +644,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         <p className="mt-1 text-sm text-muted-foreground">
           ნახეთ განცხადების ინფორმაცია. დასაშვები ველების შესაცვლელად გამოიყენეთ რედაქტირება.
         </p>
-        {!canViewPrivateFields && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            შენიშვნები, შიდა ფასი და ზოგი სამუშაო ველი დამალულია, რადგან თქვენ არ ხართ ამ განცხადების აგენტი. ადმინისტრატორებს სრული ჩანაწერი ყოველთვის ჩანს.
-          </p>
-        )}
         {detailsBody}
       </div>
     );
@@ -618,11 +678,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           </Link>
         </div>
       </div>
-      {!canViewPrivateFields && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          შენიშვნები, შიდა ფასი და ზოგი სამუშაო ველი დამალულია, რადგან თქვენ არ ხართ ამ განცხადების აგენტი. ადმინისტრატორებს სრული ჩანაწერი ყოველთვის ჩანს.
-        </p>
-      )}
       {detailsBody}
     </div>
   );

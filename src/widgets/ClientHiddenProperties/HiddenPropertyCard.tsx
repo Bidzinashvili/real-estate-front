@@ -52,7 +52,7 @@ export function HiddenPropertyCard({
             <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-semibold text-white">
               {formatDealTypeLabel(item.dealType)}
             </span>
-            <LifecycleStatusBadge kind="property" status={item.status} size="sm" />
+            <LifecycleStatusBadge kind="property" status={item.status} size="sm" isArchived={isArchived} />
             {isArchived ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                 <Archive className="h-3 w-3" aria-hidden="true" />

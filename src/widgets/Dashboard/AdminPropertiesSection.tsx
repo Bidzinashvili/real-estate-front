@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import type { Property } from "@/features/properties/types";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 
@@ -73,9 +74,10 @@ export function AdminPropertiesSection({
                           status={property.status}
                           outcomeSource={property.outcomeSource}
                           verificationReason={property.verificationReason}
+                          isArchived={isPropertyArchived(property)}
                           size="sm"
                         />
-                        <HideFromOthersBadge isHidden={property.hideFromOthers} />
+                        <HideFromOthersBadge isHidden={property.hideFromOthers === true} />
                       </div>
                     </td>
                   <td className="hidden px-4 py-3 text-foreground md:table-cell">
@@ -88,7 +90,7 @@ export function AdminPropertiesSection({
                     {property.pricePublic.toLocaleString()}
                   </td>
                   <td className="hidden px-4 py-3 text-foreground lg:table-cell">
-                    {property.propertyOwner?.name ?? property.ownerName}
+                    {property.propertyOwner?.name ?? property.ownerName ?? ""}
                   </td>
                   <td className="px-4 py-3 text-right text-foreground">
                     {new Date(property.createdAt).toLocaleDateString()}

@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MoreVertical } from "lucide-react";
-import { verifyProperty, archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
+import { archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { DELETE_COPY } from "@/features/lifecycle/deleteCopy";
 import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { PROPERTY_VERIFICATION_COPY } from "@/features/lifecycle/propertyVerification";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
 import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
 import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
@@ -31,6 +32,9 @@ type PropertyListingCardManagerProps = {
   onToggleHideFromOthers?: (nextHidden: boolean) => void;
   isSavingHideFromOthers?: boolean;
   hideFromOthersError?: string | null;
+  canVerify?: boolean;
+  isVerifying?: boolean;
+  onVerify?: () => void;
 };
 
 export function PropertyListingCardManager({
@@ -46,13 +50,14 @@ export function PropertyListingCardManager({
   onToggleHideFromOthers,
   isSavingHideFromOthers = false,
   hideFromOthersError = null,
+  canVerify = false,
+  isVerifying = false,
+  onVerify,
 }: PropertyListingCardManagerProps) {
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verifyError, setVerifyError] = useState<string | null>(null);
   const archiveAction = useArchiveAction({
     canManage: canChangeStatus,
     isArchived: isPropertyArchived(property),
@@ -135,7 +140,7 @@ export function PropertyListingCardManager({
                 სტატუსის შეცვლა
               </button>
             ) : null}
-            {canChangeStatus ? (
+            {canVerify && onVerify ? (
               <button
                 type="button"
                 role="menuitem"
@@ -146,25 +151,12 @@ export function PropertyListingCardManager({
                   event.preventDefault();
                   event.stopPropagation();
                   setIsActionMenuOpen(false);
-                  setVerifyError(null);
-                  setIsVerifying(true);
-                  void verifyProperty(property.id)
-                    .then(() => {
-                      onListingChanged();
-                    })
-                    .catch((error: unknown) => {
-                      const message =
-                        error instanceof Error
-                          ? error.message
-                          : "განცხადების გადამოწმება ვერ მოხერხდა.";
-                      setVerifyError(message);
-                    })
-                    .finally(() => {
-                      setIsVerifying(false);
-                    });
+                  onVerify();
                 }}
               >
-                {isVerifying ? "მოწმდება…" : "გადავამოწმე"}
+                {isVerifying
+                  ? PROPERTY_VERIFICATION_COPY.verifying
+                  : PROPERTY_VERIFICATION_COPY.verifyTodayCombined}
               </button>
             ) : null}
             {canSetReminders ? (
@@ -232,7 +224,9 @@ export function PropertyListingCardManager({
                 {DELETE_COPY.actionLabel}
               </button>
             ) : null}
-            {canToggleHideFromOthers && onToggleHideFromOthers ? (
+            {canToggleHideFromOthers &&
+            onToggleHideFromOthers &&
+            property.hideFromOthers !== undefined ? (
               <HideFromOthersToggle
                 isHidden={property.hideFromOthers}
                 disabled={isSavingHideFromOthers}
@@ -261,11 +255,6 @@ export function PropertyListingCardManager({
               </div>
             ) : null}
           </div>
-        ) : null}
-        {verifyError ? (
-          <p className="mt-1 max-w-[14rem] rounded-lg bg-card px-2 py-1 text-xs text-destructive shadow-sm">
-            {verifyError}
-          </p>
         ) : null}
         {colorError ? (
           <p className="mt-1 max-w-[14rem] rounded-lg bg-card px-2 py-1 text-xs text-destructive shadow-sm">

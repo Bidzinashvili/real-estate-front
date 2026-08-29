@@ -5,8 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
-import { canManageProperty, canViewPrivateListingFields } from "@/features/properties/listingVisibility";
-import { updateProperty, verifyProperty, archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
+import { canManageProperty } from "@/features/properties/listingVisibility";
+import { markPropertyOpened, updateProperty, archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
+import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
+import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
 import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { calculateMatchScore } from "@/features/properties/matchScore";
@@ -14,6 +16,7 @@ import { PropertyDetailsViewContent } from "@/widgets/PropertyDetails/PropertyDe
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { useVerifyProperty } from "@/features/lifecycle/useVerifyProperty";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
 import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
 import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
@@ -21,6 +24,7 @@ import { DeleteConfirmDialog } from "@/widgets/Lifecycle/DeleteConfirmDialog";
 import type { RecordColor } from "@/features/recordColor/recordColor";
 import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColor";
 import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
+import { useUpdateReadyToUpload } from "@/features/readyToUpload/useUpdateReadyToUpload";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
@@ -37,12 +41,18 @@ export function PropertyDetailsReadOnlyBody({
 }: PropertyDetailsReadOnlyBodyProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
-  const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
+  const { property, isLoading, error, refetch, applyNoteLastOpenedAt } =
+    usePropertyDetails(propertyId);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
   const [isSavingReminder, setIsSavingReminder] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
+  const {
+    verifyListing,
+    isVerifying,
+    error: verifyError,
+    successMessage: verifySuccessMessage,
+  } = useVerifyProperty();
   const { saveColor, isSaving: isSavingColor, error: colorError } =
     useUpdateRecordColor();
   const {
@@ -50,15 +60,23 @@ export function PropertyDetailsReadOnlyBody({
     isSaving: isSavingHideFromOthers,
     error: hideFromOthersError,
   } = useUpdateHideFromOthers();
+  const {
+    saveReadyToUpload,
+    isSaving: isSavingReadyToUpload,
+    error: readyToUploadError,
+  } = useUpdateReadyToUpload();
+
+  useMarkNoteOpened({
+    kind: "property",
+    recordId: property?.id ?? null,
+    canMark: canMarkNoteOpened(property, user),
+    markOpened: markPropertyOpened,
+    onOpened: applyNoteLastOpenedAt,
+  });
 
   const canEdit = useMemo(() => {
     if (!user || !property) return false;
     return canManageProperty(user, property);
-  }, [property, user]);
-
-  const canViewPrivateFields = useMemo(() => {
-    if (!user || !property) return false;
-    return canViewPrivateListingFields(user, property);
   }, [property, user]);
 
   const archiveAction = useArchiveAction({
@@ -212,6 +230,18 @@ export function PropertyDetailsReadOnlyBody({
     }
   }
 
+  async function handleToggleReadyToUpload(nextReady: boolean) {
+    if (!property || !canEdit) {
+      return;
+    }
+    try {
+      await saveReadyToUpload(property.id, nextReady);
+      await refetch();
+    } catch {
+      return;
+    }
+  }
+
   async function handleSaveReminder(payload: ReminderConfigPayload) {
     if (!property || !canEdit) {
       return;
@@ -235,17 +265,9 @@ export function PropertyDetailsReadOnlyBody({
     if (!property || !canEdit) {
       return;
     }
-    setIsVerifying(true);
-    setReminderError(null);
-    try {
-      await verifyProperty(property.id);
+    const didVerify = await verifyListing(property.id);
+    if (didVerify) {
       await refetch();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "განცხადების გადამოწმება ვერ მოხერხდა.";
-      setReminderError(message);
-    } finally {
-      setIsVerifying(false);
     }
   }
 
@@ -294,7 +316,6 @@ export function PropertyDetailsReadOnlyBody({
       <PropertyDetailsViewContent
         property={property}
         canEdit={canEdit}
-        canViewPrivateFields={canViewPrivateFields}
         layout={layout}
         isArchiving={archiveAction.isPending}
         archiveError={archiveAction.error}
@@ -315,6 +336,8 @@ export function PropertyDetailsReadOnlyBody({
         isSavingReminder={isSavingReminder}
         isVerifying={isVerifying}
         reminderError={reminderError}
+        verifyError={verifyError}
+        verifySuccessMessage={verifySuccessMessage}
         isSavingColor={isSavingColor}
         colorError={colorError}
         onSelectColor={(nextColor) => {
@@ -324,6 +347,11 @@ export function PropertyDetailsReadOnlyBody({
         hideFromOthersError={hideFromOthersError}
         onToggleHideFromOthers={(nextHidden) => {
           void handleToggleHideFromOthers(nextHidden);
+        }}
+        isSavingReadyToUpload={isSavingReadyToUpload}
+        readyToUploadError={readyToUploadError}
+        onToggleReadyToUpload={(nextReady) => {
+          void handleToggleReadyToUpload(nextReady);
         }}
       />
       <PropertyListingRemindersModal

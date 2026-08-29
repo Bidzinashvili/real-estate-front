@@ -30,7 +30,7 @@ export type PublicApartment = {
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
   project: string | null;
-  buildingNumber: string | null;
+  buildingNumber?: string | null;
 };
 
 export type PublicPrivateHouse = {

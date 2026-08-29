@@ -28,6 +28,7 @@ export {
   atLeastOneMessage,
   atLeastOneMonthMessage,
   atLeastZeroMessage,
+  greaterThanZeroMessage,
   formatCriteriaMatchSummary,
   formatListingsPerPage,
   formatPageOf,

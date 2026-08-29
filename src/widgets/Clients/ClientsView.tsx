@@ -23,7 +23,7 @@ import {
   buildStatusFilterParam,
 } from "@/features/clients/getClientsQuery";
 import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
-import { resolveCreatedDateQuery } from "@/features/databaseList/createdDateRange";
+import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
 import {
   viewerCanManageRecord,
   viewerOwnsRecord,
@@ -35,18 +35,26 @@ import { DatabaseListSearchInput } from "@/widgets/DatabaseList/DatabaseListSear
 import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
 import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
 import { AdvancedSearchSheet } from "@/widgets/DatabaseList/AdvancedSearchSheet";
+import { NeverOpenedFilter } from "@/widgets/DatabaseList/NeverOpenedFilter";
 import { CLIENT_LIST_DEFAULT_LIMIT } from "@/features/clients/clientListUrlParams";
+import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
 
 const SORT_OPTIONS: { value: ClientSortBy; label: string }[] = [
   { value: "createdAt", label: "ატვირთვის თარიღი" },
   { value: "updatedAt", label: "განახლების თარიღი" },
   { value: "name", label: "სახელი" },
+  { value: "noteLastOpenedAt", label: NOTE_LAST_OPENED_COPY.sortBy },
 ];
 
 const ORDER_OPTIONS: { value: ClientSortOrder; label: string }[] = [
   { value: "desc", label: "კლებადი" },
   { value: "asc", label: "ზრდადი" },
+];
+
+const LAST_OPENED_ORDER_OPTIONS: { value: ClientSortOrder; label: string }[] = [
+  { value: "desc", label: NOTE_LAST_OPENED_COPY.sortDesc },
+  { value: "asc", label: NOTE_LAST_OPENED_COPY.sortAsc },
 ];
 
 const DEAL_TYPE_OPTIONS = [
@@ -89,6 +97,8 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
     setDealType,
     setStatus,
     setCreatedDateRange,
+    setLastOpenedDateRange,
+    setNeverOpened,
     setSortBy,
     setOrder,
     setPage,
@@ -100,6 +110,10 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   } = filters;
 
   const createdDates = resolveCreatedDateQuery(state.createdFrom, state.createdTo);
+  const lastOpenedDates = resolveLastOpenedDateQuery(
+    state.lastOpenedFrom,
+    state.lastOpenedTo,
+  );
 
   const { clients, total, activeCount, isLoading, error, refetch } =
     useClientsList({
@@ -111,6 +125,9 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
       status: buildStatusFilterParam(state.status),
       createdFrom: createdDates.createdFrom,
       createdTo: createdDates.createdTo,
+      lastOpenedFrom: state.neverOpened ? undefined : lastOpenedDates.lastOpenedFrom,
+      lastOpenedTo: state.neverOpened ? undefined : lastOpenedDates.lastOpenedTo,
+      neverOpened: state.neverOpened ? true : undefined,
       sortBy: state.sortBy,
       order: state.order,
       page: state.page,
@@ -209,7 +226,11 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
             aria-label="სორტირების მიმართულება"
             value={state.order}
             onChange={handleOrderChange}
-            options={ORDER_OPTIONS}
+            options={
+              state.sortBy === "noteLastOpenedAt"
+                ? LAST_OPENED_ORDER_OPTIONS
+                : ORDER_OPTIONS
+            }
           />
         </div>
       </div>
@@ -308,6 +329,24 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
               ))}
             </select>
           </NativeSelectSurface>
+          <CreatedAtDateRangeFilter
+            createdFrom={state.lastOpenedFrom}
+            createdTo={state.lastOpenedTo}
+            disabled={state.neverOpened}
+            label={NOTE_LAST_OPENED_COPY.filterLabel}
+            fromAriaLabel={NOTE_LAST_OPENED_COPY.filterFromAria}
+            toAriaLabel={NOTE_LAST_OPENED_COPY.filterToAria}
+            onChange={({ createdFrom, createdTo }) =>
+              setLastOpenedDateRange({
+                lastOpenedFrom: createdFrom,
+                lastOpenedTo: createdTo,
+              })
+            }
+          />
+          <NeverOpenedFilter
+            checked={state.neverOpened}
+            onChange={setNeverOpened}
+          />
         </div>
       </AdvancedSearchSheet>
 

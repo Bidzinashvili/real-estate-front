@@ -15,6 +15,9 @@ import {
   PROPERTY_CATALOG_SELECT_CLASS as SELECT_CLASS,
 } from "@/widgets/Properties/propertyCatalogFilterSharedStyles";
 import { PropertyCatalogMoreFiltersDetails } from "@/widgets/Properties/propertyCatalogMoreFiltersDetails";
+import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
+import { NeverOpenedFilter } from "@/widgets/DatabaseList/NeverOpenedFilter";
+import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 
 function parseLifecycleStatusFilterValue(raw: string): PropertyStatus | "" {
   if (raw === "") return "";
@@ -104,6 +107,25 @@ export function PropertyCatalogFilterFields({
       </div>
 
       <PropertyCatalogMoreFiltersDetails catalog={catalog} />
+
+      <CreatedAtDateRangeFilter
+        createdFrom={state.lastOpenedFrom}
+        createdTo={state.lastOpenedTo}
+        disabled={state.neverOpened}
+        label={NOTE_LAST_OPENED_COPY.filterLabel}
+        fromAriaLabel={NOTE_LAST_OPENED_COPY.filterFromAria}
+        toAriaLabel={NOTE_LAST_OPENED_COPY.filterToAria}
+        onChange={({ createdFrom, createdTo }) =>
+          catalog.setLastOpenedDateRange({
+            lastOpenedFrom: createdFrom,
+            lastOpenedTo: createdTo,
+          })
+        }
+      />
+      <NeverOpenedFilter
+        checked={state.neverOpened}
+        onChange={catalog.setNeverOpened}
+      />
 
       <div>
         <span className={LABEL_CLASS}>გვერდზე</span>

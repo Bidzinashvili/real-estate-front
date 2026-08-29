@@ -13,6 +13,7 @@ import {
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import { formatPublicPropertyTitle } from "@/features/propertyShare/formatPublicPropertyTitle";
 import type { PublicProperty } from "@/features/propertyShare/publicPropertyTypes";
+import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import { formatGelAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { PropertyViewGallery } from "@/widgets/PropertyDetails/PropertyViewGallery";
 import { PublicPropertyCharacteristics } from "@/widgets/PublicProperty/PublicPropertyCharacteristics";
@@ -22,13 +23,7 @@ type PublicPropertyViewProps = {
 };
 
 function publicAreaSquareMeters(property: PublicProperty): number | null {
-  return (
-    property.apartment?.totalArea ??
-    property.privateHouse?.totalArea ??
-    property.landPlot?.landArea ??
-    property.commercial?.area ??
-    null
-  );
+  return canonicalPropertyArea(property);
 }
 
 function publicFullAddress(property: PublicProperty): string {

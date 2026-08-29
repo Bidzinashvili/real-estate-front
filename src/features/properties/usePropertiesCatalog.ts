@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
+import { noteOpenedEventName } from "@/features/noteLastOpened/noteOpenedEvent";
 import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import { getProperties } from "@/features/properties/api";
@@ -31,6 +32,7 @@ import {
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { Property, PropertyType } from "@/features/properties/types";
 import { useUserStore } from "@/shared/stores";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 import { parseDatabaseListScope } from "@/features/databaseList/databaseListScope";
 
@@ -178,6 +180,12 @@ export type UsePropertiesCatalogResult = {
   setCreatedFrom: (value: string) => void;
   setCreatedTo: (value: string) => void;
   setCreatedDateRange: (value: { createdFrom: string; createdTo: string }) => void;
+  setLastOpenedDateRange: (value: {
+    lastOpenedFrom: string;
+    lastOpenedTo: string;
+  }) => void;
+  setNeverOpened: (value: boolean) => void;
+  setReadyToUpload: (value: boolean) => void;
   setShowMyProperties: (value: boolean) => void;
   setListScope: (value: DatabaseListScope) => void;
   setShowArchived: (value: boolean) => void;
@@ -201,6 +209,7 @@ export function usePropertiesCatalog(
   const searchParams = useSearchParams();
   const currentUser = useUserStore((userStore) => userStore.user);
   const isUserFetchLoading = useUserStore((userStore) => userStore.isLoading);
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
 
   const [state, setState] = useState<PropertyCatalogUrlState>(
     () => DEFAULT_CATALOG_URL_STATE,
@@ -433,7 +442,7 @@ export function usePropertiesCatalog(
       effectCommitted = false;
       controller.abort();
     };
-  }, [apiQuery, canFetchCatalog, refetchTick, state.page]);
+  }, [apiQuery, canFetchCatalog, isAdminMode, refetchTick, state.page]);
 
   const refetch = useCallback(() => {
     setRefetchTick((previousTick) => previousTick + 1);
@@ -446,9 +455,11 @@ export function usePropertiesCatalog(
     };
     window.addEventListener(recordsChangedEventName, handleRecordsChanged);
     window.addEventListener(remindersChangedEventName, handleRecordsChanged);
+    window.addEventListener(noteOpenedEventName, handleRecordsChanged);
     return () => {
       window.removeEventListener(recordsChangedEventName, handleRecordsChanged);
       window.removeEventListener(remindersChangedEventName, handleRecordsChanged);
+      window.removeEventListener(noteOpenedEventName, handleRecordsChanged);
     };
   }, []);
 

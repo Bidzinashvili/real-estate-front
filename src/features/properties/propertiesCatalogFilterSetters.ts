@@ -32,6 +32,9 @@ const ADVANCED_FILTER_DEFAULTS: Pick<
   | "houseArea"
   | "landArea"
   | "commercialArea"
+  | "lastOpenedFrom"
+  | "lastOpenedTo"
+  | "neverOpened"
 > = {
   lifecycleStatus: DEFAULT_CATALOG_URL_STATE.lifecycleStatus,
   city: DEFAULT_CATALOG_URL_STATE.city,
@@ -50,6 +53,9 @@ const ADVANCED_FILTER_DEFAULTS: Pick<
   houseArea: DEFAULT_CATALOG_URL_STATE.houseArea,
   landArea: DEFAULT_CATALOG_URL_STATE.landArea,
   commercialArea: DEFAULT_CATALOG_URL_STATE.commercialArea,
+  lastOpenedFrom: DEFAULT_CATALOG_URL_STATE.lastOpenedFrom,
+  lastOpenedTo: DEFAULT_CATALOG_URL_STATE.lastOpenedTo,
+  neverOpened: DEFAULT_CATALOG_URL_STATE.neverOpened,
 };
 
 export function createPropertiesCatalogFilterSetters(args: {
@@ -91,6 +97,21 @@ export function createPropertiesCatalogFilterSetters(args: {
     setCreatedTo: (value: string) => bumpPage({ createdTo: value }),
     setCreatedDateRange: (value: { createdFrom: string; createdTo: string }) =>
       bumpPage(value),
+    setLastOpenedDateRange: (value: {
+      lastOpenedFrom: string;
+      lastOpenedTo: string;
+    }) =>
+      bumpPage({
+        ...value,
+        neverOpened: false,
+      }),
+    setNeverOpened: (value: boolean) =>
+      bumpPage(
+        value
+          ? { neverOpened: true, lastOpenedFrom: "", lastOpenedTo: "" }
+          : { neverOpened: false },
+      ),
+    setReadyToUpload: (value: boolean) => bumpPage({ readyToUpload: value }),
     setShowMyProperties: (value: boolean) =>
       bumpPage({ showMyProperties: value }),
     setListScope: (value: DatabaseListScope) => bumpPage({ listScope: value }),
@@ -139,6 +160,10 @@ export function countAdvancedCatalogFilters(
   if (state.houseArea.trim()) advancedFilterCount += 1;
   if (state.landArea.trim()) advancedFilterCount += 1;
   if (state.commercialArea.trim()) advancedFilterCount += 1;
+  if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) {
+    advancedFilterCount += 1;
+  }
+  if (state.neverOpened) advancedFilterCount += 1;
   return advancedFilterCount;
 }
 
@@ -151,6 +176,9 @@ export function hasClearableCatalogFilters(
   if (state.district.trim()) return true;
   if (state.minPrice.trim() || state.maxPrice.trim()) return true;
   if (state.createdFrom.trim() || state.createdTo.trim()) return true;
+  if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) return true;
+  if (state.neverOpened) return true;
+  if (state.readyToUpload) return true;
   return countAdvancedCatalogFilters(state) > 0;
 }
 

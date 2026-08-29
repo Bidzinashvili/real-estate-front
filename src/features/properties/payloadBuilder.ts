@@ -17,7 +17,7 @@ import type {
 } from "@/features/properties/types";
 
 export type PropertyFormLandPlot = {
-  landArea: number;
+  landArea?: number;
   forInvestment: boolean;
   canBeDivided: boolean;
   landCategory: LandCategory | "";

@@ -15,6 +15,7 @@ import {
 import { DEAL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { isPropertyStatus } from "@/features/properties/propertyStatus";
+import { formatAreaSquareMeters } from "@/features/properties/propertyArea";
 
 type PropertyMatchCardProps = {
   match: ScoredPropertyMatch;
@@ -53,6 +54,15 @@ export function PropertyMatchCard({
   const listing = match.property;
   const apartment = listing.apartment;
   const imageUrl = getMatchImageUrl(listing.images);
+  const apartmentSummary = apartment
+    ? [
+        apartment.rooms != null ? `${apartment.rooms} ოთახი` : null,
+        formatAreaSquareMeters(apartment.totalArea),
+        apartment.floor != null ? `სართული ${apartment.floor}` : null,
+      ]
+        .filter((part): part is string => part !== null && part !== "")
+        .join(" · ")
+    : "";
 
   return (
     <article className="overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-border">
@@ -70,6 +80,9 @@ export function PropertyMatchCard({
               {listing.address}
               {listing.city ? `, ${listing.city}` : ""}
             </p>
+            {listing.ourSiteId?.trim() ? (
+              <p className="text-xs text-muted-foreground">ID: {listing.ourSiteId.trim()}</p>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               {listing.district} · {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType)}
             </p>
@@ -86,15 +99,17 @@ export function PropertyMatchCard({
             criteria={match.criteria}
           />
         </div>
-        {apartment ? (
-          <p className="text-xs text-muted-foreground">
-            {apartment.rooms ?? "—"} ოთახი · {apartment.totalArea ?? "—"} მ² · სართული{" "}
-            {apartment.floor ?? "—"}
-          </p>
+        {apartmentSummary ? (
+          <p className="text-xs text-muted-foreground">{apartmentSummary}</p>
         ) : null}
         <p className="text-sm font-medium text-foreground">
           {listing.pricePublic.toLocaleString()}
         </p>
+        {listing.publicComment?.trim() ? (
+          <p className="line-clamp-3 text-xs text-muted-foreground">
+            {listing.publicComment.trim()}
+          </p>
+        ) : null}
         <MatchingCriteriaList criteria={match.criteria} />
         <div className="flex flex-wrap items-center gap-2">
           <Link

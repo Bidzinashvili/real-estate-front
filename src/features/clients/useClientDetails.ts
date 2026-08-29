@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getClientById } from "@/features/clients/api";
 import type { ClientDetail } from "@/features/clients/types";
 
@@ -9,12 +9,22 @@ type UseClientDetailsResult = {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  applyNoteLastOpenedAt: (openedAt: string | null) => void;
 };
 
 export function useClientDetails(id: string): UseClientDetailsResult {
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const applyNoteLastOpenedAt = useCallback((openedAt: string | null) => {
+    setClient((previous) => {
+      if (!previous || previous.noteLastOpenedAt === undefined) {
+        return previous;
+      }
+      return { ...previous, noteLastOpenedAt: openedAt };
+    });
+  }, []);
 
   const refetch = async () => {
     if (!id) return;
@@ -67,5 +77,5 @@ export function useClientDetails(id: string): UseClientDetailsResult {
     };
   }, [id]);
 
-  return { client, isLoading, error, refetch };
+  return { client, isLoading, error, refetch, applyNoteLastOpenedAt };
 }

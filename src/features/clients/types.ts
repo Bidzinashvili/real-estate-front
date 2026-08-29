@@ -126,6 +126,7 @@ export type Client = EntityVerificationFields & {
   archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+  noteLastOpenedAt?: ISODateString | null;
   deletedAt: ISODateString | null;
   color?: RecordColor;
   requirements: ClientRequirements | null;

@@ -64,6 +64,22 @@ export function resolveCreatedDateQuery(
   };
 }
 
+export function resolveLastOpenedDateQuery(
+  lastOpenedFromInput: string,
+  lastOpenedToInput: string,
+): {
+  lastOpenedFrom?: string;
+  lastOpenedTo?: string;
+  error: string | null;
+} {
+  const resolved = resolveCreatedDateQuery(lastOpenedFromInput, lastOpenedToInput);
+  return {
+    lastOpenedFrom: resolved.createdFrom,
+    lastOpenedTo: resolved.createdTo,
+    error: resolved.error,
+  };
+}
+
 export type CreatedDatePreset = "today" | "last7" | "last30";
 
 export function createdDatePresetRange(

@@ -31,12 +31,15 @@ import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
 import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
+import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
+import { buildGeneratePublicTextDraftFromCreateForm } from "@/features/properties/generatePublicTextDraft";
 
 function parseFormNumber(value: string): number | null {
   const trimmedValue = value.trim();
   if (trimmedValue === "") return null;
   const parsedValue = Number(trimmedValue);
-  return Number.isFinite(parsedValue) ? parsedValue : null;
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) return null;
+  return parsedValue;
 }
 
 function getCreateAreaSquareMeters(form: FormState): number | null {
@@ -289,18 +292,13 @@ export function AddPropertyCoreFields({
         ids={form.externalIds}
         onChange={(nextIds) => updateForm("externalIds", nextIds)}
       />
-      <div className="space-y-1.5 sm:col-span-2">
-        <label htmlFor="publicComment" className="block text-sm font-medium text-foreground">
-          კომენტარი
-        </label>
-        <textarea
-          id="publicComment"
-          rows={3}
-          value={form.publicComment}
-          onChange={(event) => updateForm("publicComment", event.target.value)}
-          className={addPropertyInputClassName()}
-        />
-      </div>
+      <PublicCommentGenerateField
+        id="publicComment"
+        value={form.publicComment}
+        onChange={(nextValue) => updateForm("publicComment", nextValue)}
+        buildDraft={() => buildGeneratePublicTextDraftFromCreateForm(form)}
+        textareaClassName={addPropertyInputClassName()}
+      />
       <div className="space-y-1.5 sm:col-span-2">
         <label htmlFor="internalText" className="block text-sm font-medium text-foreground">
           ატვირთვის ტექსტი

@@ -31,15 +31,18 @@ import { NoteRemindersSection } from "@/widgets/Reminders/NoteRemindersSection";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { isRentalDealType } from "@/features/properties/propertyStatus";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { canVerifyPropertyListing, PROPERTY_VERIFICATION_COPY } from "@/features/lifecycle/propertyVerification";
 import { canEditRecordColor, type RecordColor } from "@/features/recordColor/recordColor";
 import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
 import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
+import { ReadyToUploadBadge } from "@/widgets/ReadyToUpload/ReadyToUploadBadge";
+import { ReadyToUploadToggle } from "@/widgets/ReadyToUpload/ReadyToUploadToggle";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 
 type PropertyDetailsViewContentProps = {
   property: Property;
   canEdit: boolean;
-  canViewPrivateFields: boolean;
   layout: "page" | "embedded";
   isArchiving: boolean;
   archiveError: string | null;
@@ -60,18 +63,22 @@ type PropertyDetailsViewContentProps = {
   isSavingReminder: boolean;
   isVerifying: boolean;
   reminderError: string | null;
+  verifyError: string | null;
+  verifySuccessMessage: string | null;
   isSavingColor: boolean;
   colorError: string | null;
   onSelectColor: (color: RecordColor) => void;
   isSavingHideFromOthers: boolean;
   hideFromOthersError: string | null;
   onToggleHideFromOthers: (nextHidden: boolean) => void;
+  isSavingReadyToUpload: boolean;
+  readyToUploadError: string | null;
+  onToggleReadyToUpload: (nextReady: boolean) => void;
 };
 
 export function PropertyDetailsViewContent({
   property,
   canEdit,
-  canViewPrivateFields,
   layout,
   isArchiving,
   archiveError,
@@ -92,12 +99,17 @@ export function PropertyDetailsViewContent({
   isSavingReminder,
   isVerifying,
   reminderError,
+  verifyError,
+  verifySuccessMessage,
   isSavingColor,
   colorError,
   onSelectColor,
   isSavingHideFromOthers,
   hideFromOthersError,
   onToggleHideFromOthers,
+  isSavingReadyToUpload,
+  readyToUploadError,
+  onToggleReadyToUpload,
 }: PropertyDetailsViewContentProps) {
   const apiBaseUrl = getApiBaseUrl();
   const headline = formatPropertyHeadline(property);
@@ -117,6 +129,8 @@ export function PropertyDetailsViewContent({
   }
 
   const temporaryLockedFields = collectPropertyTemporaryLocks(fieldLockOverlay);
+  const isArchivedListing = isPropertyArchived(property);
+  const showVerifyAction = canEdit && canVerifyPropertyListing(property);
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
@@ -146,12 +160,15 @@ export function PropertyDetailsViewContent({
                 status={property.status}
                 outcomeSource={property.outcomeSource}
                 verificationReason={property.verificationReason}
+                isArchived={isArchivedListing}
               />
-              <HideFromOthersBadge isHidden={property.hideFromOthers} />
+              <HideFromOthersBadge isHidden={property.hideFromOthers === true} />
+              <ReadyToUploadBadge isReady={property.readyToUpload} />
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <AdminModeToggle />
             {canEditRecordColor(canEdit, property.color) && property.color !== undefined ? (
               <RecordColorPicker
                 value={property.color}
@@ -159,12 +176,20 @@ export function PropertyDetailsViewContent({
                 onSelect={onSelectColor}
               />
             ) : null}
-            {canEdit ? (
+            {canEdit && property.hideFromOthers !== undefined ? (
               <HideFromOthersToggle
                 isHidden={property.hideFromOthers}
                 disabled={isSavingHideFromOthers}
                 variant="icon"
                 onToggle={onToggleHideFromOthers}
+              />
+            ) : null}
+            {canEdit && property.readyToUpload !== undefined ? (
+              <ReadyToUploadToggle
+                isReady={property.readyToUpload}
+                disabled={isSavingReadyToUpload}
+                variant="icon"
+                onToggle={onToggleReadyToUpload}
               />
             ) : null}
             <PropertyDetailWhatsAppButton property={property} />
@@ -203,6 +228,11 @@ export function PropertyDetailsViewContent({
             {hideFromOthersError}
           </p>
         ) : null}
+        {readyToUploadError ? (
+          <p className="text-xs text-destructive" role="alert">
+            {readyToUploadError}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.9fr)] lg:items-start">
@@ -213,9 +243,13 @@ export function PropertyDetailsViewContent({
         <div className="order-2 h-auto min-w-0 self-start overflow-visible lg:col-start-2 lg:row-start-1">
           <PropertyViewSummaryCard
             property={property}
-            canViewPrivateFields={canViewPrivateFields}
             fieldLocks={canManageLocks ? fieldLockOverlay : undefined}
             onFieldLockChange={canManageLocks ? handleFieldLockChange : undefined}
+            canVerify={showVerifyAction}
+            isVerifying={isVerifying}
+            verifyError={verifyError}
+            verifySuccessMessage={verifySuccessMessage}
+            onVerify={showVerifyAction ? onVerifyNow : undefined}
           />
         </div>
 
@@ -230,34 +264,45 @@ export function PropertyDetailsViewContent({
         </div>
 
         <div className="order-4 flex min-w-0 flex-col gap-4 lg:col-start-2">
-          {canViewPrivateFields ? (
-            <PropertyViewContactCard property={property} />
-          ) : null}
-          <PropertyDetailsLifecycleSection property={property} />
-          <VerificationReminderPanel
-            fields={property}
-            presetSet={
-              isRentalDealType(property.dealType) &&
-              (property.status === "RENTED" || isPropertyArchived(property))
-                ? "rentalExpiry"
-                : "verification"
-            }
-            canEdit={canEdit}
-            isSaving={isSavingReminder}
-            isVerifying={isVerifying}
-            error={reminderError}
-            onSaveReminder={onSaveReminder}
-            onVerifyNow={onVerifyNow}
-          />
-          <NoteRemindersSection
-            targetType="PROPERTY"
-            propertyId={property.id}
-            canCreate={canEdit}
-          />
-          <PropertyViewPrivateComments
+          <PropertyViewContactCard property={property} />
+          <PropertyDetailsLifecycleSection
             property={property}
-            canViewPrivateFields={canViewPrivateFields}
+            canVerify={showVerifyAction}
+            isVerifying={isVerifying}
+            verifyError={verifyError}
+            verifySuccessMessage={verifySuccessMessage}
+            onVerify={showVerifyAction ? onVerifyNow : undefined}
           />
+          {canEdit ? (
+            <VerificationReminderPanel
+              fields={property}
+              presetSet={
+                isRentalDealType(property.dealType) &&
+                (property.status === "RENTED" || isArchivedListing)
+                  ? "rentalExpiry"
+                  : "verification"
+              }
+              canEdit={canEdit}
+              isSaving={isSavingReminder}
+              isVerifying={isVerifying}
+              error={reminderError ?? verifyError}
+              onSaveReminder={onSaveReminder}
+              onVerifyNow={showVerifyAction ? onVerifyNow : undefined}
+              verifyLabel={
+                property.status === "NEEDS_VERIFICATION"
+                  ? PROPERTY_VERIFICATION_COPY.verifyStillActive
+                  : PROPERTY_VERIFICATION_COPY.verifyTodayCombined
+              }
+            />
+          ) : null}
+          {canEdit ? (
+            <NoteRemindersSection
+              targetType="PROPERTY"
+              propertyId={property.id}
+              canCreate={canEdit}
+            />
+          ) : null}
+          <PropertyViewPrivateComments property={property} />
           <PropertyViewMetaCard property={property} />
           {layout === "page" ? (
             <PropertyViewActionsCard
@@ -280,6 +325,9 @@ export function PropertyDetailsViewContent({
               isSavingHideFromOthers={isSavingHideFromOthers}
               hideFromOthersError={hideFromOthersError}
               onToggleHideFromOthers={onToggleHideFromOthers}
+              isSavingReadyToUpload={isSavingReadyToUpload}
+              readyToUploadError={readyToUploadError}
+              onToggleReadyToUpload={onToggleReadyToUpload}
             />
           ) : null}
         </div>

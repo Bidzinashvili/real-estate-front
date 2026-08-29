@@ -7,7 +7,7 @@ import {
   parseDatabaseListScope,
   type DatabaseListScope,
 } from "@/features/databaseList/databaseListScope";
-import { resolveCreatedDateQuery } from "@/features/databaseList/createdDateRange";
+import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
 
 export const CLIENT_LIST_DEFAULT_LIMIT = 20;
 export const CLIENT_LIST_SEARCH_DEBOUNCE_MS = 300;
@@ -21,6 +21,9 @@ export type ClientListUrlState = {
   status: ClientStatus | "";
   createdFrom: string;
   createdTo: string;
+  lastOpenedFrom: string;
+  lastOpenedTo: string;
+  neverOpened: boolean;
   sortBy: ClientSortBy;
   order: SortOrder;
   page: number;
@@ -41,6 +44,9 @@ export const DEFAULT_CLIENT_LIST_URL_STATE: ClientListUrlState = {
   status: "",
   createdFrom: "",
   createdTo: "",
+  lastOpenedFrom: "",
+  lastOpenedTo: "",
+  neverOpened: false,
   sortBy: "createdAt",
   order: "desc",
   page: 1,
@@ -103,6 +109,17 @@ export function parseClientListUrl(
   const createdTo = searchParams.get("createdTo");
   if (createdTo) next.createdTo = createdTo;
 
+  const lastOpenedFrom = searchParams.get("lastOpenedFrom");
+  if (lastOpenedFrom) next.lastOpenedFrom = lastOpenedFrom;
+  const lastOpenedTo = searchParams.get("lastOpenedTo");
+  if (lastOpenedTo) next.lastOpenedTo = lastOpenedTo;
+  const neverOpenedRaw = searchParams.get("neverOpened");
+  if (neverOpenedRaw === "true" || neverOpenedRaw === "1") {
+    next.neverOpened = true;
+    next.lastOpenedFrom = "";
+    next.lastOpenedTo = "";
+  }
+
   const sortBy = searchParams.get("sortBy");
   if (sortBy && isClientSortBy(sortBy)) next.sortBy = sortBy;
 
@@ -134,6 +151,20 @@ export function clientListUrlStateToSearchParams(
   if (!createdDates.error && createdDates.createdTo) {
     params.set("createdTo", createdDates.createdTo);
   }
+  if (state.neverOpened) {
+    params.set("neverOpened", "true");
+  } else {
+    const lastOpenedDates = resolveLastOpenedDateQuery(
+      state.lastOpenedFrom,
+      state.lastOpenedTo,
+    );
+    if (!lastOpenedDates.error && lastOpenedDates.lastOpenedFrom) {
+      params.set("lastOpenedFrom", lastOpenedDates.lastOpenedFrom);
+    }
+    if (!lastOpenedDates.error && lastOpenedDates.lastOpenedTo) {
+      params.set("lastOpenedTo", lastOpenedDates.lastOpenedTo);
+    }
+  }
   if (state.sortBy !== DEFAULT_CLIENT_LIST_URL_STATE.sortBy) {
     params.set("sortBy", state.sortBy);
   }
@@ -148,7 +179,13 @@ export function clientListUrlStateToSearchParams(
 }
 
 export function countClientAdvancedFilters(state: ClientListUrlState): number {
-  return state.status ? 1 : 0;
+  let advancedFilterCount = 0;
+  if (state.status) advancedFilterCount += 1;
+  if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) {
+    advancedFilterCount += 1;
+  }
+  if (state.neverOpened) advancedFilterCount += 1;
+  return advancedFilterCount;
 }
 
 export function hasClearableClientFilters(state: ClientListUrlState): boolean {
@@ -157,5 +194,7 @@ export function hasClearableClientFilters(state: ClientListUrlState): boolean {
   if (state.budgetMinInput.trim() || state.budgetMaxInput.trim()) return true;
   if (state.dealType) return true;
   if (state.createdFrom.trim() || state.createdTo.trim()) return true;
+  if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) return true;
+  if (state.neverOpened) return true;
   return countClientAdvancedFilters(state) > 0;
 }

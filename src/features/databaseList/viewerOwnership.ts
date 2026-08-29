@@ -5,7 +5,7 @@ type Viewer = {
 
 type OwnershipRecord = {
   ownedByViewer: boolean | null;
-  userId: string;
+  userId?: string;
 };
 
 export function viewerOwnsRecord(
@@ -21,7 +21,7 @@ export function viewerOwnsRecord(
   if (record.ownedByViewer === false) {
     return false;
   }
-  return record.userId !== "" && record.userId === viewer.id;
+  return Boolean(record.userId) && record.userId === viewer.id;
 }
 
 export function viewerCanManageRecord(

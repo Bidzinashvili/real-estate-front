@@ -136,6 +136,7 @@ export interface MatchCriterionDto {
 
 export interface PropertyMatchSummary {
   id: string;
+  ourSiteId?: string | null;
   propertyType: PropertyType;
   dealType: PropertyDealType;
   status: string;

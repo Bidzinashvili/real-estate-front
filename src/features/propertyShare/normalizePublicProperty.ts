@@ -120,7 +120,9 @@ function normalizeApartment(value: unknown): PublicApartment | null {
     petsAllowed: asNullableBoolean(value.petsAllowed),
     minRentalPeriod: asNullableNumber(value.minRentalPeriod),
     project: asNullableString(value.project),
-    buildingNumber: asNullableString(value.buildingNumber),
+    ...("buildingNumber" in value
+      ? { buildingNumber: asNullableString(value.buildingNumber) }
+      : {}),
   };
 }
 

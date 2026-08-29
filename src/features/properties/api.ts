@@ -8,6 +8,8 @@ import { toGetPropertiesSearchParams } from "@/features/properties/getProperties
 import type {
   CreatePropertyDto,
   CreatePropertyResponse,
+  GeneratePublicTextDraft,
+  GeneratePublicTextResponse,
   Property,
   PropertyListResponse,
   PropertyUpdatePayload,
@@ -22,8 +24,10 @@ import {
   emitRecordMutationEvents,
   emitRecordsChangedEvent,
 } from "@/features/lifecycle/recordsChangedEvent";
+import { emitNoteOpenedEvent } from "@/features/noteLastOpened/noteOpenedEvent";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
+import { requestedAdminModeQuery } from "@/features/adminMode/requestedAdminModeQuery";
 
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
@@ -56,7 +60,10 @@ export async function getProperties(
   requestOptions?: GetPropertiesRequestOptions,
 ): Promise<PropertiesListResult> {
   const { baseUrl, headers } = getAuthHeaders();
-  const params = toGetPropertiesSearchParams(query);
+  const params = toGetPropertiesSearchParams({
+    ...query,
+    ...requestedAdminModeQuery(),
+  });
 
   try {
     const res = await axios.get<PropertyListResponse>(`${baseUrl}/properties`, {
@@ -90,6 +97,7 @@ export async function getPropertyById(id: string): Promise<Property | null> {
   try {
     const res = await axios.get(`${baseUrl}/properties/${id}`, {
       headers,
+      params: requestedAdminModeQuery(),
     });
     return normalizeProperty(res.data);
   } catch (error) {
@@ -182,20 +190,47 @@ export async function updateProperty(
   }
 }
 
+export async function markPropertyOpened(
+  id: string,
+): Promise<{ id: string; noteLastOpenedAt: string | null }> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(`${baseUrl}/properties/${id}/opened`, undefined, {
+      headers,
+    });
+    emitNoteOpenedEvent();
+    const payload = res.data as { id?: unknown; noteLastOpenedAt?: unknown };
+    return {
+      id: typeof payload.id === "string" ? payload.id : id,
+      noteLastOpenedAt:
+        typeof payload.noteLastOpenedAt === "string" ? payload.noteLastOpenedAt : null,
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ამ განცხადების გახსნის აღნიშვნის უფლება არ გაქვთ"
+          : "განცხადების გახსნის აღნიშვნა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
 export async function verifyProperty(id: string): Promise<Property | null> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.post(
-      `${baseUrl}/properties/${id}/verify`,
-      {},
-      {
-        headers: {
-          ...headers,
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const res = await axios.post(`${baseUrl}/properties/${id}/verify`, undefined, {
+      headers,
+    });
     emitRemindersChangedEvent();
     emitRecordsChangedEvent();
     return normalizeProperty(res.data);
@@ -415,6 +450,91 @@ function buildCreatePropertyFormData(
     formData.append("images", image);
   }
   return formData;
+}
+
+function parseGeneratePublicTextResponse(
+  data: unknown,
+): GeneratePublicTextResponse {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("ტექსტის გენერირება ვერ მოხერხდა.");
+  }
+
+  const textValue = "text" in data ? data.text : undefined;
+  if (typeof textValue !== "string") {
+    throw new Error("ტექსტის გენერირება ვერ მოხერხდა.");
+  }
+
+  return { text: textValue };
+}
+
+export async function generatePropertyPublicText(
+  draft: GeneratePublicTextDraft,
+): Promise<GeneratePublicTextResponse> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/properties/generate-public-text`,
+      draft,
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return parseGeneratePublicTextResponse(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ტექსტის გენერირების უფლება არ გაქვთ."
+          : status === 401
+            ? "ავტორიზაცია საჭიროა."
+            : "ტექსტის გენერირება ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function generateSavedPropertyPublicText(
+  propertyId: string,
+): Promise<GeneratePublicTextResponse> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/properties/${propertyId}/generate-public-text`,
+      undefined,
+      { headers },
+    );
+    return parseGeneratePublicTextResponse(res.data);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallbackByStatus: Record<number, string> = {
+        401: "ავტორიზაცია საჭიროა.",
+        403: "ტექსტის გენერირების უფლება არ გაქვთ.",
+        404: "განცხადება ვერ მოიძებნა.",
+      };
+      const fallback =
+        fallbackByStatus[status] ?? "ტექსტის გენერირება ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
 }
 
 export async function createProperty(

@@ -31,7 +31,7 @@ function PublicNumberFact({
   value: number | null | undefined;
   suffix?: string;
 }) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
+  if (value === null || value === undefined || Number.isNaN(value) || value <= 0) {
     return null;
   }
   const formatted = suffix ? `${value.toLocaleString()} ${suffix}` : value.toLocaleString();
@@ -134,11 +134,6 @@ export function PublicPropertyCharacteristics({
         />
       ) : null,
       <PublicTextFact key="project" label="პროექტი" value={apartment.project} />,
-      <PublicTextFact
-        key="buildingNumber"
-        label="კორპუსის ნომერი"
-        value={apartment.buildingNumber}
-      />,
       <PublicNumberFact key="parking" label="პარკინგი" value={apartment.parkingSpaces} />,
     ];
     const comfort = [

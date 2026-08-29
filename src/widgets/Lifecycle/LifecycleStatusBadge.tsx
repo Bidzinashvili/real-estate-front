@@ -18,6 +18,7 @@ type LifecycleStatusBadgeProps = {
   status: PropertyStatus | ClientStatus;
   outcomeSource?: OutcomeSource | null;
   verificationReason?: VerificationReason | null;
+  isArchived?: boolean;
   size?: "sm" | "md";
 };
 
@@ -31,7 +32,14 @@ function propertyVisual(
   status: PropertyStatus,
   outcomeSource: OutcomeSource | null | undefined,
   verificationReason: VerificationReason | null | undefined,
+  isArchived: boolean,
 ): { icon: ReactNode; className: string } {
+  if (isArchived && (status === "FOR_SALE" || status === "FOR_RENT")) {
+    return {
+      icon: <StatusDot className="bg-muted-foreground" />,
+      className: "bg-muted text-muted-foreground",
+    };
+  }
   if (status === "FOR_SALE" || status === "FOR_RENT") {
     return {
       icon: <StatusDot className="bg-success" />,
@@ -150,11 +158,17 @@ export function LifecycleStatusBadge({
   status,
   outcomeSource = null,
   verificationReason = null,
+  isArchived = false,
   size = "md",
 }: LifecycleStatusBadgeProps) {
   const visual =
     kind === "property"
-      ? propertyVisual(status as PropertyStatus, outcomeSource, verificationReason)
+      ? propertyVisual(
+          status as PropertyStatus,
+          outcomeSource,
+          verificationReason,
+          isArchived,
+        )
       : clientVisual(status as ClientStatus, outcomeSource, verificationReason);
   const label =
     kind === "property"

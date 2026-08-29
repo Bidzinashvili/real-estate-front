@@ -155,13 +155,20 @@ export function DetailNumber({
   value,
   suffix,
   empty = EMPTY,
+  requirePositive = false,
 }: {
   label: string;
   value: number | null | undefined;
   suffix?: string;
   empty?: string;
+  requirePositive?: boolean;
 }) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
+  if (
+    value === null ||
+    value === undefined ||
+    Number.isNaN(value) ||
+    (requirePositive && value <= 0)
+  ) {
     return <DetailText label={label} value="" empty={empty} />;
   }
   return (

@@ -15,23 +15,35 @@ import {
   propertyTypeDisplayLabel,
 } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { PropertyVerificationStatus } from "@/widgets/Lifecycle/PropertyVerificationStatus";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { isCustomRecordColor } from "@/features/recordColor/recordColor";
 import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
+import { NoteLastOpenedLabel } from "@/widgets/NoteLastOpened/NoteLastOpenedLabel";
 import { cn } from "@/shared/lib/utils";
+import { hasAuthorizedInternalPrice } from "@/features/properties/authorizedPropertyFields";
 
 type PropertyViewSummaryCardProps = {
   property: Property;
-  canViewPrivateFields: boolean;
   fieldLocks?: PropertyFieldLocks;
   onFieldLockChange?: (lockKey: "price" | "street", nextLock: LockState) => void;
+  canVerify?: boolean;
+  isVerifying?: boolean;
+  verifyError?: string | null;
+  verifySuccessMessage?: string | null;
+  onVerify?: () => void;
 };
 
 export function PropertyViewSummaryCard({
   property,
-  canViewPrivateFields,
   fieldLocks,
   onFieldLockChange,
+  canVerify = false,
+  isVerifying = false,
+  verifyError = null,
+  verifySuccessMessage = null,
+  onVerify,
 }: PropertyViewSummaryCardProps) {
   const publicPrice = formatGelAmount(property.pricePublic);
   const internalPrice = formatGelAmount(property.priceInternal);
@@ -71,7 +83,7 @@ export function PropertyViewSummaryCard({
         ) : null}
       </div>
 
-      {canViewPrivateFields ? (
+      {hasAuthorizedInternalPrice(property) ? (
         <div className="mt-4 rounded-xl bg-warning-muted/60 px-3 py-2.5 ring-1 ring-border">
           <p className="text-xs text-muted-foreground">შიდა ფასი</p>
           <p className="mt-0.5 text-lg font-semibold text-foreground">
@@ -93,14 +105,25 @@ export function PropertyViewSummaryCard({
             {formatDealTypeLabel(property.dealType)}
           </dd>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 col-span-2">
           <dt className="text-xs text-muted-foreground">სტატუსი</dt>
-          <dd className="mt-1">
+          <dd className="mt-1 space-y-1.5">
             <LifecycleStatusBadge
               kind="property"
               status={property.status}
               outcomeSource={property.outcomeSource}
               verificationReason={property.verificationReason}
+              isArchived={isPropertyArchived(property)}
+            />
+            <PropertyVerificationStatus
+              status={property.status}
+              archivedAt={property.archivedAt}
+              lastVerifiedAt={property.lastVerifiedAt}
+              canManage={canVerify}
+              isVerifying={isVerifying}
+              error={verifyError}
+              successMessage={verifySuccessMessage}
+              onVerify={onVerify}
             />
           </dd>
         </div>
@@ -126,6 +149,10 @@ export function PropertyViewSummaryCard({
         className="mt-4"
         createdAt={property.createdAt}
         updatedAt={property.updatedAt}
+      />
+      <NoteLastOpenedLabel
+        className="mt-1.5"
+        noteLastOpenedAt={property.noteLastOpenedAt}
       />
     </section>
   );

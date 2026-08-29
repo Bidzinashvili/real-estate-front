@@ -1,3 +1,4 @@
+import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import {
   formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
@@ -64,13 +65,7 @@ export function isRentalDeal(property: Property): boolean {
 }
 
 export function propertyAreaSquareMeters(property: Property): number | null {
-  return (
-    property.apartment?.totalArea ??
-    property.privateHouse?.totalArea ??
-    property.landPlot?.landArea ??
-    property.commercial?.area ??
-    null
-  );
+  return canonicalPropertyArea(property);
 }
 
 export function formatCommercialStatusLabel(raw: string | null | undefined): string | null {

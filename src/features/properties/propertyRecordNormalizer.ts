@@ -31,7 +31,7 @@ import {
   asString,
   isJsonObject,
 } from "@/shared/lib/jsonValue";
-import type { JsonValue } from "@/shared/lib/jsonValue";
+import type { JsonObject, JsonValue } from "@/shared/lib/jsonValue";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { isPropertyFieldLockKey } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
@@ -101,6 +101,14 @@ function parseFieldLocks(value: JsonValue | undefined): PropertyFieldLocks | und
     }
   }
   return Object.keys(fieldLocks).length > 0 ? fieldLocks : undefined;
+}
+
+function asCanonicalArea(value: JsonValue | undefined): number | null {
+  const parsed = asNullableNumber(value);
+  if (parsed === null || parsed <= 0) {
+    return null;
+  }
+  return parsed;
 }
 
 function asNullableBoolean(value: JsonValue | undefined): boolean | null {
@@ -188,7 +196,90 @@ function normalizeImages(value: unknown): PropertyListingImage[] {
     .filter((item): item is PropertyListingImage => item !== null);
 }
 
-function normalizeExternalIds(value: unknown): PropertyExternalId[] {
+function optionalRecord<FieldKey extends string, FieldValue>(
+  fieldKey: FieldKey,
+  fieldValue: FieldValue | undefined,
+): Partial<Record<FieldKey, FieldValue>> {
+  if (fieldValue === undefined) {
+    return {};
+  }
+  return { [fieldKey]: fieldValue } as Record<FieldKey, FieldValue>;
+}
+
+function hasOwnJsonField(source: JsonObject, fieldKey: string): boolean {
+  return Object.prototype.hasOwnProperty.call(source, fieldKey);
+}
+
+function readOptionalNullableString(
+  source: JsonObject,
+  fieldKey: string,
+): string | null | undefined {
+  if (!hasOwnJsonField(source, fieldKey)) {
+    return undefined;
+  }
+  return asNullableString(source[fieldKey]);
+}
+
+function readFirstPresentNullableString(
+  source: JsonObject,
+  fieldKeys: string[],
+): string | null | undefined {
+  for (const fieldKey of fieldKeys) {
+    if (hasOwnJsonField(source, fieldKey)) {
+      return asNullableString(source[fieldKey]);
+    }
+  }
+  return undefined;
+}
+
+function readOptionalString(
+  source: JsonObject,
+  fieldKey: string,
+): string | undefined {
+  if (!hasOwnJsonField(source, fieldKey)) {
+    return undefined;
+  }
+  return asString(source[fieldKey]);
+}
+
+function readOptionalStringArray(
+  source: JsonObject,
+  fieldKey: string,
+): string[] | undefined {
+  if (!hasOwnJsonField(source, fieldKey)) {
+    return undefined;
+  }
+  return asStringArray(source[fieldKey]);
+}
+
+function readOptionalBoolean(
+  source: JsonObject,
+  fieldKey: string,
+): boolean | undefined {
+  if (!hasOwnJsonField(source, fieldKey)) {
+    return undefined;
+  }
+  return asBoolean(source[fieldKey]);
+}
+
+function readOptionalNullableNumber(
+  source: JsonObject,
+  fieldKey: string,
+): number | null | undefined {
+  if (!hasOwnJsonField(source, fieldKey)) {
+    return undefined;
+  }
+  const rawValue = source[fieldKey];
+  if (rawValue === null) {
+    return null;
+  }
+  return asNumber(rawValue);
+}
+
+function normalizeExternalIds(value: unknown): PropertyExternalId[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
   if (!Array.isArray(value)) return [];
 
   return value
@@ -222,10 +313,10 @@ function normalizeApartment(value: unknown): PropertyApartment | null {
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
-    buildingNumber: asNullableString(value.buildingNumber),
+    ...optionalRecord("buildingNumber", readOptionalNullableString(value, "buildingNumber")),
     buildingCondition: parseBuildingCondition(value.buildingCondition),
     buildingAgeType: parseBuildingAgeType(value.buildingAgeType),
-    totalArea: asNumber(value.totalArea),
+    totalArea: asCanonicalArea(value.totalArea),
     project: asNullableString(value.project),
     renovation: asNullableString(value.renovation),
     rooms: asNumber(value.rooms),
@@ -257,9 +348,9 @@ function normalizePrivateHouse(
     id: asString(value.id),
     propertyId: asString(value.propertyId),
     buildingCondition: parseBuildingCondition(value.buildingCondition),
-    houseArea: asNumber(value.houseArea),
+    houseArea: asNullableNumber(value.houseArea),
     yardArea: asNumber(value.yardArea),
-    totalArea: asNumber(value.totalArea),
+    totalArea: asCanonicalArea(value.totalArea),
     renovation: asNullableString(value.renovation),
     rooms: asNumber(value.rooms),
     bedrooms: asNumber(value.bedrooms),
@@ -286,7 +377,7 @@ function normalizeLandPlot(value: unknown): PropertyLandPlot | null {
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
-    landArea: asNumber(value.landArea),
+    landArea: asCanonicalArea(value.landArea),
     landCategory: parseLandCategory(value.landCategory),
     landUsage: parseCommercialStatus(value.landUsage),
     forInvestment: asBoolean(value.forInvestment),
@@ -307,7 +398,7 @@ function normalizeCommercial(value: unknown): PropertyCommercial | null {
   return {
     id: asString(value.id),
     propertyId: asString(value.propertyId),
-    area: asNumber(value.area),
+    area: asCanonicalArea(value.area),
     status: parseCommercialStatus(value.status),
     floor: asNumber(value.floor),
     totalFloors: asNullableNumber(value.totalFloors),
@@ -345,31 +436,49 @@ export function normalizeProperty(value: unknown): Property | null {
       value.streetId === undefined || value.streetId === null
         ? null
         : asString(value.streetId).trim() || null,
-    title: asNullableString(value.title),
+    ...optionalRecord("title", readOptionalNullableString(value, "title")),
     cadastralCode: asNullableString(value.cadastralCode),
     pricePublic: asNumber(value.pricePublic),
-    priceInternal:
-      value.priceInternal === null || value.priceInternal === undefined
-        ? null
-        : asNumber(value.priceInternal),
-    ownerName: asString(value.ownerName),
-    ownerPhones: asStringArray(value.ownerPhones),
-    ownerWhatsapp: asNullableString(value.ownerWhatsapp),
-    ownerId:
-      value.ownerId === undefined || value.ownerId === null
-        ? null
-        : asString(value.ownerId).trim() || null,
-    propertyOwner: normalizePropertyOwnerSummary(value.propertyOwner),
+    ...optionalRecord("priceInternal", readOptionalNullableNumber(value, "priceInternal")),
+    ...optionalRecord("ownerName", readOptionalString(value, "ownerName")),
+    ...optionalRecord("ownerPhones", readOptionalStringArray(value, "ownerPhones")),
+    ...optionalRecord("ownerWhatsapp", readOptionalNullableString(value, "ownerWhatsapp")),
+    ...optionalRecord(
+      "ownerId",
+      hasOwnJsonField(value, "ownerId")
+        ? value.ownerId === null
+          ? null
+          : asString(value.ownerId).trim() || null
+        : undefined,
+    ),
+    ...optionalRecord(
+      "propertyOwner",
+      hasOwnJsonField(value, "propertyOwner")
+        ? normalizePropertyOwnerSummary(value.propertyOwner)
+        : undefined,
+    ),
     ourSiteId: asNullableString(value.ourSiteId),
-    myHomeId: asNullableString(value.myHomeId),
-    ssGeId: asNullableString(value.ssGeId),
-    externalIds: normalizeExternalIds(value.externalIds),
+    ...optionalRecord("myHomeId", readOptionalNullableString(value, "myHomeId")),
+    ...optionalRecord("ssGeId", readOptionalNullableString(value, "ssGeId")),
+    ...optionalRecord("externalIds", normalizeExternalIds(value.externalIds)),
     description: asNullableString(value.description ?? value.publicComment),
     publicComment: asNullableString(value.publicComment ?? value.description),
-    privateComment: asNullableString(value.privateComment ?? value.comment),
-    internalText: asNullableString(value.internalText ?? value.internalComment),
-    comment: asNullableString(value.comment ?? value.privateComment),
-    internalComment: asNullableString(value.internalComment ?? value.internalText),
+    ...optionalRecord(
+      "privateComment",
+      readFirstPresentNullableString(value, ["privateComment", "comment"]),
+    ),
+    ...optionalRecord(
+      "internalText",
+      readFirstPresentNullableString(value, ["internalText", "internalComment"]),
+    ),
+    ...optionalRecord(
+      "comment",
+      readFirstPresentNullableString(value, ["comment", "privateComment"]),
+    ),
+    ...optionalRecord(
+      "internalComment",
+      readFirstPresentNullableString(value, ["internalComment", "internalText"]),
+    ),
     commentDate: asNullableString(value.commentDate),
     tenantClientId:
       value.tenantClientId === undefined || value.tenantClientId === null
@@ -384,18 +493,28 @@ export function normalizeProperty(value: unknown): Property | null {
     images,
     createdAt: asNullableString(value.createdAt) ?? "",
     updatedAt: asNullableString(value.updatedAt) ?? "",
+    ...optionalRecord(
+      "noteLastOpenedAt",
+      readOptionalNullableString(value, "noteLastOpenedAt"),
+    ),
     deletedAt: asNullableString(value.deletedAt),
-    userId: asString(value.userId),
+    ...optionalRecord("userId", readOptionalString(value, "userId")),
     ownedByViewer:
       typeof value.ownedByViewer === "boolean" ? value.ownedByViewer : null,
-    hideFromOthers: asBoolean(value.hideFromOthers),
+    ...optionalRecord("hideFromOthers", readOptionalBoolean(value, "hideFromOthers")),
+    ...optionalRecord("readyToUpload", readOptionalBoolean(value, "readyToUpload")),
     color: parseRecordColor(value.color),
     apartment: normalizeApartment(value.apartment),
     privateHouse: normalizePrivateHouse(value.privateHouse),
     landPlot: normalizeLandPlot(value.landPlot),
     commercial: normalizeCommercial(value.commercial),
     fieldLocks: parseFieldLocks(value.fieldLocks),
-    reminderSummary: parseReminderSummary(value.reminderSummary),
+    ...optionalRecord(
+      "reminderSummary",
+      hasOwnJsonField(value, "reminderSummary")
+        ? parseReminderSummary(value.reminderSummary)
+        : undefined,
+    ),
     ...parseEntityVerificationFields(value),
   };
 }

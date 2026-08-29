@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getPropertiesBulk } from "@/features/properties/api";
 import type { Property } from "@/features/properties/types";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 
 type UsePropertiesListOptions = {
@@ -22,6 +23,7 @@ export function usePropertiesList({
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
 
   const load = useCallback(async (): Promise<Property[]> => {
     setIsLoading(true);
@@ -39,7 +41,7 @@ export function usePropertiesList({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAdminMode]);
 
   useEffect(() => {
     if (!enabled) {

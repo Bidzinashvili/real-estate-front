@@ -18,6 +18,7 @@ import {
   formatRenovationLabel,
   isRentalDeal,
 } from "@/widgets/PropertyDetails/propertyViewFormatters";
+import { CANONICAL_AREA_MISSING_LABEL } from "@/features/properties/propertyArea";
 
 type PropertyViewCharacteristicsProps = {
   property: Property;
@@ -58,6 +59,8 @@ export function PropertyViewCharacteristics({
               value={property.apartment.totalArea}
               isToBeVerified={false}
               suffix="მ²"
+              requirePositive
+              emptyLabel={CANONICAL_AREA_MISSING_LABEL}
               {...lockProps("area")}
             />
             <VerifiableNumberFact
@@ -138,7 +141,12 @@ export function PropertyViewCharacteristics({
               value={property.apartment.project}
               {...lockProps("project")}
             />
-            <OptionalTextFact label="კორპუსის ნომერი" value={property.apartment.buildingNumber} />
+            {property.apartment.buildingNumber !== undefined ? (
+              <OptionalTextFact
+                label="კორპუსის ნომერი"
+                value={property.apartment.buildingNumber}
+              />
+            ) : null}
             <VerifiableNumberFact
               label="პარკინგი"
               value={property.apartment.parkingSpaces}
@@ -231,6 +239,8 @@ export function PropertyViewCharacteristics({
               value={property.privateHouse.totalArea}
               isToBeVerified={false}
               suffix="მ²"
+              requirePositive
+              emptyLabel={CANONICAL_AREA_MISSING_LABEL}
             />
             <VerifiableNumberFact
               label="ოთახები"
@@ -347,6 +357,8 @@ export function PropertyViewCharacteristics({
               value={property.landPlot.landArea}
               isToBeVerified={false}
               suffix="მ²"
+              requirePositive
+              emptyLabel={CANONICAL_AREA_MISSING_LABEL}
             />
             <OptionalTextFact
               label="მიწის კატეგორია"
@@ -421,6 +433,8 @@ export function PropertyViewCharacteristics({
               value={property.commercial.area}
               isToBeVerified={false}
               suffix="მ²"
+              requirePositive
+              emptyLabel={CANONICAL_AREA_MISSING_LABEL}
             />
             <OptionalTextFact
               label="დანიშნულება"

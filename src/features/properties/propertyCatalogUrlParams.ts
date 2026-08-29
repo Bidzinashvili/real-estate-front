@@ -19,7 +19,7 @@ import {
   parseDatabaseListScope,
   type DatabaseListScope,
 } from "@/features/databaseList/databaseListScope";
-import { resolveCreatedDateQuery } from "@/features/databaseList/createdDateRange";
+import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
 import {
   parseNumericRangeFilter,
   serializeNumericRangeFilter,
@@ -59,6 +59,10 @@ export type PropertyCatalogUrlState = {
   commercialArea: string;
   createdFrom: string;
   createdTo: string;
+  lastOpenedFrom: string;
+  lastOpenedTo: string;
+  neverOpened: boolean;
+  readyToUpload: boolean;
   sortBy: PropertySortBy;
   order: PropertyListSortOrder;
   page: number;
@@ -139,6 +143,10 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   commercialArea: "",
   createdFrom: "",
   createdTo: "",
+  lastOpenedFrom: "",
+  lastOpenedTo: "",
+  neverOpened: false,
+  readyToUpload: false,
   sortBy: "createdAt",
   order: "desc",
   page: 1,
@@ -260,6 +268,21 @@ export function parsePropertyCatalogUrl(
   const createdTo = searchParams.get("createdTo");
   if (createdTo) next.createdTo = createdTo;
 
+  const lastOpenedFrom = searchParams.get("lastOpenedFrom");
+  if (lastOpenedFrom) next.lastOpenedFrom = lastOpenedFrom;
+  const lastOpenedTo = searchParams.get("lastOpenedTo");
+  if (lastOpenedTo) next.lastOpenedTo = lastOpenedTo;
+  const neverOpenedRaw = searchParams.get("neverOpened");
+  if (neverOpenedRaw === "true" || neverOpenedRaw === "1") {
+    next.neverOpened = true;
+    next.lastOpenedFrom = "";
+    next.lastOpenedTo = "";
+  }
+  const readyToUploadRaw = searchParams.get("readyToUpload");
+  if (readyToUploadRaw === "true" || readyToUploadRaw === "1") {
+    next.readyToUpload = true;
+  }
+
   const sortBy = searchParams.get("sortBy");
   if (sortBy && isPropertySortBy(sortBy)) next.sortBy = sortBy;
 
@@ -329,6 +352,23 @@ export function propertyCatalogUrlStateToSearchParams(
   if (!createdDates.error && createdDates.createdTo) {
     params.set("createdTo", createdDates.createdTo);
   }
+  if (state.neverOpened) {
+    params.set("neverOpened", "true");
+  } else {
+    const lastOpenedDates = resolveLastOpenedDateQuery(
+      state.lastOpenedFrom,
+      state.lastOpenedTo,
+    );
+    if (!lastOpenedDates.error && lastOpenedDates.lastOpenedFrom) {
+      params.set("lastOpenedFrom", lastOpenedDates.lastOpenedFrom);
+    }
+    if (!lastOpenedDates.error && lastOpenedDates.lastOpenedTo) {
+      params.set("lastOpenedTo", lastOpenedDates.lastOpenedTo);
+    }
+  }
+  if (state.readyToUpload) {
+    params.set("readyToUpload", "true");
+  }
 
   if (state.sortBy !== DEFAULT_CATALOG_URL_STATE.sortBy) {
     params.set("sortBy", state.sortBy);
@@ -364,6 +404,10 @@ export function catalogStateToApiQuery(
 ): GetPropertiesQuery {
   const textFilters = debouncedText ?? pickCatalogDebouncedTextState(state);
   const createdDates = resolveCreatedDateQuery(state.createdFrom, state.createdTo);
+  const lastOpenedDates = resolveLastOpenedDateQuery(
+    state.lastOpenedFrom,
+    state.lastOpenedTo,
+  );
   const roomsRange = toNumericRangeFilter(
     parseIntegerInput(textFilters.roomsFrom),
     parseIntegerInput(textFilters.roomsTo),
@@ -398,6 +442,16 @@ export function catalogStateToApiQuery(
     area: parseDecimalInput(textFilters.commercialArea),
     createdFrom: createdDates.error ? undefined : createdDates.createdFrom,
     createdTo: createdDates.error ? undefined : createdDates.createdTo,
+    lastOpenedFrom:
+      state.neverOpened || lastOpenedDates.error
+        ? undefined
+        : lastOpenedDates.lastOpenedFrom,
+    lastOpenedTo:
+      state.neverOpened || lastOpenedDates.error
+        ? undefined
+        : lastOpenedDates.lastOpenedTo,
+    neverOpened: state.neverOpened ? true : undefined,
+    readyToUpload: state.readyToUpload ? true : undefined,
     sortBy: state.sortBy,
     order: state.order,
     page: state.page,

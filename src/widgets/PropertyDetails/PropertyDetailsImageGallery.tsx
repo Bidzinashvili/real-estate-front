@@ -14,13 +14,13 @@ type PreparedItem = {
 };
 
 type PropertyImageRow = {
-  id: string;
+  id?: string;
   url: string;
   originalName: string;
 };
 
 function imageIdForApiDelete(image: PropertyImageRow): string {
-  const trimmedId = image.id.trim();
+  const trimmedId = image.id?.trim() ?? "";
   if (trimmedId) return trimmedId;
   const pathOnly = image.url.split("?")[0] ?? image.url;
   const segment = pathOnly.split("/").pop();

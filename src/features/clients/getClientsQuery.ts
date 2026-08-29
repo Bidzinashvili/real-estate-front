@@ -19,7 +19,12 @@ export const DISTRICT_FILTER_MIN_LENGTH = 3;
 export const DISTRICT_FILTER_DEBOUNCE_MS = 400;
 
 export function isClientSortBy(value: string): value is ClientSortBy {
-  return value === "createdAt" || value === "updatedAt" || value === "name";
+  return (
+    value === "createdAt" ||
+    value === "updatedAt" ||
+    value === "name" ||
+    value === "noteLastOpenedAt"
+  );
 }
 
 export function isClientSortOrder(value: string): value is SortOrder {
@@ -46,6 +51,16 @@ export function toGetClientsSearchParams(
   }
   if (query.createdTo) {
     out.createdTo = query.createdTo;
+  }
+  if (query.neverOpened === true) {
+    out.neverOpened = "true";
+  } else {
+    if (query.lastOpenedFrom) {
+      out.lastOpenedFrom = query.lastOpenedFrom;
+    }
+    if (query.lastOpenedTo) {
+      out.lastOpenedTo = query.lastOpenedTo;
+    }
   }
   if (query.district !== undefined) {
     out.district = toLockedQueryJson(query.district);

@@ -52,6 +52,7 @@ export function PropertyOwnerLinkedProperties({
                       kind="property"
                       status={listing.status}
                       size="sm"
+                      isArchived={Boolean(listing.archivedAt)}
                     />
                     {listing.archivedAt ? (
                       <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">

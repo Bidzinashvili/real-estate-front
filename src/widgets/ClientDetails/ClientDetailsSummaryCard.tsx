@@ -12,6 +12,7 @@ import { isPrivacySafeSharedClient } from "@/features/databaseList/viewerOwnersh
 import { isCustomRecordColor } from "@/features/recordColor/recordColor";
 import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
+import { NoteLastOpenedLabel } from "@/widgets/NoteLastOpened/NoteLastOpenedLabel";
 import { cn } from "@/shared/lib/utils";
 
 type ClientDetailsSummaryCardProps = {
@@ -153,6 +154,10 @@ export function ClientDetailsSummaryCard({
           <RecordTimestamp
             createdAt={client.createdAt}
             updatedAt={client.updatedAt}
+          />
+          <NoteLastOpenedLabel
+            className="mt-1.5"
+            noteLastOpenedAt={client.noteLastOpenedAt}
           />
         </div>
       </div>

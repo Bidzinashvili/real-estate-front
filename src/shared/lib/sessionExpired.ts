@@ -4,6 +4,7 @@ import axios from "axios";
 import { clearAccessToken } from "@/shared/lib/auth";
 import { useUserStore } from "@/shared/stores/userStore";
 import { useUndoSnackbarStore } from "@/features/recordUndo/undoSnackbarStore";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import {
   isSessionExpiredMessage,
   getAuthErrorRawMessage,
@@ -17,6 +18,7 @@ let sessionClearInProgress = false;
 export function clearAuthenticatedCaches(): void {
   useUserStore.getState().clearUser();
   useUndoSnackbarStore.getState().clearAll();
+  useAdminModeStore.getState().resetAdminMode();
 }
 
 export function clearAuthenticatedSession(): void {

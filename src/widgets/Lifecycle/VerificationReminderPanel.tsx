@@ -5,6 +5,7 @@ import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnu
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
 import { formatReminderTypeLabel } from "@/features/lifecycle/lifecycleLabels";
+import { formatTbilisiDateTime } from "@/shared/lib/formatDate";
 import {
   datetimeLocalValueToIso,
   isoToDatetimeLocalValue,
@@ -24,6 +25,7 @@ type VerificationReminderPanelProps = {
   onSaveReminder: (payload: ReminderConfigPayload) => Promise<void>;
   onVerifyNow?: () => Promise<void>;
   isVerifying?: boolean;
+  verifyLabel?: string;
 };
 
 export function VerificationReminderPanel({
@@ -35,6 +37,7 @@ export function VerificationReminderPanel({
   onSaveReminder,
   onVerifyNow,
   isVerifying = false,
+  verifyLabel = "გადავამოწმე",
 }: VerificationReminderPanelProps) {
   const [customMonthsInput, setCustomMonthsInput] = useState(
     fields.reminderIntervalMonths != null ? String(fields.reminderIntervalMonths) : "2",
@@ -44,7 +47,9 @@ export function VerificationReminderPanel({
   );
   const [formError, setFormError] = useState<string | null>(null);
 
-  const lastVerifiedLabel = formatLifecycleDate(fields.lastVerifiedAt);
+  const lastVerifiedLabel = fields.lastVerifiedAt
+    ? formatTbilisiDateTime(fields.lastVerifiedAt)
+    : null;
   const nextReminderLabel = formatLifecycleDate(fields.reminderDate);
   const reminderTypeLabel = formatReminderTypeLabel(
     fields.reminderType,
@@ -97,7 +102,7 @@ export function VerificationReminderPanel({
 
       <dl className="mt-3 space-y-1.5 text-sm">
         <div className="flex flex-wrap gap-x-2">
-          <dt className="text-muted-foreground">გადამოწმებულია:</dt>
+          <dt className="text-muted-foreground">ბოლო გადამოწმება:</dt>
           <dd className="font-medium text-foreground">{lastVerifiedLabel ?? "—"}</dd>
         </div>
         <div className="flex flex-wrap gap-x-2">
@@ -213,7 +218,7 @@ export function VerificationReminderPanel({
               onClick={() => void onVerifyNow()}
               className="inline-flex rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90 disabled:opacity-60"
             >
-              {isVerifying ? "მოწმდება…" : "გადავამოწმე"}
+              {isVerifying ? "მოწმდება…" : verifyLabel}
             </button>
           ) : null}
         </div>

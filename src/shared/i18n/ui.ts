@@ -105,6 +105,10 @@ export function atLeastZeroMessage(label: string): string {
   return `${label} უნდა იყოს მინიმუმ 0.`;
 }
 
+export function greaterThanZeroMessage(label: string): string {
+  return `${label} უნდა იყოს 0-ზე მეტი`;
+}
+
 export function wholeNumberOfMonthsMessage(label: string): string {
   return `${label} უნდა იყოს მთელი რიცხვი თვეებში.`;
 }

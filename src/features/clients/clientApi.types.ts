@@ -135,7 +135,7 @@ export type UpdateClientPayload = {
   minRentalPeriod?: LockedOptional<number>;
 };
 
-export type ClientSortBy = "createdAt" | "updatedAt" | "name";
+export type ClientSortBy = "createdAt" | "updatedAt" | "name" | "noteLastOpenedAt";
 
 export type SortOrder = "asc" | "desc";
 
@@ -154,6 +154,9 @@ export type GetClientsQuery = {
   scope?: DatabaseListScope;
   createdFrom?: string;
   createdTo?: string;
+  lastOpenedFrom?: string;
+  lastOpenedTo?: string;
+  neverOpened?: boolean;
 };
 
 export const DEFAULT_CLIENT_LIST_FILTER_LOCK: LockState = "locked";
@@ -235,6 +238,7 @@ export type ClientApi = EntityVerificationFields & {
   archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+  noteLastOpenedAt?: ISODateString | null;
   deletedAt: ISODateString | null;
   color?: RecordColor;
   requirements?: ClientRequirementsApi | Record<string, unknown> | null;
