@@ -126,7 +126,7 @@ export function ClientListCard({
             summary={client.reminderSummary}
             showSchedule
           />
-          <HideFromOthersBadge isHidden={client.hideFromOthers} />
+          <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
         </div>
 
         <p className="text-2xl font-semibold tracking-tight text-foreground">
@@ -208,7 +208,7 @@ export function ClientListCard({
                   }}
                 />
               ) : null}
-              {canManage ? (
+              {canManage && client.hideFromOthers !== undefined ? (
                 <HideFromOthersToggle
                   isHidden={client.hideFromOthers}
                   disabled={isSavingHideFromOthers}

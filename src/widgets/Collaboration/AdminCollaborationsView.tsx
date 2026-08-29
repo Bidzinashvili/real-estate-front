@@ -11,6 +11,7 @@ import {
 } from "@/features/collaboration/collaborationLabels";
 import { CollaborationRequestCard } from "@/widgets/Collaboration/CollaborationRequestCard";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
+import { formatCollaborationPropertyAddress } from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type AdminTabId = "waitingAdmin" | "approved" | "rejected" | "notebook";
 
@@ -124,10 +125,11 @@ export function AdminCollaborationsView() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">
-                    {monitor.property.address}
-                    {monitor.property.city ? `, ${monitor.property.city}` : ""}
+                    {formatCollaborationPropertyAddress(monitor.property)}
                   </p>
-                  <p className="text-xs text-muted-foreground">{monitor.property.district}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {monitor.property?.district ?? "—"}
+                  </p>
                 </div>
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-foreground">
                   {MONITORING_STATE_LABELS[monitor.monitoringState]}

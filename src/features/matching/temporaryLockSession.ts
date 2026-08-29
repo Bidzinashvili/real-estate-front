@@ -8,6 +8,10 @@ function sessionStorageKey(kind: TemporaryLockSessionKind, entityId: string): st
   return `${kind}:${entityId}`;
 }
 
+export function clearTemporaryLockSessions(): void {
+  sessionLocks.clear();
+}
+
 export function writeTemporaryLockSession(
   kind: TemporaryLockSessionKind,
   entityId: string,

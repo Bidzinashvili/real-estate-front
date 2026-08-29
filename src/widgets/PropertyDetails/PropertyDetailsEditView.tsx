@@ -11,9 +11,6 @@ import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { useEffect, useMemo, useState } from "react";
 import type { Property, PropertyUpdatePayload } from "@/features/properties/types";
 import { canManageProperty } from "@/features/properties/listingVisibility";
-import { markPropertyOpened } from "@/features/properties/api";
-import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
-import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
 import { refetchUpdatedProperty } from "@/features/properties/saveFlow";
 
 type PropertyDetailsEditViewProps = {
@@ -23,7 +20,7 @@ type PropertyDetailsEditViewProps = {
 export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
-  const { property, isLoading, error, refetch, applyNoteLastOpenedAt } =
+  const { property, isLoading, error, refetch } =
     usePropertyDetails(propertyId);
   const { update, isLoading: isSaving, error: saveError } = useUpdateProperty();
   const [latestProperty, setLatestProperty] = useState<Property | null>(null);
@@ -41,14 +38,6 @@ export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewP
     if (!user || !activeProperty) return false;
     return canManageProperty(user, activeProperty);
   }, [activeProperty, user]);
-
-  useMarkNoteOpened({
-    kind: "property",
-    recordId: activeProperty?.id ?? null,
-    canMark: canMarkNoteOpened(activeProperty, user),
-    markOpened: markPropertyOpened,
-    onOpened: applyNoteLastOpenedAt,
-  });
 
   useEffect(() => {
     if (!activeProperty || !user) return;

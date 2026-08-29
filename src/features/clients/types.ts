@@ -108,7 +108,7 @@ export type Client = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
   ownedByViewer: boolean | null;
-  hideFromOthers: boolean;
+  hideFromOthers?: boolean;
   name: string;
   clientProfileId: string | null;
   clientProfile: ClientProfileCompact | null;

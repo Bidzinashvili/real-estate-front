@@ -21,7 +21,7 @@ type ClientDetailsTopBarProps = {
   recordColor?: RecordColor;
   isSavingColor: boolean;
   colorError: string | null;
-  hideFromOthers: boolean;
+  hideFromOthers?: boolean;
   isSavingHideFromOthers: boolean;
   hideFromOthersError: string | null;
   onNavigateToList: () => void;
@@ -77,7 +77,7 @@ export function ClientDetailsTopBar({
             onSelect={onSelectColor}
           />
         ) : null}
-        {canEditStatus ? (
+        {canEditStatus && hideFromOthers !== undefined ? (
           <HideFromOthersToggle
             isHidden={hideFromOthers}
             disabled={isSavingHideFromOthers}

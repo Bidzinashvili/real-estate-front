@@ -56,7 +56,7 @@ export type CollaborationRequestDto = {
   statusGroup: CollaborationStatusGroup;
   split: CollaborationSplit;
   viewerRole: CollaborationViewerRole | null;
-  property: CollaborationProperty;
+  property: CollaborationProperty | null;
   clientId: string | null;
   client: CollaborationClient | null;
   participants: CollaborationParticipant[];
@@ -107,7 +107,7 @@ export type CollaborationMonitorDto = {
   approvedByAdminId: string;
   monitoringState: MonitoringState;
   propertyStatus: string;
-  property: CollaborationProperty;
+  property: CollaborationProperty | null;
   collaboration: CollaborationRequestDto;
 };
 

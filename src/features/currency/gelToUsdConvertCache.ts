@@ -63,6 +63,12 @@ export function prefetchGelToUsdForAmounts(
   return Promise.all(conversionTasks).then(() => undefined);
 }
 
+export function clearGelToUsdCache(): void {
+  resultCache.clear();
+  inflightByKey.clear();
+  emitGelToUsdCacheUpdate();
+}
+
 export function getCachedGelToUsd(gelAmount: number): Promise<ConvertCurrencyResponse> {
   if (
     !Number.isFinite(gelAmount) ||

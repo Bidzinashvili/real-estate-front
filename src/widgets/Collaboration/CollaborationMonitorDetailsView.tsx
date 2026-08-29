@@ -14,6 +14,11 @@ import {
 } from "@/shared/i18n/enumLabels";
 import { CollaborationParticipantsList } from "@/widgets/Collaboration/CollaborationParticipantsList";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
+import {
+  COLLABORATION_PROPERTY_DELETED_LABEL,
+  formatCollaborationPropertyAddress,
+  formatCollaborationPropertyDistrict,
+} from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type CollaborationMonitorDetailsViewProps = {
   monitorId: string;
@@ -61,11 +66,24 @@ export function CollaborationMonitorDetailsView({
 
           <section className="space-y-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
             <h2 className="text-sm font-semibold text-foreground">განცხადება</h2>
-            <p className="text-sm font-medium text-foreground">
-              {monitor.property.address}
-              {monitor.property.city ? `, ${monitor.property.city}` : ""}
-            </p>
-            <p className="text-xs text-muted-foreground">{monitor.property.district}</p>
+            {monitor.property ? (
+              <>
+                <p className="text-sm font-medium text-foreground">
+                  {formatCollaborationPropertyAddress(monitor.property)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatCollaborationPropertyDistrict(monitor.property) ?? "—"}
+                </p>
+                <Link
+                  href={`/properties/${monitor.property.id}`}
+                  className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
+                >
+                  განცხადების გახსნა
+                </Link>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">{COLLABORATION_PROPERTY_DELETED_LABEL}</p>
+            )}
             <p className="text-sm text-foreground">
               სტატუსი:{" "}
               {lookupEnumLabel(PROPERTY_STATUS_LABELS, monitor.propertyStatus) ??
@@ -74,12 +92,6 @@ export function CollaborationMonitorDetailsView({
             <p className="text-sm text-foreground">
               მონიტორინგი: {MONITORING_STATE_LABELS[monitor.monitoringState]}
             </p>
-            <Link
-              href={`/properties/${monitor.property.id}`}
-              className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
-            >
-              განცხადების გახსნა
-            </Link>
           </section>
 
           <section className="space-y-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">

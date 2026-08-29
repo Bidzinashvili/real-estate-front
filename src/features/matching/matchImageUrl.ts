@@ -1,4 +1,9 @@
-export function getMatchImageUrl(images: unknown[]): string | null {
+export function getMatchImageUrl(
+  images: unknown[] | null | undefined,
+): string | null {
+  if (!images || images.length === 0) {
+    return null;
+  }
   const firstImage = images[0];
   if (typeof firstImage === "string" && firstImage.trim()) {
     return firstImage;

@@ -6,9 +6,6 @@ import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import { useClientDetails } from "@/features/clients/useClientDetails";
-import { markClientOpened } from "@/features/clients/api";
-import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
-import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
 import { useUpdateClient } from "@/features/clients/useUpdateClient";
 import { clientFormSchema } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
@@ -189,16 +186,7 @@ function EditClientFormInner({
 
 export function EditClientForm({ clientId }: EditClientFormProps) {
   const router = useRouter();
-  const { user } = useCurrentUser();
-  const { client, isLoading, error, applyNoteLastOpenedAt } = useClientDetails(clientId);
-
-  useMarkNoteOpened({
-    kind: "client",
-    recordId: client?.id ?? null,
-    canMark: canMarkNoteOpened(client, user),
-    markOpened: markClientOpened,
-    onOpened: applyNoteLastOpenedAt,
-  });
+  const { client, isLoading, error } = useClientDetails(clientId);
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">კლიენტი იტვირთება…</p>;

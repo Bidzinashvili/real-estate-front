@@ -19,6 +19,11 @@ import {
 } from "@/shared/i18n/enumLabels";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
 import { CollaborationParticipantsList } from "@/widgets/Collaboration/CollaborationParticipantsList";
+import {
+  COLLABORATION_PROPERTY_DELETED_LABEL,
+  formatCollaborationPropertyAddress,
+  formatCollaborationPropertyDistrict,
+} from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type CollaborationDetailBodyProps = {
   collaboration: CollaborationRequestDto;
@@ -68,8 +73,10 @@ export function CollaborationDetailBody({
         <div className="min-w-0 space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">თანამშრომლობის მოთხოვნა</h1>
           <p className="text-sm text-muted-foreground">
-            {listing.address}
-            {listing.city ? `, ${listing.city}` : ""} · {listing.district}
+            {formatCollaborationPropertyAddress(listing)}
+            {listing
+              ? ` · ${formatCollaborationPropertyDistrict(listing) ?? "—"}`
+              : ""}
           </p>
         </div>
         <CollaborationStatusBadge status={collaboration.status} />
@@ -77,22 +84,28 @@ export function CollaborationDetailBody({
 
       <section className="space-y-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         <h2 className="text-sm font-semibold text-foreground">განცხადება</h2>
-        <p className="text-sm text-foreground">
-          {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType} ·{" "}
-          {lookupEnumLabel(PROPERTY_STATUS_LABELS, listing.status) ?? listing.status}
-        </p>
-        <p className="text-sm font-medium text-foreground">
-          {listing.pricePublic.toLocaleString()}
-        </p>
-        {listing.publicComment ? (
-          <p className="text-sm text-muted-foreground">{listing.publicComment}</p>
-        ) : null}
-        <Link
-          href={`/properties/${listing.id}`}
-          className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
-        >
-          განცხადების გახსნა
-        </Link>
+        {listing ? (
+          <>
+            <p className="text-sm text-foreground">
+              {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType} ·{" "}
+              {lookupEnumLabel(PROPERTY_STATUS_LABELS, listing.status) ?? listing.status}
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              {listing.pricePublic.toLocaleString()}
+            </p>
+            {listing.publicComment ? (
+              <p className="text-sm text-muted-foreground">{listing.publicComment}</p>
+            ) : null}
+            <Link
+              href={`/properties/${listing.id}`}
+              className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              განცხადების გახსნა
+            </Link>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">{COLLABORATION_PROPERTY_DELETED_LABEL}</p>
+        )}
       </section>
 
       <section className="space-y-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">

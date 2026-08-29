@@ -306,6 +306,30 @@ function parseClientDealType(value: JsonValue | undefined): Client["dealType"] {
   return "SALE";
 }
 
+function hasOwnJsonField(source: JsonObject, fieldKey: string): boolean {
+  return Object.prototype.hasOwnProperty.call(source, fieldKey);
+}
+
+function readOptionalBoolean(
+  source: JsonObject,
+  fieldKey: string,
+): boolean | undefined {
+  if (!hasOwnJsonField(source, fieldKey)) {
+    return undefined;
+  }
+  return asBoolean(source[fieldKey]);
+}
+
+function optionalClientField<FieldKey extends string, FieldValue>(
+  fieldKey: FieldKey,
+  fieldValue: FieldValue | undefined,
+): Partial<Record<FieldKey, FieldValue>> {
+  if (fieldValue === undefined) {
+    return {};
+  }
+  return { [fieldKey]: fieldValue } as Record<FieldKey, FieldValue>;
+}
+
 export function normalizeClient(client: ClientApi): Client {
   const record: JsonObject = client as JsonObject;
   const districts = parseLockedStringArray(record.districts);
@@ -322,7 +346,7 @@ export function normalizeClient(client: ClientApi): Client {
     ...client,
     userId: asString(record.userId),
     ownedByViewer: typeof record.ownedByViewer === "boolean" ? record.ownedByViewer : null,
-    hideFromOthers: asBoolean(record.hideFromOthers),
+    ...optionalClientField("hideFromOthers", readOptionalBoolean(record, "hideFromOthers")),
     color: parseRecordColor(record.color),
     name: asString(record.name),
     description: asString(record.description),

@@ -5,6 +5,9 @@ import { clearAccessToken } from "@/shared/lib/auth";
 import { useUserStore } from "@/shared/stores/userStore";
 import { useUndoSnackbarStore } from "@/features/recordUndo/undoSnackbarStore";
 import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
+import { useCatalogPriceDisplayStore } from "@/shared/stores/catalogPriceDisplayStore";
+import { clearGelToUsdCache } from "@/features/currency/gelToUsdConvertCache";
+import { clearTemporaryLockSessions } from "@/features/matching/temporaryLockSession";
 import {
   isSessionExpiredMessage,
   getAuthErrorRawMessage,
@@ -19,6 +22,9 @@ export function clearAuthenticatedCaches(): void {
   useUserStore.getState().clearUser();
   useUndoSnackbarStore.getState().clearAll();
   useAdminModeStore.getState().resetAdminMode();
+  useCatalogPriceDisplayStore.getState().setDisplayCurrency("GEL");
+  clearGelToUsdCache();
+  clearTemporaryLockSessions();
 }
 
 export function clearAuthenticatedSession(): void {

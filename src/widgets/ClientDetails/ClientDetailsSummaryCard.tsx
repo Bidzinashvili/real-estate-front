@@ -71,7 +71,7 @@ export function ClientDetailsSummaryCard({
           outcomeSource={client.outcomeSource}
           verificationReason={client.verificationReason}
         />
-        <HideFromOthersBadge isHidden={client.hideFromOthers} />
+        <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
         {isClientArchived(client) ? (
           <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
             {ARCHIVE_COPY.archivedBadge}

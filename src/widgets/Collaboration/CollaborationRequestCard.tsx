@@ -6,6 +6,10 @@ import {
 import { DEAL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
 import { CollaborationParticipantsList } from "@/widgets/Collaboration/CollaborationParticipantsList";
+import {
+  formatCollaborationPropertyAddress,
+  formatCollaborationPropertyDistrict,
+} from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type CollaborationRequestCardProps = {
   collaboration: CollaborationRequestDto;
@@ -35,11 +39,12 @@ export function CollaborationRequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            {listing.address}
-            {listing.city ? `, ${listing.city}` : ""}
+            {formatCollaborationPropertyAddress(listing)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {listing.district} · {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType}
+            {listing
+              ? `${formatCollaborationPropertyDistrict(listing) ?? "—"} · ${lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType}`
+              : "—"}
           </p>
         </div>
         <CollaborationStatusBadge status={collaboration.status} />
