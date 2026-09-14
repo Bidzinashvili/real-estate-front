@@ -29,9 +29,10 @@ import {
   viewerOwnsRecord,
 } from "@/features/databaseList/viewerOwnership";
 import { OnlyMineToggle } from "@/widgets/DatabaseList/OnlyMineToggle";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { ClientListCard } from "@/widgets/Clients/ClientListCard";
-import { DatabaseListSearchInput } from "@/widgets/DatabaseList/DatabaseListSearchInput";
+import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
 import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
 import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
 import { AdvancedSearchSheet } from "@/widgets/DatabaseList/AdvancedSearchSheet";
@@ -91,6 +92,7 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
     state,
     debouncedState,
     setSearchInput,
+    setSelectedColors,
     setDistrict,
     setBudgetMinInput,
     setBudgetMaxInput,
@@ -118,6 +120,7 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const { clients, total, activeCount, isLoading, error, refetch } =
     useClientsList({
       search: debouncedState.searchInput.trim() || undefined,
+      color: state.selectedColors.length > 0 ? state.selectedColors : undefined,
       district: buildDistrictFilterParam(debouncedState.district),
       budgetMin: buildBudgetFilterParam(debouncedState.budgetMinInput),
       budgetMax: buildBudgetFilterParam(debouncedState.budgetMaxInput),
@@ -213,6 +216,7 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
           isMine={isMineScope}
         />
         <OnlyMineToggle isActive={isMineScope} onToggle={toggleOnlyMine} />
+        <AdminModeToggle />
         <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
           <span className="hidden font-medium sm:inline">სორტირება</span>
           <InlineSelect
@@ -235,11 +239,13 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
         </div>
       </div>
 
-      <DatabaseListSearchInput
-        value={state.searchInput}
-        onChange={setSearchInput}
-        placeholder="მოძებნე სახელით, ID-ით, ნომრით ან სხვა მონაცემით..."
-        clearAriaLabel="ძიების გასუფთავება"
+      <DatabaseListSearchRow
+        searchValue={state.searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="მოძებნე სახელით, ID-ით, ნომრით ან სხვა მონაცემით..."
+        searchClearAriaLabel="ძიების გასუფთავება"
+        selectedColors={state.selectedColors}
+        onSelectedColorsChange={setSelectedColors}
       />
 
       <div className="flex flex-col gap-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">

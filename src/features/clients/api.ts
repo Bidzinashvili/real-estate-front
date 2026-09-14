@@ -6,6 +6,7 @@ import {
   IDENTITY_CONFLICT_MESSAGE,
 } from "@/features/clientProfiles/identityConflict";
 import { toGetClientsSearchParams, type GetClientsQuery } from "@/features/clients/getClientsQuery";
+import { requestedAdminModeQuery } from "@/features/adminMode/requestedAdminModeQuery";
 import {
   normalizeClient,
   normalizeClientDetail,
@@ -69,7 +70,10 @@ export async function getClients(
   requestOptions?: GetClientsRequestOptions,
 ): Promise<ClientsListResponse> {
   const { baseUrl, headers } = getBearerAuthContext();
-  const params = toGetClientsSearchParams(query);
+  const params = toGetClientsSearchParams({
+    ...query,
+    ...requestedAdminModeQuery(),
+  });
 
   try {
     const res = await axios.get<GetClientsResponse>(`${baseUrl}/clients`, {
@@ -101,6 +105,7 @@ export async function getClientById(id: string): Promise<ClientDetail> {
   try {
     const res = await axios.get<ClientDetailApi>(`${baseUrl}/clients/${id}`, {
       headers,
+      params: requestedAdminModeQuery(),
     });
     return normalizeClientDetail(res.data);
   } catch (error) {

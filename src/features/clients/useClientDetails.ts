@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getClientById } from "@/features/clients/api";
 import type { ClientDetail } from "@/features/clients/types";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseClientDetailsResult = {
   client: ClientDetail | null;
@@ -16,6 +17,7 @@ export function useClientDetails(id: string): UseClientDetailsResult {
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
 
   const applyNoteLastOpenedAt = useCallback((openedAt: string | null) => {
     setClient((previous) => {
@@ -75,7 +77,7 @@ export function useClientDetails(id: string): UseClientDetailsResult {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isAdminMode]);
 
   return { client, isLoading, error, refetch, applyNoteLastOpenedAt };
 }

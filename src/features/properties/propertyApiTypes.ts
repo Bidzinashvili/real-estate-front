@@ -59,6 +59,7 @@ export type GetPropertiesQueryApi = {
   limit?: number;
   labelIds?: string[];
   labelNames?: string[];
+  color?: RecordColor[];
   archived?: boolean;
   myProperties?: boolean;
   scope?: DatabaseListScope;

@@ -35,6 +35,7 @@ import { useUserStore } from "@/shared/stores";
 import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 import { parseDatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 
 type UsePropertiesCatalogOptions = {
   enabled?: boolean;
@@ -156,6 +157,7 @@ export type UsePropertiesCatalogResult = {
   selectedLabels: LabelSelection[];
   debouncedTextFilters: CatalogDebouncedTextState;
   setSearchInput: (value: string) => void;
+  setSelectedColors: (value: RecordColor[]) => void;
   setSelectedLabels: (value: LabelSelection[]) => void;
   setDealType: (value: DealType | "") => void;
   setLifecycleStatus: (value: PropertyStatus | "") => void;
@@ -354,6 +356,7 @@ export function usePropertiesCatalog(
     state.propertyType,
     state.selectedLabelIds,
     state.selectedLabelNames,
+    state.selectedColors,
     state.sortBy,
     state.order,
     state.page,
@@ -363,6 +366,10 @@ export function usePropertiesCatalog(
     state.showArchived,
     state.createdFrom,
     state.createdTo,
+    state.lastOpenedFrom,
+    state.lastOpenedTo,
+    state.neverOpened,
+    state.readyToUpload,
     state.balcony,
     archivedFilter,
   ]);

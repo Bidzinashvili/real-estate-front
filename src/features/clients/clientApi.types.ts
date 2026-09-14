@@ -157,6 +157,8 @@ export type GetClientsQuery = {
   lastOpenedFrom?: string;
   lastOpenedTo?: string;
   neverOpened?: boolean;
+  color?: RecordColor[];
+  adminMode?: boolean;
 };
 
 export const DEFAULT_CLIENT_LIST_FILTER_LOCK: LockState = "locked";

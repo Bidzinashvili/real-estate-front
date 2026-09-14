@@ -15,7 +15,7 @@ import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { canManageProperty } from "@/features/properties/listingVisibility";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
-import { DatabaseListSearchInput } from "@/widgets/DatabaseList/DatabaseListSearchInput";
+import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 import {
@@ -65,6 +65,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
     error,
     state,
     setSearchInput,
+    setSelectedColors,
     setPage,
     refetch,
     hasClearableFilters,
@@ -153,11 +154,13 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
           </div>
         </div>
 
-        <DatabaseListSearchInput
-          value={state.searchInput}
-          onChange={setSearchInput}
-          placeholder="მოძებნე მისამართით, ID-ით, ნომრით ან სხვა მონაცემით..."
-          clearAriaLabel="ძიების გასუფთავება"
+        <DatabaseListSearchRow
+          searchValue={state.searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="მოძებნე მისამართით, ID-ით, ნომრით ან სხვა მონაცემით..."
+          searchClearAriaLabel="ძიების გასუფთავება"
+          selectedColors={state.selectedColors}
+          onSelectedColorsChange={setSelectedColors}
         />
 
         <PropertyCatalogBasicFilters

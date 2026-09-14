@@ -12,6 +12,7 @@ import {
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { PropertyType } from "@/features/properties/types";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 
 const ADVANCED_FILTER_DEFAULTS: Pick<
   PropertyCatalogUrlState,
@@ -69,6 +70,7 @@ export function createPropertiesCatalogFilterSetters(args: {
     setSearchInput: (value: string) => {
       setState((previousState) => ({ ...previousState, searchInput: value, page: 1 }));
     },
+    setSelectedColors: (value: RecordColor[]) => bumpPage({ selectedColors: value }),
     setSelectedLabelIds: (value: string[]) => bumpPage({ selectedLabelIds: value }),
     setSelectedLabelNames: (value: string[]) => bumpPage({ selectedLabelNames: value }),
     setDealType: (value: DealType | "") => bumpPage({ dealType: value }),
@@ -171,6 +173,7 @@ export function hasClearableCatalogFilters(
   state: PropertyCatalogUrlState,
 ): boolean {
   if (state.searchInput.trim()) return true;
+  if (state.selectedColors.length > 0) return true;
   if (state.dealType) return true;
   if (state.propertyType) return true;
   if (state.district.trim()) return true;

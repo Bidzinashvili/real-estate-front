@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { getClients } from "@/features/clients/api";
 import type { GetClientsQuery } from "@/features/clients/getClientsQuery";
 import type { Client } from "@/features/clients/types";
+import { isRecordColor, type RecordColor } from "@/features/recordColor/recordColor";
 import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEvent";
 import { noteOpenedEventName } from "@/features/noteLastOpened/noteOpenedEvent";
 import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseClientsListResult = {
   clients: Client[];
@@ -25,7 +27,21 @@ function lockedFieldKey(field: { value?: unknown; lock: string } | undefined): s
   return field === undefined ? "" : JSON.stringify(field);
 }
 
+function parseColorQueryKey(colorKey: string): RecordColor[] | undefined {
+  if (colorKey === "") {
+    return undefined;
+  }
+  const parsedColors: RecordColor[] = [];
+  for (const piece of colorKey.split(",")) {
+    if (isRecordColor(piece)) {
+      parsedColors.push(piece);
+    }
+  }
+  return parsedColors.length > 0 ? parsedColors : undefined;
+}
+
 export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [clients, setClients] = useState<Client[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -53,6 +69,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const queryLimit = query?.limit;
   const archived = query?.archived;
   const scope = query?.scope;
+  const colorKey = query?.color?.join(",") ?? "";
 
   const refetch = useCallback(() => {
     setRefetchTick((previousTick) => previousTick + 1);
@@ -112,6 +129,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
             limit: queryLimit,
             archived,
             scope,
+            color: parseColorQueryKey(colorKey),
           },
           { signal: controller.signal },
         );
@@ -162,6 +180,8 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
     queryLimit,
     archived,
     scope,
+    colorKey,
+    isAdminMode,
     refetchTick,
   ]);
 

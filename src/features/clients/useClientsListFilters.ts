@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ClientStatus, DealType } from "@/features/clients/clientEnums";
 import type { ClientSortBy, SortOrder } from "@/features/clients/clientApi.types";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 import {
   toggleDatabaseListScope,
   type DatabaseListScope,
@@ -136,6 +137,11 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     }));
   }, []);
 
+  const setSelectedColors = useCallback(
+    (value: RecordColor[]) => bumpPage({ selectedColors: value }),
+    [bumpPage],
+  );
+
   const setDistrict = useCallback(
     (value: string) => bumpPage({ district: value }),
     [bumpPage],
@@ -235,6 +241,7 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     state,
     debouncedState,
     setSearchInput,
+    setSelectedColors,
     setDistrict,
     setBudgetMinInput,
     setBudgetMaxInput,

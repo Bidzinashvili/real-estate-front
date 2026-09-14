@@ -25,6 +25,11 @@ import {
   serializeNumericRangeFilter,
   toNumericRangeFilter,
 } from "@/features/databaseList/numericRangeFilter";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import {
+  appendRecordColorsToSearchParams,
+  parseRecordColorsFromSearchParams,
+} from "@/features/recordColor/recordColorQuery";
 
 export const CATALOG_LIMIT_OPTIONS = [10, 20, 50] as const;
 
@@ -37,6 +42,7 @@ export type PropertyCatalogUrlState = {
   showArchived: boolean;
   selectedLabelIds: string[];
   selectedLabelNames: string[];
+  selectedColors: RecordColor[];
   dealType: DealType | "";
   lifecycleStatus: PropertyStatus | "";
   propertyType: PropertyType | "";
@@ -121,6 +127,7 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   showArchived: false,
   selectedLabelIds: [],
   selectedLabelNames: [],
+  selectedColors: [],
   dealType: "",
   lifecycleStatus: "",
   propertyType: "",
@@ -201,6 +208,8 @@ export function parsePropertyCatalogUrl(
   if (labelNames.length > 0) {
     next.selectedLabelNames = labelNames;
   }
+
+  next.selectedColors = parseRecordColorsFromSearchParams(searchParams);
 
   const type = searchParams.get("type");
   if (type && isPropertyType(type)) next.propertyType = type;
@@ -394,6 +403,7 @@ export function propertyCatalogUrlStateToSearchParams(
     const trimmedLabelName = labelName.trim();
     if (trimmedLabelName) params.append("labelNames", trimmedLabelName);
   }
+  appendRecordColorsToSearchParams(params, state.selectedColors);
 
   return params;
 }
@@ -424,6 +434,7 @@ export function catalogStateToApiQuery(
     status: state.lifecycleStatus || undefined,
     labelIds: state.selectedLabelIds.length > 0 ? state.selectedLabelIds : undefined,
     labelNames: state.selectedLabelNames.length > 0 ? state.selectedLabelNames : undefined,
+    color: state.selectedColors.length > 0 ? state.selectedColors : undefined,
     city: textFilters.city.trim() || undefined,
     district: textFilters.district.trim() || undefined,
     minPrice: parseDecimalInput(textFilters.minPrice),

@@ -7,6 +7,10 @@ import type {
   SortOrder,
 } from "@/features/clients/clientApi.types";
 import { DEFAULT_CLIENT_LIST_FILTER_LOCK } from "@/features/clients/clientApi.types";
+import {
+  appendRecordColorsToSearchParams,
+  normalizeRecordColors,
+} from "@/features/recordColor/recordColorQuery";
 
 export type { GetClientsQuery, ClientSortBy, SortOrder };
 
@@ -37,65 +41,68 @@ function toLockedQueryJson(value: { value?: unknown; lock: string }): string {
 
 export function toGetClientsSearchParams(
   query: GetClientsQuery | undefined,
-): Record<string, string> {
-  if (!query) return {};
-
-  const out: Record<string, string> = {};
+): URLSearchParams {
+  const out = new URLSearchParams();
+  if (!query) return out;
 
   const trimmedSearch = query.search?.trim() ?? "";
   if (trimmedSearch !== "") {
-    out.search = trimmedSearch;
+    out.set("search", trimmedSearch);
   }
   if (query.createdFrom) {
-    out.createdFrom = query.createdFrom;
+    out.set("createdFrom", query.createdFrom);
   }
   if (query.createdTo) {
-    out.createdTo = query.createdTo;
+    out.set("createdTo", query.createdTo);
   }
   if (query.neverOpened === true) {
-    out.neverOpened = "true";
+    out.set("neverOpened", "true");
   } else {
     if (query.lastOpenedFrom) {
-      out.lastOpenedFrom = query.lastOpenedFrom;
+      out.set("lastOpenedFrom", query.lastOpenedFrom);
     }
     if (query.lastOpenedTo) {
-      out.lastOpenedTo = query.lastOpenedTo;
+      out.set("lastOpenedTo", query.lastOpenedTo);
     }
   }
   if (query.district !== undefined) {
-    out.district = toLockedQueryJson(query.district);
+    out.set("district", toLockedQueryJson(query.district));
   }
   if (query.budgetMin !== undefined) {
-    out.budgetMin = toLockedQueryJson(query.budgetMin);
+    out.set("budgetMin", toLockedQueryJson(query.budgetMin));
   }
   if (query.budgetMax !== undefined) {
-    out.budgetMax = toLockedQueryJson(query.budgetMax);
+    out.set("budgetMax", toLockedQueryJson(query.budgetMax));
   }
   if (query.dealType) {
-    out.dealType = query.dealType;
+    out.set("dealType", query.dealType);
   }
   if (query.status !== undefined) {
-    out.status = toLockedQueryJson(query.status);
+    out.set("status", toLockedQueryJson(query.status));
   }
   if (query.sortBy) {
-    out.sortBy = query.sortBy;
+    out.set("sortBy", query.sortBy);
   }
   if (query.order) {
-    out.order = query.order;
+    out.set("order", query.order);
   }
   if (query.page !== undefined && Number.isFinite(query.page)) {
-    out.page = String(query.page);
+    out.set("page", String(query.page));
   }
   if (query.limit !== undefined && Number.isFinite(query.limit)) {
-    out.limit = String(query.limit);
+    out.set("limit", String(query.limit));
   }
   if (query.archived === true) {
-    out.archived = "true";
+    out.set("archived", "true");
   } else if (query.archived === false) {
-    out.archived = "false";
+    out.set("archived", "false");
   }
   if (query.scope) {
-    out.scope = query.scope;
+    out.set("scope", query.scope);
+  }
+  appendRecordColorsToSearchParams(out, normalizeRecordColors(query.color));
+  if (query.adminMode === true) {
+    out.set("adminMode", "true");
   }
 
   return out;

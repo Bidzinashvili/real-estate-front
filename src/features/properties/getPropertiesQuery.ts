@@ -7,6 +7,11 @@ import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { Property, PropertyType } from "@/features/properties/types";
 import type { LockState } from "@/features/matching/matchingEnums";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import {
+  appendRecordColorsToSearchParams,
+  normalizeRecordColors,
+} from "@/features/recordColor/recordColorQuery";
 
 export type PropertiesListResult = {
   properties: Property[];
@@ -60,6 +65,7 @@ export type GetPropertiesQuery = {
   readyToUpload?: boolean;
   labelIds?: string[];
   labelNames?: string[];
+  color?: RecordColor[];
   adminMode?: boolean;
 };
 
@@ -212,6 +218,7 @@ export function toGetPropertiesSearchParams(
   }
   appendArray(out, "labelIds", query.labelIds);
   appendArray(out, "labelNames", query.labelNames);
+  appendRecordColorsToSearchParams(out, normalizeRecordColors(query.color));
   if (query.adminMode === true) {
     out.set("adminMode", "true");
   }

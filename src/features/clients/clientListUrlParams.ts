@@ -8,12 +8,18 @@ import {
   type DatabaseListScope,
 } from "@/features/databaseList/databaseListScope";
 import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import {
+  appendRecordColorsToSearchParams,
+  parseRecordColorsFromSearchParams,
+} from "@/features/recordColor/recordColorQuery";
 
 export const CLIENT_LIST_DEFAULT_LIMIT = 20;
 export const CLIENT_LIST_SEARCH_DEBOUNCE_MS = 300;
 
 export type ClientListUrlState = {
   searchInput: string;
+  selectedColors: RecordColor[];
   district: string;
   budgetMinInput: string;
   budgetMaxInput: string;
@@ -37,6 +43,7 @@ export type ClientListDebouncedState = Pick<
 
 export const DEFAULT_CLIENT_LIST_URL_STATE: ClientListUrlState = {
   searchInput: "",
+  selectedColors: [],
   district: "",
   budgetMinInput: "",
   budgetMaxInput: "",
@@ -90,6 +97,8 @@ export function parseClientListUrl(
   const search = searchParams.get("search");
   if (search) next.searchInput = search;
 
+  next.selectedColors = parseRecordColorsFromSearchParams(searchParams);
+
   const district = searchParams.get("district");
   if (district) next.district = district;
 
@@ -138,6 +147,7 @@ export function clientListUrlStateToSearchParams(
   const params = new URLSearchParams();
   const trimmedSearch = state.searchInput.trim();
   if (trimmedSearch) params.set("search", trimmedSearch);
+  appendRecordColorsToSearchParams(params, state.selectedColors);
   const trimmedDistrict = state.district.trim();
   if (trimmedDistrict) params.set("district", trimmedDistrict);
   if (state.budgetMinInput.trim()) params.set("budgetMin", state.budgetMinInput.trim());
@@ -190,6 +200,7 @@ export function countClientAdvancedFilters(state: ClientListUrlState): number {
 
 export function hasClearableClientFilters(state: ClientListUrlState): boolean {
   if (state.searchInput.trim()) return true;
+  if (state.selectedColors.length > 0) return true;
   if (state.district.trim()) return true;
   if (state.budgetMinInput.trim() || state.budgetMaxInput.trim()) return true;
   if (state.dealType) return true;

@@ -47,8 +47,8 @@ export type NormalizedRemindersList = {
   limit: number;
 };
 
-const LISTING_VERIFICATION_ID_PREFIX = "listing-verification:";
-const CLIENT_REMINDER_ID_PREFIX = "client-reminder:";
+export const LISTING_VERIFICATION_ID_PREFIX = "listing-verification:";
+export const CLIENT_REMINDER_ID_PREFIX = "client-reminder:";
 
 const DISABLED_ACTIONS: ReminderFeedActions = {
   canUpdate: false,
@@ -520,4 +520,30 @@ export function normalizeDashboardRemindersList(
 
 export function isKeepStyleReminder(variant: DashboardReminderVariant): boolean {
   return variant === "SCHEDULED_PROPERTY" || variant === "SCHEDULED_CLIENT";
+}
+
+export function isLifecycleReminderId(reminderId: string): boolean {
+  return (
+    reminderId.startsWith(LISTING_VERIFICATION_ID_PREFIX) ||
+    reminderId.startsWith(CLIENT_REMINDER_ID_PREFIX)
+  );
+}
+
+export function isLifecycleVerificationReminder(
+  reminder: Pick<DashboardReminderRow, "id" | "reminderVariant">,
+): boolean {
+  if (
+    reminder.reminderVariant === "LISTING_VERIFICATION" ||
+    reminder.reminderVariant === "CLIENT_REMINDER"
+  ) {
+    return true;
+  }
+  return isLifecycleReminderId(reminder.id);
+}
+
+export function isAlarmOverlayReminder(reminder: DashboardReminderRow): boolean {
+  if (isLifecycleVerificationReminder(reminder)) {
+    return false;
+  }
+  return isKeepStyleReminder(reminder.reminderVariant) || reminder.actions.canSnooze;
 }
