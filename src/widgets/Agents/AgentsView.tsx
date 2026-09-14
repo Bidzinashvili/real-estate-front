@@ -5,6 +5,7 @@ import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAgentsList } from "@/features/agents/useAgentsList";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { PasswordSetBadge } from "@/widgets/Agents/PasswordSetBadge";
 
 const PAGE_SIZE = 10;
 
@@ -12,14 +13,14 @@ type SortBy = "fullName" | "email" | "createdAt";
 type Order = "asc" | "desc";
 
 const AGENT_SORT_OPTIONS: { value: SortBy; label: string }[] = [
-  { value: "createdAt", label: "Newest" },
-  { value: "fullName", label: "Name" },
-  { value: "email", label: "Email" },
+  { value: "createdAt", label: "უახლესი" },
+  { value: "fullName", label: "სახელი" },
+  { value: "email", label: "ელფოსტა" },
 ];
 
 const ORDER_OPTIONS: { value: Order; label: string }[] = [
-  { value: "desc", label: "Desc" },
-  { value: "asc", label: "Asc" },
+  { value: "desc", label: "კლებადი" },
+  { value: "asc", label: "ზრდადი" },
 ];
 
 export function AgentsView() {
@@ -68,11 +69,10 @@ export function AgentsView() {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Your agents, at a glance
+            თქვენი აგენტები
           </h1>
-          <p className="max-w-md text-sm text-slate-600">
-            Quickly search, filter, and jump into agent details. Keep your team
-            and pipeline up to date.
+          <p className="max-w-md text-sm text-muted-foreground">
+            მოძებნეთ და გაფილტრეთ აგენტები და სწრაფად გადადით დეტალებზე.
           </p>
         </div>
 
@@ -80,25 +80,25 @@ export function AgentsView() {
           <button
             type="button"
             onClick={() => router.push("/agents/new")}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
-            Add agent
+            აგენტის დამატება
           </button>
 
-          <div className="flex w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 shadow-sm sm:w-72">
+          <div className="flex w-full items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 shadow-sm sm:w-72">
             <input
               type="search"
               value={search}
               onChange={(event) => handleSearchChange(event.target.value)}
-              placeholder="Search..."
-              className="h-7 w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+              placeholder="ძიება..."
+              className="h-7 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => handleSearchChange("")}
-                className="inline-flex h-7 w-7 items-center justify-center text-slate-400 transition hover:text-slate-700"
-                aria-label="Clear search"
+                className="inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:text-foreground"
+                aria-label="ძიების გასუფთავება"
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -106,24 +106,24 @@ export function AgentsView() {
             <button
               type="button"
               onClick={() => handleSearchChange(search)}
-              className="inline-flex h-7 w-7 items-center justify-center text-slate-400 transition hover:text-slate-700"
-              aria-label="Search"
+              className="inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:text-foreground"
+              aria-label="ძიება"
             >
               <Search className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">
-            <span className="hidden font-medium sm:inline">Sort</span>
+          <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow-sm">
+            <span className="hidden font-medium sm:inline">სორტირება</span>
             <InlineSelect
-              aria-label="Sort agents by"
+              aria-label="აგენტების სორტირება"
               value={sortBy}
               onChange={(value) => handleSortChange(value as SortBy)}
               options={AGENT_SORT_OPTIONS}
             />
-            <span className="h-4 w-px bg-slate-200" />
+            <span className="h-4 w-px bg-border" />
             <InlineSelect
-              aria-label="Sort order"
+              aria-label="სორტირების მიმართულება"
               value={order}
               onChange={(value) => handleOrderChange(value as Order)}
               options={ORDER_OPTIONS}
@@ -132,60 +132,63 @@ export function AgentsView() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         {isLoading && (
-          <p className="text-sm text-slate-600">Loading agents…</p>
+          <p className="text-sm text-muted-foreground">აგენტები იტვირთება…</p>
         )}
 
         {error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
         )}
 
         {!isLoading && !error && filteredAgents.length === 0 && (
-          <p className="text-sm text-slate-600">
-            You don&apos;t have any agents yet.
+          <p className="text-sm text-muted-foreground">
+            აგენტები ჯერ არ გაქვთ.
           </p>
         )}
 
         {!isLoading && !error && filteredAgents.length > 0 && (
           <div className="mt-2 overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500">
+              <thead className="bg-muted text-left text-xs font-medium text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Joined</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3">სახელი</th>
+                  <th className="px-4 py-3">ელფოსტა</th>
+                  <th className="px-4 py-3">ტელეფონი</th>
+                  <th className="px-4 py-3">შემოუერთდა</th>
+                  <th className="px-4 py-3 text-right">მოქმედებები</th>
                 </tr>
               </thead>
               <tbody>
                 {currentAgents.map((agent) => (
                   <tr
                     key={agent.id}
-                    className="border-t border-slate-100 hover:bg-slate-50/60"
+                    className="border-t border-border hover:bg-muted/60"
                   >
-                    <td className="px-4 py-3 text-slate-900">
-                      {agent.fullName}
+                    <td className="px-4 py-3 text-foreground">
+                      <div className="flex flex-col gap-1">
+                        <span>{agent.fullName}</span>
+                        <PasswordSetBadge passwordSet={agent.passwordSet} />
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {agent.email}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {agent.phone || "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {new Date(agent.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => router.push(`/agents/${agent.id}`)}
-                        className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+                        className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
                       >
-                        View
+                        ნახვა
                       </button>
                     </td>
                   </tr>
@@ -197,18 +200,18 @@ export function AgentsView() {
       </div>
 
       {!isLoading && !error && filteredAgents.length > 0 && (
-        <div className="flex items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
           <span>
-            Page {safePage} of {totalPages}
+            გვერდი {safePage} / {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={safePage === 1}
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Previous
+              წინა
             </button>
             <button
               type="button"
@@ -216,9 +219,9 @@ export function AgentsView() {
               onClick={() =>
                 setPage((prev) => Math.min(totalPages, prev + 1))
               }
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Next
+              შემდეგი
             </button>
           </div>
         </div>

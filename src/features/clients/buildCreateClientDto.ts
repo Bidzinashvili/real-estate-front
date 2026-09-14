@@ -2,14 +2,30 @@ import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import type {
   CreateClientPayload,
   LockState,
-  LockedPartial,
+  LockedOptional,
   UpdateClientPayload,
 } from "@/features/clients/clientApi.types";
 import {
   BUILDING_CONDITIONS,
   KITCHEN_TYPES,
-  RENOVATION_VALUES,
 } from "@/features/clients/clientEnums";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
+import { persistEntityLock } from "@/features/matching/persistEntityLock";
+import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
+
+function phonesForIdentitySubmit(phones: string[]): string[] {
+  return phones
+    .map((phoneNumber) => phoneNumber.trim())
+    .filter((phoneNumber) => phoneNumber !== "");
+}
+
+function toSubmittedWhatsapp(rawWhatsapp: string | undefined): string | undefined {
+  const trimmedWhatsapp = rawWhatsapp?.trim() ?? "";
+  if (!trimmedWhatsapp) {
+    return undefined;
+  }
+  return normalizeGeorgianPhone(trimmedWhatsapp);
+}
 
 function parseReminderDateToIso(raw: string): string | undefined {
   const trimmed = raw.trim();
@@ -24,19 +40,20 @@ function parseReminderDateToIso(raw: string): string | undefined {
 }
 
 function shouldEmitLockedPartial(lock: LockState, hasMeaningfulValue: boolean): boolean {
-  return hasMeaningfulValue || lock !== "none";
+  return hasMeaningfulValue || persistEntityLock(lock) !== "none";
 }
 
 function appendLockedPartialNumber(
-  dto: CreateClientPayload,
+  dto: CreateClientPayload | UpdateClientPayload,
   key: "budgetMin" | "budgetMax" | "minRentalPeriod",
   field: ClientFormValues[typeof key],
 ): void {
+  const persistedLock = persistEntityLock(field.lock);
   const hasValue = field.value !== undefined && !Number.isNaN(field.value);
-  if (!shouldEmitLockedPartial(field.lock, hasValue)) {
+  if (!shouldEmitLockedPartial(persistedLock, hasValue)) {
     return;
   }
-  const payload: LockedPartial<number> = { lock: field.lock };
+  const payload: LockedOptional<number> = { lock: persistedLock };
   if (hasValue) {
     payload.value = field.value;
   }
@@ -44,7 +61,7 @@ function appendLockedPartialNumber(
 }
 
 function appendLockedNumber(
-  dto: CreateClientPayload,
+  dto: CreateClientPayload | UpdateClientPayload,
   key:
     | "minRooms"
     | "maxRooms"
@@ -64,13 +81,24 @@ function appendLockedNumber(
   if (!hasValue) {
     return;
   }
-  dto[key] = { value: field.value as number, lock: field.lock };
+  dto[key] = { value: field.value as number, lock: persistEntityLock(field.lock) };
 }
 
 function appendLockedBoolean(
-  dto: CreateClientPayload,
+  dto: CreateClientPayload | UpdateClientPayload,
+  key: "excludeLastFloor",
+  field: ClientFormValues["excludeLastFloor"],
+): void {
+  const hasValue = field.value !== undefined;
+  if (!hasValue) {
+    return;
+  }
+  dto[key] = { value: field.value === true, lock: persistEntityLock(field.lock) };
+}
+
+function appendLockedPreference(
+  dto: CreateClientPayload | UpdateClientPayload,
   key:
-    | "excludeLastFloor"
     | "hasBalcony"
     | "goodView"
     | "elevator"
@@ -80,48 +108,27 @@ function appendLockedBoolean(
     | "parking",
   field: ClientFormValues[typeof key],
 ): void {
-  const hasValue = field.value !== undefined;
-  if (!hasValue) {
-    return;
-  }
-  dto[key] = { value: field.value as boolean, lock: field.lock };
-}
-
-function appendLockedPartialRenovation(
-  dto: CreateClientPayload,
-  field: ClientFormValues["renovation"],
-): void {
-  const raw = field.value;
-  const hasEnumValue =
-    raw !== undefined &&
-    raw !== "" &&
-    (RENOVATION_VALUES as readonly string[]).includes(raw);
-  if (!shouldEmitLockedPartial(field.lock, hasEnumValue)) {
-    return;
-  }
-  const payload: LockedPartial<(typeof RENOVATION_VALUES)[number]> = {
-    lock: field.lock,
+  dto[key] = {
+    value: field.value as ClientPreferenceValue,
+    lock: persistEntityLock(field.lock),
   };
-  if (hasEnumValue) {
-    payload.value = raw;
-  }
-  dto.renovation = payload;
 }
 
 function appendLockedPartialBuildingCondition(
-  dto: CreateClientPayload,
+  dto: CreateClientPayload | UpdateClientPayload,
   field: ClientFormValues["buildingCondition"],
 ): void {
   const raw = field.value;
+  const persistedLock = persistEntityLock(field.lock);
   const hasEnumValue =
     raw !== undefined &&
     raw !== "" &&
     (BUILDING_CONDITIONS as readonly string[]).includes(raw);
-  if (!shouldEmitLockedPartial(field.lock, hasEnumValue)) {
+  if (!shouldEmitLockedPartial(persistedLock, hasEnumValue)) {
     return;
   }
-  const payload: LockedPartial<(typeof BUILDING_CONDITIONS)[number]> = {
-    lock: field.lock,
+  const payload: LockedOptional<(typeof BUILDING_CONDITIONS)[number]> = {
+    lock: persistedLock,
   };
   if (hasEnumValue) {
     payload.value = raw;
@@ -130,19 +137,20 @@ function appendLockedPartialBuildingCondition(
 }
 
 function appendLockedPartialKitchenTypeField(
-  dto: CreateClientPayload,
+  dto: CreateClientPayload | UpdateClientPayload,
   field: ClientFormValues["kitchenType"],
 ): void {
   const raw = field.value;
+  const persistedLock = persistEntityLock(field.lock);
   const hasEnumValue =
     raw !== undefined &&
     raw !== "" &&
     (KITCHEN_TYPES as readonly string[]).includes(raw);
-  if (!shouldEmitLockedPartial(field.lock, hasEnumValue)) {
+  if (!shouldEmitLockedPartial(persistedLock, hasEnumValue)) {
     return;
   }
-  const payload: LockedPartial<(typeof KITCHEN_TYPES)[number]> = {
-    lock: field.lock,
+  const payload: LockedOptional<(typeof KITCHEN_TYPES)[number]> = {
+    lock: persistedLock,
   };
   if (hasEnumValue) {
     payload.value = raw;
@@ -150,13 +158,17 @@ function appendLockedPartialKitchenTypeField(
   dto.kitchenType = payload;
 }
 
-function appendPet(dto: CreateClientPayload, pet: ClientFormValues["pet"]): void {
+function appendPet(
+  dto: CreateClientPayload | UpdateClientPayload,
+  pet: ClientFormValues["pet"],
+): void {
   const trimmed = pet.value?.trim();
+  const persistedLock = persistEntityLock(pet.lock);
   const hasValue = Boolean(trimmed);
-  if (!shouldEmitLockedPartial(pet.lock, hasValue)) {
+  if (!shouldEmitLockedPartial(persistedLock, hasValue)) {
     return;
   }
-  const payload: LockedPartial<string> = { lock: pet.lock };
+  const payload: LockedOptional<string> = { lock: persistedLock };
   if (hasValue && trimmed) {
     payload.value = trimmed;
   }
@@ -164,14 +176,15 @@ function appendPet(dto: CreateClientPayload, pet: ClientFormValues["pet"]): void
 }
 
 function appendProjectExclude(
-  dto: CreateClientPayload,
+  dto: CreateClientPayload | UpdateClientPayload,
   field: ClientFormValues["projectExclude"],
 ): void {
+  const persistedLock = persistEntityLock(field.lock);
   const hasValue = field.value.length > 0;
-  if (!shouldEmitLockedPartial(field.lock, hasValue)) {
+  if (!shouldEmitLockedPartial(persistedLock, hasValue)) {
     return;
   }
-  const payload: LockedPartial<string[]> = { lock: field.lock };
+  const payload: LockedOptional<string[]> = { lock: persistedLock };
   if (hasValue) {
     payload.value = field.value;
   }
@@ -182,36 +195,13 @@ function filterStringList(values: string[]): string[] {
   return values.map((value) => value.trim()).filter((value) => value.length > 0);
 }
 
-export function buildCreateClientDto(values: ClientFormValues): CreateClientPayload {
-  const dto: CreateClientPayload = {
-    name: values.name,
-    phones: values.phones,
-    dealType: values.dealType,
-    description: values.description,
-    districts: { value: filterStringList(values.districts.value), lock: values.districts.lock },
-    addresses: { value: filterStringList(values.addresses.value), lock: values.addresses.lock },
-    labels: { value: filterStringList(values.labels.value), lock: values.labels.lock },
-  };
-
-  if (values.whatsapp?.trim()) {
-    dto.whatsapp = values.whatsapp.trim();
-  }
-
+function appendMatchingFields(
+  dto: CreateClientPayload | UpdateClientPayload,
+  values: ClientFormValues,
+): void {
   appendLockedPartialNumber(dto, "budgetMin", values.budgetMin);
   appendLockedPartialNumber(dto, "budgetMax", values.budgetMax);
-
-  if (values.status) {
-    dto.status = values.status;
-  }
-
   appendPet(dto, values.pet);
-
-  const validPersons = (values.relatedPersons ?? []).filter(
-    (person) => person.name?.trim(),
-  );
-  if (validPersons.length > 0) {
-    dto.relatedPersons = validPersons;
-  }
 
   appendLockedNumber(dto, "minRooms", values.minRooms);
   appendLockedNumber(dto, "maxRooms", values.maxRooms);
@@ -221,40 +211,119 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
   appendLockedNumber(dto, "maxFloor", values.maxFloor);
   appendLockedBoolean(dto, "excludeLastFloor", values.excludeLastFloor);
 
-  appendLockedPartialRenovation(dto, values.renovation);
+  dto.renovations = {
+    value: values.renovations.value,
+    lock: persistEntityLock(values.renovations.lock),
+  };
+
   appendLockedPartialBuildingCondition(dto, values.buildingCondition);
   appendLockedPartialKitchenTypeField(dto, values.kitchenType);
-
   appendProjectExclude(dto, values.projectExclude);
 
   appendLockedNumber(dto, "minArea", values.minArea);
   appendLockedNumber(dto, "maxArea", values.maxArea);
-  appendLockedBoolean(dto, "hasBalcony", values.hasBalcony);
+  appendLockedPreference(dto, "hasBalcony", values.hasBalcony);
   appendLockedNumber(dto, "balconyAreaMin", values.balconyAreaMin);
   appendLockedNumber(dto, "balconyAreaMax", values.balconyAreaMax);
-  appendLockedBoolean(dto, "goodView", values.goodView);
-  appendLockedBoolean(dto, "elevator", values.elevator);
-  appendLockedBoolean(dto, "centralHeating", values.centralHeating);
-  appendLockedBoolean(dto, "airConditioner", values.airConditioner);
-  appendLockedBoolean(dto, "furnished", values.furnished);
+  appendLockedPreference(dto, "goodView", values.goodView);
+  appendLockedPreference(dto, "elevator", values.elevator);
+  appendLockedPreference(dto, "centralHeating", values.centralHeating);
+  appendLockedPreference(dto, "airConditioner", values.airConditioner);
+  appendLockedPreference(dto, "furnished", values.furnished);
   appendLockedNumber(dto, "minBathrooms", values.minBathrooms);
   appendLockedNumber(dto, "maxBathrooms", values.maxBathrooms);
-  appendLockedBoolean(dto, "parking", values.parking);
+  appendLockedPreference(dto, "parking", values.parking);
   appendLockedPartialNumber(dto, "minRentalPeriod", values.minRentalPeriod);
+}
+
+export function buildCreateClientDto(values: ClientFormValues): CreateClientPayload {
+  const dto: CreateClientPayload = {
+    name: values.name,
+    phones: phonesForIdentitySubmit(values.phones),
+    dealType: values.dealType,
+    description: values.description,
+    districts: {
+      value: filterStringList(values.districts.value),
+      lock: persistEntityLock(values.districts.lock),
+    },
+    addresses: {
+      value: filterStringList(values.addresses.value),
+      lock: persistEntityLock(values.addresses.lock),
+    },
+    labels: {
+      value: filterStringList(values.labels.value),
+      lock: persistEntityLock(values.labels.lock),
+    },
+  };
+
+  const submittedWhatsapp = toSubmittedWhatsapp(values.whatsapp);
+  if (submittedWhatsapp) {
+    dto.whatsapp = submittedWhatsapp;
+  }
+
+  if (values.status) {
+    dto.status = values.status;
+  }
+
+  const validPersons = (values.relatedPersons ?? []).filter(
+    (person) => person.name?.trim(),
+  );
+  if (validPersons.length > 0) {
+    dto.relatedPersons = validPersons;
+  }
+
+  appendMatchingFields(dto, values);
 
   const reminderIso = parseReminderDateToIso(values.reminderDate ?? "");
   if (reminderIso) {
-    dto.reminderDate = reminderIso;
+    dto.reminder = {
+      type: "CUSTOM_DATE",
+      notifyAt: reminderIso,
+      repeats: false,
+    };
   }
 
   return dto;
 }
 
 export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayload {
-  const payload = buildCreateClientDto(values) as UpdateClientPayload;
-  payload.reminderDate = values.reminderDate?.trim()
-    ? parseReminderDateToIso(values.reminderDate)
-    : null;
-  payload.status = values.status ? values.status : undefined;
-  return payload;
+  const dto: UpdateClientPayload = {
+    name: values.name,
+    phones: phonesForIdentitySubmit(values.phones),
+    dealType: values.dealType,
+    description: values.description,
+    districts: {
+      value: filterStringList(values.districts.value),
+      lock: persistEntityLock(values.districts.lock),
+    },
+    addresses: {
+      value: filterStringList(values.addresses.value),
+      lock: persistEntityLock(values.addresses.lock),
+    },
+    labels: {
+      value: filterStringList(values.labels.value),
+      lock: persistEntityLock(values.labels.lock),
+    },
+    status: values.status ? values.status : undefined,
+    outcomeSource:
+      values.status === "INACTIVE" && values.outcomeSource
+        ? values.outcomeSource
+        : undefined,
+  };
+
+  const submittedWhatsapp = toSubmittedWhatsapp(values.whatsapp);
+  if (submittedWhatsapp) {
+    dto.whatsapp = submittedWhatsapp;
+  }
+
+  const validPersons = (values.relatedPersons ?? []).filter(
+    (person) => person.name?.trim(),
+  );
+  if (validPersons.length > 0) {
+    dto.relatedPersons = validPersons;
+  }
+
+  appendMatchingFields(dto, values);
+
+  return dto;
 }

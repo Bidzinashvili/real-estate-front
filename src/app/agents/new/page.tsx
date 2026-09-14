@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AddAgentForm } from "@/widgets/AddAgent/AddAgentForm";
 
 export const metadata: Metadata = {
-  title: "Add agent",
+  title: "აგენტის დამატება",
 };
 
 function AddAgentPage() {

@@ -81,7 +81,7 @@ export function ListingPriceEquivalentHint({
         }
         setHintState({
           status: "error",
-          message: "Could not load the USD equivalent right now.",
+          message: "დოლარის ეკვივალენტის ჩატვირთვა ვერ მოხერხდა.",
         });
       }
     }
@@ -114,24 +114,24 @@ export function ListingPriceEquivalentHint({
   }
 
   if (hintState.status === "loading") {
-    return <p className="text-xs text-slate-500">USD equivalent…</p>;
+    return <p className="text-xs text-muted-foreground">დოლარის ეკვივალენტი…</p>;
   }
 
   if (hintState.status === "error") {
     return (
-      <p className="text-xs text-red-600" role="status">
+      <p className="text-xs text-destructive" role="status">
         {hintState.message}
       </p>
     );
   }
 
   return (
-    <p className="text-xs text-slate-600">
+    <p className="text-xs text-muted-foreground">
       ≈ {usdFormatter.format(hintState.result)} ·{" "}
       <span className="tabular-nums">
-        {rateFormatter.format(hintState.rate)} USD per 1 ₾
+        {rateFormatter.format(hintState.rate)} USD / 1 ₾
       </span>
-      <span className="text-slate-500"> · NBG {hintState.date}</span>
+      <span className="text-muted-foreground"> · NBG {hintState.date}</span>
     </p>
   );
 }

@@ -20,7 +20,7 @@ const MAX_CONVERT_AMOUNT = 1e15;
 function getCurrencyApiBaseUrl(): string {
   const baseUrl = getApiBaseUrl();
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
   return baseUrl;
 }
@@ -115,25 +115,25 @@ export async function getUsdRate(
       if (isNetworkFailure) {
         throw new ApiError(
           {
-            message: "Network error. Check your connection and try again.",
+            message: "ქსელის შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.",
             error: "NetworkError",
             statusCode: status,
           },
-          "Network error. Check your connection and try again.",
+          "ქსელის შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.",
         );
       }
 
       if (status === 503) {
         const fallback =
-          "Official exchange rates are temporarily unavailable. Try again shortly.";
+          "ოფიციალური კურსები დროებით მიუწვდომელია. სცადეთ ცოტა ხანში.";
         const parsed = parseStandardApiError(error.response?.data, status, fallback);
         throw new ApiError(parsed, fallback);
       }
 
       const fallback =
         status === 400
-          ? "Check the date and try again."
-          : "Could not load the official USD rate right now.";
+          ? "შეამოწმეთ თარიღი და სცადეთ ხელახლა."
+          : "ოფიციალური კურსის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }
@@ -151,11 +151,11 @@ export async function convertCurrency(
   if (params.from === params.to) {
     throw new ApiError(
       {
-        message: "Choose two different currencies.",
+        message: "აირჩიეთ ორი განსხვავებული ვალუტა.",
         error: "BadRequest",
         statusCode: 400,
       },
-      "Choose two different currencies.",
+      "აირჩიეთ ორი განსხვავებული ვალუტა.",
     );
   }
 
@@ -166,11 +166,11 @@ export async function convertCurrency(
   ) {
     throw new ApiError(
       {
-        message: `Enter an amount between 0 and ${MAX_CONVERT_AMOUNT}.`,
+        message: `შეიყვანეთ თანხა 0-დან ${MAX_CONVERT_AMOUNT}-მდე.`,
         error: "BadRequest",
         statusCode: 400,
       },
-      `Enter an amount between 0 and ${MAX_CONVERT_AMOUNT}.`,
+      `შეიყვანეთ თანხა 0-დან ${MAX_CONVERT_AMOUNT}-მდე.`,
     );
   }
 
@@ -204,25 +204,25 @@ export async function convertCurrency(
       if (isNetworkFailure) {
         throw new ApiError(
           {
-            message: "Network error. Check your connection and try again.",
+            message: "ქსელის შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.",
             error: "NetworkError",
             statusCode: status,
           },
-          "Network error. Check your connection and try again.",
+          "ქსელის შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.",
         );
       }
 
       if (status === 503) {
         const fallback =
-          "Official exchange rates are temporarily unavailable. Try again shortly.";
+          "ოფიციალური კურსები დროებით მიუწვდომელია. სცადეთ ცოტა ხანში.";
         const parsed = parseStandardApiError(error.response?.data, status, fallback);
         throw new ApiError(parsed, fallback);
       }
 
       const fallback =
         status === 400
-          ? "Check the amount, currencies, and date, then try again."
-          : "Could not convert this amount right now.";
+          ? "შეამოწმეთ თანხა, ვალუტები და თარიღი, შემდეგ სცადეთ ხელახლა."
+          : "თანხის კონვერტაცია ვერ მოხერხდა.";
       const parsed = parseStandardApiError(error.response?.data, status, fallback);
       throw new ApiError(parsed, fallback);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AgentDetails } from "@/features/agents/types";
 import { getAgentById } from "@/features/agents/api";
 
@@ -8,12 +8,18 @@ type UseAgentDetailsResult = {
   agent: AgentDetails | null;
   isLoading: boolean;
   error: string | null;
+  reload: () => void;
 };
 
 export function useAgentDetails(id: string | null | undefined): UseAgentDetailsResult {
   const [agent, setAgent] = useState<AgentDetails | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reloadCount, setReloadCount] = useState(0);
+
+  const reload = useCallback(() => {
+    setReloadCount((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -34,7 +40,7 @@ export function useAgentDetails(id: string | null | undefined): UseAgentDetailsR
       } catch (err) {
         if (!cancelled) {
           const message =
-            err instanceof Error ? err.message : "Could not load this agent.";
+            err instanceof Error ? err.message : "აგენტის ჩატვირთვა ვერ მოხერხდა.";
           setError(message);
           setAgent(null);
         }
@@ -45,13 +51,12 @@ export function useAgentDetails(id: string | null | undefined): UseAgentDetailsR
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadCount]);
 
-  return { agent, isLoading, error };
+  return { agent, isLoading, error, reload };
 }
-

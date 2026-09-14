@@ -5,6 +5,7 @@ import type {
   AgentDetails,
   AgentsResponse,
   AgentCreatePayload,
+  AgentCreateResult,
   AgentUpdatePayload,
 } from "@/features/agents/types";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
@@ -20,11 +21,11 @@ function getAuthHeaders() {
   const token = getStoredAuthToken();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
 
   return {
@@ -52,7 +53,7 @@ export async function getAgentsList(
     return res.data.agents ?? res.data.items ?? [];
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load agents right now.";
+      const fallback = "აგენტების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -75,7 +76,7 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load this agent right now.";
+      const fallback = "აგენტის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -88,17 +89,17 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
   }
 }
 
-export async function createAgent(payload: AgentCreatePayload): Promise<Agent> {
+export async function createAgent(payload: AgentCreatePayload): Promise<AgentCreateResult> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.post<Agent>(`${baseUrl}/admin/agents`, payload, {
+    const res = await axios.post<AgentCreateResult>(`${baseUrl}/admin/agents`, payload, {
       headers,
     });
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not create agent right now.";
+      const fallback = "აგენტის შექმნა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -128,7 +129,7 @@ export async function updateAgent(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not save changes for this agent.";
+      const fallback = "აგენტის ცვლილებების შენახვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,
@@ -157,7 +158,62 @@ export async function deleteAgents(
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not delete this agent right now.";
+      const fallback = "აგენტის წაშლა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
+export async function resendAgentSetupEmail(
+  agentId: string,
+): Promise<{ message?: string }> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post<{ message?: string }>(
+      `${baseUrl}/admin/agents/${agentId}/resend-setup`,
+      {},
+      { headers },
+    );
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "პაროლის დაყენების ბმულის გაგზავნა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
+export async function resetAgentPassword(
+  agentId: string,
+  newPassword: string,
+): Promise<{ message?: string }> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post<{ message?: string }>(
+      `${baseUrl}/admin/agents/${agentId}/reset-password`,
+      { newPassword },
+      { headers },
+    );
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "პაროლის შეცვლა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,

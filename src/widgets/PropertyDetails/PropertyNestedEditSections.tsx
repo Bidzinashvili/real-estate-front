@@ -8,114 +8,337 @@ import type {
   PropertyCommercialUpdate,
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
-import { parseRenovationForForm } from "@/features/properties/types";
+import { isBuildingAgeType, parseRenovationForForm } from "@/features/properties/types";
+import { HashtagPicker } from "@/shared/components/HashtagPicker";
 import {
+  BUILDING_AGE_TYPE_FIELD_LABEL,
+  BUILDING_AGE_TYPE_SELECT_OPTIONS,
   LAND_CATEGORY_SELECT_OPTIONS,
   LAND_USAGE_SELECT_OPTIONS,
   RENOVATION_SELECT_OPTIONS,
+  BUILDING_CONDITION_OPTIONS,
+  KITCHEN_TYPE_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import type {
   PropertyFormLandPlot,
   PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
+import {
+  CANONICAL_AREA_MISSING_LABEL,
+  nextPrivateHouseTotalArea,
+} from "@/features/properties/propertyArea";
 import { SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import {
   EditableCheckbox,
   EditableNumericTextInput,
+  EditableTwoDigitNumericInput,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import { MinRentalPeriodEditField } from "@/widgets/PropertyDetails/MinRentalPeriodEditField";
 import { parseDecimalInput, parseIntegerInput } from "@/shared/lib/parseNumericInput";
-import { HashtagPicker } from "@/shared/components/HashtagPicker";
+import type { LockState, PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { PreferenceLockButton, FieldWithLock, MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { VerifiableBooleanField } from "@/widgets/AddProperty/VerifiableBooleanField";
+import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
+import {
+  applyBooleanUiState,
+  booleanUiStateFromApartment,
+  type ApartmentBooleanVerifiableField,
+} from "@/features/properties/apartmentVerification";
 
 type ApartmentProps = {
   dealType: DealType;
   apartment: NonNullable<PropertyFormValues["apartment"]>;
   setApartment: (patch: PropertyApartmentUpdate) => void;
+  fieldLocks: PropertyFieldLocks;
+  setFieldLocks: (nextLocks: PropertyFieldLocks) => void;
 };
 
 export function ApartmentEditSection({
   dealType,
   apartment,
   setApartment,
+  fieldLocks,
+  setFieldLocks,
 }: ApartmentProps) {
+  function handleBooleanFieldChange(
+    fieldKey: ApartmentBooleanVerifiableField,
+    nextState: ReturnType<typeof booleanUiStateFromApartment>,
+  ) {
+    const next = applyBooleanUiState(
+      apartment.needsVerification ?? [],
+      fieldKey,
+      nextState,
+    );
+    setApartment({
+      [fieldKey]: next.value,
+      needsVerification: next.needsVerification,
+    });
+  }
+
+  function handleFieldLockChange(lockKey: PropertyFieldLockKey, nextLock: LockState) {
+    setFieldLocks(applyPropertyFieldLock(fieldLocks, lockKey, nextLock));
+  }
+
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Apartment</legend>
+      <legend className="text-sm font-semibold text-foreground">ბინა</legend>
+      <MatchingLockHint />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <EditableNumericTextInput
-          label="Total area"
-          value={apartment.totalArea}
-          onValueChange={(next) => setApartment({ totalArea: next })}
-          parse={parseDecimalInput}
-          inputMode="decimal"
-        />
-        <EditableNumericTextInput
-          label="Rooms"
-          value={apartment.rooms}
-          onValueChange={(next) => setApartment({ rooms: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
-        />
-        <EditableNumericTextInput
-          label="Floor"
-          value={apartment.floor}
-          onValueChange={(next) => setApartment({ floor: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
-        />
-        <EditableNumericTextInput
-          label="Total floors"
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "area")}
+          onLockChange={(nextLock) => handleFieldLockChange("area", nextLock)}
+        >
+          <EditableNumericTextInput
+            label="საერთო ფართობი"
+            value={apartment.totalArea}
+            onValueChange={(next) => setApartment({ totalArea: next })}
+            parse={parseDecimalInput}
+            inputMode="decimal"
+            placeholder={CANONICAL_AREA_MISSING_LABEL}
+          />
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "rooms")}
+          onLockChange={(nextLock) => handleFieldLockChange("rooms", nextLock)}
+        >
+          <EditableNumericTextInput
+            label="ოთახები"
+            value={apartment.rooms}
+            onValueChange={(next) => setApartment({ rooms: next })}
+            parse={parseIntegerInput}
+            inputMode="numeric"
+          />
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "bedrooms")}
+          onLockChange={(nextLock) => handleFieldLockChange("bedrooms", nextLock)}
+        >
+          <EditableNumericTextInput
+            label="საძინებლები"
+            value={apartment.bedrooms}
+            onValueChange={(next) => setApartment({ bedrooms: next })}
+            parse={parseIntegerInput}
+            inputMode="numeric"
+          />
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "floor")}
+          onLockChange={(nextLock) => handleFieldLockChange("floor", nextLock)}
+        >
+          <EditableNumericTextInput
+            label="სართული"
+            value={apartment.floor}
+            onValueChange={(next) => setApartment({ floor: next })}
+            parse={parseIntegerInput}
+            inputMode="numeric"
+          />
+        </FieldWithLock>
+        <EditableTwoDigitNumericInput
+          label="სართულიანობა"
           value={apartment.totalFloors}
           onValueChange={(next) => setApartment({ totalFloors: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
         />
         <EditableNumericTextInput
-          label="Ceiling height"
+          label="ჭერის სიმაღლე"
           value={apartment.ceilingHeight ?? undefined}
           onValueChange={(next) => setApartment({ ceilingHeight: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
-        <EditableNumericTextInput
-          label="Balcony area"
-          value={apartment.balconyArea ?? undefined}
-          onValueChange={(next) => setApartment({ balconyArea: next })}
-          parse={parseDecimalInput}
-          inputMode="decimal"
-        />
-        <EditableNumericTextInput
-          label="Parking spaces"
-          value={apartment.parkingSpaces ?? undefined}
-          onValueChange={(next) => setApartment({ parkingSpaces: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
-        />
-        <HashtagPicker
-          id="editAptProject"
-          label="Project"
-          value={apartment.project ?? ""}
-          onChange={(next) => setApartment({ project: next })}
-        />
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "balconyArea")}
+          onLockChange={(nextLock) => handleFieldLockChange("balconyArea", nextLock)}
+        >
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <EditableNumericTextInput
+                label="აივნის ფართობი"
+                value={apartment.balconyArea ?? undefined}
+                onValueChange={(next) => {
+                  setApartment({ balconyArea: next ?? null });
+                  if (next !== undefined) {
+                    setApartment({
+                      balconyArea: next,
+                      needsVerification: (apartment.needsVerification ?? []).filter(
+                        (fieldKey) => fieldKey !== "balconyArea",
+                      ),
+                    });
+                  }
+                }}
+                parse={parseDecimalInput}
+                inputMode="decimal"
+              />
+            </div>
+            <NeedsVerificationToggle
+              fieldKey="balconyArea"
+              activeFields={apartment.needsVerification ?? []}
+              onChange={(nextFields) => setApartment({ needsVerification: nextFields })}
+            />
+          </div>
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "parking")}
+          onLockChange={(nextLock) => handleFieldLockChange("parking", nextLock)}
+        >
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <EditableNumericTextInput
+                label="პარკინგის ადგილები"
+                value={apartment.parkingSpaces ?? undefined}
+                onValueChange={(next) => {
+                  if (next !== undefined) {
+                    setApartment({
+                      parkingSpaces: next,
+                      needsVerification: (apartment.needsVerification ?? []).filter(
+                        (fieldKey) => fieldKey !== "parkingSpaces",
+                      ),
+                    });
+                    return;
+                  }
+                  setApartment({ parkingSpaces: null });
+                }}
+                parse={parseIntegerInput}
+                inputMode="numeric"
+              />
+            </div>
+            <NeedsVerificationToggle
+              fieldKey="parkingSpaces"
+              activeFields={apartment.needsVerification ?? []}
+              onChange={(nextFields) => setApartment({ needsVerification: nextFields })}
+            />
+          </div>
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "bathrooms")}
+          onLockChange={(nextLock) => handleFieldLockChange("bathrooms", nextLock)}
+        >
+          <EditableNumericTextInput
+            label="სველი წერტილები"
+            value={apartment.bathrooms ?? undefined}
+            onValueChange={(next) => setApartment({ bathrooms: next ?? null })}
+            parse={parseIntegerInput}
+            inputMode="numeric"
+          />
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "project")}
+          onLockChange={(nextLock) => handleFieldLockChange("project", nextLock)}
+        >
+          <HashtagPicker
+            id="editAptProject"
+            label="პროექტი"
+            value={apartment.project ?? ""}
+            onChange={(next) => setApartment({ project: next })}
+          />
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "renovation")}
+          onLockChange={(nextLock) => handleFieldLockChange("renovation", nextLock)}
+        >
+          <SelectField
+            id="editAptRenovation"
+            label="რემონტი"
+            value={parseRenovationForForm(apartment.renovation ?? null)}
+            onChange={(next) => setApartment({ renovation: next })}
+            options={RENOVATION_SELECT_OPTIONS}
+          />
+        </FieldWithLock>
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "buildingCondition")}
+          onLockChange={(nextLock) => handleFieldLockChange("buildingCondition", nextLock)}
+        >
+          <SelectField
+            id="editAptBuildingCondition"
+            label="შენობის მდგომარეობა"
+            value={apartment.buildingCondition ?? "NEW"}
+            onChange={(next) => setApartment({ buildingCondition: next })}
+            options={BUILDING_CONDITION_OPTIONS}
+          />
+        </FieldWithLock>
         <SelectField
-          id="editAptRenovation"
-          label="Renovation"
-          value={parseRenovationForForm(apartment.renovation ?? null)}
-          onChange={(next) => setApartment({ renovation: next })}
-          options={RENOVATION_SELECT_OPTIONS}
+          id="editAptBuildingAgeType"
+          label={BUILDING_AGE_TYPE_FIELD_LABEL}
+          value={apartment.buildingAgeType ?? ""}
+          onChange={(next) =>
+            setApartment({
+              buildingAgeType: isBuildingAgeType(next) ? next : null,
+            })
+          }
+          options={BUILDING_AGE_TYPE_SELECT_OPTIONS}
         />
-        <EditableCheckbox
-          label="Furnished"
-          checked={Boolean(apartment.furnished)}
-          onChange={(checked) => setApartment({ furnished: checked })}
-        />
-        <MinRentalPeriodEditField
-          dealType={dealType}
-          idPrefix="editApt"
-          months={apartment.minRentalPeriod ?? undefined}
-          onMonthsChange={(next) => setApartment({ minRentalPeriod: next })}
-        />
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "kitchenType")}
+          onLockChange={(nextLock) => handleFieldLockChange("kitchenType", nextLock)}
+        >
+          <SelectField
+            id="editAptKitchenType"
+            label="სამზარეულოს ტიპი"
+            value={apartment.kitchenType ?? "SEPARATE"}
+            onChange={(next) => setApartment({ kitchenType: next })}
+            options={KITCHEN_TYPE_OPTIONS}
+          />
+        </FieldWithLock>
+        {(
+          [
+            { label: "ლიფტი", key: "elevator" },
+            { label: "ცენტრალური გათბობა", key: "centralHeating" },
+            { label: "კონდიციონერი", key: "airConditioner" },
+            { label: "ავეჯით", key: "furnished" },
+            { label: "კარგი ხედი", key: "goodView" },
+          ] as const
+        ).map((field) => (
+          <div key={field.key} className="flex items-end gap-2">
+            <div className="flex-1">
+              <VerifiableBooleanField
+                id={`editApt-${field.key}`}
+                label={field.label}
+                value={booleanUiStateFromApartment(
+                  apartment[field.key],
+                  apartment.needsVerification ?? [],
+                  field.key,
+                )}
+                onChange={(nextState) => handleBooleanFieldChange(field.key, nextState)}
+              />
+            </div>
+            <PreferenceLockButton
+              value={readPropertyFieldLock(fieldLocks, field.key)}
+              onChange={(nextLock) => handleFieldLockChange(field.key, nextLock)}
+            />
+          </div>
+        ))}
+        {dealType === "RENT" ? (
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <VerifiableBooleanField
+                id="editAptPetsAllowed"
+                label="ცხოველები დაიშვება"
+                value={booleanUiStateFromApartment(
+                  apartment.petsAllowed,
+                  apartment.needsVerification ?? [],
+                  "petsAllowed",
+                )}
+                onChange={(nextState) => handleBooleanFieldChange("petsAllowed", nextState)}
+              />
+            </div>
+            <PreferenceLockButton
+              value={readPropertyFieldLock(fieldLocks, "petsAllowed")}
+              onChange={(nextLock) => handleFieldLockChange("petsAllowed", nextLock)}
+            />
+          </div>
+        ) : null}
+        <FieldWithLock
+          lock={readPropertyFieldLock(fieldLocks, "minRentalPeriod")}
+          onLockChange={(nextLock) => handleFieldLockChange("minRentalPeriod", nextLock)}
+        >
+          <MinRentalPeriodEditField
+            dealType={dealType}
+            idPrefix="editApt"
+            months={apartment.minRentalPeriod ?? undefined}
+            onMonthsChange={(next) => setApartment({ minRentalPeriod: next })}
+          />
+        </FieldWithLock>
       </div>
     </fieldset>
   );
@@ -134,55 +357,73 @@ export function PrivateHouseEditSection({
 }: PrivateHouseProps) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Private house</legend>
+      <legend className="text-sm font-semibold text-foreground">კერძო სახლი</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="House area"
+          label="სახლის ფართობი"
           value={privateHouse.houseArea}
-          onValueChange={(next) => setPrivateHouse({ houseArea: next })}
+          onValueChange={(next) =>
+            setPrivateHouse({
+              houseArea: next,
+              totalArea: nextPrivateHouseTotalArea(next, privateHouse.yardArea),
+            })
+          }
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Yard area"
+          label="ეზოს ფართობი"
           value={privateHouse.yardArea}
-          onValueChange={(next) => setPrivateHouse({ yardArea: next })}
+          onValueChange={(next) =>
+            setPrivateHouse({
+              yardArea: next,
+              totalArea: nextPrivateHouseTotalArea(privateHouse.houseArea, next),
+            })
+          }
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Balcony area"
+          label="საერთო ფართობი"
+          value={privateHouse.totalArea}
+          onValueChange={(next) => setPrivateHouse({ totalArea: next })}
+          parse={parseDecimalInput}
+          inputMode="decimal"
+          placeholder={CANONICAL_AREA_MISSING_LABEL}
+        />
+        <EditableNumericTextInput
+          label="აივნის ფართობი"
           value={privateHouse.balconyArea ?? undefined}
           onValueChange={(next) => setPrivateHouse({ balconyArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           value={privateHouse.parkingSpaces ?? undefined}
           onValueChange={(next) => setPrivateHouse({ parkingSpaces: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableCheckbox
-          label="Furnished"
+          label="ავეჯით"
           checked={Boolean(privateHouse.furnished)}
           onChange={(checked) => setPrivateHouse({ furnished: checked })}
         />
         <EditableCheckbox
-          label="Pool"
+          label="აუზი"
           checked={Boolean(privateHouse.pool)}
           onChange={(checked) => setPrivateHouse({ pool: checked })}
         />
         <EditableCheckbox
-          label="Fruit trees"
+          label="ხეხილი"
           checked={Boolean(privateHouse.fruitTrees)}
           onChange={(checked) => setPrivateHouse({ fruitTrees: checked })}
         />
         <SelectField
           id="editPhRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={parseRenovationForForm(privateHouse.renovation ?? null)}
           onChange={(next) => setPrivateHouse({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}
@@ -220,38 +461,39 @@ export function LandPlotEditSection({ dealType, landPlot, setLandPlot }: LandPlo
 
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Land plot</legend>
+      <legend className="text-sm font-semibold text-foreground">მიწის ნაკვეთი</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Land area"
+          label="მიწის ფართობი"
           value={landPlot.landArea}
           onValueChange={(next) => setLandPlot({ landArea: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+          placeholder={CANONICAL_AREA_MISSING_LABEL}
         />
         <SelectField
           id="editLpLandCategory"
-          label="Land category"
+          label="მიწის კატეგორია"
           value={landPlot.landCategory}
           onChange={handleLandCategoryChange}
           options={LAND_CATEGORY_SELECT_OPTIONS}
         />
         <SelectField
           id="editLpLandUsage"
-          label="Land usage"
+          label="მიწის დანიშნულება"
           value={landPlot.landUsage}
           onChange={handleLandUsageChange}
           options={LAND_USAGE_SELECT_OPTIONS}
           disabled={!hasLandCategory}
         />
         <EditableCheckbox
-          label="For investment"
+          label="საინვესტიციო"
           checked={Boolean(landPlot.forInvestment)}
           onChange={(checked) => setLandPlot({ forInvestment: checked })}
         />
         <EditableCheckbox
-          label="Can be divided"
+          label="იყოფა"
           checked={Boolean(landPlot.canBeDivided)}
           onChange={(checked) => setLandPlot({ canBeDivided: checked })}
         />
@@ -279,45 +521,44 @@ export function CommercialEditSection({
 }: CommercialProps) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-slate-800">Commercial</legend>
+      <legend className="text-sm font-semibold text-foreground">კომერციული</legend>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Area"
+          label="ფართობი"
           value={commercial.area}
           onValueChange={(next) => setCommercial({ area: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
+          placeholder={CANONICAL_AREA_MISSING_LABEL}
         />
-        <EditableNumericTextInput
-          label="Total floors"
+        <EditableTwoDigitNumericInput
+          label="სართულიანობა"
           value={commercial.totalFloors}
           onValueChange={(next) => setCommercial({ totalFloors: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
         />
         <EditableNumericTextInput
-          label="Ceiling height"
+          label="ჭერის სიმაღლე"
           value={commercial.ceilingHeight ?? undefined}
           onValueChange={(next) => setCommercial({ ceilingHeight: next })}
           parse={parseDecimalInput}
           inputMode="decimal"
         />
         <EditableNumericTextInput
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           value={commercial.parkingSpaces ?? undefined}
           onValueChange={(next) => setCommercial({ parkingSpaces: next })}
           parse={parseIntegerInput}
           inputMode="numeric"
         />
         <EditableCheckbox
-          label="Air conditioner"
+          label="კონდიციონერი"
           checked={Boolean(commercial.airConditioner)}
           onChange={(checked) => setCommercial({ airConditioner: checked })}
         />
         <SelectField
           id="editCmRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={parseRenovationForForm(commercial.renovation ?? null)}
           onChange={(next) => setCommercial({ renovation: next })}
           options={RENOVATION_SELECT_OPTIONS}

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { addPropertyInputClassName } from "@/widgets/AddProperty/addPropertyFormFields";
+import { sanitizeTwoDigitNumericInput } from "@/shared/lib/twoDigitNumericInput";
 
 type FloorInputProps = {
   floorId: string;
@@ -17,15 +18,11 @@ type FloorInputProps = {
   required?: boolean;
 };
 
-function sanitizeDigits(value: string): string {
-  return value.replace(/\D/g, "").slice(0, 2);
-}
-
 export function FloorInput({
   floorId,
   totalFloorsId,
-  floorLabel = "Floor",
-  totalFloorsLabel = "Total floors",
+  floorLabel = "სართული",
+  totalFloorsLabel = "სართულიანობა",
   floorValue,
   totalFloorsValue,
   onFloorChange,
@@ -37,7 +34,7 @@ export function FloorInput({
   const totalFloorsInputRef = useRef<HTMLInputElement | null>(null);
 
   function handleFloorChange(value: string) {
-    const nextValue = sanitizeDigits(value);
+    const nextValue = sanitizeTwoDigitNumericInput(value);
     onFloorChange(nextValue);
     if (nextValue.length === 2) {
       totalFloorsInputRef.current?.focus();
@@ -45,14 +42,14 @@ export function FloorInput({
   }
 
   function handleTotalFloorsChange(value: string) {
-    onTotalFloorsChange(sanitizeDigits(value));
+    onTotalFloorsChange(sanitizeTwoDigitNumericInput(value));
   }
 
   return (
     <div className="space-y-1.5">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1.5">
-          <label htmlFor={floorId} className="block text-sm font-medium text-slate-800">
+          <label htmlFor={floorId} className="block text-sm font-medium text-foreground">
             {floorLabel}
           </label>
           <input
@@ -64,13 +61,13 @@ export function FloorInput({
             value={floorValue}
             required={required}
             onChange={(event) => handleFloorChange(event.target.value)}
-            className={`${addPropertyInputClassName()} ${floorError ? "border-red-500 focus:border-red-600" : ""}`}
+            className={`${addPropertyInputClassName()} ${floorError ? "border-destructive focus:border-destructive" : ""}`}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="w-20 space-y-1.5">
           <label
             htmlFor={totalFloorsId}
-            className="block text-sm font-medium text-slate-800"
+            className="block text-sm font-medium text-foreground"
           >
             {totalFloorsLabel}
           </label>
@@ -84,17 +81,17 @@ export function FloorInput({
             value={totalFloorsValue}
             required={required}
             onChange={(event) => handleTotalFloorsChange(event.target.value)}
-            className={`${addPropertyInputClassName()} ${totalFloorsError ? "border-red-500 focus:border-red-600" : ""}`}
+            className={`${addPropertyInputClassName()} ${totalFloorsError ? "border-destructive focus:border-destructive" : ""}`}
           />
         </div>
       </div>
       {floorError ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {floorError}
         </p>
       ) : null}
       {totalFloorsError ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {totalFloorsError}
         </p>
       ) : null}

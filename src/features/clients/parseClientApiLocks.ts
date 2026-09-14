@@ -1,5 +1,8 @@
 import type { LockState } from "@/features/clients/clientApi.types";
 import type { JsonObject, JsonValue } from "@/shared/lib/jsonValue";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
+import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
+import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import type {
   BuildingCondition,
   KitchenType,
@@ -173,31 +176,63 @@ export function parseLockedBoolean(raw: JsonValue | undefined, fallback: boolean
   return { value: fallback, lock: "none" };
 }
 
-export function parseLockedRenovation(raw: JsonValue | undefined): {
-  value: Renovation | null;
+export function parseLockedRenovations(raw: JsonValue | undefined): {
+  value: Renovation[];
   lock: LockState;
 } {
-  if (raw === null || raw === undefined) {
-    return { value: null, lock: "none" };
-  }
-  if (typeof raw === "string" && (RENOVATION_VALUES as readonly string[]).includes(raw)) {
-    return { value: raw as Renovation, lock: "none" };
+  if (Array.isArray(raw)) {
+    return {
+      value: raw.filter(
+        (item): item is Renovation =>
+          typeof item === "string" &&
+          (RENOVATION_VALUES as readonly string[]).includes(item),
+      ),
+      lock: "none",
+    };
   }
   if (isLockedObject(raw)) {
-    const lock = parseLockState(raw.lock) ?? "none";
+    const lock = persistEntityLock(parseLockState(raw.lock) ?? "none");
     const inner = raw.value;
-    if (inner === null || inner === undefined) {
-      return { value: null, lock };
+    if (Array.isArray(inner)) {
+      return {
+        value: inner.filter(
+          (item): item is Renovation =>
+            typeof item === "string" &&
+            (RENOVATION_VALUES as readonly string[]).includes(item),
+        ),
+        lock,
+      };
     }
     if (
       typeof inner === "string" &&
       (RENOVATION_VALUES as readonly string[]).includes(inner)
     ) {
-      return { value: inner as Renovation, lock };
+      return { value: [inner as Renovation], lock };
     }
-    return { value: null, lock };
+    return { value: [], lock };
   }
-  return { value: null, lock: "none" };
+  if (typeof raw === "string" && (RENOVATION_VALUES as readonly string[]).includes(raw)) {
+    return { value: [raw as Renovation], lock: "none" };
+  }
+  return { value: [], lock: "none" };
+}
+
+export function parseLockedPreference(raw: JsonValue | undefined): {
+  value: ClientPreferenceValue;
+  lock: LockState;
+} {
+  if (typeof raw === "string" && isClientPreferenceValue(raw)) {
+    return { value: raw, lock: "none" };
+  }
+  if (isLockedObject(raw)) {
+    const lock = persistEntityLock(parseLockState(raw.lock) ?? "none");
+    const inner = raw.value;
+    if (typeof inner === "string" && isClientPreferenceValue(inner)) {
+      return { value: inner, lock };
+    }
+    return { value: "NOT_SET", lock };
+  }
+  return { value: "NOT_SET", lock: "none" };
 }
 
 export function parseLockedBuildingCondition(raw: JsonValue | undefined): {

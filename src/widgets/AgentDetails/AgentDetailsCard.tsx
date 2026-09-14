@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent } from "react";
-import type { Agent } from "@/features/agents/types";
+import type { AgentDetails } from "@/features/agents/types";
+import { normalizeGeorgianAgentPhone } from "@/features/agents/normalizeAgentPhone";
+import { AgentPhoneInput } from "@/widgets/Agents/AgentPhoneInput";
 
 type FormValues = {
   fullName: string;
@@ -10,7 +12,7 @@ type FormValues = {
 };
 
 type AgentDetailsCardProps = {
-  agent: Agent;
+  agent: AgentDetails;
   isSaving: boolean;
   saveError: string | null;
   onSubmit: (values: FormValues) => void;
@@ -27,14 +29,14 @@ export function AgentDetailsCard({
   const [values, setValues] = useState<FormValues>({
     fullName: agent.fullName,
     email: agent.email,
-    phone: agent.phone ?? "",
+    phone: normalizeGeorgianAgentPhone(agent.phone ?? ""),
   });
 
   useEffect(() => {
     setValues({
       fullName: agent.fullName,
       email: agent.email,
-      phone: agent.phone ?? "",
+      phone: normalizeGeorgianAgentPhone(agent.phone ?? ""),
     });
   }, [agent.fullName, agent.email, agent.phone]);
 
@@ -49,55 +51,62 @@ export function AgentDetailsCard({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onSubmit(values);
+    onSubmit({
+      ...values,
+      phone: normalizeGeorgianAgentPhone(values.phone),
+    });
   };
 
   return (
-    <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h1 className="text-2xl font-semibold tracking-tight">Agent details</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Update your agent&apos;s information or remove them from your list.
+    <div className="w-full max-w-xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <h1 className="text-2xl font-semibold tracking-tight">აგენტის დეტალები</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        განაახლეთ აგენტის ინფორმაცია ან წაშალეთ სიიდან.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-800">
-            Full name
+          <label className="block text-sm font-medium text-foreground">
+            სრული სახელი
           </label>
           <input
             type="text"
             value={values.fullName}
             onChange={handleChange("fullName")}
-            className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-900"
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-800">
-            Email
+          <label className="block text-sm font-medium text-foreground">
+            ელფოსტა
           </label>
           <input
             type="email"
             value={values.email}
             onChange={handleChange("email")}
-            className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-900"
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-800">
-            Phone
+          <label htmlFor="phone" className="block text-sm font-medium text-foreground">
+            ტელეფონი
           </label>
-          <input
-            type="tel"
+          <AgentPhoneInput
+            id="phone"
             value={values.phone}
-            onChange={handleChange("phone")}
-            className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-900"
+            onChange={(nextPhone) =>
+              setValues((currentValues) => ({
+                ...currentValues,
+                phone: nextPhone,
+              }))
+            }
           />
         </div>
 
         {saveError && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {saveError}
           </p>
         )}
@@ -106,17 +115,17 @@ export function AgentDetailsCard({
           <button
             type="button"
             onClick={onDeleteClick}
-            className="rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-100"
+            className="rounded-full border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive shadow-sm transition hover:bg-destructive/15"
           >
-            Delete agent
+            აგენტის წაშლა
           </button>
 
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSaving ? "Saving…" : "Save changes"}
+            {isSaving ? "ინახება…" : "ცვლილებების შენახვა"}
           </button>
         </div>
       </form>

@@ -10,6 +10,13 @@ import type {
   LockState,
   UUID,
 } from "@/features/clients/clientApi.types";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
+import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
+import type { ClientProfileCompact } from "@/features/clientProfiles/types";
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
 
 export type RelatedPerson = {
   id: UUID;
@@ -43,23 +50,23 @@ export type ClientRequirements = {
   minFloor: number | null;
   maxFloor: number | null;
   excludeLastFloor: boolean;
-  renovation: Renovation | null;
+  renovations: Renovation[];
   buildingCondition: BuildingCondition | null;
   projectExclude: string[];
   minArea: number | null;
   maxArea: number | null;
-  hasBalcony: boolean | null;
+  hasBalcony: ClientPreferenceValue;
   balconyAreaMin: number | null;
   balconyAreaMax: number | null;
-  goodView: boolean | null;
-  elevator: boolean | null;
-  centralHeating: boolean | null;
-  airConditioner: boolean | null;
+  goodView: ClientPreferenceValue;
+  elevator: ClientPreferenceValue;
+  centralHeating: ClientPreferenceValue;
+  airConditioner: ClientPreferenceValue;
   kitchenType: KitchenType | null;
-  furnished: boolean | null;
+  furnished: ClientPreferenceValue;
   minBathrooms: number | null;
   maxBathrooms: number | null;
-  parking: boolean | null;
+  parking: ClientPreferenceValue;
   minRentalPeriod: number | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
@@ -70,7 +77,7 @@ export type ClientRequirements = {
   minFloorLock?: LockState;
   maxFloorLock?: LockState;
   excludeLastFloorLock?: LockState;
-  renovationLock?: LockState;
+  renovationsLock?: LockState;
   buildingConditionLock?: LockState;
   projectExcludeLock?: LockState;
   minAreaLock?: LockState;
@@ -97,10 +104,14 @@ export type Comment = {
   createdAt: ISODateString;
 };
 
-export type Client = {
+export type Client = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
+  ownedByViewer: boolean | null;
+  hideFromOthers?: boolean;
   name: string;
+  clientProfileId: string | null;
+  clientProfile: ClientProfileCompact | null;
   phones: string[];
   whatsapp: string | null;
   budgetMin: number | null;
@@ -112,11 +123,12 @@ export type Client = {
   addresses: string[];
   labels: string[];
   status: ClientStatus;
-  reminderDate: ISODateString | null;
-  reminderSentAt: ISODateString | null;
+  archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+  noteLastOpenedAt?: ISODateString | null;
   deletedAt: ISODateString | null;
+  color?: RecordColor;
   requirements: ClientRequirements | null;
   relatedPersons: RelatedPerson[];
   districtsLock?: LockState;
@@ -125,6 +137,7 @@ export type Client = {
   budgetMinLock?: LockState;
   budgetMaxLock?: LockState;
   petLock?: LockState;
+  reminderSummary: ReminderSummary;
 };
 
 export type ClientDetail = Client & {
@@ -136,13 +149,12 @@ export type ClientsListResponse = {
   total: number;
   page: number;
   limit: number;
+  activeCount: number;
+  scope: DatabaseListScope | null;
   clients: Client[];
 };
 
-export type DeleteClientResponse = {
-  id: UUID;
-  deleted: true;
-};
+export type DeleteClientResponse = SoftDeleteResponse;
 
 export type DeleteClientCommentResponse = {
   id: UUID;

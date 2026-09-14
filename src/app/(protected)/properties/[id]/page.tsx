@@ -6,7 +6,7 @@ type PropertyDetailsPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Property details",
+  title: "განცხადების დეტალები",
 };
 
 export default async function PropertyDetailsPage({

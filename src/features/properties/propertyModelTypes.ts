@@ -2,6 +2,11 @@ import type { DealType } from "@/features/properties/dealType";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
+import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 
 export type { DealType };
 export type { PropertyStatus };
@@ -38,6 +43,18 @@ export type BuildingCondition = (typeof BUILDING_CONDITIONS)[number];
 
 export function isBuildingCondition(value: string): value is BuildingCondition {
   return (BUILDING_CONDITIONS as readonly string[]).includes(value);
+}
+
+export const BUILDING_AGE_TYPES = ["NEW", "OLD"] as const;
+export type BuildingAgeType = (typeof BUILDING_AGE_TYPES)[number];
+
+export function isBuildingAgeType(value: string): value is BuildingAgeType {
+  return (BUILDING_AGE_TYPES as readonly string[]).includes(value);
+}
+
+export function parseBuildingAgeType(value: unknown): BuildingAgeType | null {
+  const stringCandidate = typeof value === "string" ? value.trim() : "";
+  return isBuildingAgeType(stringCandidate) ? stringCandidate : null;
 }
 
 export const KITCHEN_TYPES = ["SEPARATE", "STUDIO"] as const;
@@ -98,7 +115,7 @@ export function parseRenovationForForm(
 }
 
 export type PropertyListingImage = {
-  id: string;
+  id?: string;
   url: string;
   originalName: string;
 };
@@ -114,9 +131,10 @@ export type PropertyExternalId = {
 export type PropertyApartment = {
   id: string;
   propertyId: string;
-  buildingNumber: string | null;
+  buildingNumber?: string | null;
   buildingCondition: BuildingCondition;
-  totalArea: number;
+  buildingAgeType: BuildingAgeType | null;
+  totalArea: number | null;
   project: string | null;
   renovation: string | null;
   rooms: number;
@@ -126,23 +144,25 @@ export type PropertyApartment = {
   ceilingHeight: number | null;
   balconyArea: number | null;
   needsVerification: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator: boolean | null;
+  centralHeating: boolean | null;
+  airConditioner: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished: boolean | null;
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
+  goodView: boolean | null;
+  bathrooms: number | null;
 };
 
 export type PropertyPrivateHouse = {
   id: string;
   propertyId: string;
   buildingCondition: BuildingCondition;
-  houseArea: number;
+  houseArea: number | null;
   yardArea: number;
-  totalArea: number;
+  totalArea: number | null;
   renovation: string | null;
   rooms: number;
   bedrooms: number;
@@ -165,7 +185,7 @@ export type PropertyPrivateHouse = {
 export type PropertyLandPlot = {
   id: string;
   propertyId: string;
-  landArea: number;
+  landArea: number | null;
   landCategory: LandCategory;
   landUsage: CommercialStatus;
   forInvestment: boolean;
@@ -182,7 +202,7 @@ export type PropertyLandPlot = {
 export type PropertyCommercial = {
   id: string;
   propertyId: string;
-  area: number;
+  area: number | null;
   status: CommercialStatus;
   floor: number;
   totalFloors: number | null;
@@ -199,7 +219,7 @@ export type PropertyCommercial = {
   minRentalPeriod: number | null;
 };
 
-export type Property = {
+export type Property = EntityVerificationFields & {
   id: string;
   propertyType: PropertyType;
   hotelScope?: HotelScope | null;
@@ -209,36 +229,45 @@ export type Property = {
   district: string;
   address: string;
   streetId: string | null;
-  title: string | null;
+  title?: string | null;
   cadastralCode: string | null;
   pricePublic: number;
-  priceInternal: number | null;
-  ownerName: string;
-  ownerPhone: string;
-  ownerWhatsapp: string | null;
+  priceInternal?: number | null;
+  ownerName?: string;
+  ownerPhones?: string[];
+  ownerWhatsapp?: string | null;
+  ownerId?: string | null;
+  propertyOwner?: PropertyOwnerSummary | null;
   ourSiteId: string | null;
-  myHomeId: string | null;
-  ssGeId: string | null;
-  externalIds: PropertyExternalId[];
+  myHomeId?: string | null;
+  ssGeId?: string | null;
+  externalIds?: PropertyExternalId[];
   description: string | null;
   publicComment: string | null;
-  privateComment: string | null;
-  internalText: string | null;
-  comment: string | null;
-  internalComment: string | null;
-  reminderDate: string | null;
+  privateComment?: string | null;
+  internalText?: string | null;
+  comment?: string | null;
+  internalComment?: string | null;
   commentDate: string | null;
   tenantClientId: string | null;
   rentalDurationMonths: number | null;
+  archivedAt: string | null;
   labels?: LabelDto[];
   images: PropertyListingImage[];
   createdAt: string;
   updatedAt: string;
+  noteLastOpenedAt?: string | null;
   deletedAt: string | null;
-  userId: string;
+  userId?: string;
+  ownedByViewer: boolean | null;
+  hideFromOthers?: boolean;
+  readyToUpload?: boolean;
+  color?: RecordColor;
 
   apartment: PropertyApartment | null;
   privateHouse: PropertyPrivateHouse | null;
   landPlot: PropertyLandPlot | null;
   commercial: PropertyCommercial | null;
+  fieldLocks?: PropertyFieldLocks;
+  reminderSummary?: ReminderSummary;
 };

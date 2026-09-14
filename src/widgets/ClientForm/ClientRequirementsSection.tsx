@@ -15,8 +15,8 @@ import {
   BUILDING_CONDITION_LABELS,
   KITCHEN_TYPE_LABELS,
 } from "@/features/clients/clientEnums";
-import type { LockState } from "@/features/clients/clientApi.types";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
+import { ClientPreferenceValueControl } from "@/widgets/ClientForm/ClientPreferenceValueControl";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 
 const splitLines = (value: string) =>
@@ -26,29 +26,30 @@ const splitLines = (value: string) =>
     .filter(Boolean);
 
 const RANGE_FIELDS = [
-  { label: "Rooms", minName: "minRooms" as const, maxName: "maxRooms" as const, min: 0 },
-  { label: "Bedrooms", minName: "minBedrooms" as const, maxName: "maxBedrooms" as const, min: 0 },
-  { label: "Bathrooms", minName: "minBathrooms" as const, maxName: "maxBathrooms" as const, min: 0 },
-  { label: "Floor", minName: "minFloor" as const, maxName: "maxFloor" as const, min: undefined },
-  { label: "Area (m²)", minName: "minArea" as const, maxName: "maxArea" as const, min: 0 },
+  { label: "ოთახები", minName: "minRooms" as const, maxName: "maxRooms" as const, min: 0 },
+  { label: "საძინებლები", minName: "minBedrooms" as const, maxName: "maxBedrooms" as const, min: 0 },
+  { label: "სველი წერტილები", minName: "minBathrooms" as const, maxName: "maxBathrooms" as const, min: 0 },
+  { label: "სართული", minName: "minFloor" as const, maxName: "maxFloor" as const, min: undefined },
+  { label: "ფართობი (მ²)", minName: "minArea" as const, maxName: "maxArea" as const, min: 0 },
   {
-    label: "Balcony area (m²)",
+    label: "აივნის ფართობი (მ²)",
     minName: "balconyAreaMin" as const,
     maxName: "balconyAreaMax" as const,
     min: 0,
   },
 ] as const;
 
-const BOOLEAN_FIELDS = [
-  { name: "excludeLastFloor" as const, label: "Exclude last floor" },
-  { name: "hasBalcony" as const, label: "Has balcony" },
-  { name: "goodView" as const, label: "Good view" },
-  { name: "elevator" as const, label: "Elevator" },
-  { name: "centralHeating" as const, label: "Central heating" },
-  { name: "airConditioner" as const, label: "Air conditioner" },
-  { name: "furnished" as const, label: "Furnished" },
-  { name: "parking" as const, label: "Parking" },
-];
+const BOOLEAN_FIELDS = [{ name: "excludeLastFloor" as const, label: "ბოლო სართულის გამოკლებით" }];
+
+const PREFERENCE_FIELDS = [
+  { name: "hasBalcony" as const, label: "აივანი" },
+  { name: "goodView" as const, label: "კარგი ხედი" },
+  { name: "elevator" as const, label: "ლიფტი" },
+  { name: "centralHeating" as const, label: "ცენტრალური გათბობა" },
+  { name: "airConditioner" as const, label: "კონდიციონერი" },
+  { name: "furnished" as const, label: "ავეჯით" },
+  { name: "parking" as const, label: "პარკინგი" },
+] as const;
 
 type ClientRequirementsSectionProps = {
   control: Control<ClientFormValues>;
@@ -86,7 +87,6 @@ function RequirementRangeRow({
   config,
   control,
   errors,
-  setValue,
   fieldDescriptions,
   showLockForPath,
 }: {
@@ -100,35 +100,26 @@ function RequirementRangeRow({
   const minErrorMessage = readRangeError(errors, config.minName);
   const maxErrorMessage = readRangeError(errors, config.maxName);
   const fieldDescription = fieldDescriptions?.[config.minName] ?? fieldDescriptions?.[config.maxName];
-  const shouldShowLock = showLockForPath(config.minName) || showLockForPath(config.maxName);
+  const shouldShowMinLock = showLockForPath(config.minName);
+  const shouldShowMaxLock = showLockForPath(config.maxName);
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-2">
-        <label className="block flex-1 text-sm font-medium text-slate-800">{config.label}</label>
-        {shouldShowLock ? (
-          <Controller
-            name={`${config.minName}.lock`}
-            control={control}
-            render={({ field }) => {
-              const handleLockChange = (nextLock: LockState) => {
-                field.onChange(nextLock);
-                setValue?.(`${config.maxName}.lock`, nextLock, {
-                  shouldDirty: true,
-                  shouldTouch: true,
-                });
-              };
-
-              return (
-                <PreferenceLockButton value={field.value} onChange={handleLockChange} />
-              );
-            }}
-          />
-        ) : null}
-      </div>
+      <label className="block text-sm font-medium text-foreground">{config.label}</label>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <div className="space-y-1">
-          <span className="text-xs font-medium text-slate-500">From</span>
+          <div className="flex items-center gap-2">
+            <span className="flex-1 text-xs font-medium text-muted-foreground">დან</span>
+            {shouldShowMinLock ? (
+              <Controller
+                name={`${config.minName}.lock`}
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
+            ) : null}
+          </div>
           <Controller
             name={`${config.minName}.value`}
             control={control}
@@ -141,14 +132,25 @@ function RequirementRangeRow({
                   const rawValue = event.target.value;
                   field.onChange(rawValue === "" ? undefined : Number(rawValue));
                 }}
-                className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
             )}
           />
         </div>
-        <div className="flex items-end justify-center pb-2 text-slate-400">–</div>
+        <div className="flex items-end justify-center pb-2 text-muted-foreground">–</div>
         <div className="space-y-1">
-          <span className="text-xs font-medium text-slate-500">To</span>
+          <div className="flex items-center gap-2">
+            <span className="flex-1 text-xs font-medium text-muted-foreground">მდე</span>
+            {shouldShowMaxLock ? (
+              <Controller
+                name={`${config.maxName}.lock`}
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
+            ) : null}
+          </div>
           <Controller
             name={`${config.maxName}.value`}
             control={control}
@@ -161,23 +163,23 @@ function RequirementRangeRow({
                   const rawValue = event.target.value;
                   field.onChange(rawValue === "" ? undefined : Number(rawValue));
                 }}
-                className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
             )}
           />
         </div>
       </div>
       {minErrorMessage ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {minErrorMessage}
         </p>
       ) : null}
       {maxErrorMessage ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {maxErrorMessage}
         </p>
       ) : null}
-      {fieldDescription ? <p className="text-xs text-slate-500">{fieldDescription}</p> : null}
+      {fieldDescription ? <p className="text-xs text-muted-foreground">{fieldDescription}</p> : null}
     </div>
   );
 }
@@ -213,8 +215,8 @@ export function ClientRequirementsSection({
     }));
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 className="mb-4 text-base font-semibold text-slate-800">Requirements</h2>
+    <section className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <h2 className="mb-4 text-base font-semibold text-foreground">მოთხოვნები</h2>
       <div className="space-y-4">
         <div className="space-y-4">
           {RANGE_FIELDS.map((config) => (
@@ -233,8 +235,8 @@ export function ClientRequirementsSection({
         {isRentDeal && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <label className="block flex-1 text-sm font-medium text-slate-800">
-                Min rental period (months)
+              <label className="block flex-1 text-sm font-medium text-foreground">
+                მინიმალური ქირის ვადა (თვე)
               </label>
               {showLockForPath("minRentalPeriod") ? (
                 <Controller
@@ -258,62 +260,82 @@ export function ClientRequirementsSection({
                     const raw = event.target.value;
                     field.onChange(raw === "" ? undefined : Number(raw));
                   }}
-                  className="block w-48 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+                  className="block w-48 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 />
               )}
             />
             {errors.minRentalPeriod?.value && (
-              <p className="text-xs text-red-600" role="alert">
+              <p className="text-xs text-destructive" role="alert">
                 {errors.minRentalPeriod.value.message}
               </p>
             )}
             {fieldDescriptions?.minRentalPeriod ? (
-              <p className="text-xs text-slate-500">{fieldDescriptions.minRentalPeriod}</p>
+              <p className="text-xs text-muted-foreground">{fieldDescriptions.minRentalPeriod}</p>
             ) : null}
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <label className="block flex-1 text-sm font-medium text-slate-800">Renovation</label>
-              {showLockForPath("renovation") ? (
-                <Controller
-                  name="renovation.lock"
-                  control={control}
-                  render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
-                  )}
-                />
-              ) : null}
-            </div>
-            <Controller
-              name="renovation.value"
-              control={control}
-              render={({ field }) => (
-                <select
-                  value={field.value ?? ""}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
-                >
-                  <option value="">Any</option>
-                  {renovationOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {fieldDescriptions?.renovation ? (
-              <p className="text-xs text-slate-500">{fieldDescriptions.renovation}</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <label className="block flex-1 text-sm font-medium text-foreground">რემონტი</label>
+            {showLockForPath("renovations") || showLockForPath("renovation") ? (
+              <Controller
+                name="renovations.lock"
+                control={control}
+                render={({ field }) => (
+                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                )}
+              />
             ) : null}
           </div>
+          <Controller
+            name="renovations.value"
+            control={control}
+            render={({ field }) => (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {renovationOptions.map((option) => {
+                  const isChecked = field.value.includes(
+                    option.value as (typeof RENOVATION_VALUES)[number],
+                  );
+                  return (
+                    <label
+                      key={option.value}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(event) => {
+                          const optionValue = option.value as (typeof RENOVATION_VALUES)[number];
+                          if (event.target.checked) {
+                            field.onChange([...field.value, optionValue]);
+                            return;
+                          }
+                          field.onChange(
+                            field.value.filter((currentValue) => currentValue !== optionValue),
+                          );
+                        }}
+                        className="h-4 w-4 rounded border-border text-foreground"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
+          {fieldDescriptions?.renovations || fieldDescriptions?.renovation ? (
+            <p className="text-xs text-muted-foreground">
+              {fieldDescriptions?.renovations ?? fieldDescriptions?.renovation}
+            </p>
+          ) : null}
+        </div>
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <label className="block flex-1 text-sm font-medium text-slate-800">
-                Building condition
+              <label className="block flex-1 text-sm font-medium text-foreground">
+                შენობის მდგომარეობა
               </label>
               {showLockForPath("buildingCondition") ? (
                 <Controller
@@ -332,9 +354,9 @@ export function ClientRequirementsSection({
                 <select
                   value={field.value ?? ""}
                   onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+                  className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 >
-                  <option value="">Any</option>
+                  <option value="">ნებისმიერი</option>
                   {buildingOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -344,13 +366,13 @@ export function ClientRequirementsSection({
               )}
             />
             {fieldDescriptions?.buildingCondition ? (
-              <p className="text-xs text-slate-500">{fieldDescriptions.buildingCondition}</p>
+              <p className="text-xs text-muted-foreground">{fieldDescriptions.buildingCondition}</p>
             ) : null}
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <label className="block flex-1 text-sm font-medium text-slate-800">Kitchen type</label>
+              <label className="block flex-1 text-sm font-medium text-foreground">სამზარეულოს ტიპი</label>
               {showLockForPath("kitchenType") ? (
                 <Controller
                   name="kitchenType.lock"
@@ -368,9 +390,9 @@ export function ClientRequirementsSection({
                 <select
                   value={field.value ?? ""}
                   onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400"
+                  className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 >
-                  <option value="">Any</option>
+                  <option value="">ნებისმიერი</option>
                   {kitchenOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -380,15 +402,15 @@ export function ClientRequirementsSection({
               )}
             />
             {fieldDescriptions?.kitchenType ? (
-              <p className="text-xs text-slate-500">{fieldDescriptions.kitchenType}</p>
+              <p className="text-xs text-muted-foreground">{fieldDescriptions.kitchenType}</p>
             ) : null}
           </div>
         </div>
 
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
-            <label className="block flex-1 text-sm font-medium text-slate-800">
-              Projects to exclude (one per line)
+            <label className="block flex-1 text-sm font-medium text-foreground">
+              გამოსარიცხი პროექტები (თითო სტრიქონზე ერთი)
             </label>
             {showLockForPath("projectExclude") ? (
               <Controller
@@ -408,12 +430,12 @@ export function ClientRequirementsSection({
                 rows={2}
                 value={field.value.join("\n")}
                 onChange={(event) => field.onChange(splitLines(event.target.value))}
-                className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
               />
             )}
           />
           {fieldDescriptions?.projectExclude ? (
-            <p className="text-xs text-slate-500">{fieldDescriptions.projectExclude}</p>
+            <p className="text-xs text-muted-foreground">{fieldDescriptions.projectExclude}</p>
           ) : null}
         </div>
 
@@ -430,11 +452,11 @@ export function ClientRequirementsSection({
                         type="checkbox"
                         checked={field.value === true}
                         onChange={(event) => field.onChange(event.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-slate-900"
+                        className="h-4 w-4 rounded border-border text-foreground"
                       />
                     )}
                   />
-                  <span className="text-sm text-slate-700">{label}</span>
+                  <span className="text-sm text-foreground">{label}</span>
                 </label>
                 {showLockForPath(name) ? (
                   <Controller
@@ -447,7 +469,39 @@ export function ClientRequirementsSection({
                 ) : null}
               </div>
               {fieldDescriptions?.[name] ? (
-                <p className="text-xs text-slate-500">{fieldDescriptions[name]}</p>
+                <p className="text-xs text-muted-foreground">{fieldDescriptions[name]}</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {PREFERENCE_FIELDS.map(({ name, label }) => (
+            <div key={name} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <label className="block flex-1 text-sm font-medium text-foreground">{label}</label>
+                {showLockForPath(name) ? (
+                  <Controller
+                    name={`${name}.lock`}
+                    control={control}
+                    render={({ field }) => (
+                      <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                ) : null}
+              </div>
+              <Controller
+                name={`${name}.value`}
+                control={control}
+                render={({ field }) => (
+                  <ClientPreferenceValueControl
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {fieldDescriptions?.[name] ? (
+                <p className="text-xs text-muted-foreground">{fieldDescriptions[name]}</p>
               ) : null}
             </div>
           ))}

@@ -31,11 +31,11 @@ export function AddPropertyForm() {
   } = useAddPropertyForm();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto w-full max-w-5xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-2xl font-semibold tracking-tight">Add property</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Fill in required details and the matching property subtype section.
+    <main className="min-h-screen bg-muted px-4 py-8 text-foreground sm:px-6">
+      <div className="mx-auto w-full max-w-5xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
+        <h1 className="text-2xl font-semibold tracking-tight">განცხადების დამატება</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          შეავსეთ სავალდებულო ველები და შესაბამისი ქონების ტიპის სექცია.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-6" noValidate>
@@ -44,6 +44,8 @@ export function AddPropertyForm() {
             fieldErrors={fieldErrors}
             images={images}
             imageError={imageError}
+            fieldLocks={form.fieldLocks}
+            patchFieldLocks={(nextLocks) => updateForm("fieldLocks", nextLocks)}
             updateForm={updateForm}
             updateAddress={updateAddress}
             onAddImages={addImages}
@@ -66,7 +68,9 @@ export function AddPropertyForm() {
               dealType={form.dealType}
               apartment={form.apartment}
               fieldErrors={fieldErrors}
+              fieldLocks={form.fieldLocks}
               patchApartment={patchApartment}
+              patchFieldLocks={(nextLocks) => updateForm("fieldLocks", nextLocks)}
             />
           )}
 
@@ -98,7 +102,7 @@ export function AddPropertyForm() {
           )}
 
           {(submitError || error) && (
-            <p className="whitespace-pre-line text-sm text-red-600" role="alert">
+            <p className="whitespace-pre-line text-sm text-destructive" role="alert">
               {submitError ?? error}
             </p>
           )}
@@ -107,16 +111,16 @@ export function AddPropertyForm() {
             <button
               type="button"
               onClick={cancel}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
             >
-              Cancel
+              გაუქმება
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isLoading ? "Saving…" : "Create property"}
+              {isLoading ? "ინახება…" : "განცხადების შექმნა"}
             </button>
           </div>
         </form>

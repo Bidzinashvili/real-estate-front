@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientsList } from "@/features/clients/useClientsList";
+import { useClientsListFilters } from "@/features/clients/useClientsListFilters";
+import { useCurrentUser } from "@/shared/hooks";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import type { Client } from "@/features/clients/types";
+import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
 import { InlineSelect } from "@/shared/ui/InlineSelect";
 import {
   DEAL_TYPES,
@@ -18,20 +23,43 @@ import {
   buildStatusFilterParam,
 } from "@/features/clients/getClientsQuery";
 import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
+import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
+import {
+  viewerCanManageRecord,
+  viewerOwnsRecord,
+} from "@/features/databaseList/viewerOwnership";
+import { OnlyMineToggle } from "@/widgets/DatabaseList/OnlyMineToggle";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
+import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
+import { ClientListCard } from "@/widgets/Clients/ClientListCard";
+import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
+import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
+import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
+import { AdvancedSearchSheet } from "@/widgets/DatabaseList/AdvancedSearchSheet";
+import { NeverOpenedFilter } from "@/widgets/DatabaseList/NeverOpenedFilter";
+import { CLIENT_LIST_DEFAULT_LIMIT } from "@/features/clients/clientListUrlParams";
+import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
+import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
 
 const SORT_OPTIONS: { value: ClientSortBy; label: string }[] = [
-  { value: "createdAt", label: "Created" },
-  { value: "updatedAt", label: "Updated" },
-  { value: "name", label: "Name" },
+  { value: "createdAt", label: "ატვირთვის თარიღი" },
+  { value: "updatedAt", label: "განახლების თარიღი" },
+  { value: "name", label: "სახელი" },
+  { value: "noteLastOpenedAt", label: NOTE_LAST_OPENED_COPY.sortBy },
 ];
 
 const ORDER_OPTIONS: { value: ClientSortOrder; label: string }[] = [
-  { value: "desc", label: "Desc" },
-  { value: "asc", label: "Asc" },
+  { value: "desc", label: "კლებადი" },
+  { value: "asc", label: "ზრდადი" },
+];
+
+const LAST_OPENED_ORDER_OPTIONS: { value: ClientSortOrder; label: string }[] = [
+  { value: "desc", label: NOTE_LAST_OPENED_COPY.sortDesc },
+  { value: "asc", label: NOTE_LAST_OPENED_COPY.sortAsc },
 ];
 
 const DEAL_TYPE_OPTIONS = [
-  { value: "", label: "All deal types" },
+  { value: "", label: "ყველა გარიგება" },
   ...DEAL_TYPES.map((dealType) => ({
     value: dealType,
     label: DEAL_TYPE_LABELS[dealType],
@@ -39,282 +67,385 @@ const DEAL_TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
+  { value: "", label: "ყველა სტატუსი" },
   ...CLIENT_STATUSES.map((clientStatus) => ({
     value: clientStatus,
     label: CLIENT_STATUS_LABELS[clientStatus],
   })),
 ];
 
-const STATUS_BADGE_CLASSES: Record<ClientStatus, string> = {
-  ACTIVE: "bg-green-100 text-green-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  ARCHIVED: "bg-slate-100 text-slate-600",
+type ClientsViewProps = {
+  listingScope?: "current" | "archived";
 };
 
-const DEFAULT_LIMIT = 20;
-
-export function ClientsView() {
+export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const router = useRouter();
+  const { user } = useCurrentUser();
+  const isArchiveScope = listingScope === "archived";
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
+  const [reminderClientId, setReminderClientId] = useState<string | null>(null);
 
-  const [district, setDistrict] = useState("");
-  const [budgetMinInput, setBudgetMinInput] = useState("");
-  const [budgetMaxInput, setBudgetMaxInput] = useState("");
-  const [dealTypeFilter, setDealTypeFilter] = useState<DealType | "">("");
-  const [statusFilter, setStatusFilter] = useState<ClientStatus | "">("");
-  const [sortBy, setSortBy] = useState<ClientSortBy>("createdAt");
-  const [order, setOrder] = useState<ClientSortOrder>("desc");
-  const [page, setPage] = useState(1);
-
-  const { clients, total, isLoading, error } = useClientsList({
-    district: buildDistrictFilterParam(district),
-    budgetMin: buildBudgetFilterParam(budgetMinInput),
-    budgetMax: buildBudgetFilterParam(budgetMaxInput),
-    dealType: dealTypeFilter || undefined,
-    status: buildStatusFilterParam(statusFilter),
-    sortBy,
-    order,
-    page,
-    limit: DEFAULT_LIMIT,
+  const filters = useClientsListFilters({
+    syncUrl: !isArchiveScope,
   });
+  const {
+    state,
+    debouncedState,
+    setSearchInput,
+    setSelectedColors,
+    setDistrict,
+    setBudgetMinInput,
+    setBudgetMaxInput,
+    setDealType,
+    setStatus,
+    setCreatedDateRange,
+    setLastOpenedDateRange,
+    setNeverOpened,
+    setSortBy,
+    setOrder,
+    setPage,
+    toggleOnlyMine,
+    resetAdvancedFilters,
+    resetFilters,
+    advancedFilterCount,
+    hasClearableFilters,
+  } = filters;
 
-  const totalPages = Math.max(1, Math.ceil(total / DEFAULT_LIMIT));
+  const createdDates = resolveCreatedDateQuery(state.createdFrom, state.createdTo);
+  const lastOpenedDates = resolveLastOpenedDateQuery(
+    state.lastOpenedFrom,
+    state.lastOpenedTo,
+  );
 
-  const handleFilterChange = () => {
-    setPage(1);
-  };
+  const { clients, total, activeCount, isLoading, error, refetch } =
+    useClientsList({
+      search: debouncedState.searchInput.trim() || undefined,
+      color: state.selectedColors.length > 0 ? state.selectedColors : undefined,
+      district: buildDistrictFilterParam(debouncedState.district),
+      budgetMin: buildBudgetFilterParam(debouncedState.budgetMinInput),
+      budgetMax: buildBudgetFilterParam(debouncedState.budgetMaxInput),
+      dealType: state.dealType || undefined,
+      status: buildStatusFilterParam(state.status),
+      createdFrom: createdDates.createdFrom,
+      createdTo: createdDates.createdTo,
+      lastOpenedFrom: state.neverOpened ? undefined : lastOpenedDates.lastOpenedFrom,
+      lastOpenedTo: state.neverOpened ? undefined : lastOpenedDates.lastOpenedTo,
+      neverOpened: state.neverOpened ? true : undefined,
+      sortBy: state.sortBy,
+      order: state.order,
+      page: state.page,
+      limit: CLIENT_LIST_DEFAULT_LIMIT,
+      archived: isArchiveScope ? true : undefined,
+      scope: state.listScope,
+    });
 
-  const handleDistrictChange = (value: string) => {
-    setDistrict(value);
-    handleFilterChange();
-  };
+  const isMineScope = state.listScope === "MINE";
+  const activeNotesLabel = isMineScope
+    ? "ჩემი აქტიური კლიენტები"
+    : "აქტიური კლიენტები";
+  const totalPages = Math.max(1, Math.ceil(total / CLIENT_LIST_DEFAULT_LIMIT));
+  const showInitialLoading = isLoading && clients.length === 0 && !error;
+  const showResults = !error && clients.length > 0;
+  const showEmpty = !isLoading && !error && clients.length === 0;
 
   const handleDealTypeChange = (value: string) => {
-    setDealTypeFilter(value as DealType | "");
-    handleFilterChange();
+    setDealType(value as DealType | "");
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value as ClientStatus | "");
-    handleFilterChange();
+    setStatus(value as ClientStatus | "");
   };
 
   const handleSortChange = (value: string) => {
     setSortBy(value as ClientSortBy);
-    setPage(1);
   };
 
   const handleOrderChange = (value: string) => {
     setOrder(value as ClientSortOrder);
-    setPage(1);
   };
+
+  function canManageClient(client: Client): boolean {
+    return viewerCanManageRecord(client, user);
+  }
+
+  function canOpenClientDetail(client: Client): boolean {
+    if (!user) {
+      return false;
+    }
+    if (user.role === "ADMIN") {
+      return true;
+    }
+    return viewerOwnsRecord(client, user);
+  }
 
   return (
     <>
+      {isArchiveScope ? null : (
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Clients &amp; Leads
+            კლიენტები და ლიდები
           </h1>
-          <p className="max-w-md text-sm text-slate-600">
-            Manage your CRM leads, track deal progress, and follow up with clients.
+          <p className="max-w-md text-sm text-muted-foreground">
+            მართეთ კლიენტები, თვალი ადევნეთ გარიგებებს და განაგრძეთ კომუნიკაცია.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <Link
             href="/clients/invite-links"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            Invite links
+            მოწვევის ბმულები
           </Link>
           <button
             type="button"
             onClick={() => router.push("/clients/new")}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
-            Add client
+            კლიენტის დამატება
           </button>
         </div>
       </div>
+      )}
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-        <input
-          type="text"
-          value={district}
-          onChange={(event) => handleDistrictChange(event.target.value)}
-          placeholder="District…"
-          className="h-8 w-36 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
+      <div className="flex flex-wrap items-center gap-2">
+        <ActiveNotesCount
+          label={activeNotesLabel}
+          count={activeCount}
+          isMine={isMineScope}
         />
-
-        <input
-          type="number"
-          value={budgetMinInput}
-          onChange={(event) => {
-            setBudgetMinInput(event.target.value);
-            setPage(1);
-          }}
-          placeholder="Budget min"
-          className="h-8 w-32 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
-        />
-
-        <input
-          type="number"
-          value={budgetMaxInput}
-          onChange={(event) => {
-            setBudgetMaxInput(event.target.value);
-            setPage(1);
-          }}
-          placeholder="Budget max"
-          className="h-8 w-32 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400"
-        />
-
-        <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
+        <OnlyMineToggle isActive={isMineScope} onToggle={toggleOnlyMine} />
+        <AdminModeToggle />
+        <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
+          <span className="hidden font-medium sm:inline">სორტირება</span>
           <InlineSelect
-            aria-label="Filter by deal type"
-            value={dealTypeFilter}
-            onChange={handleDealTypeChange}
-            options={DEAL_TYPE_OPTIONS}
-          />
-        </div>
-
-        <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
-          <InlineSelect
-            aria-label="Filter by status"
-            value={statusFilter}
-            onChange={handleStatusChange}
-            options={STATUS_OPTIONS}
-          />
-        </div>
-
-        <div className="ml-auto flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
-          <span className="hidden font-medium sm:inline">Sort</span>
-          <InlineSelect
-            aria-label="Sort clients by"
-            value={sortBy}
+            aria-label="კლიენტების სორტირება"
+            value={state.sortBy}
             onChange={handleSortChange}
             options={SORT_OPTIONS}
           />
-          <span className="h-4 w-px bg-slate-200" />
+          <span className="h-4 w-px bg-border" />
           <InlineSelect
-            aria-label="Sort order"
-            value={order}
+            aria-label="სორტირების მიმართულება"
+            value={state.order}
             onChange={handleOrderChange}
-            options={ORDER_OPTIONS}
+            options={
+              state.sortBy === "noteLastOpenedAt"
+                ? LAST_OPENED_ORDER_OPTIONS
+                : ORDER_OPTIONS
+            }
           />
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-        {isLoading && (
-          <p className="text-sm text-slate-600">Loading clients…</p>
+      <DatabaseListSearchRow
+        searchValue={state.searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="მოძებნე სახელით, ID-ით, ნომრით ან სხვა მონაცემით..."
+        searchClearAriaLabel="ძიების გასუფთავება"
+        selectedColors={state.selectedColors}
+        onSelectedColorsChange={setSelectedColors}
+      />
+
+      <div className="flex flex-col gap-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
+            <InlineSelect
+              aria-label="გარიგების ტიპით გაფილტვრა"
+              value={state.dealType}
+              onChange={handleDealTypeChange}
+              options={DEAL_TYPE_OPTIONS}
+            />
+          </div>
+          <input
+            type="text"
+            value={state.district}
+            onChange={(event) => setDistrict(event.target.value)}
+            placeholder="უბანი…"
+            className="h-8 w-36 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+          />
+          <input
+            type="number"
+            value={state.budgetMinInput}
+            onChange={(event) => setBudgetMinInput(event.target.value)}
+            placeholder="მინ. ბიუჯეტი"
+            className="h-8 w-32 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+          />
+          <input
+            type="number"
+            value={state.budgetMaxInput}
+            onChange={(event) => setBudgetMaxInput(event.target.value)}
+            placeholder="მაქს. ბიუჯეტი"
+            className="h-8 w-32 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+          />
+          <AdvancedSearchButton
+            appliedCount={advancedFilterCount}
+            onOpen={() => setAdvancedSearchOpen(true)}
+          />
+          {hasClearableFilters ? (
+            <button
+              type="button"
+              onClick={() => resetFilters()}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              ყველაფრის გასუფთავება
+            </button>
+          ) : null}
+        </div>
+        <CreatedAtDateRangeFilter
+          createdFrom={state.createdFrom}
+          createdTo={state.createdTo}
+          onChange={setCreatedDateRange}
+          compact
+        />
+      </div>
+
+      <AdvancedSearchSheet
+        open={advancedSearchOpen}
+        title="გაფართოებული ძებნა"
+        appliedCount={advancedFilterCount}
+        onClose={() => setAdvancedSearchOpen(false)}
+        onClear={resetAdvancedFilters}
+        footer={
+          <button
+            type="button"
+            onClick={() => setAdvancedSearchOpen(false)}
+            className="w-full rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
+          >
+            შედეგების ჩვენება
+          </button>
+        }
+      >
+        <div className="space-y-3">
+          <span className="block text-xs font-medium text-muted-foreground">
+            სტატუსი
+          </span>
+          <NativeSelectSurface>
+            <select
+              aria-label="სტატუსით გაფილტვრა"
+              value={state.status}
+              onChange={(event) => handleStatusChange(event.target.value)}
+              className="w-full appearance-none rounded-lg border border-border bg-card py-2 pl-3 pr-10 text-sm text-foreground shadow-sm outline-none focus:border-primary"
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value || "all"} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </NativeSelectSurface>
+          <CreatedAtDateRangeFilter
+            createdFrom={state.lastOpenedFrom}
+            createdTo={state.lastOpenedTo}
+            disabled={state.neverOpened}
+            label={NOTE_LAST_OPENED_COPY.filterLabel}
+            fromAriaLabel={NOTE_LAST_OPENED_COPY.filterFromAria}
+            toAriaLabel={NOTE_LAST_OPENED_COPY.filterToAria}
+            onChange={({ createdFrom, createdTo }) =>
+              setLastOpenedDateRange({
+                lastOpenedFrom: createdFrom,
+                lastOpenedTo: createdTo,
+              })
+            }
+          />
+          <NeverOpenedFilter
+            checked={state.neverOpened}
+            onChange={setNeverOpened}
+          />
+        </div>
+      </AdvancedSearchSheet>
+
+      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+        {showInitialLoading && (
+          <p className="text-sm text-muted-foreground">კლიენტები იტვირთება…</p>
         )}
 
         {error && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
         )}
 
-        {!isLoading && !error && clients.length === 0 && (
-          <p className="text-sm text-slate-600">No clients found.</p>
+        {showEmpty && (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {isArchiveScope ? ARCHIVE_COPY.emptyClients : "შედეგები ვერ მოიძებნა"}
+            </p>
+            {hasClearableFilters ? (
+              <button
+                type="button"
+                onClick={() => resetFilters()}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                ფილტრების გასუფთავება
+              </button>
+            ) : null}
+          </div>
         )}
 
-        {!isLoading && !error && clients.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Deal</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Budget</th>
-                  <th className="px-4 py-3">District</th>
-                  <th className="px-4 py-3">Created</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
-                  <tr
-                    key={client.id}
-                    className="border-t border-slate-100 hover:bg-slate-50/60"
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-900">
-                      {client.name}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {client.phones[0] ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {DEAL_TYPE_LABELS[client.dealType]}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE_CLASSES[client.status]}`}
-                      >
-                        {CLIENT_STATUS_LABELS[client.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {client.budgetMin !== null || client.budgetMax !== null
-                        ? [
-                            client.budgetMin !== null ? client.budgetMin.toLocaleString() : null,
-                            client.budgetMax !== null ? client.budgetMax.toLocaleString() : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" – ")
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {client.districts[0] ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {new Date(client.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/clients/${client.id}`)}
-                        className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {showResults && (
+          <>
+            <p className="mb-3 text-xs text-muted-foreground">
+              {isArchiveScope ? "არქივში ნაპოვნია: " : "ნაპოვნია: "}
+              <span className="font-medium text-foreground">{total}</span>
+              {isLoading ? (
+                <span className="ml-2 text-muted-foreground">ახლდება…</span>
+              ) : null}
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-5 xl:grid-cols-3 xl:gap-6">
+              {clients.map((client) => (
+                <ClientListCard
+                  key={client.id}
+                  client={client}
+                  isArchiveScope={isArchiveScope}
+                  canManage={canManageClient(client)}
+                  canOpenDetail={canOpenClientDetail(client)}
+                  currentUser={user}
+                  onOpenDetail={(clientId) => router.push(`/clients/${clientId}`)}
+                  onOpenReminder={setReminderClientId}
+                  onChanged={refetch}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
 
-      {!isLoading && !error && total > 0 && (
-        <div className="flex items-center justify-between gap-3 text-xs text-slate-600">
+      {!error && total > 0 && (
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
           <span>
-            Page {page} of {totalPages} &bull; {total} total
+            გვერდი {state.page} / {totalPages} • სულ {total}
           </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              disabled={page === 1}
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={state.page === 1}
+              onClick={() => setPage(Math.max(1, state.page - 1))}
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Previous
+              წინა
             </button>
             <button
               type="button"
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={state.page === totalPages}
+              onClick={() => setPage(Math.min(totalPages, state.page + 1))}
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Next
+              შემდეგი
             </button>
           </div>
         </div>
       )}
+      {reminderClientId ? (
+        <ReminderPickerModal
+          mode="create"
+          open
+          target={{ targetType: "CLIENT", clientId: reminderClientId }}
+          onClose={() => setReminderClientId(null)}
+          onSaved={refetch}
+        />
+      ) : null}
     </>
   );
 }

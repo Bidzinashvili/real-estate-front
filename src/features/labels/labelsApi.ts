@@ -17,11 +17,11 @@ function getAuthContext() {
   const token = getStoredAuthToken();
 
   if (!baseUrl) {
-    throw new Error("API base URL is not configured");
+    throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
 
   if (!token) {
-    throw new Error("You are not authenticated.");
+    throw new Error("ავტორიზაცია საჭიროა.");
   }
 
   return {
@@ -58,7 +58,7 @@ export async function fetchLabelsAutocomplete(
     }
 
     if (axios.isAxiosError(error)) {
-      const fallback = "Could not load label suggestions right now.";
+      const fallback = "ლეიბლების ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
         error.response?.status ?? 500,

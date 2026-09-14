@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { useUserStore } from "@/shared/stores";
 import { useRemindersList } from "@/features/reminders/useRemindersList";
 import { useReminderCallAlerts } from "@/features/reminders/useReminderCallAlerts";
+import { isAlarmOverlayReminder } from "@/features/reminders/dashboardReminderNormalizer";
 import { ReminderCallNotification } from "@/widgets/Dashboard/ReminderCallNotification";
 import type { GetRemindersQuery } from "@/features/reminders/remindersApi";
 
@@ -23,8 +25,13 @@ export function ReminderAlertCenter() {
     pollIntervalMs: REMINDER_ALERTS_POLL_INTERVAL_MS,
   });
 
+  const alarmReminders = useMemo(
+    () => reminders.filter((reminder) => isAlarmOverlayReminder(reminder)),
+    [reminders],
+  );
+
   const reminderCallAlerts = useReminderCallAlerts({
-    reminders,
+    reminders: alarmReminders,
   });
 
   if (!reminderCallAlerts.activeReminder) {

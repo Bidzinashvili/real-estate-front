@@ -4,13 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import { useDistricts } from "@/features/districts/useDistricts";
 import type { LabelSelection } from "@/features/labels/labelTypes";
+import type { LockState, PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   PropertyApartmentUpdate,
   PropertyCommercialUpdate,
   PropertyPrivateHouseUpdate,
 } from "@/features/properties/types";
 import {
+  GEORGIAN_CITY_OPTIONS,
   HOTEL_SCOPE_FORM_OPTIONS,
+  isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import {
   DEAL_TYPE_OPTIONS,
@@ -21,11 +24,11 @@ import type {
   PropertyFormLandPlot,
   PropertyFormValues,
 } from "@/features/properties/payloadBuilder";
+import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import { LabeledSelect } from "@/shared/ui/LabeledSelect";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
   EditableNumericTextInput,
-  EditableTextInput,
   propertyDetailsEditableInputClassName,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
 import {
@@ -35,15 +38,23 @@ import {
   PrivateHouseEditSection,
 } from "@/widgets/PropertyDetails/PropertyNestedEditSections";
 import { PropertyListingFieldsView } from "@/widgets/PropertyDetails/PropertyListingFieldsView";
-import {
-  parseDecimalInput,
-} from "@/shared/lib/parseNumericInput";
+import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
+import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
+import {
+  calculatePricePerSquareMeter,
+  formatPricePerSquareMeter,
+} from "@/features/properties/pricePerSquareMeter";
+import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
+import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
+import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
+import { buildGeneratePublicTextDraftFromEditForm } from "@/features/properties/generatePublicTextDraft";
 
 type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
   canEdit: boolean;
   showInternalPrice: boolean;
+  showPrivateNotes: boolean;
   readOnlyPrivateHouseBalcony?: number | null;
   onDealTypeChange: (value: DealType) => void;
   onHotelScopeChange: (raw: string) => void;
@@ -62,15 +73,35 @@ type PropertyDetailsEditableSectionsProps = {
     value: string,
   ) => void;
   setApartment: (patch: PropertyApartmentUpdate) => void;
+  setFieldLocks: (nextLocks: PropertyFieldLocks) => void;
   setPrivateHouse: (patch: PropertyPrivateHouseUpdate) => void;
   setLandPlot: (patch: Partial<PropertyFormLandPlot>) => void;
   setCommercial: (patch: PropertyCommercialUpdate) => void;
+  ourSiteId?: string | null;
 };
+
+function getEditableAreaSquareMeters(values: PropertyFormValues): number | null {
+  return canonicalPropertyArea({
+    apartment: values.apartment
+      ? { totalArea: values.apartment.totalArea ?? null }
+      : null,
+    privateHouse: values.privateHouse
+      ? { totalArea: values.privateHouse.totalArea ?? null }
+      : null,
+    landPlot: values.landPlot
+      ? { landArea: values.landPlot.landArea ?? null }
+      : null,
+    commercial: values.commercial
+      ? { area: values.commercial.area ?? null }
+      : null,
+  });
+}
 
 export function PropertyDetailsEditableSections({
   values,
   canEdit,
   showInternalPrice,
+  showPrivateNotes,
   readOnlyPrivateHouseBalcony,
   onDealTypeChange,
   onHotelScopeChange,
@@ -79,15 +110,34 @@ export function PropertyDetailsEditableSections({
   onLabelsChange,
   onCommentChange,
   setApartment,
+  setFieldLocks,
   setPrivateHouse,
   setLandPlot,
   setCommercial,
+  ourSiteId = null,
 }: PropertyDetailsEditableSectionsProps) {
   const { districts } = useDistricts();
   const manualDistrictGroupRef = useRef(false);
   const [selectedDistrictGroup, setSelectedDistrictGroup] = useState("");
+  const pricePerSquareMeter = calculatePricePerSquareMeter(
+    values.pricePublic,
+    getEditableAreaSquareMeters(values),
+  );
+
+  const showDistrictFields = isTbilisiCity(values.city);
+  const hasKnownCity = GEORGIAN_CITY_OPTIONS.some(
+    (option) => option.value === values.city,
+  );
+  const citySelectOptions =
+    hasKnownCity || values.city.trim() === ""
+      ? GEORGIAN_CITY_OPTIONS
+      : [{ value: values.city, label: values.city }, ...GEORGIAN_CITY_OPTIONS];
 
   const derivedDistrictGroup = useMemo(() => {
+    if (!showDistrictFields) {
+      return "";
+    }
+
     for (const districtGroup of districts ?? []) {
       if (districtGroup.neighborhoods.includes(values.district)) {
         return districtGroup.name;
@@ -95,21 +145,28 @@ export function PropertyDetailsEditableSections({
     }
 
     return "";
-  }, [districts, values.district]);
+  }, [districts, showDistrictFields, values.district]);
 
   useEffect(() => {
+    if (!showDistrictFields) {
+      manualDistrictGroupRef.current = false;
+      setSelectedDistrictGroup("");
+      return;
+    }
+
     if (manualDistrictGroupRef.current) {
       return;
     }
 
     setSelectedDistrictGroup(derivedDistrictGroup);
-  }, [derivedDistrictGroup]);
+  }, [derivedDistrictGroup, showDistrictFields]);
 
   if (!canEdit) {
     return (
       <PropertyListingFieldsView
         values={values}
         showInternalPrice={showInternalPrice}
+        showPrivateNotes={showPrivateNotes}
         readOnlyPrivateHouseBalcony={readOnlyPrivateHouseBalcony}
       />
     );
@@ -118,7 +175,7 @@ export function PropertyDetailsEditableSections({
   return (
     <>
       <LabeledSelect
-        label="Deal type"
+        label="გარიგების ტიპი"
         value={values.dealType}
         onChange={(value) => {
           if (isDealType(value)) onDealTypeChange(value);
@@ -128,66 +185,113 @@ export function PropertyDetailsEditableSections({
 
       {values.propertyType === "HOTEL" && (
         <LabeledSelect
-          label="Hotel scope"
+          label="სასტუმროს ტიპი"
           value={values.hotelScope ?? ""}
           onChange={onHotelScopeChange}
           options={[
-            { value: "", label: "Not specified" },
+            { value: "", label: "არ არის მითითებული" },
             ...HOTEL_SCOPE_FORM_OPTIONS,
           ]}
         />
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <EditableTextInput
-          label="City"
+        <LabeledSelect
+          id="propertyCity"
+          label="ქალაქი"
           value={values.city}
           onChange={(value) => onFieldChange("city", value)}
+          options={citySelectOptions}
         />
-        <DistrictNeighborhoodPicker
-          value={
-            selectedDistrictGroup || values.district
-              ? {
-                  group: selectedDistrictGroup,
-                  neighborhood: values.district,
-                }
-              : null
-          }
-          onChange={(next) => {
-            manualDistrictGroupRef.current = true;
-            setSelectedDistrictGroup(next?.group ?? "");
-            onFieldChange("district", next?.neighborhood ?? "");
-          }}
-        />
+        {showDistrictFields ? (
+          <DistrictNeighborhoodPicker
+            value={
+              selectedDistrictGroup || values.district
+                ? {
+                    group: selectedDistrictGroup,
+                    neighborhood: values.district,
+                  }
+                : null
+            }
+            onChange={(next) => {
+              manualDistrictGroupRef.current = true;
+              setSelectedDistrictGroup(next?.group ?? "");
+              onFieldChange("district", next?.neighborhood ?? "");
+            }}
+          />
+        ) : null}
       </div>
 
-      <StreetAutocompleteField
-        id="propertyAddress"
-        label="Address"
-        value={values.address}
-        onChange={(next, addressChangeMeta) =>
-          onFieldChange("address", next, addressChangeMeta)
-        }
-        inputClassName={propertyDetailsEditableInputClassName}
-      />
+      {values.propertyType === "APARTMENT" ? (
+        <FieldWithLock
+          lock={readPropertyFieldLock(values.fieldLocks, "street")}
+          onLockChange={(nextLock: LockState) =>
+            setFieldLocks(applyPropertyFieldLock(values.fieldLocks, "street", nextLock))
+          }
+        >
+          <StreetAutocompleteField
+            id="propertyAddress"
+            label="მისამართი"
+            value={values.address}
+            onChange={(next, addressChangeMeta) =>
+              onFieldChange("address", next, addressChangeMeta)
+            }
+            inputClassName={propertyDetailsEditableInputClassName}
+          />
+        </FieldWithLock>
+      ) : (
+        <StreetAutocompleteField
+          id="propertyAddress"
+          label="მისამართი"
+          value={values.address}
+          onChange={(next, addressChangeMeta) =>
+            onFieldChange("address", next, addressChangeMeta)
+          }
+          inputClassName={propertyDetailsEditableInputClassName}
+        />
+      )}
 
       <div
         className={`grid gap-4 sm:grid-cols-2 ${showInternalPrice ? "" : "max-w-md"}`}
       >
-        <EditableNumericTextInput
-          label="Public price"
-          value={values.pricePublic}
-          onValueChange={(next) => onPriceChange("pricePublic", next)}
-          parse={parseDecimalInput}
-          inputMode="decimal"
-        />
+        <div className="space-y-1.5">
+          {values.propertyType === "APARTMENT" ? (
+            <FieldWithLock
+              lock={readPropertyFieldLock(values.fieldLocks, "price")}
+              onLockChange={(nextLock: LockState) =>
+                setFieldLocks(applyPropertyFieldLock(values.fieldLocks, "price", nextLock))
+              }
+            >
+              <EditableNumericTextInput
+                label="საჯარო ფასი"
+                value={values.pricePublic}
+                onValueChange={(next) => onPriceChange("pricePublic", next)}
+                parse={parseIntegerInput}
+                inputMode="numeric"
+              />
+            </FieldWithLock>
+          ) : (
+            <EditableNumericTextInput
+              label="საჯარო ფასი"
+              value={values.pricePublic}
+              onValueChange={(next) => onPriceChange("pricePublic", next)}
+              parse={parseIntegerInput}
+              inputMode="numeric"
+            />
+          )}
+          {pricePerSquareMeter !== null ? (
+            <p className="text-xs font-medium text-muted-foreground">
+              {formatPricePerSquareMeter(pricePerSquareMeter)}
+            </p>
+          ) : null}
+        </div>
         {showInternalPrice && (
           <EditableNumericTextInput
-            label="Internal price"
+            label="შიდა ფასი"
             value={values.priceInternal}
             onValueChange={(next) => onPriceChange("priceInternal", next)}
-            parse={parseDecimalInput}
-            inputMode="decimal"
+            parse={parseIntegerInput}
+            inputMode="numeric"
           />
         )}
       </div>
@@ -195,48 +299,43 @@ export function PropertyDetailsEditableSections({
       <div className="space-y-1.5">
         <LabelAutocompleteChipsInput
           id="propertyLabels"
-          label="Labels"
+          label="ლეიბლები"
           selectedLabels={values.labels}
           onChange={onLabelsChange}
           allowFreeText
-          placeholder="Type to search or add labels"
+          placeholder="აკრიფეთ ლეიბლის მოსაძებნად ან დასამატებლად"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-slate-800">Public comment</label>
-        <textarea
-          value={values.publicComment}
-          onChange={(event) => onCommentChange("publicComment", event.target.value)}
-          className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
-          rows={4}
-        />
-      </div>
-      {showInternalPrice ? (
+      <PublicCommentGenerateField
+        id="publicComment"
+        value={values.publicComment}
+        onChange={(nextValue) => onCommentChange("publicComment", nextValue)}
+        buildDraft={() =>
+          buildGeneratePublicTextDraftFromEditForm(values, ourSiteId)
+        }
+        textareaClassName="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
+        disabled={!canEdit}
+      />
+      {showPrivateNotes ? (
         <>
+          <HistoryNoteField
+            id="privateComment"
+            label="კომენტარი ჩემთვის"
+            value={values.privateComment}
+            onChange={(nextValue) => onCommentChange("privateComment", nextValue)}
+            textareaClassName="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
+          />
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-800">
-              Personal comment
-            </label>
-            <textarea
-              value={values.privateComment}
-              onChange={(event) =>
-                onCommentChange("privateComment", event.target.value)
-              }
-              className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
-              rows={4}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-800">
-              Internal text
+            <label className="block text-sm font-medium text-foreground">
+              ატვირთვის ტექსტი
             </label>
             <textarea
               value={values.internalText}
               onChange={(event) =>
                 onCommentChange("internalText", event.target.value)
               }
-              className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+              className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
               rows={4}
             />
           </div>
@@ -248,6 +347,8 @@ export function PropertyDetailsEditableSections({
           dealType={values.dealType}
           apartment={values.apartment}
           setApartment={setApartment}
+          fieldLocks={values.fieldLocks}
+          setFieldLocks={setFieldLocks}
         />
       )}
 

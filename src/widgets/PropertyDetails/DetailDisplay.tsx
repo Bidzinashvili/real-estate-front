@@ -15,10 +15,10 @@ export function DetailRow({
 }) {
   return (
     <div className="min-w-0 space-y-0.5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <div className="break-words text-sm text-slate-900">{children}</div>
+      <div className="break-words text-sm text-foreground">{children}</div>
     </div>
   );
 }
@@ -52,28 +52,59 @@ export function DetailMultiline({
   const text = isEmpty(value) ? empty : String(value);
   return (
     <div className="min-w-0 space-y-1">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <div className="rounded-lg border border-slate-100 bg-slate-50/90 px-3 py-2 text-sm text-slate-800 whitespace-pre-wrap">
+      <div className="rounded-lg border border-border bg-muted/90 px-3 py-2 text-sm text-foreground whitespace-pre-wrap">
         {text}
       </div>
     </div>
   );
 }
 
-export function DetailYesNo({ label, value }: { label: string; value: boolean }) {
+export function DetailYesNo({
+  label,
+  value,
+}: {
+  label: string;
+  value: boolean | null | undefined;
+}) {
+  const display =
+    value === true ? "კი" : value === false ? "არა" : "უცნობი";
   return (
     <DetailRow label={label}>
       <span
         className={
-          value ? "font-medium text-emerald-800" : "text-slate-500"
+          value === true
+            ? "font-medium text-success-foreground"
+            : value === false
+              ? "text-muted-foreground"
+              : "text-muted-foreground"
         }
       >
-        {value ? "Yes" : "No"}
+        {display}
       </span>
     </DetailRow>
   );
+}
+
+export function DetailVerification({
+  label,
+  value,
+  isToBeVerified,
+}: {
+  label: string;
+  value: boolean | null | undefined;
+  isToBeVerified: boolean;
+}) {
+  if (isToBeVerified) {
+    return (
+      <DetailRow label={label}>
+        <span className="font-medium text-warning-foreground">გადასამოწმებელია</span>
+      </DetailRow>
+    );
+  }
+  return <DetailYesNo label={label} value={value} />;
 }
 
 export function DetailPhone({
@@ -94,7 +125,7 @@ export function DetailPhone({
     <DetailRow label={label}>
       <a
         href={`tel:${tel}`}
-        className="text-emerald-800 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-900"
+        className="text-success-foreground underline decoration-emerald-200 underline-offset-2 hover:text-success-foreground"
       >
         {raw}
       </a>
@@ -124,13 +155,20 @@ export function DetailNumber({
   value,
   suffix,
   empty = EMPTY,
+  requirePositive = false,
 }: {
   label: string;
   value: number | null | undefined;
   suffix?: string;
   empty?: string;
+  requirePositive?: boolean;
 }) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
+  if (
+    value === null ||
+    value === undefined ||
+    Number.isNaN(value) ||
+    (requirePositive && value <= 0)
+  ) {
     return <DetailText label={label} value="" empty={empty} />;
   }
   return (

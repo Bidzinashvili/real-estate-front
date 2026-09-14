@@ -46,7 +46,7 @@ export function DashboardPage() {
   if (!user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-slate-500">Loading your dashboard…</p>
+        <p className="text-muted-foreground">მთავარი იტვირთება…</p>
       </div>
     );
   }

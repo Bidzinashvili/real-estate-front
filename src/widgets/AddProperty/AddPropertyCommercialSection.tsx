@@ -26,12 +26,12 @@ export function AddPropertyCommercialSection({
   patchCommercial,
 }: Props) {
   return (
-    <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h2 className="text-sm font-semibold text-slate-800">Commercial details</h2>
+    <section className="space-y-3 rounded-xl border border-border bg-muted p-4">
+      <h2 className="text-sm font-semibold text-foreground">კომერციული ობიექტის დეტალები</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           id="cmArea"
-          label="Area"
+          label="ფართობი"
           type="number"
           value={commercial.area}
           onChange={(value) => patchCommercial({ area: value })}
@@ -51,7 +51,7 @@ export function AddPropertyCommercialSection({
         />
         <TextField
           id="cmCeilingHeight"
-          label="Ceiling height"
+          label="ჭერის სიმაღლე"
           type="number"
           value={commercial.ceilingHeight}
           onChange={(value) => patchCommercial({ ceilingHeight: value })}
@@ -59,30 +59,30 @@ export function AddPropertyCommercialSection({
         />
         <SelectField
           id="cmStatus"
-          label="Status"
+          label="სტატუსი"
           value={commercial.status}
           onChange={(value) => patchCommercial({ status: value })}
           options={COMMERCIAL_STATUS_OPTIONS}
         />
         <SelectField
           id="cmRenovation"
-          label="Renovation"
+          label="რემონტი"
           value={commercial.renovation}
           onChange={(value) => patchCommercial({ renovation: value })}
           options={RENOVATION_SELECT_OPTIONS}
         />
-        {dealType === "RENT" && (
+        {dealType === "RENT" || dealType === "DAILY_RENT" ? (
           <MinRentalPeriodField
             idPrefix="cm"
             value={commercial.minRentalPeriod}
             onChange={(value) => patchCommercial({ minRentalPeriod: value })}
             error={fieldErrors["commercial.minRentalPeriod"]}
           />
-        )}
+        ) : null}
         {[
           {
             id: "cmCentralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             key: "centralHeating",
             checked: commercial.centralHeating,
             onChange: (checked: boolean) =>
@@ -90,7 +90,7 @@ export function AddPropertyCommercialSection({
           },
           {
             id: "cmAirConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             key: "airConditioner",
             checked: commercial.airConditioner,
             onChange: (checked: boolean) =>
@@ -117,7 +117,7 @@ export function AddPropertyCommercialSection({
         ))}
         <TextField
           id="cmParking"
-          label="Parking spaces"
+          label="პარკინგის ადგილები"
           type="number"
           value={commercial.parkingSpaces}
           onChange={(value) => patchCommercial({ parkingSpaces: value })}
@@ -125,25 +125,25 @@ export function AddPropertyCommercialSection({
         />
         <CheckboxField
           id="cmElectricity"
-          label="Electricity"
+          label="ელექტროენერგია"
           checked={commercial.electricity}
           onChange={(checked) => patchCommercial({ electricity: checked })}
         />
         <CheckboxField
           id="cmWater"
-          label="Water"
+          label="წყალი"
           checked={commercial.water}
           onChange={(checked) => patchCommercial({ water: checked })}
         />
         <CheckboxField
           id="cmGas"
-          label="Gas"
+          label="გაზი"
           checked={commercial.gas}
           onChange={(checked) => patchCommercial({ gas: checked })}
         />
         <CheckboxField
           id="cmSewage"
-          label="Sewage"
+          label="კანალიზაცია"
           checked={commercial.sewage}
           onChange={(checked) => patchCommercial({ sewage: checked })}
         />

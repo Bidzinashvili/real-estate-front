@@ -3,79 +3,141 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/shared/stores";
+import { ThemeToggle } from "@/shared/theme/ThemeToggle";
+import { useCollaborationInboxCount } from "@/features/collaboration/useCollaborationInboxCount";
 
 export function AppHeader() {
   const pathname = usePathname();
   const user = useUserStore((state) => state.user);
   const isAdmin = user?.role === "ADMIN";
+  const { count: inboxCount } = useCollaborationInboxCount({
+    enabled: user !== null,
+    role: user?.role ?? null,
+  });
 
   return (
-    <header
-      className="mb-6 flex items-center gap-4 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm sm:px-6 max-[675px]:justify-center min-[676px]:justify-between"
-    >
+    <header className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-card/80 px-3 py-3 shadow-sm backdrop-blur-sm sm:gap-4 sm:px-6 max-[675px]:justify-center min-[676px]:justify-between">
       <div className="hidden items-center gap-2 min-[676px]:flex">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
-          RE
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
+          უქ
         </div>
         <div className="flex flex-col">
           <Link
             href="/dashboard"
-            className="text-sm font-semibold tracking-tight text-slate-900 sm:text-base"
+            className="text-sm font-semibold tracking-tight text-foreground sm:text-base"
           >
-            Real Estate Admin
+            უძრავი ქონება
           </Link>
-          <span className="text-xs text-slate-500">
-            Manage agents and performance in one place
+          <span className="text-xs text-muted-foreground">
+            აგენტებისა და განცხადებების მართვა
           </span>
         </div>
       </div>
 
-      <nav className="flex items-center gap-1 rounded-full bg-slate-100/80 p-1 text-xs font-medium text-slate-600">
-        <Link
-          href="/dashboard"
-          className={`inline-flex items-center rounded-full px-3 py-1 transition ${
-            pathname === "/dashboard"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "hover:text-slate-900"
-          }`}
-        >
-          Dashboard
-        </Link>
-        {isAdmin && (
+      <div className="flex items-center gap-2">
+        <nav className="flex items-center gap-1 overflow-x-auto rounded-full bg-muted/80 p-1 text-xs font-medium text-muted-foreground">
           <Link
-            href="/agents"
+            href="/dashboard"
             className={`inline-flex items-center rounded-full px-3 py-1 transition ${
-              pathname?.startsWith("/agents")
-                ? "bg-white text-slate-900 shadow-sm"
-                : "hover:text-slate-900"
+              pathname === "/dashboard"
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
             }`}
           >
-            Agents
+            მთავარი
           </Link>
-        )}
-        <Link
-          href="/clients"
-          className={`inline-flex items-center rounded-full px-3 py-1 transition ${
-            pathname?.startsWith("/clients")
-              ? "bg-white text-slate-900 shadow-sm"
-              : "hover:text-slate-900"
-          }`}
-        >
-          Clients
-        </Link>
-        <Link
-          href="/properties"
-          className={`inline-flex items-center rounded-full px-3 py-1 transition ${
-            pathname?.startsWith("/properties")
-              ? "bg-white text-slate-900 shadow-sm"
-              : "hover:text-slate-900"
-          }`}
-        >
-          Properties
-        </Link>
-      </nav>
+          {isAdmin && (
+            <Link
+              href="/agents"
+              className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+                pathname?.startsWith("/agents")
+                  ? "bg-card text-foreground shadow-sm"
+                  : "hover:text-foreground"
+              }`}
+            >
+              აგენტები
+            </Link>
+          )}
+          <Link
+            href="/clients"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/clients")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            კლიენტები
+          </Link>
+          <Link
+            href="/client-profiles"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/client-profiles")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            პროფილები
+          </Link>
+          <Link
+            href="/collaborations"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/collaborations")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            თანამშრომლობა
+            {inboxCount > 0 ? (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                {inboxCount > 99 ? "99+" : inboxCount}
+              </span>
+            ) : null}
+          </Link>
+          <Link
+            href="/properties"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/properties")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            განცხადებები
+          </Link>
+          <Link
+            href="/property-owners"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/property-owners")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            მეპატრონეები
+          </Link>
+          <Link
+            href="/archive"
+            className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+              pathname?.startsWith("/archive")
+                ? "bg-card text-foreground shadow-sm"
+                : "hover:text-foreground"
+            }`}
+          >
+            არქივი
+          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin/trash"
+              className={`inline-flex items-center rounded-full px-3 py-1 transition ${
+                pathname?.startsWith("/admin/trash")
+                  ? "bg-card text-foreground shadow-sm"
+                  : "hover:text-foreground"
+              }`}
+            >
+              ნაგვის ყუთი
+            </Link>
+          )}
+        </nav>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
-
-

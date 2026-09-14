@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  GEORGIAN_CITY_OPTIONS,
+  isTbilisiCity,
+} from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
 import {
   buildPropertyUpdatePayload,
@@ -16,15 +21,36 @@ import {
   isHotelScope,
   parseRenovationForForm,
 } from "@/features/properties/types";
+import { applyLinkedPropertyPriceChange } from "@/features/properties/linkedPropertyPrices";
 import { getApiBaseUrl } from "@/shared/lib/auth";
+import { requiredFieldMessage, wholeNumberAtLeastOneMessage, greaterThanZeroMessage } from "@/shared/i18n/ui";
+import {
+  CANONICAL_AREA_MISSING_LABEL,
+  hydratePositiveArea,
+  nextPrivateHouseTotalArea,
+} from "@/features/properties/propertyArea";
 import { PropertyDetailsEditableSections } from "@/widgets/PropertyDetails/PropertyDetailsEditableSections";
 import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyDetailsImageGallery";
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
 import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
+import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
+import { collectPropertyTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
+import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
+import { ui } from "@/shared/i18n/ui";
+import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
+import {
+  assignmentFromProperty,
+  buildOwnerWritePayload,
+  isOwnerAssignmentDirty,
+} from "@/features/propertyOwners/ownerContactDrafts";
+import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
+import {
+  hasAuthorizedInternalPrice,
+  hasAuthorizedPrivateNotes,
+} from "@/features/properties/authorizedPropertyFields";
 
 type PropertyDetailsCardBaseProps = {
   property: Property;
-  canViewPrivateFields: boolean;
 };
 
 type PropertyDetailsCardEditProps = PropertyDetailsCardBaseProps & {
@@ -44,7 +70,7 @@ export type PropertyDetailsCardProps =
   | PropertyDetailsCardEditProps
   | PropertyDetailsCardViewProps;
 
-const propertyLabelsOwnerErrorMessage = "You can only edit labels on your own properties.";
+const propertyLabelsOwnerErrorMessage = "ლეიბლების რედაქტირება მხოლოდ საკუთარ განცხადებებზე შეგიძლიათ.";
 
 function getSaveErrorMessage(saveError: string | null): string | null {
   if (!saveError) {
@@ -60,22 +86,51 @@ function getSaveErrorMessage(saveError: string | null): string | null {
 
 function getMinRentalPeriodErrorMessage(months: number | undefined): string | null {
   if (months === undefined || Number.isNaN(months)) {
-    return "Min Rental Period (months) is required.";
+    return "მინიმალური ქირის ვადა (თვეებში) სავალდებულოა.";
   }
   if (!Number.isInteger(months) || months < 1) {
-    return "Min Rental Period must be a whole number of at least 1 month.";
+    return "მინიმალური ქირის ვადა უნდა იყოს მინიმუმ 1 თვე.";
+  }
+
+  return null;
+}
+
+function getCanonicalAreaErrorMessage(
+  area: number | undefined,
+  label: string,
+): string | null {
+  if (area === undefined || Number.isNaN(area)) {
+    return `${CANONICAL_AREA_MISSING_LABEL}. ${greaterThanZeroMessage(label)}`;
+  }
+  if (area <= 0) {
+    return greaterThanZeroMessage(label);
+  }
+  return null;
+}
+
+function getTotalFloorsErrorMessage(
+  totalFloors: number | undefined,
+  label: string,
+): string | null {
+  if (totalFloors === undefined || Number.isNaN(totalFloors)) {
+    return requiredFieldMessage(label);
+  }
+  if (!Number.isInteger(totalFloors) || totalFloors < 1) {
+    return wholeNumberAtLeastOneMessage(label);
   }
 
   return null;
 }
 
 export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
-  const { property, canViewPrivateFields, presentation } = props;
+  const { property, presentation } = props;
   const canEdit = presentation === "edit" ? props.canEdit : false;
   const isSaving = presentation === "edit" ? props.isSaving : false;
   const saveError = presentation === "edit" ? props.saveError : null;
   const onSubmit = presentation === "edit" ? props.onSubmit : undefined;
   const onImagesChanged = presentation === "edit" ? props.onImagesChanged : undefined;
+  const showInternalPrice = hasAuthorizedInternalPrice(property);
+  const showPrivateNotes = hasAuthorizedPrivateNotes(property);
 
   const apiBaseUrl = getApiBaseUrl();
   const initialValues = useMemo<PropertyFormValues>(() => {
@@ -99,8 +154,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       })),
       apartment: property.apartment
         ? {
-            totalArea: property.apartment.totalArea,
+            totalArea: hydratePositiveArea(property.apartment.totalArea),
             rooms: property.apartment.rooms,
+            bedrooms: property.apartment.bedrooms,
             totalFloors: property.apartment.totalFloors,
             ceilingHeight: property.apartment.ceilingHeight ?? undefined,
             balconyArea: property.apartment.balconyArea,
@@ -108,15 +164,25 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             floor: property.apartment.floor,
             project: property.apartment.project ?? "",
             renovation: parseRenovationForForm(property.apartment.renovation),
+            buildingCondition: property.apartment.buildingCondition,
+            buildingAgeType: property.apartment.buildingAgeType,
             furnished: property.apartment.furnished,
             parkingSpaces: property.apartment.parkingSpaces,
             minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
+            elevator: property.apartment.elevator,
+            centralHeating: property.apartment.centralHeating,
+            airConditioner: property.apartment.airConditioner,
+            kitchenType: property.apartment.kitchenType,
+            goodView: property.apartment.goodView,
+            bathrooms: property.apartment.bathrooms,
+            petsAllowed: property.apartment.petsAllowed,
           }
         : null,
       privateHouse: property.privateHouse
         ? {
-            houseArea: property.privateHouse.houseArea,
+            houseArea: hydratePositiveArea(property.privateHouse.houseArea),
             yardArea: property.privateHouse.yardArea,
+            totalArea: hydratePositiveArea(property.privateHouse.totalArea),
             balconyArea: property.privateHouse.balconyArea,
             parkingSpaces: property.privateHouse.parkingSpaces,
             needsVerification: property.privateHouse.needsVerification,
@@ -129,7 +195,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         : null,
       landPlot: property.landPlot
         ? {
-            landArea: property.landPlot.landArea,
+            landArea: hydratePositiveArea(property.landPlot.landArea),
             landCategory: property.landPlot.landCategory,
             landUsage: property.landPlot.landUsage,
             forInvestment: property.landPlot.forInvestment,
@@ -139,7 +205,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         : null,
       commercial: property.commercial
         ? {
-            area: property.commercial.area,
+            area: hydratePositiveArea(property.commercial.area),
             totalFloors: property.commercial.totalFloors ?? undefined,
             ceilingHeight: property.commercial.ceilingHeight ?? undefined,
             parkingSpaces: property.commercial.parkingSpaces,
@@ -149,17 +215,25 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             minRentalPeriod: property.commercial.minRentalPeriod ?? undefined,
           }
         : null,
+      fieldLocks: property.fieldLocks ?? {},
     };
   }, [property]);
 
   const [values, setValues] = useState<PropertyFormValues>(initialValues);
+  const [ownerAssignment, setOwnerAssignment] = useState<PropertyOwnerAssignment>(() =>
+    assignmentFromProperty(property),
+  );
   const [clientError, setClientError] = useState<string | null>(null);
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
 
+  useEffect(() => {
+    setOwnerAssignment(assignmentFromProperty(property));
+  }, [property.id, property.updatedAt, property.propertyOwner, property.ownerName, property.ownerPhones]);
+
   const handleDealTypeChange = (value: DealType) => {
-    const clearRentFields = value !== "RENT";
+    const clearRentFields = value !== "RENT" && value !== "DAILY_RENT";
     setValues((prev) => ({
       ...prev,
       dealType: value,
@@ -200,8 +274,17 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     addressChangeMeta?: { selectedStreetId: string | null },
   ) => {
     setValues((prev) => {
-      if (field === "city" || field === "district") {
-        return { ...prev, [field]: value, selectedStreetId: null };
+      if (field === "city") {
+        const keepTbilisiDistricts = isTbilisiCity(value);
+        return {
+          ...prev,
+          city: value,
+          district: keepTbilisiDistricts ? prev.district : "",
+          selectedStreetId: null,
+        };
+      }
+      if (field === "district") {
+        return { ...prev, district: value, selectedStreetId: null };
       }
       if (field === "address") {
         return {
@@ -218,7 +301,24 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     field: "pricePublic" | "priceInternal",
     value: number | undefined,
   ) => {
-    setValues((prev) => ({ ...prev, [field]: value }));
+    setValues((prev) => {
+      if (field === "pricePublic" && !showInternalPrice) {
+        return { ...prev, pricePublic: value };
+      }
+
+      const nextPrices = applyLinkedPropertyPriceChange({
+        changedField: field,
+        nextValue: value,
+        currentInternal: prev.priceInternal,
+        currentPublic: prev.pricePublic,
+      });
+
+      return {
+        ...prev,
+        priceInternal: nextPrices.priceInternal,
+        pricePublic: nextPrices.pricePublic,
+      };
+    });
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -228,14 +328,92 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
     setClientError(null);
 
+    if (
+      initialValues.city !== values.city &&
+      !GEORGIAN_CITY_OPTIONS.some((option) => option.value === values.city)
+    ) {
+      setClientError("ქალაქი უნდა იყოს თბილისი, ბათუმი, ქუთაისი ან ბორჯომი.");
+      return;
+    }
+
+    if (isTbilisiCity(values.city) && values.district.trim() === "") {
+      setClientError(requiredFieldMessage("უბანი"));
+      return;
+    }
+
     if (values.landPlot) {
       if (values.landPlot.landCategory === "" || values.landPlot.landUsage === "") {
-        setClientError("Select land category and land usage.");
+        setClientError("აირჩიეთ მიწის კატეგორია და დანიშნულება.");
         return;
       }
     }
 
-    if (values.dealType === "RENT") {
+    if (values.apartment) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.apartment.totalArea,
+        "ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
+      const message = getTotalFloorsErrorMessage(
+        values.apartment.totalFloors,
+        "ბინის სართულიანობა",
+      );
+      if (message) {
+        setClientError(message);
+        return;
+      }
+    }
+
+    if (values.privateHouse) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.privateHouse.totalArea,
+        "საერთო ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
+    }
+
+    if (values.landPlot) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.landPlot.landArea,
+        "მიწის ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
+    }
+
+    if (values.commercial) {
+      const areaMessage = getCanonicalAreaErrorMessage(
+        values.commercial.area,
+        "ფართობი",
+      );
+      if (areaMessage) {
+        setClientError(areaMessage);
+        return;
+      }
+      const message = getTotalFloorsErrorMessage(
+        values.commercial.totalFloors,
+        "კომერციული სართულიანობა",
+      );
+      if (message) {
+        setClientError(message);
+        return;
+      }
+    }
+
+    if (values.dealType === "SALE" && property.status === "AVAILABLE_SOON") {
+      setClientError("სტატუსი „მალე ხელმისაწვდომი“ მხოლოდ ქირავნობის განცხადებებზეა დაშვებული");
+      return;
+    }
+
+    if (values.dealType === "RENT" || values.dealType === "DAILY_RENT") {
       if (values.apartment) {
         const message = getMinRentalPeriodErrorMessage(values.apartment.minRentalPeriod ?? undefined);
         if (message) {
@@ -276,11 +454,31 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       property.propertyType,
     );
 
+    if (isOwnerAssignmentDirty(property, ownerAssignment)) {
+      const ownerWrite = buildOwnerWritePayload(ownerAssignment);
+      if (ownerWrite.error || !ownerWrite.payload) {
+        setClientError(ownerWrite.error ?? "მესაკუთრის მონაცემები არასრულია.");
+        return;
+      }
+      if ("ownerId" in ownerWrite.payload) {
+        payload.ownerId = ownerWrite.payload.ownerId;
+      } else {
+        payload.owner = ownerWrite.payload.owner;
+      }
+    }
+
     if (Object.keys(payload).length === 0) {
       return;
     }
 
     void onSubmit(payload);
+  };
+
+  const setFieldLocks = (nextLocks: PropertyFormValues["fieldLocks"]) => {
+    setValues((previousValues) => ({
+      ...previousValues,
+      fieldLocks: nextLocks,
+    }));
   };
 
   const setApartment = (patch: PropertyApartmentUpdate) => {
@@ -334,14 +532,15 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       {presentation === "view" ? (
         <div className="mt-6 space-y-6">
           <PropertyDetailsLifecycleSection
-            lifecycleStatus={property.status}
-            verificationReminderIso={property.reminderDate}
+            property={property}
+            showRecordTimestamp
           />
 
           <PropertyDetailsEditableSections
             values={values}
             canEdit={false}
-            showInternalPrice={canViewPrivateFields}
+            showInternalPrice={showInternalPrice}
+            showPrivateNotes={showPrivateNotes}
             readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={() => {}}
@@ -350,6 +549,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             onLabelsChange={() => {}}
             onCommentChange={() => {}}
             setApartment={setApartment}
+            setFieldLocks={setFieldLocks}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}
@@ -357,20 +557,21 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
           <PropertyDetailsReadOnlySections
             property={property}
-            showPrivateNotes={canViewPrivateFields}
+            showPrivateNotes={showPrivateNotes}
           />
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <PropertyDetailsLifecycleSection
-            lifecycleStatus={property.status}
-            verificationReminderIso={property.reminderDate}
+            property={property}
+            showRecordTimestamp
           />
 
           <PropertyDetailsEditableSections
             values={values}
             canEdit={canEdit}
-            showInternalPrice={canViewPrivateFields}
+            showInternalPrice={showInternalPrice}
+            showPrivateNotes={showPrivateNotes}
             readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={(raw) => {
@@ -391,25 +592,34 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
               setValues((prev) => ({ ...prev, [field]: value }))
             }
             setApartment={setApartment}
+            setFieldLocks={setFieldLocks}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}
+            ourSiteId={property.ourSiteId}
+          />
+
+          <PropertyOwnerPickerSection
+            assignment={ownerAssignment}
+            onChange={setOwnerAssignment}
+            disabled={!canEdit || isSaving}
           />
 
           <PropertyDetailsReadOnlySections
             property={property}
-            showPrivateNotes={canViewPrivateFields}
+            showPrivateNotes={showPrivateNotes}
+            hideOwnerFields
           />
 
           {(clientError || getSaveErrorMessage(saveError)) && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {clientError ?? getSaveErrorMessage(saveError)}
             </p>
           )}
 
           {!canEdit && (
-            <p className="text-xs text-slate-500">
-              You don&apos;t have permission to edit this property.
+            <p className="text-xs text-muted-foreground">
+              ამ განცხადების რედაქტირების უფლება არ გაქვთ.
             </p>
           )}
 
@@ -417,9 +627,9 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             <button
               type="submit"
               disabled={!canEdit || isSaving}
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSaving ? "Saving…" : "Save changes"}
+              {isSaving ? "ინახება…" : "ცვლილებების შენახვა"}
             </button>
           </div>
         </form>
@@ -429,35 +639,45 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
 
   if (presentation === "view") {
     return (
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-2xl font-semibold tracking-tight">Property details</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          View listing information. Use Edit listing to change fields you are allowed to
-          update.
+      <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
+        <h1 className="text-2xl font-semibold tracking-tight">განცხადების დეტალები</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          ნახეთ განცხადების ინფორმაცია. დასაშვები ველების შესაცვლელად გამოიყენეთ რედაქტირება.
         </p>
-        {!canViewPrivateFields && (
-          <p className="mt-2 text-sm text-slate-600">
-            Notes, internal price, and some workflow fields are hidden because you are not
-            the listing agent. Administrators always see the full record.
-          </p>
-        )}
         {detailsBody}
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h1 className="text-2xl font-semibold tracking-tight">Property details</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Update listing information. Agents can only edit their own properties.
-      </p>
-      {!canViewPrivateFields && (
-        <p className="mt-2 text-sm text-slate-600">
-          Notes, internal price, and some workflow fields are hidden because you are not the
-          listing agent. Administrators always see the full record.
-        </p>
-      )}
+    <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight">განცხადების დეტალები</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            განაახლეთ განცხადების ინფორმაცია. აგენტებს მხოლოდ საკუთარი განცხადებების რედაქტირება შეუძლიათ.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {property.propertyType === "APARTMENT" ? (
+            <MatchPercentActions
+              allHref={propertyMatchesHref(property.id, "GLOBAL")}
+              mineHref={propertyMatchesHref(property.id, "MINE")}
+              allLabel={`${ui.matchAll}: ${ui.allClients}`}
+              mineLabel={`${ui.matchMine}: ${ui.myClients}`}
+              sessionKind="property"
+              entityId={property.id}
+              temporaryLockedFields={collectPropertyTemporaryLocks(values.fieldLocks)}
+            />
+          ) : null}
+          <Link
+            href={`/properties/${property.id}`}
+            className="inline-flex items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
+          >
+            ობიექტის ნახვა
+          </Link>
+        </div>
+      </div>
       {detailsBody}
     </div>
   );

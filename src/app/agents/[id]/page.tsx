@@ -6,7 +6,7 @@ type AgentDetailsPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Agent details",
+  title: "აგენტის დეტალები",
 };
 
 export default async function AgentDetailsPage({

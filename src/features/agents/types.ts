@@ -4,6 +4,7 @@ export type Agent = {
   email: string;
   phone: string | null;
   createdAt: string;
+  passwordSet?: boolean;
 };
 
 export type AgentsResponse = {
@@ -17,6 +18,11 @@ export type AgentsResponse = {
   hasPreviousPage?: boolean;
 };
 
+export type AgentEmailDelivery = {
+  setupEmailSent: boolean;
+  adminNotificationSent: boolean;
+};
+
 export type AgentDetails = {
   id: string;
   fullName: string;
@@ -27,12 +33,18 @@ export type AgentDetails = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  passwordSet?: boolean;
 };
 
 export type AgentCreatePayload = {
   fullName: string;
   email: string;
   phone: string;
+};
+
+export type AgentCreateResult = AgentDetails & {
+  passwordSet: boolean;
+  emailDelivery?: AgentEmailDelivery;
 };
 
 export type AgentUpdatePayload = Partial<AgentCreatePayload>;

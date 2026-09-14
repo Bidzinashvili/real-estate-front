@@ -1,8 +1,12 @@
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import type { LabelDto } from "@/features/labels/labelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
@@ -10,6 +14,7 @@ import type {
   LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
+import type { NestedPropertyOwnerInput } from "@/features/propertyOwners/types";
 
 export type PropertyUpdatePayload = UpdatePropertyRequestBody;
 export type { LabelDto };
@@ -40,6 +45,7 @@ export type PropertyImageInput =
 
 export type PropertyApartmentCreate = {
   buildingCondition: BuildingCondition;
+  buildingAgeType?: BuildingAgeType | null;
   totalArea: number;
   rooms: number;
   bedrooms: number;
@@ -48,17 +54,19 @@ export type PropertyApartmentCreate = {
   ceilingHeight?: number;
   balconyArea?: number;
   needsVerification?: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator?: boolean | null;
+  centralHeating?: boolean | null;
+  airConditioner?: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished?: boolean | null;
   parkingSpaces?: number;
   buildingNumber?: string;
   project?: string;
   renovation?: string;
-  petsAllowed?: boolean;
+  petsAllowed?: boolean | null;
   minRentalPeriod?: number;
+  goodView?: boolean | null;
+  bathrooms?: number;
 };
 
 export type PropertyPrivateHouseCreate = {
@@ -123,16 +131,20 @@ export type CreatePropertyDto = {
   hotelScope?: HotelScope;
   dealType?: DealType;
   status?: PropertyStatus;
-  reminderDate?: string;
+  reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   city: string;
-  district: string;
+  district?: string;
   address: string;
   pricePublic: number;
-  ownerName: string;
-  ownerPhone: string;
+  ownerName?: string;
+  ownerPhones?: string[];
   cadastralCode?: string;
   priceInternal?: number;
   ownerWhatsapp?: string;
+  ownerId?: string;
+  owner?: NestedPropertyOwnerInput;
   myHomeId?: string;
   ssGeId?: string;
   externalIds?: Array<{
@@ -145,6 +157,7 @@ export type CreatePropertyDto = {
   internalText?: string;
   labels?: string[];
   images?: PropertyImageInput[];
+  fieldLocks?: PropertyFieldLocks;
   apartment?: PropertyApartmentCreate;
   privateHouse?: PropertyPrivateHouseCreate;
   landPlot?: PropertyLandPlotCreate;

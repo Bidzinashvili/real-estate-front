@@ -1,47 +1,139 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, ArrowLeft, Bell, Tags } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
-import { PropertyDetailsCard } from "@/widgets/PropertyDetails/PropertyDetailsCard";
-import { canViewPrivateListingFields } from "@/features/properties/listingVisibility";
-import { updateProperty } from "@/features/properties/api";
+import { canManageProperty } from "@/features/properties/listingVisibility";
+import { markPropertyOpened, updateProperty, archiveProperty, unarchiveProperty, deleteProperty, restoreProperty } from "@/features/properties/api";
+import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
+import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
 import { PropertyListingRemindersModal } from "@/widgets/Properties/PropertyListingRemindersModal";
+import { PropertyListingChangeStatusModal } from "@/widgets/Properties/PropertyListingChangeStatusModal";
 import { calculateMatchScore } from "@/features/properties/matchScore";
+import { PropertyDetailsViewContent } from "@/widgets/PropertyDetails/PropertyDetailsViewContent";
+import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
+import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { useVerifyProperty } from "@/features/lifecycle/useVerifyProperty";
+import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
+import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
+import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
+import { DeleteConfirmDialog } from "@/widgets/Lifecycle/DeleteConfirmDialog";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColor";
+import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
+import { useUpdateReadyToUpload } from "@/features/readyToUpload/useUpdateReadyToUpload";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
   layout: "page" | "embedded";
   onBeforeEditNavigation?: () => void;
+  onDeleted?: () => void;
 };
 
 export function PropertyDetailsReadOnlyBody({
   propertyId,
   layout,
   onBeforeEditNavigation,
+  onDeleted,
 }: PropertyDetailsReadOnlyBodyProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
-  const { property, isLoading, error, refetch } = usePropertyDetails(propertyId);
+  const { property, isLoading, error, refetch, applyNoteLastOpenedAt } =
+    usePropertyDetails(propertyId);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
-  const [isArchiving, setIsArchiving] = useState(false);
-  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
+  const [isSavingReminder, setIsSavingReminder] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
+  const {
+    verifyListing,
+    isVerifying,
+    error: verifyError,
+    successMessage: verifySuccessMessage,
+  } = useVerifyProperty();
+  const { saveColor, isSaving: isSavingColor, error: colorError } =
+    useUpdateRecordColor();
+  const {
+    saveHideFromOthers,
+    isSaving: isSavingHideFromOthers,
+    error: hideFromOthersError,
+  } = useUpdateHideFromOthers();
+  const {
+    saveReadyToUpload,
+    isSaving: isSavingReadyToUpload,
+    error: readyToUploadError,
+  } = useUpdateReadyToUpload();
+
+  useMarkNoteOpened({
+    kind: "property",
+    recordId: property?.id ?? null,
+    canMark: canMarkNoteOpened(property, user),
+    markOpened: markPropertyOpened,
+    onOpened: applyNoteLastOpenedAt,
+  });
 
   const canEdit = useMemo(() => {
     if (!user || !property) return false;
-    if (user.role === "ADMIN") return true;
-    return user.role === "AGENT" && property.userId === user.id;
+    return canManageProperty(user, property);
   }, [property, user]);
 
-  const canViewPrivateFields = useMemo(() => {
-    if (!user || !property) return false;
-    return canViewPrivateListingFields(user, property);
-  }, [property, user]);
+  const archiveAction = useArchiveAction({
+    canManage: canEdit,
+    isArchived: property ? isPropertyArchived(property) : false,
+    canRestore: property ? canRestoreArchivedProperty(property) : false,
+    onArchive: () => {
+      if (!property) {
+        return Promise.resolve();
+      }
+      return archiveProperty(property.id);
+    },
+    onRestore: () => {
+      if (!property) {
+        return Promise.resolve();
+      }
+      return unarchiveProperty(property.id);
+    },
+    onSuccess: () => {
+      void refetch();
+    },
+  });
+  const deleteAction = useSoftDeleteAction({
+    canManage: canEdit,
+    onDelete: () => {
+      if (!property) {
+        return Promise.resolve();
+      }
+      return deleteProperty(property.id);
+    },
+    onRestore: () => {
+      if (!property) {
+        return Promise.resolve(null);
+      }
+      return restoreProperty(property.id);
+    },
+    onSuccess: () => {
+      void refetch();
+    },
+    onDeleted: () => {
+      onDeleted?.();
+      if (layout === "embedded") {
+        return;
+      }
+      if (property && isPropertyArchived(property)) {
+        router.push("/archive");
+        return;
+      }
+      router.push("/properties");
+    },
+  });
 
   const handleGoBack = () => {
+    if (property && isPropertyArchived(property)) {
+      router.push("/archive");
+      return;
+    }
     router.push("/properties");
   };
 
@@ -53,18 +145,18 @@ export function PropertyDetailsReadOnlyBody({
     if (property.apartment) {
       return calculateMatchScore(
         [
-          { key: "elevator", label: "Elevator", value: property.apartment.elevator },
+          { key: "elevator", label: "ლიფტი", value: property.apartment.elevator },
           {
             key: "centralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             value: property.apartment.centralHeating,
           },
           {
             key: "airConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             value: property.apartment.airConditioner,
           },
-          { key: "furnished", label: "Furnished", value: property.apartment.furnished },
+          { key: "furnished", label: "ავეჯით", value: property.apartment.furnished },
         ],
         property.apartment.needsVerification,
       );
@@ -75,17 +167,17 @@ export function PropertyDetailsReadOnlyBody({
         [
           {
             key: "centralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             value: property.privateHouse.centralHeating,
           },
           {
             key: "airConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             value: property.privateHouse.airConditioner,
           },
           {
             key: "furnished",
-            label: "Furnished",
+            label: "ავეჯით",
             value: property.privateHouse.furnished,
           },
         ],
@@ -98,12 +190,12 @@ export function PropertyDetailsReadOnlyBody({
         [
           {
             key: "centralHeating",
-            label: "Central heating",
+            label: "ცენტრალური გათბობა",
             value: property.commercial.centralHeating,
           },
           {
             key: "airConditioner",
-            label: "Air conditioner",
+            label: "კონდიციონერი",
             value: property.commercial.airConditioner,
           },
         ],
@@ -114,34 +206,74 @@ export function PropertyDetailsReadOnlyBody({
     return { percentage: null, matched: 0, total: 0 };
   }, [property]);
 
-  async function handleArchiveProperty() {
+  async function handleSelectColor(nextColor: RecordColor) {
+    if (!property || !canEdit || property.color === undefined) {
+      return;
+    }
+    try {
+      await saveColor("property", property.id, nextColor);
+      await refetch();
+    } catch {
+      return;
+    }
+  }
+
+  async function handleToggleHideFromOthers(nextHidden: boolean) {
     if (!property || !canEdit) {
       return;
     }
-
-    setIsArchiving(true);
-    setArchiveError(null);
     try {
-      await updateProperty(property.id, { status: "ARCHIVED" });
+      await saveHideFromOthers("property", property.id, nextHidden);
+      await refetch();
+    } catch {
+      return;
+    }
+  }
+
+  async function handleToggleReadyToUpload(nextReady: boolean) {
+    if (!property || !canEdit) {
+      return;
+    }
+    try {
+      await saveReadyToUpload(property.id, nextReady);
+      await refetch();
+    } catch {
+      return;
+    }
+  }
+
+  async function handleSaveReminder(payload: ReminderConfigPayload) {
+    if (!property || !canEdit) {
+      return;
+    }
+    setIsSavingReminder(true);
+    setReminderError(null);
+    try {
+      await updateProperty(property.id, { reminder: payload });
       await refetch();
     } catch (error) {
-      setArchiveError(
-        error instanceof Error ? error.message : "Could not archive property.",
-      );
+      const message =
+        error instanceof Error ? error.message : "შეხსენების შენახვა ვერ მოხერხდა.";
+      setReminderError(message);
+      throw error;
     } finally {
-      setIsArchiving(false);
+      setIsSavingReminder(false);
+    }
+  }
+
+  async function handleVerifyNow() {
+    if (!property || !canEdit) {
+      return;
+    }
+    const didVerify = await verifyListing(property.id);
+    if (didVerify) {
+      await refetch();
     }
   }
 
   const loadingBlock = (
-    <div
-      className={
-        layout === "page"
-          ? "flex min-h-screen items-center justify-center bg-slate-50 text-slate-900"
-          : "flex min-h-[12rem] items-center justify-center text-slate-500"
-      }
-    >
-      <p className="text-slate-500">Loading property details…</p>
+    <div className="flex min-h-[12rem] items-center justify-center text-muted-foreground">
+      <p className="text-muted-foreground">განცხადების დეტალები იტვირთება…</p>
     </div>
   );
 
@@ -150,110 +282,78 @@ export function PropertyDetailsReadOnlyBody({
   }
 
   if (error || !property) {
-    const message = error ?? "We could not find this property.";
+    const message = error ?? "განცხადება ვერ მოიძებნა.";
     if (layout === "embedded") {
-      return <p className="text-sm text-slate-600">{message}</p>;
+      return <p className="text-sm text-muted-foreground">{message}</p>;
     }
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
-        <div className="flex w-full max-w-xl flex-col gap-4 px-4">
-          <button
-            type="button"
-            onClick={handleGoBack}
-            className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              <span>Go back</span>
-            </span>
-          </button>
-          <p className="text-slate-500">{message}</p>
-        </div>
-      </main>
+      <div className="flex w-full flex-col gap-4">
+        <button
+          type="button"
+          onClick={handleGoBack}
+          className="self-start text-sm font-medium text-muted-foreground transition hover:text-foreground"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>განცხადებები</span>
+          </span>
+        </button>
+        <p className="text-muted-foreground">{message}</p>
+      </div>
     );
   }
 
   if (!user) {
-    const sessionBlock = (
-      <div
-        className={
-          layout === "page"
-            ? "flex min-h-screen items-center justify-center bg-slate-50 text-slate-900"
-            : "flex min-h-[12rem] items-center justify-center text-slate-500"
-        }
-      >
-        <p className="text-slate-500">Loading your session…</p>
+    return (
+      <div className="flex min-h-[12rem] items-center justify-center text-muted-foreground">
+        <p className="text-muted-foreground">სესია იტვირთება…</p>
       </div>
     );
-    return sessionBlock;
   }
 
-  const cardSection = (
-    <div className="flex w-full flex-col gap-4">
-      {canEdit ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={`/properties/${property.id}/edit`}
-            onClick={() => {
-              onBeforeEditNavigation?.();
-            }}
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
-          >
-            Edit listing
-          </Link>
-        </div>
-      ) : null}
-
-      <PropertyDetailsCard
+  return (
+    <>
+      <PropertyDetailsViewContent
         property={property}
-        presentation="view"
-        canViewPrivateFields={canViewPrivateFields}
+        canEdit={canEdit}
+        layout={layout}
+        isArchiving={archiveAction.isPending}
+        archiveError={archiveAction.error}
+        matchPercentage={matchScore.percentage}
+        canShowArchive={archiveAction.canShowArchive}
+        canShowRestore={archiveAction.canShowRestore}
+        canShowDelete={deleteAction.canShowDelete}
+        isDeletePending={deleteAction.isPending}
+        onGoBack={handleGoBack}
+        onBeforeEditNavigation={onBeforeEditNavigation}
+        onOpenReminders={() => setIsRemindersOpen(true)}
+        onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
+        onArchive={archiveAction.requestArchive}
+        onRestore={archiveAction.requestRestore}
+        onRequestDelete={deleteAction.requestDelete}
+        onSaveReminder={handleSaveReminder}
+        onVerifyNow={handleVerifyNow}
+        isSavingReminder={isSavingReminder}
+        isVerifying={isVerifying}
+        reminderError={reminderError}
+        verifyError={verifyError}
+        verifySuccessMessage={verifySuccessMessage}
+        isSavingColor={isSavingColor}
+        colorError={colorError}
+        onSelectColor={(nextColor) => {
+          void handleSelectColor(nextColor);
+        }}
+        isSavingHideFromOthers={isSavingHideFromOthers}
+        hideFromOthersError={hideFromOthersError}
+        onToggleHideFromOthers={(nextHidden) => {
+          void handleToggleHideFromOthers(nextHidden);
+        }}
+        isSavingReadyToUpload={isSavingReadyToUpload}
+        readyToUploadError={readyToUploadError}
+        onToggleReadyToUpload={(nextReady) => {
+          void handleToggleReadyToUpload(nextReady);
+        }}
       />
-      {layout === "page" ? (
-        <div className="sticky bottom-4 z-30 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsRemindersOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-              Reminder
-            </button>
-            {canEdit ? (
-              <Link
-                href={`/properties/${property.id}/edit`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-              >
-                <Tags className="h-3.5 w-3.5" aria-hidden="true" />
-                Color tags
-              </Link>
-            ) : null}
-            {canEdit ? (
-              <button
-                type="button"
-                disabled={isArchiving || property.status === "ARCHIVED"}
-                onClick={handleArchiveProperty}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-                {isArchiving ? "Archiving..." : "Archive"}
-              </button>
-            ) : null}
-            <span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-800">
-              Match: {matchScore.percentage ?? "N/A"}%
-            </span>
-            <span className="rounded-full bg-purple-100 px-3 py-2 text-xs font-semibold text-purple-800">
-              My data: pending
-            </span>
-          </div>
-          {archiveError ? (
-            <p className="mt-2 text-xs text-red-600" role="alert">
-              {archiveError}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
       <PropertyListingRemindersModal
         open={isRemindersOpen}
         property={property}
@@ -262,28 +362,39 @@ export function PropertyDetailsReadOnlyBody({
           void refetch();
         }}
       />
-    </div>
+      {canEdit ? (
+        <PropertyListingChangeStatusModal
+          open={isChangeStatusOpen}
+          property={property}
+          onClose={() => setIsChangeStatusOpen(false)}
+          onSaved={() => {
+            void refetch();
+          }}
+        />
+      ) : null}
+      {archiveAction.confirmKind ? (
+        <ArchiveConfirmDialog
+          open
+          kind={archiveAction.confirmKind}
+          isProcessing={archiveAction.isPending}
+          error={archiveAction.error}
+          onConfirm={() => {
+            void archiveAction.confirm();
+          }}
+          onCancel={archiveAction.cancel}
+        />
+      ) : null}
+      {deleteAction.isConfirmOpen ? (
+        <DeleteConfirmDialog
+          open
+          isProcessing={deleteAction.isPending}
+          error={deleteAction.error}
+          onConfirm={() => {
+            void deleteAction.confirm();
+          }}
+          onCancel={deleteAction.cancel}
+        />
+      ) : null}
+    </>
   );
-
-  if (layout === "page") {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900">
-        <div className="flex w-full max-w-2xl flex-col gap-4 px-4">
-          <button
-            type="button"
-            onClick={handleGoBack}
-            className="self-start text-sm font-medium text-slate-600 transition hover:text-slate-900"
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              <span>Go back</span>
-            </span>
-          </button>
-          {cardSection}
-        </div>
-      </main>
-    );
-  }
-
-  return cardSection;
 }

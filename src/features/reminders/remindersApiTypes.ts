@@ -6,6 +6,7 @@ export type ReminderTiming = RemindersTimingFilter;
 
 export type ReminderListVariant =
   | "SCHEDULED_PROPERTY"
+  | "SCHEDULED_CLIENT"
   | "LISTING_VERIFICATION"
   | "CLIENT_REMINDER";
 export type ReminderVariant = ReminderListVariant;
@@ -24,33 +25,62 @@ export type GetRemindersQuery = {
   limit?: number;
 };
 
+export type ReminderFeedActions = {
+  canUpdate: boolean;
+  canDelete: boolean;
+  canDismiss: boolean;
+  canSnooze: boolean;
+};
+
+export type ReminderCoverImage = {
+  id: string;
+  url: string;
+  originalName: string;
+};
+
+export type ReminderPropertyPreview = {
+  id: UUID;
+  address: string;
+  city: string;
+  district: string;
+  status: string;
+  title: string | null;
+  propertyType: string | null;
+  dealType: string | null;
+  archivedAt: ISODateString | null;
+  coverImage: ReminderCoverImage | null;
+};
+
+export type ReminderClientPreview = {
+  id: UUID;
+  name: string;
+  status: string | null;
+  dealType: string | null;
+  archivedAt: ISODateString | null;
+  districts: string[];
+};
+
 export type ReminderItem = {
   id: string;
   notifyAt: ISODateString;
+  createdAt?: ISODateString | null;
   sentAt?: ISODateString | null;
+  triggeredAt?: ISODateString | null;
   dismissedAt?: ISODateString | null;
+  isDue?: boolean;
   variant: ReminderVariant;
   targetType: ReminderTargetType;
-  property?: {
-    id: UUID;
-    address: string;
-    city: string;
-    district: string;
-    status: string;
-  } | null;
-  client?: {
-    id: UUID;
-    name: string;
-  } | null;
+  note?: string | null;
+  scheduledKind?: ReminderKind | null;
+  property?: ReminderPropertyPreview | null;
+  client?: ReminderClientPreview | null;
   propertyId?: UUID;
   clientId?: UUID;
   subjectTitle?: string;
-  scheduledKind?: ReminderKind | null;
-  note?: string | null;
   rentalDurationMonths?: number | null;
   rentalPeriodStartedAt?: ISODateString | null;
   rentalPeriodEndsAt?: ISODateString | null;
-  createdAt?: ISODateString;
+  actions?: ReminderFeedActions;
 };
 
 export type GetRemindersResponse = {
@@ -81,3 +111,14 @@ export type PatchReminderBody =
   | PatchScheduledCustomReminderBody
   | PatchScheduledRentalEndingReminderBody
   | PatchListingOrClientReminderBody;
+
+export type SnoozeReminderBody = {
+  minutes: number;
+};
+
+export type ReminderSummary = {
+  activeCount: number;
+  nextReminderAt: ISODateString | null;
+  hasDueReminder: boolean;
+  latestTriggeredAt: ISODateString | null;
+};

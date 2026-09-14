@@ -3,162 +3,194 @@ import {
   BUILDING_CONDITION_LABELS,
   KITCHEN_TYPE_LABELS,
 } from "@/features/clients/clientEnums";
+import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientRequirements } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
 import { ClientDetailsRequirementRow } from "./ClientDetailsRequirementRow";
 
 type ClientDetailsRequirementsSectionProps = {
   requirements: ClientRequirements;
+  getLock: (fieldKey: string, persisted?: LockState) => LockState;
+  onLockChange: (fieldKey: string, nextLock: LockState) => void;
 };
 
 export function ClientDetailsRequirementsSection({
   requirements: req,
+  getLock,
+  onLockChange,
 }: ClientDetailsRequirementsSectionProps) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 className="mb-4 text-base font-semibold text-slate-800">Requirements</h2>
+    <div className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
+      <h2 className="mb-4 text-base font-semibold text-foreground">მოთხოვნები</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <ClientDetailsRequirementRow
-          label="Min rooms"
+          label="მინ. ოთახები"
           value={req.minRooms}
-          lock={req.minRoomsLock}
+          lock={getLock("minRooms", req.minRoomsLock)}
+          onLockChange={(nextLock) => onLockChange("minRooms", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Max rooms"
+          label="მაქს. ოთახები"
           value={req.maxRooms}
-          lock={req.maxRoomsLock}
+          lock={getLock("maxRooms", req.maxRoomsLock)}
+          onLockChange={(nextLock) => onLockChange("maxRooms", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Min bedrooms"
+          label="მინ. საძინებლები"
           value={req.minBedrooms}
-          lock={req.minBedroomsLock}
+          lock={getLock("minBedrooms", req.minBedroomsLock)}
+          onLockChange={(nextLock) => onLockChange("minBedrooms", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Max bedrooms"
+          label="მაქს. საძინებლები"
           value={req.maxBedrooms}
-          lock={req.maxBedroomsLock}
+          lock={getLock("maxBedrooms", req.maxBedroomsLock)}
+          onLockChange={(nextLock) => onLockChange("maxBedrooms", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Min bathrooms"
+          label="მინ. სველი წერტილები"
           value={req.minBathrooms}
-          lock={req.minBathroomsLock}
+          lock={getLock("minBathrooms", req.minBathroomsLock)}
+          onLockChange={(nextLock) => onLockChange("minBathrooms", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Max bathrooms"
+          label="მაქს. სველი წერტილები"
           value={req.maxBathrooms}
-          lock={req.maxBathroomsLock}
+          lock={getLock("maxBathrooms", req.maxBathroomsLock)}
+          onLockChange={(nextLock) => onLockChange("maxBathrooms", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Min floor"
+          label="მინ. სართული"
           value={req.minFloor}
-          lock={req.minFloorLock}
+          lock={getLock("minFloor", req.minFloorLock)}
+          onLockChange={(nextLock) => onLockChange("minFloor", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Max floor"
+          label="მაქს. სართული"
           value={req.maxFloor}
-          lock={req.maxFloorLock}
+          lock={getLock("maxFloor", req.maxFloorLock)}
+          onLockChange={(nextLock) => onLockChange("maxFloor", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Exclude last floor"
+          label="ბოლო სართულის გამოკლებით"
           value={req.excludeLastFloor}
-          lock={req.excludeLastFloorLock}
+          lock={getLock("excludeLastFloor", req.excludeLastFloorLock)}
+          onLockChange={(nextLock) => onLockChange("excludeLastFloor", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Min area"
+          label="მინ. ფართობი"
           value={req.minArea !== null ? `${req.minArea} m²` : null}
-          lock={req.minAreaLock}
+          lock={getLock("minArea", req.minAreaLock)}
+          onLockChange={(nextLock) => onLockChange("minArea", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Max area"
+          label="მაქს. ფართობი"
           value={req.maxArea !== null ? `${req.maxArea} m²` : null}
-          lock={req.maxAreaLock}
+          lock={getLock("maxArea", req.maxAreaLock)}
+          onLockChange={(nextLock) => onLockChange("maxArea", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Renovation"
-          value={req.renovation ? RENOVATION_LABELS[req.renovation] : null}
-          lock={req.renovationLock}
+          label="რემონტი"
+          value={
+            (req.renovations ?? []).length > 0
+              ? (req.renovations ?? []).map((renovation) => RENOVATION_LABELS[renovation]).join(", ")
+              : null
+          }
+          lock={getLock("renovations", req.renovationsLock)}
+          onLockChange={(nextLock) => onLockChange("renovations", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Building condition"
+          label="შენობის მდგომარეობა"
           value={
             req.buildingCondition ? BUILDING_CONDITION_LABELS[req.buildingCondition] : null
           }
-          lock={req.buildingConditionLock}
+          lock={getLock("buildingCondition", req.buildingConditionLock)}
+          onLockChange={(nextLock) => onLockChange("buildingCondition", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Kitchen type"
+          label="სამზარეულოს ტიპი"
           value={req.kitchenType ? KITCHEN_TYPE_LABELS[req.kitchenType] : null}
-          lock={req.kitchenTypeLock}
+          lock={getLock("kitchenType", req.kitchenTypeLock)}
+          onLockChange={(nextLock) => onLockChange("kitchenType", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Has balcony"
+          label="აივანი"
           value={req.hasBalcony}
-          lock={req.hasBalconyLock}
+          lock={getLock("hasBalcony", req.hasBalconyLock)}
+          onLockChange={(nextLock) => onLockChange("hasBalcony", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Balcony min (m²)"
+          label="აივნის მინ. ფართობი (მ²)"
           value={req.balconyAreaMin}
-          lock={req.balconyAreaMinLock}
+          lock={getLock("balconyAreaMin", req.balconyAreaMinLock)}
+          onLockChange={(nextLock) => onLockChange("balconyAreaMin", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Balcony max (m²)"
+          label="აივნის მაქს. ფართობი (მ²)"
           value={req.balconyAreaMax}
-          lock={req.balconyAreaMaxLock}
+          lock={getLock("balconyAreaMax", req.balconyAreaMaxLock)}
+          onLockChange={(nextLock) => onLockChange("balconyAreaMax", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Good view"
+          label="კარგი ხედი"
           value={req.goodView}
-          lock={req.goodViewLock}
+          lock={getLock("goodView", req.goodViewLock)}
+          onLockChange={(nextLock) => onLockChange("goodView", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Elevator"
+          label="ლიფტი"
           value={req.elevator}
-          lock={req.elevatorLock}
+          lock={getLock("elevator", req.elevatorLock)}
+          onLockChange={(nextLock) => onLockChange("elevator", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Central heating"
+          label="ცენტრალური გათბობა"
           value={req.centralHeating}
-          lock={req.centralHeatingLock}
+          lock={getLock("centralHeating", req.centralHeatingLock)}
+          onLockChange={(nextLock) => onLockChange("centralHeating", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Air conditioner"
+          label="კონდიციონერი"
           value={req.airConditioner}
-          lock={req.airConditionerLock}
+          lock={getLock("airConditioner", req.airConditionerLock)}
+          onLockChange={(nextLock) => onLockChange("airConditioner", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Furnished"
+          label="ავეჯით"
           value={req.furnished}
-          lock={req.furnishedLock}
+          lock={getLock("furnished", req.furnishedLock)}
+          onLockChange={(nextLock) => onLockChange("furnished", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Parking"
+          label="პარკინგი"
           value={req.parking}
-          lock={req.parkingLock}
+          lock={getLock("parking", req.parkingLock)}
+          onLockChange={(nextLock) => onLockChange("parking", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="Min rental period"
+          label="მინიმალური ქირის ვადა"
           value={
             req.minRentalPeriod !== null
               ? `${req.minRentalPeriod} month${req.minRentalPeriod === 1 ? "" : "s"}`
               : null
           }
-          lock={req.minRentalPeriodLock}
+          lock={getLock("minRentalPeriod", req.minRentalPeriodLock)}
+          onLockChange={(nextLock) => onLockChange("minRentalPeriod", nextLock)}
         />
-        {((req.projectExclude ?? []).length > 0 || (req.projectExcludeLock ?? "none") !== "none") && (
-          <div className="col-span-2 flex flex-col gap-0.5 sm:col-span-3 md:col-span-4">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-slate-500">Exclude projects</span>
-              {req.projectExcludeLock !== undefined ? (
-                <ClientDetailsLockBadge lock={req.projectExcludeLock} />
-              ) : null}
-            </div>
-            <span className="text-sm font-medium text-slate-800">
-              {(req.projectExclude ?? []).length > 0
-                ? (req.projectExclude ?? []).join(", ")
-                : "—"}
-            </span>
+        <div className="col-span-2 flex flex-col gap-0.5 sm:col-span-3 md:col-span-4">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">გამორიცხული პროექტები</span>
+            <ClientDetailsLockBadge
+              lock={getLock("projectExclude", req.projectExcludeLock)}
+              onChange={(nextLock) => onLockChange("projectExclude", nextLock)}
+            />
           </div>
-        )}
+          <span className="text-sm font-medium text-foreground">
+            {(req.projectExclude ?? []).length > 0
+              ? (req.projectExclude ?? []).join(", ")
+              : "—"}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Noto_Sans_Georgian } from "next/font/google";
 import Script from "next/script";
+import { ThemeProvider } from "@/shared/theme/ThemeProvider";
+import { AuthSessionGuard } from "@/widgets/AuthSessionGuard/AuthSessionGuard";
+import { THEME_INIT_SCRIPT } from "@/shared/theme/themeStorage";
 import "./globals.css";
 
-
-const inter = Inter({ subsets: ["latin"] });
+const notoSansGeorgian = Noto_Sans_Georgian({
+  subsets: ["georgian", "latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 const metadata: Metadata = {
-  title: "Real Estate App",
-  description: "Real estate application built with Next.js and FSD architecture",
+  title: "უძრავი ქონება",
+  description: "უძრავი ქონების CRM სისტემა",
 };
 
 function RootLayout({
@@ -17,15 +23,21 @@ function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="ka" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className={notoSansGeorgian.className}>
         <Script
           src="https://accounts.google.com/gsi/client"
           async
           defer
           strategy="beforeInteractive"
         />
-        {children}
+        <ThemeProvider>
+          <AuthSessionGuard />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ type PropertyEditPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Edit property",
+  title: "განცხადების რედაქტირება",
 };
 
 export default async function PropertyEditPage({ params }: PropertyEditPageProps) {

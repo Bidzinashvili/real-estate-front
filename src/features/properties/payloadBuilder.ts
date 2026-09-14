@@ -1,5 +1,9 @@
+import { isTbilisiCity } from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
 import type { LabelSelection } from "@/features/labels/labelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import { persistPropertyFieldLocks, buildPropertyFieldLocksUpdate } from "@/features/matching/persistEntityLock";
+import { buildPatchNeedsVerification } from "@/features/properties/apartmentVerification";
 import type {
   CommercialStatus,
   HotelScope,
@@ -13,7 +17,7 @@ import type {
 } from "@/features/properties/types";
 
 export type PropertyFormLandPlot = {
-  landArea: number;
+  landArea?: number;
   forInvestment: boolean;
   canBeDivided: boolean;
   landCategory: LandCategory | "";
@@ -39,6 +43,7 @@ export type PropertyFormValues = {
   privateHouse: PropertyPrivateHouseUpdate | null;
   landPlot: PropertyFormLandPlot | null;
   commercial: PropertyCommercialUpdate | null;
+  fieldLocks: PropertyFieldLocks;
 };
 
 function addIfChanged<T extends Record<string, unknown>>(
@@ -61,6 +66,54 @@ function addIfChanged<T extends Record<string, unknown>>(
   }
 
   return Object.keys(result).length > 0 ? (result as T) : undefined;
+}
+
+function collectVerifiedApartmentKeys(
+  patch: PropertyApartmentUpdate,
+): string[] {
+  const verifiedKeys: string[] = [];
+  if (patch.elevator === true || patch.elevator === false) verifiedKeys.push("elevator");
+  if (patch.centralHeating === true || patch.centralHeating === false) {
+    verifiedKeys.push("centralHeating");
+  }
+  if (patch.airConditioner === true || patch.airConditioner === false) {
+    verifiedKeys.push("airConditioner");
+  }
+  if (patch.furnished === true || patch.furnished === false) verifiedKeys.push("furnished");
+  if (patch.petsAllowed === true || patch.petsAllowed === false) {
+    verifiedKeys.push("petsAllowed");
+  }
+  if (patch.goodView === true || patch.goodView === false) verifiedKeys.push("goodView");
+  if (typeof patch.parkingSpaces === "number") verifiedKeys.push("parkingSpaces");
+  if (typeof patch.balconyArea === "number") verifiedKeys.push("balconyArea");
+  return verifiedKeys;
+}
+
+function buildApartmentPatch(
+  initial: PropertyApartmentUpdate | null,
+  current: PropertyApartmentUpdate | null,
+): PropertyApartmentUpdate | undefined {
+  if (!current) {
+    return undefined;
+  }
+
+  const initialWithoutNv = initial
+    ? { ...initial, needsVerification: undefined }
+    : null;
+  const currentWithoutNv = { ...current, needsVerification: undefined };
+  const valuePatch = addIfChanged(initialWithoutNv, currentWithoutNv);
+  const merged = mergeMinRentalPeriodIntoPatch(initial, current, valuePatch) ?? {};
+  const verifiedKeysInPatch = collectVerifiedApartmentKeys(merged);
+  const needsVerification = buildPatchNeedsVerification({
+    initialNeedsVerification: initial?.needsVerification ?? [],
+    currentNeedsVerification: current.needsVerification ?? [],
+    verifiedKeysInPatch,
+  });
+  if (needsVerification !== undefined) {
+    merged.needsVerification = needsVerification;
+  }
+
+  return Object.keys(merged).length > 0 ? merged : undefined;
 }
 
 function mergeMinRentalPeriodIntoPatch<T extends Record<string, unknown>>(
@@ -186,8 +239,9 @@ export function buildPropertyUpdatePayload(
     }
   }
 
+  const nextDistrict = isTbilisiCity(current.city) ? current.district : "";
   if (initial.city !== current.city) payload.city = current.city;
-  if (initial.district !== current.district) payload.district = current.district;
+  if (initial.district !== nextDistrict) payload.district = nextDistrict;
   if (initial.address !== current.address) payload.address = current.address;
   if (initial.pricePublic !== current.pricePublic) {
     if (current.pricePublic !== undefined) {
@@ -217,11 +271,7 @@ export function buildPropertyUpdatePayload(
     payload.removeLabelIds = labelPatch.removeLabelIds;
   }
 
-  const apartmentPatch = mergeMinRentalPeriodIntoPatch(
-    initial.apartment,
-    current.apartment,
-    addIfChanged(initial.apartment, current.apartment),
-  );
+  const apartmentPatch = buildApartmentPatch(initial.apartment, current.apartment);
   if (apartmentPatch) payload.apartment = apartmentPatch;
 
   const privateHousePatch = mergeMinRentalPeriodIntoPatch(
@@ -240,6 +290,14 @@ export function buildPropertyUpdatePayload(
     addIfChanged(initial.commercial, current.commercial),
   );
   if (commercialPatch) payload.commercial = commercialPatch;
+
+  const currentLocks = buildPropertyFieldLocksUpdate(initial.fieldLocks, current.fieldLocks);
+  const initialLocks = persistPropertyFieldLocks(initial.fieldLocks);
+  const initialLockJson = JSON.stringify(initialLocks ?? {});
+  const currentLockJson = JSON.stringify(currentLocks ?? {});
+  if (initialLockJson !== currentLockJson) {
+    payload.fieldLocks = currentLocks ?? {};
+  }
 
   return payload;
 }

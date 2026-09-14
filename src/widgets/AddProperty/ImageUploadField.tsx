@@ -149,8 +149,8 @@ export function ImageUploadField({
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <p className="block text-sm font-medium text-slate-800">
-          Images (optional, up to {maxImages})
+        <p className="block text-sm font-medium text-foreground">
+          ფოტოები (არასავალდებულო, მაქს. {maxImages})
         </p>
         <div
           onClick={handleBrowseClick}
@@ -158,7 +158,7 @@ export function ImageUploadField({
           onDragOver={handleDropzoneDragOver}
           onDragLeave={handleDropzoneDragLeave}
           onDrop={handleDropzoneDrop}
-          className={`cursor-pointer rounded-2xl border-2 border-dashed px-4 py-5 transition ${isDropActive ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-slate-50/60 hover:border-slate-300"}`}
+          className={`cursor-pointer rounded-2xl border-2 border-dashed px-4 py-5 transition ${isDropActive ? "border-slate-900 bg-muted" : "border-border bg-muted/60 hover:border-border"}`}
           role="button"
           tabIndex={0}
           onKeyDown={(event) => {
@@ -170,12 +170,11 @@ export function ImageUploadField({
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-slate-900">
-                Drop images here or click to browse
+              <p className="text-sm font-semibold text-foreground">
+                ჩააგდეთ ფოტოები აქ ან დააჭირეთ ასარჩევად
               </p>
-              <p className="text-xs text-slate-500">
-                Drag files from your computer, WhatsApp, or folders. PNG, JPG, and WebP images are
-                supported.
+              <p className="text-xs text-muted-foreground">
+                გადმოიტანეთ ფაილები კომპიუტერიდან, WhatsApp-იდან ან საქაღალდიდან. მხარდაჭერილია PNG, JPG და WebP.
               </p>
             </div>
             <button
@@ -184,9 +183,9 @@ export function ImageUploadField({
                 event.stopPropagation();
                 handleBrowseClick();
               }}
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
             >
-              Choose files
+              ფაილების არჩევა
             </button>
           </div>
           <input
@@ -223,21 +222,21 @@ export function ImageUploadField({
             onDragOver={handleAddMoreDragOver}
             onDragLeave={handleAddMoreDragLeave}
             onDrop={handleAddMoreDrop}
-            className={`flex min-h-[14rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 text-center transition ${dropTargetIndex === images.length ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-slate-50/60 hover:border-slate-300"}`}
+            className={`flex min-h-[14rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 text-center transition ${dropTargetIndex === images.length ? "border-slate-900 bg-muted" : "border-border bg-muted/60 hover:border-border"}`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-foreground shadow-sm">
               <Plus className="h-5 w-5" aria-hidden="true" />
             </div>
-            <span className="mt-3 text-sm font-semibold text-slate-900">Add more images</span>
-            <span className="mt-1 text-xs text-slate-500">
-              Drop files here to add them after the current sequence
+            <span className="mt-3 text-sm font-semibold text-foreground">მეტი ფოტოს დამატება</span>
+            <span className="mt-1 text-xs text-muted-foreground">
+              ჩააგდეთ ფაილები აქ, რომ დაემატოს არსებული თანმიმდევრობის შემდეგ
             </span>
           </button>
         </div>
       ) : null}
 
       {error ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {error}
         </p>
       ) : null}

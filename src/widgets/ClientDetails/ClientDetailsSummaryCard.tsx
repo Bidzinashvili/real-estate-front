@@ -1,91 +1,101 @@
-import { DEAL_TYPE_LABELS, CLIENT_STATUS_LABELS } from "@/features/clients/clientEnums";
+import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
+import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientDetail } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
-import {
-  formatClientDetailsDate,
-  formatClientDetailsDateTime,
-} from "./clientDetailsFormatters";
-import { CLIENT_DETAILS_STATUS_BADGE_CLASSES } from "./clientDetailsStatusBadgeClasses";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
+import { isClientArchived } from "@/features/lifecycle/isClientArchived";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
+import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
+import { isPrivacySafeSharedClient } from "@/features/databaseList/viewerOwnership";
+import { isCustomRecordColor } from "@/features/recordColor/recordColor";
+import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
+import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
+import { NoteLastOpenedLabel } from "@/widgets/NoteLastOpened/NoteLastOpenedLabel";
+import { cn } from "@/shared/lib/utils";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
+  getLock: (fieldKey: string, persisted?: LockState) => LockState;
+  onLockChange: (fieldKey: string, nextLock: LockState) => void;
 };
 
-export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardProps) {
+export function ClientDetailsSummaryCard({
+  client,
+  getLock,
+  onLockChange,
+}: ClientDetailsSummaryCardProps) {
   const phones = client.phones ?? [];
   const districts = client.districts ?? [];
   const addresses = client.addresses ?? [];
   const labels = client.labels ?? [];
-  const showDistrictsBlock =
-    districts.length > 0 ||
-    (client.districtsLock !== undefined && client.districtsLock !== "none");
+  const districtsLock = getLock("districts", client.districtsLock);
+  const addressesLock = getLock("addresses", client.addressesLock);
+  const budgetMinLock = getLock("budgetMin", client.budgetMinLock);
+  const budgetMaxLock = getLock("budgetMax", client.budgetMaxLock);
+  const petLock = getLock("pet", client.petLock);
 
-  const budgetRange =
-    client.budgetMin !== null || client.budgetMax !== null
-      ? [
-          client.budgetMin !== null ? client.budgetMin.toLocaleString() : null,
-          client.budgetMax !== null ? client.budgetMax.toLocaleString() : null,
-        ]
-          .filter(Boolean)
-          .join(" – ")
-      : null;
-
-  const showAddressesBlock =
-    addresses.length > 0 ||
-    (client.addressesLock !== undefined && client.addressesLock !== "none");
-  const showLabelsBlock =
-    labels.length > 0 || (client.labelsLock !== undefined && client.labelsLock !== "none");
-  const showPetBlock =
-    Boolean(client.pet) ||
-    (client.petLock !== undefined && client.petLock !== "none");
+  const isRentDeal = client.dealType === "RENT" || client.dealType === "DAILY_RENT";
+  const showDistrictsBlock = true;
+  const showAddressesBlock = true;
+  const showPetBlock = isRentDeal || Boolean(client.pet) || petLock !== "none";
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <div
+      className={cn(
+        "rounded-xl p-6 shadow-sm ring-1",
+        isCustomRecordColor(client.color)
+          ? recordColorSurfaceClassName(client.color)
+          : "bg-card ring-border",
+      )}
+    >
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {client.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
-            {(budgetRange ||
-              (client.budgetMinLock !== undefined && client.budgetMinLock !== "none") ||
-              (client.budgetMaxLock !== undefined && client.budgetMaxLock !== "none")) && (
-              <>
-                <span className="text-slate-300">·</span>
-                <span className="inline-flex flex-wrap items-center gap-1.5">
-                  {budgetRange ? <span>{budgetRange}</span> : null}
-                  {client.budgetMinLock !== undefined ? (
-                    <ClientDetailsLockBadge lock={client.budgetMinLock} />
-                  ) : null}
-                  {client.budgetMaxLock !== undefined &&
-                  client.budgetMaxLock !== client.budgetMinLock ? (
-                    <ClientDetailsLockBadge lock={client.budgetMaxLock} />
-                  ) : null}
-                </span>
-              </>
-            )}
+          </div>
+          <div className="mt-2">
+            <ClientProfileCompactIndicator
+              clientProfileId={client.clientProfileId}
+              clientProfile={client.clientProfile}
+            />
           </div>
         </div>
-        <span
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${CLIENT_DETAILS_STATUS_BADGE_CLASSES[client.status]}`}
-        >
-          {CLIENT_STATUS_LABELS[client.status]}
-        </span>
+        <LifecycleStatusBadge
+          kind="client"
+          status={client.status}
+          outcomeSource={client.outcomeSource}
+          verificationReason={client.verificationReason}
+        />
+        <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
+        {isClientArchived(client) ? (
+          <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+            {ARCHIVE_COPY.archivedBadge}
+          </span>
+        ) : null}
       </div>
 
-      {client.reminderDate && (
-        <p className="mt-3 text-xs text-amber-700">
-          Reminder: {formatClientDetailsDateTime(client.reminderDate)}
+      {formatLifecycleDate(client.lastVerifiedAt) ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          გადამოწმებულია: {formatLifecycleDate(client.lastVerifiedAt)}
         </p>
-      )}
+      ) : null}
+      {formatLifecycleDate(client.archivedAt) ? (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {ARCHIVE_COPY.archivedAtLabel}: {formatLifecycleDate(client.archivedAt)}
+        </p>
+      ) : null}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2">
         <div>
-          <p className="text-xs text-slate-500">Phones</p>
+          <p className="text-xs text-muted-foreground">ტელეფონები</p>
           <div className="mt-1 space-y-0.5">
             {phones.map((phone, phoneIndex) => (
-              <p key={phoneIndex} className="text-sm font-medium text-slate-800">
+              <p key={phoneIndex} className="text-sm font-medium text-foreground">
                 {phone}
               </p>
             ))}
@@ -94,101 +104,127 @@ export function ClientDetailsSummaryCard({ client }: ClientDetailsSummaryCardPro
 
         {client.whatsapp && (
           <div>
-            <p className="text-xs text-slate-500">WhatsApp</p>
-            <p className="mt-1 text-sm font-medium text-slate-800">{client.whatsapp}</p>
+            <p className="text-xs text-muted-foreground">WhatsApp</p>
+            <p className="mt-1 text-sm font-medium text-foreground">{client.whatsapp}</p>
           </div>
         )}
+
+        <div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-xs text-muted-foreground">მინ. ბიუჯეტი</p>
+            <ClientDetailsLockBadge
+              lock={budgetMinLock}
+              onChange={(nextLock) => onLockChange("budgetMin", nextLock)}
+            />
+          </div>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {client.budgetMin !== null ? client.budgetMin.toLocaleString() : "—"}
+          </p>
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-xs text-muted-foreground">მაქს. ბიუჯეტი</p>
+            <ClientDetailsLockBadge
+              lock={budgetMaxLock}
+              onChange={(nextLock) => onLockChange("budgetMax", nextLock)}
+            />
+          </div>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {client.budgetMax !== null ? client.budgetMax.toLocaleString() : "—"}
+          </p>
+        </div>
 
         {showPetBlock && (
           <div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <p className="text-xs text-slate-500">Pet</p>
-              {client.petLock !== undefined ? (
-                <ClientDetailsLockBadge lock={client.petLock} />
-              ) : null}
+              <p className="text-xs text-muted-foreground">შინაური ცხოველი</p>
+              <ClientDetailsLockBadge
+                lock={petLock}
+                onChange={(nextLock) => onLockChange("pet", nextLock)}
+              />
             </div>
-            <p className="mt-1 text-sm font-medium text-slate-800">
+            <p className="mt-1 text-sm font-medium text-foreground">
               {client.pet ?? "—"}
             </p>
           </div>
         )}
 
-        <div>
-          <p className="text-xs text-slate-500">Created</p>
-          <p className="mt-1 text-sm font-medium text-slate-800">
-            {formatClientDetailsDate(client.createdAt)}
-          </p>
+        <div className="sm:col-span-2">
+          <RecordTimestamp
+            createdAt={client.createdAt}
+            updatedAt={client.updatedAt}
+          />
+          <NoteLastOpenedLabel
+            className="mt-1.5"
+            noteLastOpenedAt={client.noteLastOpenedAt}
+          />
         </div>
       </div>
 
-      {client.description && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          <p className="text-xs text-slate-500">Description</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+      {!isPrivacySafeSharedClient(client) && client.description ? (
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground">აღწერა</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
             {client.description}
           </p>
         </div>
-      )}
+      ) : null}
 
       {showAddressesBlock && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-slate-500">Addresses</p>
-            {client.addressesLock !== undefined ? (
-              <ClientDetailsLockBadge lock={client.addressesLock} />
-            ) : null}
+            <p className="text-xs text-muted-foreground">მისამართები</p>
+            <ClientDetailsLockBadge
+              lock={addressesLock}
+              onChange={(nextLock) => onLockChange("addresses", nextLock)}
+            />
           </div>
           <div className="mt-1 space-y-0.5">
             {addresses.length > 0 ? (
               addresses.map((address, addressIndex) => (
-                <p key={addressIndex} className="text-sm text-slate-800">
+                <p key={addressIndex} className="text-sm text-foreground">
                   {address}
                 </p>
               ))
             ) : (
-              <p className="text-sm text-slate-600">—</p>
+              <p className="text-sm text-muted-foreground">—</p>
             )}
           </div>
         </div>
       )}
 
-      {showLabelsBlock && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-slate-500">Labels</p>
-            {client.labelsLock !== undefined ? <ClientDetailsLockBadge lock={client.labelsLock} /> : null}
-          </div>
+      {labels.length > 0 && (
+        <div className="mt-4 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground">ლეიბლები</p>
           <div className="mt-1 space-y-0.5">
-            {labels.length > 0 ? (
-              labels.map((label, labelIndex) => (
-                <p key={labelIndex} className="text-sm text-slate-800">
-                  {label}
-                </p>
-              ))
-            ) : (
-              <p className="text-sm text-slate-600">—</p>
-            )}
+            {labels.map((label, labelIndex) => (
+              <p key={labelIndex} className="text-sm text-foreground">
+                {label}
+              </p>
+            ))}
           </div>
         </div>
       )}
 
       {showDistrictsBlock && (
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs text-slate-500">Districts</p>
-            {client.districtsLock !== undefined ? (
-              <ClientDetailsLockBadge lock={client.districtsLock} />
-            ) : null}
+            <p className="text-xs text-muted-foreground">უბნები</p>
+            <ClientDetailsLockBadge
+              lock={districtsLock}
+              onChange={(nextLock) => onLockChange("districts", nextLock)}
+            />
           </div>
           <div className="mt-1 space-y-0.5">
             {districts.length > 0 ? (
               districts.map((district, districtIndex) => (
-                <p key={districtIndex} className="text-sm text-slate-800">
+                <p key={districtIndex} className="text-sm text-foreground">
                   {district}
                 </p>
               ))
             ) : (
-              <p className="text-sm text-slate-600">—</p>
+              <p className="text-sm text-muted-foreground">—</p>
             )}
           </div>
         </div>

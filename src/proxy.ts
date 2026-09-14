@@ -1,12 +1,21 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/sign-in"];
-const ADMIN_ONLY_PATHS = ["/agents"];
+const PUBLIC_PATHS = [
+  "/sign-in",
+  "/forgot-password",
+  "/reset-password",
+  "/set-password",
+];
+const ADMIN_ONLY_PATHS = ["/agents", "/collaborations/monitors", "/admin/trash"];
 const AUTH_COOKIE_KEY = "authToken";
 
 function isInvitePublicPath(pathname: string): boolean {
   return pathname === "/invite" || pathname.startsWith("/invite/");
+}
+
+function isSharePublicPath(pathname: string): boolean {
+  return pathname === "/share" || pathname.startsWith("/share/");
 }
 
 type AuthUser = {
@@ -19,7 +28,7 @@ function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) {
     return true;
   }
-  return isInvitePublicPath(pathname);
+  return isInvitePublicPath(pathname) || isSharePublicPath(pathname);
 }
 
 async function fetchAuthUser(token: string, baseUrl: string): Promise<AuthUser | null> {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClientInviteLinksView } from "@/widgets/ClientInviteLinks/ClientInviteLinksView";
 
 export const metadata: Metadata = {
-  title: "Client invite links",
+  title: "კლიენტის მოწვევის ბმულები",
 };
 
 export default function ClientInviteLinksPage() {

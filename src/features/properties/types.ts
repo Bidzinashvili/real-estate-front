@@ -3,7 +3,9 @@ export * from "@/features/properties/propertyDtoTypes";
 export * from "@/features/properties/propertyApiTypes";
 export {
   formatPropertyStatusLabel,
+  getSelectablePropertyStatuses,
   isPropertyStatus,
+  isRentalDealType,
   parsePropertyStatus,
   PROPERTY_STATUSES,
   PROPERTY_STATUS_FILTER_OPTIONS,

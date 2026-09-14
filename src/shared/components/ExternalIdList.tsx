@@ -76,11 +76,11 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+    <div className="space-y-3 rounded-xl border border-border bg-muted p-3 sm:col-span-2">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-slate-800">External IDs</h3>
-          <p className="text-xs text-slate-500">MyHome and SS.ge IDs with upload dates.</p>
+          <h3 className="text-sm font-semibold text-foreground">გარე ID-ები</h3>
+          <p className="text-xs text-muted-foreground">MyHome-ისა და SS.ge-ის ID-ები ატვირთვის თარიღებით.</p>
         </div>
         <div className="flex gap-2">
           {platformOptions.map((option) => (
@@ -88,7 +88,7 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
               key={option.value}
               type="button"
               onClick={() => handleAddId(option.value)}
-              className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary/90"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {option.label}
@@ -99,8 +99,8 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
 
       <div className="space-y-2">
         {activeIds.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-slate-500">
-            No external IDs added yet.
+          <p className="rounded-lg border border-dashed border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+            გარე ID-ები ჯერ არ არის დამატებული.
           </p>
         ) : (
           activeIds.map((externalId) => (
@@ -128,18 +128,18 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
                   handleUpdateId(externalId.localId, { value: event.target.value })
                 }
                 className={addPropertyInputClassName()}
-                placeholder="ID number"
+                placeholder="ID ნომერი"
               />
               <input
                 value={displayDate(externalId.enteredAt)}
                 readOnly
-                className={`${addPropertyInputClassName()} cursor-default bg-white text-xs text-slate-500`}
+                className={`${addPropertyInputClassName()} cursor-default bg-card text-xs text-muted-foreground`}
               />
               <button
                 type="button"
                 onClick={() => handleArchiveId(externalId.localId)}
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:text-red-600"
-                aria-label="Archive external ID"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:text-destructive"
+                aria-label="გარე ID-ის დაარქივება"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -153,20 +153,20 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
           <button
             type="button"
             onClick={() => setIsArchiveOpen((isOpen) => !isOpen)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"
           >
             <ChevronDown
               className={`h-3.5 w-3.5 transition ${isArchiveOpen ? "rotate-180" : ""}`}
               aria-hidden="true"
             />
-            Old IDs
+            ძველი ID-ები
           </button>
           {isArchiveOpen ? (
             <div className="space-y-2">
               {archivedIds.map((externalId) => (
                 <div
                   key={externalId.localId}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground"
                 >
                   <span>
                     {externalId.platform}: {externalId.value} ({displayDate(externalId.enteredAt)})
@@ -174,7 +174,7 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
                   <button
                     type="button"
                     onClick={() => handleRemoveId(externalId.localId)}
-                    className="font-semibold text-slate-400 transition hover:text-red-600"
+                    className="font-semibold text-muted-foreground transition hover:text-destructive"
                   >
                     X
                   </button>

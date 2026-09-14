@@ -1,0 +1,22 @@
+export const ARCHIVE_COPY = {
+  navLabel: "არქივი",
+  pageTitle: "არქივი",
+  propertiesTab: "განცხადებები",
+  clientsTab: "კლიენტები",
+  moveToArchive: "არქივში გადატანა",
+  restoreFromArchive: "არქივიდან დაბრუნება",
+  archiving: "არქივდება...",
+  restoring: "ბრუნდება...",
+  confirmArchiveTitle: "გსურთ ჩანაწერის არქივში გადატანა?",
+  confirmRestoreTitle: "გსურთ ჩანაწერის არქივიდან დაბრუნება?",
+  confirmArchiveDescription: "ჩანაწერი გადავა არქივში. სტატუსი არ შეიცვლება.",
+  confirmRestoreDescription:
+    "ჩანაწერი დაბრუნდება მიმდინარე სიაში. სტატუსი არ შეიცვლება.",
+  confirmYes: "დიახ",
+  cancel: "გაუქმება",
+  empty: "არქივში ჩანაწერები არ არის",
+  emptyProperties: "არქივში განცხადებები არ არის",
+  emptyClients: "არქივში კლიენტები არ არის",
+  archivedBadge: "არქივში",
+  archivedAtLabel: "დაარქივებულია",
+} as const;

@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { DashboardReminderRow } from "@/features/reminders/dashboardReminderNormalizer";
-import { patchReminder } from "@/features/reminders/remindersApi";
+import {
+  isAlarmOverlayReminder,
+  isLifecycleReminderId,
+  type DashboardReminderRow,
+} from "@/features/reminders/dashboardReminderNormalizer";
+import { dismissReminder, snoozeReminder } from "@/features/reminders/remindersApi";
+import { purgeStaleAlarmOverlayCache } from "@/features/reminders/purgeAlarmOverlayCache";
+import { ApiError } from "@/shared/lib/apiError";
 
 type UseReminderCallAlertsOptions = {
   reminders: DashboardReminderRow[];
@@ -19,14 +25,13 @@ type UseReminderCallAlertsResult = {
 };
 
 function isReminderDuePending(reminder: DashboardReminderRow): boolean {
+  if (!isAlarmOverlayReminder(reminder)) {
+    return false;
+  }
   if (reminder.dismissedAtIso) {
     return false;
   }
-  const dueAtTime = new Date(reminder.dueAtIso).getTime();
-  if (!Number.isFinite(dueAtTime)) {
-    return false;
-  }
-  return dueAtTime <= Date.now();
+  return reminder.isDue;
 }
 
 function sortByMostRecentDue(left: DashboardReminderRow, right: DashboardReminderRow): number {
@@ -38,6 +43,16 @@ function sortByMostRecentDue(left: DashboardReminderRow, right: DashboardReminde
   return rightTime - leftTime;
 }
 
+function isReminderNotFoundError(errorUnknown: unknown): boolean {
+  if (errorUnknown instanceof ApiError && errorUnknown.statusCode === 404) {
+    return true;
+  }
+  if (!(errorUnknown instanceof Error)) {
+    return false;
+  }
+  return errorUnknown.message.trim().toLowerCase().includes("reminder not found");
+}
+
 export function useReminderCallAlerts({
   reminders,
 }: UseReminderCallAlertsOptions): UseReminderCallAlertsResult {
@@ -45,7 +60,11 @@ export function useReminderCallAlerts({
   const [isDismissing, setIsDismissing] = useState(false);
   const [isSnoozing, setIsSnoozing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dismissedReminderIdsRef = useRef<Set<string>>(new Set());
+  const droppedReminderIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    purgeStaleAlarmOverlayCache();
+  }, []);
 
   const dueReminders = useMemo(() => {
     return reminders
@@ -57,15 +76,40 @@ export function useReminderCallAlerts({
     (activeReminderId ? dueReminders.find((reminder) => reminder.id === activeReminderId) : null) ??
     null;
 
+  const dropReminderFromOverlay = useCallback((reminderId: string) => {
+    droppedReminderIdsRef.current.add(reminderId);
+    setActiveReminderId((currentId) => (currentId === reminderId ? null : currentId));
+    setError(null);
+  }, []);
+
   useEffect(() => {
+    const lifecycleIds = reminders
+      .map((reminder) => reminder.id)
+      .filter((reminderId) => isLifecycleReminderId(reminderId));
+    for (const reminderId of lifecycleIds) {
+      droppedReminderIdsRef.current.add(reminderId);
+    }
+  }, [reminders]);
+
+  useEffect(() => {
+    if (activeReminderId && isLifecycleReminderId(activeReminderId)) {
+      dropReminderFromOverlay(activeReminderId);
+      return;
+    }
+
+    if (error && error.trim().toLowerCase().includes("reminder not found") && activeReminderId) {
+      dropReminderFromOverlay(activeReminderId);
+      return;
+    }
+
     if (activeReminder) {
       return;
     }
 
     const nextReminder =
-      dueReminders.find((reminder) => !dismissedReminderIdsRef.current.has(reminder.id)) ?? null;
+      dueReminders.find((reminder) => !droppedReminderIdsRef.current.has(reminder.id)) ?? null;
     setActiveReminderId(nextReminder?.id ?? null);
-  }, [activeReminder, dueReminders]);
+  }, [activeReminder, activeReminderId, dropReminderFromOverlay, dueReminders, error]);
 
   const dismissActiveReminder = useCallback(async () => {
     if (!activeReminder || isDismissing) {
@@ -73,25 +117,29 @@ export function useReminderCallAlerts({
     }
 
     const reminderId = activeReminder.id;
-    dismissedReminderIdsRef.current.add(reminderId);
+    droppedReminderIdsRef.current.add(reminderId);
     setActiveReminderId(null);
     setError(null);
     setIsDismissing(true);
 
     try {
-      await patchReminder(reminderId, { dismissedAt: new Date().toISOString() });
+      await dismissReminder(reminderId);
     } catch (errorUnknown) {
-      dismissedReminderIdsRef.current.delete(reminderId);
+      if (isReminderNotFoundError(errorUnknown)) {
+        dropReminderFromOverlay(reminderId);
+        return;
+      }
+      droppedReminderIdsRef.current.delete(reminderId);
       setActiveReminderId(reminderId);
       const message =
         errorUnknown instanceof Error
           ? errorUnknown.message
-          : "Could not dismiss this reminder right now.";
+          : "შეხსენების დახურვა ვერ მოხერხდა.";
       setError(message);
     } finally {
       setIsDismissing(false);
     }
-  }, [activeReminder, isDismissing]);
+  }, [activeReminder, dropReminderFromOverlay, isDismissing]);
 
   const snoozeActiveReminder = useCallback(
     async (minutes: number) => {
@@ -105,20 +153,24 @@ export function useReminderCallAlerts({
       setIsSnoozing(true);
       setError(null);
       try {
-        const notifyAtIso = new Date(Date.now() + minutes * 60_000).toISOString();
-        await patchReminder(activeReminder.id, { notifyAt: notifyAtIso });
+        await snoozeReminder(activeReminder.id, minutes);
+        droppedReminderIdsRef.current.add(activeReminder.id);
         setActiveReminderId(null);
       } catch (errorUnknown) {
+        if (isReminderNotFoundError(errorUnknown)) {
+          dropReminderFromOverlay(activeReminder.id);
+          return;
+        }
         const message =
           errorUnknown instanceof Error
             ? errorUnknown.message
-            : "Could not snooze this reminder right now.";
+            : "შეხსენების გადადება ვერ მოხერხდა.";
         setError(message);
       } finally {
         setIsSnoozing(false);
       }
     },
-    [activeReminder, isSnoozing],
+    [activeReminder, dropReminderFromOverlay, isSnoozing],
   );
 
   return {

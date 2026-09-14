@@ -27,7 +27,7 @@ export function LabeledSelect({
     <div className="space-y-1.5">
       <label
         htmlFor={selectId}
-        className="block text-sm font-medium text-slate-800"
+        className="block text-sm font-medium text-foreground"
       >
         {label}
       </label>
@@ -37,7 +37,7 @@ export function LabeledSelect({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
-          className="block w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-10 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 disabled:cursor-not-allowed disabled:bg-slate-50"
+          className="block w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-10 py-2 text-sm text-foreground shadow-sm outline-none ring-0 disabled:cursor-not-allowed disabled:bg-muted"
         >
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>

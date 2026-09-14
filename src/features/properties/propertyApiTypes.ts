@@ -2,6 +2,7 @@ import type { DealType } from "@/features/properties/dealType";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
@@ -9,10 +10,26 @@ import type {
   LandCategory,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import type {
+  EntityVerificationFields,
+  OutcomeSource,
+  ReminderConfigPayload,
+} from "@/features/lifecycle/lifecycleEnums";
+import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
+import type { NestedPropertyOwnerInput } from "@/features/propertyOwners/types";
+import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
 
-export type PropertySortBy = "createdAt" | "pricePublic";
+export type PropertySortBy = "createdAt" | "pricePublic" | "noteLastOpenedAt";
 
 export type SortOrder = "asc" | "desc";
+
+export type NumericRangeQuery = {
+  from?: number;
+  to?: number;
+};
 
 export type GetPropertiesQueryApi = {
   search?: string;
@@ -24,10 +41,14 @@ export type GetPropertiesQueryApi = {
   minPrice?: number;
   maxPrice?: number;
   rooms?: number;
+  roomsRange?: NumericRangeQuery;
   bedrooms?: number;
   minArea?: number;
   maxArea?: number;
   floor?: number;
+  floorRange?: NumericRangeQuery;
+  totalFloors?: number;
+  balcony?: boolean;
   yardArea?: number;
   houseArea?: number;
   landArea?: number;
@@ -38,10 +59,21 @@ export type GetPropertiesQueryApi = {
   limit?: number;
   labelIds?: string[];
   labelNames?: string[];
+  color?: RecordColor[];
+  archived?: boolean;
+  myProperties?: boolean;
+  scope?: DatabaseListScope;
+  createdFrom?: string;
+  createdTo?: string;
+  lastOpenedFrom?: string;
+  lastOpenedTo?: string;
+  neverOpened?: boolean;
+  readyToUpload?: boolean;
+  adminMode?: boolean;
 };
 
 export type PropertyImageEntry = {
-  id: string;
+  id?: string;
   url: string;
   originalName: string;
 };
@@ -61,9 +93,10 @@ export type PropertyImageInputWire =
 export type ApartmentApi = {
   id: string;
   propertyId: string;
-  buildingNumber: string | null;
+  buildingNumber?: string | null;
   buildingCondition: BuildingCondition;
-  totalArea: number;
+  buildingAgeType: BuildingAgeType | null;
+  totalArea: number | null;
   project: string | null;
   renovation: string | null;
   rooms: number;
@@ -73,23 +106,25 @@ export type ApartmentApi = {
   ceilingHeight: number | null;
   balconyArea: number | null;
   needsVerification: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator: boolean | null;
+  centralHeating: boolean | null;
+  airConditioner: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished: boolean | null;
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
+  goodView: boolean | null;
+  bathrooms: number | null;
 };
 
 export type PrivateHouseApi = {
   id: string;
   propertyId: string;
   buildingCondition: BuildingCondition;
-  houseArea: number;
+  houseArea: number | null;
   yardArea: number;
-  totalArea: number;
+  totalArea: number | null;
   renovation: string | null;
   rooms: number;
   bedrooms: number;
@@ -112,7 +147,7 @@ export type PrivateHouseApi = {
 export type LandPlotApi = {
   id: string;
   propertyId: string;
-  landArea: number;
+  landArea: number | null;
   landCategory: LandCategory;
   landUsage: CommercialStatus;
   forInvestment: boolean;
@@ -129,7 +164,7 @@ export type LandPlotApi = {
 export type CommercialApi = {
   id: string;
   propertyId: string;
-  area: number;
+  area: number | null;
   status: CommercialStatus;
   floor: number;
   totalFloors: number | null;
@@ -146,7 +181,7 @@ export type CommercialApi = {
   minRentalPeriod: number | null;
 };
 
-export type PropertyApi = {
+export type PropertyApi = EntityVerificationFields & {
   id: string;
   propertyType: PropertyType;
   hotelScope?: HotelScope | null;
@@ -156,60 +191,77 @@ export type PropertyApi = {
   district: string;
   address: string;
   streetId?: string | null;
-  title: string | null;
+  title?: string | null;
   cadastralCode: string | null;
   pricePublic: number;
-  priceInternal: number | null;
-  ownerName: string;
-  ownerPhone: string;
-  ownerWhatsapp: string | null;
+  priceInternal?: number | null;
+  ownerName?: string;
+  ownerPhones?: string[];
+  ownerWhatsapp?: string | null;
+  ownerId?: string | null;
+  propertyOwner?: PropertyOwnerSummary | null;
   ourSiteId: string | null;
-  myHomeId: string | null;
-  ssGeId: string | null;
-  externalIds: PropertyExternalIdApi[];
+  myHomeId?: string | null;
+  ssGeId?: string | null;
+  externalIds?: PropertyExternalIdApi[];
   description: string | null;
-  publicComment: string | null;
-  privateComment: string | null;
-  internalText: string | null;
-  comment: string | null;
-  internalComment: string | null;
-  reminderDate: string | null;
+  publicComment?: string | null;
+  privateComment?: string | null;
+  internalText?: string | null;
+  comment?: string | null;
+  internalComment?: string | null;
   commentDate: string | null;
   tenantClientId?: string | null;
   rentalDurationMonths?: number | null;
+  archivedAt: string | null;
   labels?: LabelDto[];
   images: PropertyImageEntry[];
   createdAt: string;
   updatedAt: string;
+  noteLastOpenedAt?: string | null;
   deletedAt: string | null;
-  userId: string;
+  userId?: string;
+  ownedByViewer?: boolean;
+  hideFromOthers?: boolean;
+  readyToUpload?: boolean;
+  color?: RecordColor;
   apartment: ApartmentApi | null;
   privateHouse: PrivateHouseApi | null;
   landPlot: LandPlotApi | null;
   commercial: CommercialApi | null;
+  fieldLocks?: PropertyFieldLocks;
+  reminderSummary?: ReminderSummary;
 };
 
 export type PropertyListResponse = {
   total: number;
   page: number;
   limit: number;
+  activeCount?: number;
+  scope?: DatabaseListScope;
+  appliedLocks?: Record<string, unknown>;
   properties: PropertyApi[];
+  items?: PropertyApi[];
 };
 
 export type CreatePropertyBase = {
   propertyType?: PropertyType;
   dealType?: DealType;
   status?: PropertyStatus;
-  reminderDate?: string;
+  reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
   city: string;
-  district: string;
+  district?: string;
   address: string;
   cadastralCode?: string;
   pricePublic: number;
   priceInternal?: number;
-  ownerName: string;
-  ownerPhone: string;
+  ownerName?: string;
+  ownerPhones?: string[];
   ownerWhatsapp?: string;
+  ownerId?: string;
+  owner?: NestedPropertyOwnerInput;
   myHomeId?: string;
   ssGeId?: string;
   externalIds?: Array<{
@@ -222,11 +274,13 @@ export type CreatePropertyBase = {
   internalText?: string;
   labels?: string[];
   images?: PropertyImageInputWire[];
+  fieldLocks?: PropertyFieldLocks;
 };
 
 export type CreateApartmentPayload = {
   buildingNumber?: string;
   buildingCondition: BuildingCondition;
+  buildingAgeType?: BuildingAgeType | null;
   totalArea: number;
   project?: string;
   renovation?: string;
@@ -237,14 +291,16 @@ export type CreateApartmentPayload = {
   ceilingHeight?: number;
   balconyArea?: number;
   needsVerification?: string[];
-  elevator: boolean;
-  centralHeating: boolean;
-  airConditioner: boolean;
+  elevator?: boolean | null;
+  centralHeating?: boolean | null;
+  airConditioner?: boolean | null;
   kitchenType: KitchenType;
-  furnished: boolean;
+  furnished?: boolean | null;
   parkingSpaces?: number;
-  petsAllowed?: boolean;
+  petsAllowed?: boolean | null;
   minRentalPeriod?: number;
+  goodView?: boolean | null;
+  bathrooms?: number;
 };
 
 export type CreatePrivateHousePayload = {
@@ -327,8 +383,17 @@ export type CreatePropertyResponse = Omit<
   Partial<Pick<PropertyApi, "apartment" | "privateHouse" | "landPlot" | "commercial">>;
 
 export type UpdatePropertyRequestBody = {
+  ownerId?: string;
+  owner?: NestedPropertyOwnerInput;
+  ownerName?: string;
+  ownerPhones?: string[];
+  ownerWhatsapp?: string;
   status?: PropertyStatus;
-  reminderDate?: string | null;
+  outcomeSource?: OutcomeSource;
+  reminder?: ReminderConfigPayload;
+  color?: RecordColor;
+  hideFromOthers?: boolean;
+  readyToUpload?: boolean;
   tenantClientId?: string | null;
   rentalDurationMonths?: number | null;
   dealType?: DealType;
@@ -348,19 +413,31 @@ export type UpdatePropertyRequestBody = {
     project?: string;
     totalArea?: number;
     rooms?: number;
+    bedrooms?: number;
     totalFloors?: number;
     ceilingHeight?: number;
     balconyArea?: number | null;
     needsVerification?: string[];
     floor?: number;
     renovation?: string;
-    furnished?: boolean;
+    buildingCondition?: BuildingCondition;
+    buildingAgeType?: BuildingAgeType | null;
+    furnished?: boolean | null;
     parkingSpaces?: number | null;
     minRentalPeriod?: number | null;
+    elevator?: boolean | null;
+    centralHeating?: boolean | null;
+    airConditioner?: boolean | null;
+    kitchenType?: KitchenType;
+    goodView?: boolean | null;
+    bathrooms?: number | null;
+    petsAllowed?: boolean | null;
   };
+  fieldLocks?: PropertyFieldLocks;
   privateHouse?: {
     houseArea?: number;
     yardArea?: number;
+    totalArea?: number;
     balconyArea?: number | null;
     parkingSpaces?: number | null;
     needsVerification?: string[];
@@ -388,6 +465,30 @@ export type UpdatePropertyRequestBody = {
     renovation?: string;
     minRentalPeriod?: number | null;
   };
+};
+
+export type GeneratePublicTextApartmentDraft = {
+  buildingAgeType?: BuildingAgeType;
+  rooms?: number;
+  bedrooms?: number;
+  kitchenType?: KitchenType;
+  balconyArea?: number;
+  goodView?: boolean;
+  furnished?: boolean;
+  airConditioner?: boolean;
+};
+
+export type GeneratePublicTextDraft = {
+  propertyType: PropertyType;
+  dealType: DealType;
+  district?: string;
+  pricePublic?: number;
+  ourSiteId?: string;
+  apartment?: GeneratePublicTextApartmentDraft;
+};
+
+export type GeneratePublicTextResponse = {
+  text: string;
 };
 
 export type DeletePropertyImageResponse = {

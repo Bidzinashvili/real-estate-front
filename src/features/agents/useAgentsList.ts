@@ -40,7 +40,7 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
 
       if (!baseUrl || !token) {
         if (!cancelled) {
-          setError("Could not load agents. Please try again later.");
+          setError("აგენტების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.");
           setIsLoading(false);
         }
         return;
@@ -56,7 +56,7 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
           const message =
             err instanceof Error
               ? err.message
-              : "Could not load agents right now.";
+              : "აგენტების ჩატვირთვა ვერ მოხერხდა.";
           setError(message);
         }
       } finally {

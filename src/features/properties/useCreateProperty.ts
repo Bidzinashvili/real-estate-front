@@ -22,7 +22,7 @@ export function useCreateProperty(): UseCreatePropertyResult {
       return await createProperty(payload, images);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not create this property.";
+        err instanceof Error ? err.message : "განცხადების შექმნა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

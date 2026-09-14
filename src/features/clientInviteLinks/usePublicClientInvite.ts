@@ -56,7 +56,7 @@ export function usePublicClientInvite(inviteToken: string): PublicInviteLoadStat
         setState({
           status: "error",
           message:
-            err instanceof Error ? err.message : "Could not load this invite form right now.",
+            err instanceof Error ? err.message : "მოწვევის ფორმის ჩატვირთვა ვერ მოხერხდა.",
         });
       }
     };

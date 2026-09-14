@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { isTbilisiCity } from "@/features/properties/addPropertyFormOptions";
 import { buildCreatePropertyPayload } from "@/features/properties/addPropertyFormPayload";
 import {
   initialFormState,
@@ -9,14 +10,23 @@ import {
   type FormState,
 } from "@/features/properties/addPropertyFormState";
 import {
+  contactsFromLegacyPhones,
+  emptyOwnerAssignment,
+} from "@/features/propertyOwners/ownerContactDrafts";
+import {
   type FormErrors,
   validateAddPropertyImages,
   validateFormInputs,
 } from "@/features/properties/addPropertyFormValidation";
 import { useCreateProperty } from "@/features/properties/useCreateProperty";
-import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
+import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
 
 const addPropertyDraftStorageKey = "draft:property:new";
+
+type LegacyAddPropertyDraft = FormState & {
+  listingLifecycleStatus?: unknown;
+  verificationReminderLocal?: unknown;
+};
 
 function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
   const initialState = initialFormState();
@@ -24,25 +34,49 @@ function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
     return initialState;
   }
 
+  const {
+    listingLifecycleStatus: legacyListingLifecycleStatus,
+    verificationReminderLocal: legacyVerificationReminderLocal,
+    ...restoredFields
+  } = restoredDraft as LegacyAddPropertyDraft;
+  void legacyListingLifecycleStatus;
+  void legacyVerificationReminderLocal;
+
+  const restoredAssignment = restoredFields.ownerAssignment;
+  const ownerAssignment = restoredAssignment
+    ? {
+        ...emptyOwnerAssignment(),
+        ...restoredAssignment,
+        contacts:
+          restoredAssignment.contacts?.length > 0
+            ? restoredAssignment.contacts
+            : contactsFromLegacyPhones(restoredFields.ownerPhones),
+      }
+    : {
+        ...emptyOwnerAssignment(),
+        name: restoredFields.ownerName ?? "",
+        lookupPhone: restoredFields.ownerPhones?.[0] ?? "",
+        contacts: contactsFromLegacyPhones(restoredFields.ownerPhones),
+      };
+
   return {
     ...initialState,
-    ...restoredDraft,
-    apartment: { ...initialState.apartment, ...restoredDraft.apartment },
-    privateHouse: { ...initialState.privateHouse, ...restoredDraft.privateHouse },
-    landPlot: { ...initialState.landPlot, ...restoredDraft.landPlot },
-    commercial: { ...initialState.commercial, ...restoredDraft.commercial },
+    ...restoredFields,
+    ownerAssignment,
+    apartment: { ...initialState.apartment, ...restoredFields.apartment },
+    privateHouse: { ...initialState.privateHouse, ...restoredFields.privateHouse },
+    landPlot: { ...initialState.landPlot, ...restoredFields.landPlot },
+    commercial: { ...initialState.commercial, ...restoredFields.commercial },
   };
 }
 
 export function useAddPropertyForm() {
   const router = useRouter();
   const { create, isLoading, error } = useCreateProperty();
-  const { restoredDraft, saveDraft, clearDraft } = useSessionDraft<FormState>(
-    addPropertyDraftStorageKey,
-  );
-  const [form, setForm] = useState<FormState>(() =>
-    mergeFormStateDraft(restoredDraft),
-  );
+  const { restoredDraft, isDraftReady, saveDraft, clearDraft } =
+    useLocalStorageDraft<FormState>(addPropertyDraftStorageKey);
+  const [form, setForm] = useState<FormState>(() => initialFormState());
+  const [isDraftApplied, setIsDraftApplied] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -54,8 +88,24 @@ export function useAddPropertyForm() {
   );
 
   useEffect(() => {
+    if (!isDraftReady) {
+      return;
+    }
+
+    if (restoredDraft) {
+      setForm(mergeFormStateDraft(restoredDraft));
+    }
+
+    setIsDraftApplied(true);
+  }, [isDraftReady, restoredDraft]);
+
+  useEffect(() => {
+    if (!isDraftReady || !isDraftApplied) {
+      return;
+    }
+
     saveDraft(form);
-  }, [form, saveDraft]);
+  }, [form, isDraftApplied, isDraftReady, saveDraft]);
 
   const updateForm = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     if (key === "propertyType") {
@@ -73,10 +123,13 @@ export function useAddPropertyForm() {
       setFieldErrors((prev) => {
         const prefix = String(key);
         const next = { ...prev };
-        for (const k of Object.keys(next)) {
-          if (k === prefix || k.startsWith(`${prefix}.`)) {
-            delete next[k];
+        for (const errorKey of Object.keys(next)) {
+          if (errorKey === prefix || errorKey.startsWith(`${prefix}.`)) {
+            delete next[errorKey];
           }
+        }
+        if (key === "city") {
+          delete next.district;
         }
         return next;
       });
@@ -85,27 +138,27 @@ export function useAddPropertyForm() {
     setForm((prev) => {
       if (key === "dealType") {
         const nextDealType = value as FormState["dealType"];
-        if (nextDealType !== "RENT") {
+        if (nextDealType !== "RENT" && nextDealType !== "DAILY_RENT") {
           return {
             ...prev,
             dealType: nextDealType,
-            apartment: { ...prev.apartment, minRentalPeriod: "" },
+            apartment: {
+              ...prev.apartment,
+              minRentalPeriod: "",
+              petsAllowed: null,
+            },
             privateHouse: { ...prev.privateHouse, minRentalPeriod: "" },
             landPlot: { ...prev.landPlot, minRentalPeriod: "" },
             commercial: { ...prev.commercial, minRentalPeriod: "" },
           };
         }
-        return { ...prev, dealType: nextDealType };
-      }
-      if (key === "listingLifecycleStatus") {
-        const nextLifecycle = value as FormState["listingLifecycleStatus"];
         return {
           ...prev,
-          listingLifecycleStatus: nextLifecycle,
-          verificationReminderLocal:
-            nextLifecycle === "TO_BE_VERIFIED"
-              ? prev.verificationReminderLocal
-              : "",
+          dealType: nextDealType,
+          apartment: {
+            ...prev.apartment,
+            petsAllowed: nextDealType === "RENT" ? prev.apartment.petsAllowed : null,
+          },
         };
       }
       if (key === "propertyType") {
@@ -116,8 +169,19 @@ export function useAddPropertyForm() {
           hotelScope: nextPropertyType === "HOTEL" ? prev.hotelScope : "",
         };
       }
-      if (key === "city" || key === "district") {
-        return { ...prev, [key]: value, selectedStreetId: null };
+      if (key === "city") {
+        const nextCity = value as FormState["city"];
+        const keepTbilisiDistricts = isTbilisiCity(nextCity);
+        return {
+          ...prev,
+          city: nextCity,
+          district: keepTbilisiDistricts ? prev.district : "",
+          districtGroup: keepTbilisiDistricts ? prev.districtGroup : "",
+          selectedStreetId: null,
+        };
+      }
+      if (key === "district") {
+        return { ...prev, district: value as string, selectedStreetId: null };
       }
       return { ...prev, [key]: value };
     });
@@ -254,7 +318,7 @@ export function useAddPropertyForm() {
         setSubmitError(
           Object.values(liveErrors)[0] ??
             errors[0] ??
-            "Please check form values and try again.",
+            "შეამოწმეთ ფორმის ველები და სცადეთ ხელახლა.",
         );
         return;
       }
@@ -275,9 +339,8 @@ export function useAddPropertyForm() {
   );
 
   const cancel = useCallback(() => {
-    clearDraft();
     router.push("/properties");
-  }, [clearDraft, router]);
+  }, [router]);
 
   return {
     form,

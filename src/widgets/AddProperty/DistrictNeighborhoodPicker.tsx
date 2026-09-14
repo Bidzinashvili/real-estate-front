@@ -52,17 +52,17 @@ export function DistrictNeighborhoodPicker({
   if (loadError) {
     return (
       <div className="space-y-2 sm:col-span-2">
-        <p className="block text-sm font-medium text-slate-800">
-          Districts & neighborhoods
+        <p className="block text-sm font-medium text-foreground">
+          უბნები და უბნის ნაწილები
         </p>
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          <p>Unable to load districts.</p>
+        <div className="rounded-lg border border-red-200 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p>უბნების ჩატვირთვა ვერ მოხერხდა.</p>
           <button
             type="button"
             onClick={retry}
-            className="mt-2 inline-flex items-center rounded-full border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-100"
+            className="mt-2 inline-flex items-center rounded-full border border-red-200 bg-card px-3 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/15"
           >
-            Retry
+            ხელახლა
           </button>
         </div>
       </div>
@@ -72,13 +72,13 @@ export function DistrictNeighborhoodPicker({
   if (isLoading && districts === null) {
     return (
       <div className="space-y-2 sm:col-span-2">
-        <p className="block text-sm font-medium text-slate-800">
-          Districts & neighborhoods
+        <p className="block text-sm font-medium text-foreground">
+          უბნები და უბნის ნაწილები
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <label htmlFor="districtGroup" className="block text-sm font-medium text-slate-800">
-              District group
+            <label htmlFor="districtGroup" className="block text-sm font-medium text-foreground">
+              უბნის ჯგუფი
             </label>
             <NativeSelectSurface>
               <select
@@ -86,13 +86,13 @@ export function DistrictNeighborhoodPicker({
                 disabled
                 className={addPropertySelectClassName()}
               >
-                <option>Loading...</option>
+                <option>იტვირთება...</option>
               </select>
             </NativeSelectSurface>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="districtNeighborhood" className="block text-sm font-medium text-slate-800">
-              Neighborhood
+            <label htmlFor="districtNeighborhood" className="block text-sm font-medium text-foreground">
+              უბანი
             </label>
             <NativeSelectSurface>
               <select
@@ -100,7 +100,7 @@ export function DistrictNeighborhoodPicker({
                 disabled
                 className={addPropertySelectClassName()}
               >
-                <option>Loading...</option>
+                <option>იტვირთება...</option>
               </select>
             </NativeSelectSurface>
           </div>
@@ -112,17 +112,17 @@ export function DistrictNeighborhoodPicker({
   if (availableDistricts.length === 0) {
     return (
       <div className="space-y-2 sm:col-span-2">
-        <p className="block text-sm font-medium text-slate-800">
-          Districts & neighborhoods
+        <p className="block text-sm font-medium text-foreground">
+          უბნები და უბნის ნაწილები
         </p>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          <p>No districts available.</p>
+        <div className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+          <p>უბნები არ არის.</p>
           <button
             type="button"
             onClick={retry}
-            className="mt-2 inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+            className="mt-2 inline-flex items-center rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
           >
-            Retry
+            ხელახლა
           </button>
         </div>
       </div>
@@ -133,8 +133,8 @@ export function DistrictNeighborhoodPicker({
     <div className="space-y-1.5 sm:col-span-2">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <label htmlFor="districtGroup" className="block text-sm font-medium text-slate-800">
-            District group
+          <label htmlFor="districtGroup" className="block text-sm font-medium text-foreground">
+            უბნის ჯგუფი
           </label>
           <NativeSelectSurface>
             <select
@@ -152,7 +152,7 @@ export function DistrictNeighborhoodPicker({
               }}
               className={`${addPropertySelectClassName()} ${isSelectDisabled ? "cursor-not-allowed opacity-60" : ""}`}
             >
-              <option value="">Select district group</option>
+              <option value="">აირჩიეთ უბნების ჯგუფი</option>
               {availableDistricts.map((districtGroup) => (
                 <option key={districtGroup.name} value={districtGroup.name}>
                   {districtGroup.name}
@@ -165,9 +165,9 @@ export function DistrictNeighborhoodPicker({
         <div className="space-y-1.5">
           <label
             htmlFor="districtNeighborhood"
-            className="block text-sm font-medium text-slate-800"
+            className="block text-sm font-medium text-foreground"
           >
-            Neighborhood
+            უბანი
           </label>
           <NativeSelectSurface>
             <select
@@ -194,8 +194,8 @@ export function DistrictNeighborhoodPicker({
             >
               <option value="">
                 {selectedGroupName === ""
-                  ? "Select district group first"
-                  : "Select neighborhood"}
+                  ? "ჯერ აირჩიეთ უბნების ჯგუფი"
+                  : "აირჩიეთ უბანი"}
               </option>
               {neighborhoods.map((neighborhoodName) => (
                 <option key={neighborhoodName} value={neighborhoodName}>
@@ -207,7 +207,7 @@ export function DistrictNeighborhoodPicker({
         </div>
       </div>
       {error ? (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {error}
         </p>
       ) : null}

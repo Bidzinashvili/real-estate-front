@@ -63,13 +63,19 @@ export function prefetchGelToUsdForAmounts(
   return Promise.all(conversionTasks).then(() => undefined);
 }
 
+export function clearGelToUsdCache(): void {
+  resultCache.clear();
+  inflightByKey.clear();
+  emitGelToUsdCacheUpdate();
+}
+
 export function getCachedGelToUsd(gelAmount: number): Promise<ConvertCurrencyResponse> {
   if (
     !Number.isFinite(gelAmount) ||
     gelAmount < 0 ||
     gelAmount > MAX_CONVERT_AMOUNT
   ) {
-    return Promise.reject(new Error("Invalid GEL amount for conversion."));
+    return Promise.reject(new Error("არასწორი ლარის თანხა კონვერტაციისთვის."));
   }
 
   const cacheKey = gelAmountCacheKey(gelAmount);

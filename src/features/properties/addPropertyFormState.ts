@@ -1,16 +1,22 @@
 import type { DealType } from "@/features/properties/dealType";
-import type { GeorgianCity } from "@/features/properties/addPropertyFormOptions";
+import {
+  TBILISI_CITY,
+  type GeorgianCity,
+} from "@/features/properties/addPropertyFormOptions";
 import type { LabelSelection } from "@/features/labels/labelTypes";
+import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
+  BuildingAgeType,
   BuildingCondition,
   CommercialStatus,
   HotelScope,
   KitchenType,
   LandCategory,
-  PropertyStatus,
   PropertyType,
   Renovation,
 } from "@/features/properties/types";
+import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
+import { emptyOwnerAssignment } from "@/features/propertyOwners/ownerContactDrafts";
 
 export type AddPropertyActiveSubtype =
   | "apartment"
@@ -32,8 +38,6 @@ export type FormState = {
   propertyType: PropertyType;
   hotelScope: HotelScope | "";
   dealType: DealType;
-  listingLifecycleStatus: PropertyStatus | "";
-  verificationReminderLocal: string;
   city: GeorgianCity;
   district: string;
   districtGroup: string;
@@ -41,6 +45,7 @@ export type FormState = {
   selectedStreetId: string | null;
   labels: LabelSelection[];
   pricePublic: string;
+  ownerAssignment: PropertyOwnerAssignment;
   ownerName: string;
   ownerPhones: string[];
   cadastralCode: string;
@@ -52,8 +57,10 @@ export type FormState = {
   publicComment: string;
   internalText: string;
   privateComment: string;
+  fieldLocks: PropertyFieldLocks;
   apartment: {
     buildingCondition: BuildingCondition;
+    buildingAgeType: BuildingAgeType | "";
     totalArea: string;
     rooms: string;
     bedrooms: string;
@@ -62,17 +69,19 @@ export type FormState = {
     ceilingHeight: string;
     balconyArea: string;
     needsVerification: string[];
-    elevator: boolean;
-    centralHeating: boolean;
-    airConditioner: boolean;
+    elevator: boolean | null;
+    centralHeating: boolean | null;
+    airConditioner: boolean | null;
     kitchenType: KitchenType;
-    furnished: boolean;
+    furnished: boolean | null;
     parkingSpaces: string;
     buildingNumber: string;
     project: string;
     renovation: Renovation | "";
-    petsAllowed: boolean;
+    petsAllowed: boolean | null;
     minRentalPeriod: string;
+    goodView: boolean | null;
+    bathrooms: string;
   };
   privateHouse: {
     buildingCondition: BuildingCondition;
@@ -135,15 +144,14 @@ export function initialFormState(): FormState {
     propertyType: "APARTMENT",
     hotelScope: "",
     dealType: "RENT",
-    listingLifecycleStatus: "",
-    verificationReminderLocal: "",
-    city: "თბილისი",
+    city: TBILISI_CITY,
     district: "",
     districtGroup: "",
     address: "",
     selectedStreetId: null,
     labels: [],
     pricePublic: "",
+    ownerAssignment: emptyOwnerAssignment(),
     ownerName: "",
     ownerPhones: ["+995"],
     cadastralCode: "",
@@ -155,8 +163,10 @@ export function initialFormState(): FormState {
     publicComment: "",
     internalText: "",
     privateComment: "",
+    fieldLocks: {},
     apartment: {
       buildingCondition: "NEW",
+      buildingAgeType: "",
       totalArea: "",
       rooms: "",
       bedrooms: "",
@@ -165,17 +175,19 @@ export function initialFormState(): FormState {
       ceilingHeight: "",
       balconyArea: "",
       needsVerification: [],
-      elevator: false,
-      centralHeating: false,
-      airConditioner: false,
+      elevator: null,
+      centralHeating: null,
+      airConditioner: null,
       kitchenType: "SEPARATE",
-      furnished: false,
+      furnished: null,
       parkingSpaces: "",
       buildingNumber: "",
       project: "Non-standard",
       renovation: "NEW_RENOVATED",
-      petsAllowed: false,
+      petsAllowed: null,
       minRentalPeriod: "",
+      goodView: null,
+      bathrooms: "",
     },
     privateHouse: {
       buildingCondition: "NEW",

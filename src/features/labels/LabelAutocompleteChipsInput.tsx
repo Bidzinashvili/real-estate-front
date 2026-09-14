@@ -6,6 +6,7 @@ import { fetchLabelsAutocomplete } from "@/features/labels/labelsApi";
 import type { LabelDto, LabelSelection, LabelType } from "@/features/labels/labelTypes";
 import { ApiError } from "@/shared/lib/apiError";
 import { cn } from "@/shared/lib/utils";
+import { LABEL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 
 const defaultDebounceMs = 300;
 const defaultMinQueryLength = 1;
@@ -65,16 +66,21 @@ function toLabelSelection(label: LabelDto): LabelSelection {
   };
 }
 
+function formatLabelType(type: LabelType | null): string | null {
+  if (!type) return null;
+  return lookupEnumLabel(LABEL_TYPE_LABELS, type);
+}
+
 function labelTypeBadgeClassName(type: LabelType | null): string {
   if (type === "STREET") {
-    return "bg-emerald-100 text-emerald-700";
+    return "bg-success-muted text-success";
   }
 
   if (type === "CUSTOM") {
-    return "bg-sky-100 text-sky-700";
+    return "bg-sky-100 text-primary";
   }
 
-  return "bg-slate-100 text-slate-500";
+  return "bg-muted text-muted-foreground";
 }
 
 export function LabelAutocompleteChipsInput({
@@ -83,7 +89,7 @@ export function LabelAutocompleteChipsInput({
   selectedLabels,
   onChange,
   allowFreeText = false,
-  placeholder = "Type to search labels",
+  placeholder = "აკრიფეთ ლეიბლის მოსაძებნად",
   debounceMs = defaultDebounceMs,
   minQueryLength = defaultMinQueryLength,
   limit = defaultLimit,
@@ -156,7 +162,7 @@ export function LabelAutocompleteChipsInput({
         if (loadError instanceof ApiError) {
           setFetchError(loadError.message);
         } else {
-          setFetchError("Could not load label suggestions right now.");
+          setFetchError("ლეიბლების ჩატვირთვა ვერ მოხერხდა.");
         }
         setSuggestions([]);
       } finally {
@@ -247,16 +253,16 @@ export function LabelAutocompleteChipsInput({
 
   return (
     <div ref={containerRef} className="relative space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
 
-      <div className="rounded-lg border border-slate-200 bg-white px-3 py-3 shadow-sm">
+      <div className="rounded-lg border border-border bg-card px-3 py-3 shadow-sm">
         <div className="flex flex-wrap gap-2">
           {selectedLabels.map((selectedLabel) => (
             <span
               key={getLabelSelectionKey(selectedLabel)}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
+              className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm text-foreground"
             >
               <span>{selectedLabel.name}</span>
               {selectedLabel.type ? (
@@ -266,14 +272,14 @@ export function LabelAutocompleteChipsInput({
                     labelTypeBadgeClassName(selectedLabel.type),
                   )}
                 >
-                  {selectedLabel.type}
+                  {formatLabelType(selectedLabel.type)}
                 </span>
               ) : null}
               <button
                 type="button"
                 onClick={() => handleRemoveLabel(selectedLabel)}
-                aria-label={`Remove ${selectedLabel.name}`}
-                className="text-slate-500 transition hover:text-slate-800"
+                aria-label={`${selectedLabel.name}-ის წაშლა`}
+                className="text-muted-foreground transition hover:text-foreground"
               >
                 &times;
               </button>
@@ -298,15 +304,15 @@ export function LabelAutocompleteChipsInput({
             onFocus={() => setIsOpen(true)}
             onKeyDown={handleInputKeyDown}
             placeholder={placeholder}
-            className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400"
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
           />
           {canAddFreeText && freeTextCandidate ? (
             <button
               type="button"
               onClick={() => handleAddLabel(freeTextCandidate)}
-              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
             >
-              Add
+              დამატება
             </button>
           ) : null}
         </div>
@@ -316,12 +322,12 @@ export function LabelAutocompleteChipsInput({
         <div
           id={listboxId}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-black/5"
         >
-          {isLoading ? <p className="px-3 py-2 text-slate-500">Loading...</p> : null}
+          {isLoading ? <p className="px-3 py-2 text-muted-foreground">იტვირთება...</p> : null}
 
           {fetchError ? (
-            <p className="px-3 py-2 text-red-600" role="alert">
+            <p className="px-3 py-2 text-destructive" role="alert">
               {fetchError}
             </p>
           ) : null}
@@ -334,16 +340,16 @@ export function LabelAutocompleteChipsInput({
                 event.preventDefault();
                 handleAddLabel(freeTextCandidate);
               }}
-              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-foreground hover:bg-muted"
             >
-              <span>Add "{freeTextCandidate.name}"</span>
+              <span>„{freeTextCandidate.name}“-ის დამატება</span>
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide",
                   labelTypeBadgeClassName(freeTextCandidate.type),
                 )}
               >
-                {freeTextCandidate.type}
+                {formatLabelType(freeTextCandidate.type)}
               </span>
             </button>
           ) : null}
@@ -355,7 +361,7 @@ export function LabelAutocompleteChipsInput({
                 key={suggestion.id}
                 type="button"
                 role="option"
-                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
+                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-foreground hover:bg-muted"
                 onMouseDown={(event) => {
                   event.preventDefault();
                   handleAddLabel(toLabelSelection(suggestion));
@@ -368,13 +374,13 @@ export function LabelAutocompleteChipsInput({
                     labelTypeBadgeClassName(suggestion.type),
                   )}
                 >
-                  {suggestion.type}
+                  {formatLabelType(suggestion.type)}
                 </span>
               </button>
             ))}
 
           {showEmptyState ? (
-            <p className="px-3 py-2 text-slate-500">No matching labels</p>
+            <p className="px-3 py-2 text-muted-foreground">შესაბამისი ლეიბლები ვერ მოიძებნა</p>
           ) : null}
         </div>
       ) : null}

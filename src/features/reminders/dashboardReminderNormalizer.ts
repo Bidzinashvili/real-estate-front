@@ -1,9 +1,13 @@
 import type { JsonObject, JsonValue } from "@/shared/lib/jsonValue";
-import { asNumber, asString, isJsonObject } from "@/shared/lib/jsonValue";
+import { asBoolean, asNumber, isJsonObject } from "@/shared/lib/jsonValue";
 import type {
   GetRemindersResponse,
+  ReminderClientPreview,
+  ReminderCoverImage,
+  ReminderFeedActions,
   ReminderItem,
   ReminderListVariant,
+  ReminderPropertyPreview,
   ReminderScheduledKind,
 } from "@/features/reminders/remindersApiTypes";
 
@@ -13,10 +17,15 @@ export type DashboardReminderVariant = ReminderListVariant;
 
 export type DashboardReminderRow = {
   id: string;
+  notifyAt: string;
   dueAtIso: string;
+  createdAtIso: string | null;
   sentAtIso: string | null;
+  triggeredAtIso: string | null;
   dismissedAtIso: string | null;
+  isDue: boolean;
   subjectType: ReminderSubjectType;
+  targetType: ReminderSubjectType;
   reminderVariant: DashboardReminderVariant;
   reminderKindLabel: string;
   scheduledKind: ReminderScheduledKind | null;
@@ -26,10 +35,27 @@ export type DashboardReminderRow = {
   rentalDurationMonths: number | null;
   rentalPeriodStartedAtIso: string | null;
   rentalPeriodEndsAtIso: string | null;
+  property: ReminderPropertyPreview | null;
+  client: ReminderClientPreview | null;
+  actions: ReminderFeedActions;
 };
 
-const LISTING_VERIFICATION_ID_PREFIX = "listing-verification:";
-const CLIENT_REMINDER_ID_PREFIX = "client-reminder:";
+export type NormalizedRemindersList = {
+  reminders: DashboardReminderRow[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export const LISTING_VERIFICATION_ID_PREFIX = "listing-verification:";
+export const CLIENT_REMINDER_ID_PREFIX = "client-reminder:";
+
+const DISABLED_ACTIONS: ReminderFeedActions = {
+  canUpdate: false,
+  canDelete: false,
+  canDismiss: false,
+  canSnooze: false,
+};
 
 function parseReminderVariantField(
   raw: JsonValue | undefined,
@@ -37,6 +63,7 @@ function parseReminderVariantField(
   if (typeof raw !== "string") return null;
   const upper = raw.trim().toUpperCase();
   if (upper === "SCHEDULED_PROPERTY") return "SCHEDULED_PROPERTY";
+  if (upper === "SCHEDULED_CLIENT") return "SCHEDULED_CLIENT";
   if (upper === "LISTING_VERIFICATION") return "LISTING_VERIFICATION";
   if (upper === "CLIENT_REMINDER") return "CLIENT_REMINDER";
   return null;
@@ -99,15 +126,18 @@ function buildReminderKindLabel(
   scheduledKind: ReminderScheduledKind | null,
 ): string {
   if (variant === "LISTING_VERIFICATION") {
-    return "Listing verification";
+    return "განცხადების გადამოწმება";
   }
   if (variant === "CLIENT_REMINDER") {
-    return "Client follow-up";
+    return "კლიენტის შეხსენება";
+  }
+  if (variant === "SCHEDULED_CLIENT") {
+    return "დაგეგმილი (კლიენტი)";
   }
   if (scheduledKind === "RENTAL_PERIOD_ENDING") {
-    return "Scheduled (rental ending)";
+    return "დაგეგმილი (ქირის დასრულება)";
   }
-  return "Scheduled";
+  return "დაგეგმილი";
 }
 
 function pickFirstNonEmptyString(
@@ -130,234 +160,158 @@ function asNullableTrimmedString(value: JsonValue | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-function parseSubjectTypeHint(raw: string): ReminderSubjectType | null {
-  const upper = raw.trim().toUpperCase();
-  if (upper === "CLIENT" || upper === "CLIENTS") return "CLIENT";
-  if (upper === "PROPERTY" || upper === "PROPERTIES" || upper === "LISTING") {
-    return "PROPERTY";
-  }
-  return null;
+function parseCoverImage(value: JsonValue | undefined): ReminderCoverImage | null {
+  if (!isJsonObject(value)) return null;
+  const url = asNullableTrimmedString(value.url);
+  if (url === null) return null;
+  return {
+    id: pickFirstNonEmptyString(value, ["id"]) || url,
+    url,
+    originalName: pickFirstNonEmptyString(value, ["originalName", "original_name"]) || "",
+  };
 }
 
-function propertyTitleFromRecord(record: JsonObject): string {
-  return (
-    pickFirstNonEmptyString(record, [
-      "propertyTitle",
-      "property_title",
-      "subjectTitle",
-      "subject_title",
-      "title",
-    ]) ||
-    pickFirstNonEmptyString(record, ["address", "propertyAddress", "property_address"]) ||
-    pickFirstNonEmptyString(record, ["label", "name"]) ||
-    "—"
+function parseDistricts(value: JsonValue | undefined): string[] {
+  if (!Array.isArray(value)) return [];
+  const districts: string[] = [];
+  for (const item of value) {
+    if (typeof item === "string" && item.trim() !== "") {
+      districts.push(item.trim());
+    }
+  }
+  return districts;
+}
+
+function parsePropertyPreview(
+  value: JsonValue | undefined,
+): ReminderPropertyPreview | null {
+  if (!isJsonObject(value)) return null;
+  const previewId = pickFirstNonEmptyString(value, ["id"]);
+  if (previewId === "") return null;
+  return {
+    id: previewId,
+    address: pickFirstNonEmptyString(value, ["address"]),
+    city: pickFirstNonEmptyString(value, ["city"]),
+    district: pickFirstNonEmptyString(value, ["district"]),
+    status: pickFirstNonEmptyString(value, ["status"]),
+    title: asNullableTrimmedString(value.title),
+    propertyType: asNullableTrimmedString(value.propertyType),
+    dealType: asNullableTrimmedString(value.dealType),
+    archivedAt: asNullableTrimmedString(value.archivedAt),
+    coverImage: parseCoverImage(value.coverImage),
+  };
+}
+
+function parseClientPreview(value: JsonValue | undefined): ReminderClientPreview | null {
+  if (!isJsonObject(value)) return null;
+  const previewId = pickFirstNonEmptyString(value, ["id"]);
+  if (previewId === "") return null;
+  return {
+    id: previewId,
+    name: pickFirstNonEmptyString(value, ["name"]) || "—",
+    status: asNullableTrimmedString(value.status),
+    dealType: asNullableTrimmedString(value.dealType),
+    archivedAt: asNullableTrimmedString(value.archivedAt),
+    districts: parseDistricts(value.districts),
+  };
+}
+
+function parseActions(value: JsonValue | undefined): ReminderFeedActions {
+  if (!isJsonObject(value)) {
+    return DISABLED_ACTIONS;
+  }
+  return {
+    canUpdate: asBoolean(value.canUpdate, false),
+    canDelete: asBoolean(value.canDelete, false),
+    canDismiss: asBoolean(value.canDismiss, false),
+    canSnooze: asBoolean(value.canSnooze, false),
+  };
+}
+
+function propertyTitleFromPreview(preview: ReminderPropertyPreview | null): string {
+  if (!preview) return "";
+  if (preview.title && preview.title.trim() !== "") return preview.title.trim();
+  const locationParts = [preview.city, preview.district].filter(Boolean).join(" / ");
+  const addressParts = [preview.address, locationParts ? `(${locationParts})` : ""].filter(
+    Boolean,
   );
+  return addressParts.join(" ").trim();
 }
 
-function clientTitleFromRecord(record: JsonObject): string {
-  return (
-    pickFirstNonEmptyString(record, [
-      "clientName",
-      "client_name",
-      "subjectTitle",
-      "subject_title",
-      "name",
-    ]) ||
-    pickFirstNonEmptyString(record, ["label", "title"]) ||
-    "—"
-  );
-}
-
-function formatPropertyNestedLabel(propertyRecord: JsonObject): string {
-  const address = pickFirstNonEmptyString(propertyRecord, ["address"]);
-  const city = pickFirstNonEmptyString(propertyRecord, ["city"]);
-  const district = pickFirstNonEmptyString(propertyRecord, ["district"]);
-  const title = pickFirstNonEmptyString(propertyRecord, ["title", "description"]);
-  const locationParts = [city, district].filter(Boolean).join(" / ");
-  const addressParts = [address, locationParts ? `(${locationParts})` : ""].filter(Boolean);
-  const combined = addressParts.join(" ").trim();
-  if (combined !== "") return combined;
-  if (title !== "") return title;
-  return "—";
-}
-
-function enrichReminderRecord(record: JsonObject): JsonObject {
-  const enriched = { ...record } as Record<string, JsonValue>;
-
-  const propertyNested = record.property;
-  if (propertyNested !== undefined && isJsonObject(propertyNested)) {
-    const nestedPropertyId = asString(propertyNested.id).trim();
-    if (
-      nestedPropertyId !== "" &&
-      pickFirstNonEmptyString(enriched, ["propertyId", "property_id"]) === ""
-    ) {
-      enriched.propertyId = nestedPropertyId;
-    }
-    if (pickFirstNonEmptyString(enriched, ["propertyTitle", "address", "subjectTitle"]) === "") {
-      const label = formatPropertyNestedLabel(propertyNested);
-      if (label !== "—") {
-        enriched.propertyTitle = label;
-      }
-    }
+function parseIsDue(record: JsonObject, notifyAt: string): boolean {
+  if (typeof record.isDue === "boolean") {
+    return record.isDue;
   }
-
-  const clientNested = record.client;
-  if (clientNested !== undefined && isJsonObject(clientNested)) {
-    const nestedClientId = asString(clientNested.id).trim();
-    if (
-      nestedClientId !== "" &&
-      pickFirstNonEmptyString(enriched, ["clientId", "client_id"]) === ""
-    ) {
-      enriched.clientId = nestedClientId;
-    }
-    const nestedName = pickFirstNonEmptyString(clientNested, ["name"]);
-    if (
-      nestedName !== "" &&
-      pickFirstNonEmptyString(enriched, ["clientName", "subjectTitle", "name"]) === ""
-    ) {
-      enriched.clientName = nestedName;
-    }
+  const dueAtTime = new Date(notifyAt).getTime();
+  if (!Number.isFinite(dueAtTime)) {
+    return false;
   }
-
-  return enriched as JsonObject;
+  return dueAtTime <= Date.now();
 }
 
 function normalizeReminderRow(value: JsonValue): DashboardReminderRow | null {
   if (!isJsonObject(value)) return null;
 
-  const record = enrichReminderRecord(value);
-
-  const id = pickFirstNonEmptyString(record, [
-    "id",
-    "_id",
-    "reminderId",
-    "reminder_id",
-  ]);
+  const id = pickFirstNonEmptyString(value, ["id", "_id", "reminderId", "reminder_id"]);
   if (id === "") return null;
 
-  const dueAtIso = pickFirstNonEmptyString(record, [
+  const notifyAt = pickFirstNonEmptyString(value, [
     "notifyAt",
     "notify_at",
     "dueAt",
     "due_at",
-    "dueDate",
-    "due_date",
-    "scheduledAt",
-    "scheduled_at",
-    "fireAt",
-    "fire_at",
   ]);
-  if (dueAtIso === "") return null;
+  if (notifyAt === "") return null;
 
+  const propertyPreview = parsePropertyPreview(value.property);
+  const clientPreview = parseClientPreview(value.client);
   const compositeIds = parseCompositeReminderIds(id);
-  const propertyIdFromRecord = pickFirstNonEmptyString(record, [
-    "propertyId",
-    "property_id",
-  ]);
-  const clientIdFromRecord = pickFirstNonEmptyString(record, [
-    "clientId",
-    "client_id",
-  ]);
-  const subjectIdRaw = pickFirstNonEmptyString(record, [
-    "subjectId",
-    "subject_id",
-    "entityId",
-    "entity_id",
-  ]);
+  const propertyIdFromRecord = pickFirstNonEmptyString(value, ["propertyId", "property_id"]);
+  const clientIdFromRecord = pickFirstNonEmptyString(value, ["clientId", "client_id"]);
 
   const propertyId =
     propertyIdFromRecord !== ""
       ? propertyIdFromRecord
-      : compositeIds.propertyId ?? "";
+      : propertyPreview?.id ?? compositeIds.propertyId ?? "";
   const clientId =
     clientIdFromRecord !== ""
       ? clientIdFromRecord
-      : compositeIds.clientId ?? "";
+      : clientPreview?.id ?? compositeIds.clientId ?? "";
 
-  const explicitHint = pickFirstNonEmptyString(record, [
-    "subjectType",
-    "subject_type",
-    "targetType",
-    "target_type",
-    "entityType",
-    "entity_type",
-    "reminderFor",
-    "reminder_for",
-  ]);
-  const explicitType = explicitHint ? parseSubjectTypeHint(explicitHint) : null;
-  const apiTargetType = parseApiTargetTypeField(record.targetType);
-
-  const kindHint = pickFirstNonEmptyString(record, ["kind", "type", "reminderType", "reminder_type"]);
-  const kindUpper = kindHint.trim().toUpperCase();
-
+  const apiTargetType = parseApiTargetTypeField(value.targetType);
   const reminderVariant =
-    parseReminderVariantField(record.variant) ??
+    parseReminderVariantField(value.variant) ??
     inferReminderVariantFromId(id) ??
-    "SCHEDULED_PROPERTY";
+    (apiTargetType === "CLIENT" ? "SCHEDULED_CLIENT" : "SCHEDULED_PROPERTY");
 
-  const scheduledKindRaw = parseScheduledKindField(record.scheduledKind);
+  const scheduledKindRaw = parseScheduledKindField(value.scheduledKind);
   const scheduledKind =
-    reminderVariant === "SCHEDULED_PROPERTY" ? scheduledKindRaw : null;
+    reminderVariant === "SCHEDULED_PROPERTY" || reminderVariant === "SCHEDULED_CLIENT"
+      ? scheduledKindRaw
+      : null;
 
   let subjectType: ReminderSubjectType;
-  let subjectId: string;
-  let subjectTitle: string;
-
-  if (reminderVariant === "LISTING_VERIFICATION") {
-    subjectType = "PROPERTY";
-    subjectId = propertyId || subjectIdRaw;
-    subjectTitle = propertyTitleFromRecord(record);
-  } else if (reminderVariant === "CLIENT_REMINDER") {
+  if (apiTargetType !== null) {
+    subjectType = apiTargetType;
+  } else if (reminderVariant === "CLIENT_REMINDER" || reminderVariant === "SCHEDULED_CLIENT") {
     subjectType = "CLIENT";
-    subjectId = clientId || subjectIdRaw;
-    subjectTitle = clientTitleFromRecord(record);
-  } else if (explicitType === "CLIENT" || apiTargetType === "CLIENT") {
-    subjectType = "CLIENT";
-    subjectId = clientId || subjectIdRaw;
-    subjectTitle = clientTitleFromRecord(record);
-  } else if (explicitType === "PROPERTY" || apiTargetType === "PROPERTY") {
-    subjectType = "PROPERTY";
-    subjectId = propertyId || subjectIdRaw;
-    subjectTitle = propertyTitleFromRecord(record);
-  } else if (clientId !== "" && propertyId === "") {
-    subjectType = "CLIENT";
-    subjectId = clientId;
-    subjectTitle = clientTitleFromRecord(record);
-  } else if (propertyId !== "") {
-    subjectType = "PROPERTY";
-    subjectId = propertyId;
-    subjectTitle = propertyTitleFromRecord(record);
-  } else if (subjectIdRaw !== "") {
-    if (kindUpper.includes("CLIENT")) {
-      subjectType = "CLIENT";
-      subjectId = subjectIdRaw;
-      subjectTitle = clientTitleFromRecord(record);
-    } else {
-      subjectType = "PROPERTY";
-      subjectId = subjectIdRaw;
-      subjectTitle = propertyTitleFromRecord(record);
-    }
   } else {
-    return null;
+    subjectType = "PROPERTY";
   }
 
+  const subjectId = subjectType === "PROPERTY" ? propertyId : clientId;
   if (subjectId === "") return null;
 
-  const note =
-    asNullableTrimmedString(record.note) ??
-    asNullableTrimmedString(record.message) ??
-    asNullableTrimmedString(record.description);
+  const subjectTitle =
+    subjectType === "PROPERTY"
+      ? propertyTitleFromPreview(propertyPreview) ||
+        pickFirstNonEmptyString(value, ["subjectTitle", "address", "title"]) ||
+        "—"
+      : clientPreview?.name ||
+        pickFirstNonEmptyString(value, ["subjectTitle", "clientName", "name"]) ||
+        "—";
 
-  const sentAtIso =
-    asNullableTrimmedString(record.sentAt) ??
-    asNullableTrimmedString(record.sent_at);
-  const dismissedAtIso =
-    asNullableTrimmedString(record.dismissedAt) ??
-    asNullableTrimmedString(record.dismissed_at);
-
-  const reminderKindLabel = buildReminderKindLabel(reminderVariant, scheduledKind);
-
-  const rentalDurationRaw = record.rentalDurationMonths;
+  const rentalDurationRaw = value.rentalDurationMonths;
   let rentalDurationMonths: number | null = null;
   if (rentalDurationRaw !== undefined && rentalDurationRaw !== null) {
     const parsedMonths = asNumber(rentalDurationRaw, Number.NaN);
@@ -366,66 +320,73 @@ function normalizeReminderRow(value: JsonValue): DashboardReminderRow | null {
     }
   }
 
-  const rentalPeriodStartedAtIso =
-    asNullableTrimmedString(record.rentalPeriodStartedAt) ??
-    asNullableTrimmedString(record.rental_period_started_at);
-
-  const rentalPeriodEndsAtIso =
-    asNullableTrimmedString(record.rentalPeriodEndsAt) ??
-    asNullableTrimmedString(record.rental_period_ends_at);
-
   return {
     id,
-    dueAtIso,
-    sentAtIso,
-    dismissedAtIso,
+    notifyAt,
+    dueAtIso: notifyAt,
+    createdAtIso: asNullableTrimmedString(value.createdAt),
+    sentAtIso: asNullableTrimmedString(value.sentAt) ?? asNullableTrimmedString(value.sent_at),
+    triggeredAtIso:
+      asNullableTrimmedString(value.triggeredAt) ??
+      asNullableTrimmedString(value.triggered_at),
+    dismissedAtIso:
+      asNullableTrimmedString(value.dismissedAt) ??
+      asNullableTrimmedString(value.dismissed_at),
+    isDue: parseIsDue(value, notifyAt),
     subjectType,
+    targetType: subjectType,
     reminderVariant,
-    reminderKindLabel,
+    reminderKindLabel: buildReminderKindLabel(reminderVariant, scheduledKind),
     scheduledKind,
     subjectId,
     subjectTitle,
-    note,
+    note:
+      asNullableTrimmedString(value.note) ??
+      asNullableTrimmedString(value.message) ??
+      asNullableTrimmedString(value.description),
     rentalDurationMonths,
-    rentalPeriodStartedAtIso,
-    rentalPeriodEndsAtIso,
+    rentalPeriodStartedAtIso:
+      asNullableTrimmedString(value.rentalPeriodStartedAt) ??
+      asNullableTrimmedString(value.rental_period_started_at),
+    rentalPeriodEndsAtIso:
+      asNullableTrimmedString(value.rentalPeriodEndsAt) ??
+      asNullableTrimmedString(value.rental_period_ends_at),
+    property: propertyPreview,
+    client: clientPreview,
+    actions: parseActions(value.actions),
   };
-}
-
-function sortDashboardReminderRows(rows: DashboardReminderRow[]): DashboardReminderRow[] {
-  const next = [...rows];
-  next.sort((left, right) => {
-    const leftTime = new Date(left.dueAtIso).getTime();
-    const rightTime = new Date(right.dueAtIso).getTime();
-    const leftValid = Number.isFinite(leftTime);
-    const rightValid = Number.isFinite(rightTime);
-    if (!leftValid && !rightValid) return 0;
-    if (!leftValid) return 1;
-    if (!rightValid) return -1;
-    return rightTime - leftTime;
-  });
-  return next;
 }
 
 function normalizeReminderFromTypedItem(item: ReminderItem): DashboardReminderRow | null {
   const subjectType = item.targetType;
+  const propertyPreview = item.property ?? null;
+  const clientPreview = item.client ?? null;
   const subjectId =
     subjectType === "PROPERTY"
-      ? (item.propertyId ?? item.property?.id ?? "")
-      : (item.clientId ?? item.client?.id ?? "");
+      ? (item.propertyId ?? propertyPreview?.id ?? "")
+      : (item.clientId ?? clientPreview?.id ?? "");
   if (!subjectId.trim()) {
     return null;
   }
   const subjectTitle =
     item.subjectTitle?.trim() ||
-    (subjectType === "PROPERTY" ? item.property?.address : item.client?.name) ||
+    (subjectType === "PROPERTY"
+      ? propertyTitleFromPreview(propertyPreview) || propertyPreview?.address
+      : clientPreview?.name) ||
     "—";
+  const notifyAt = item.notifyAt;
   return {
     id: item.id,
-    dueAtIso: item.notifyAt,
+    notifyAt,
+    dueAtIso: notifyAt,
+    createdAtIso: item.createdAt ?? null,
     sentAtIso: item.sentAt ?? null,
+    triggeredAtIso: item.triggeredAt ?? null,
     dismissedAtIso: item.dismissedAt ?? null,
+    isDue:
+      typeof item.isDue === "boolean" ? item.isDue : new Date(notifyAt).getTime() <= Date.now(),
     subjectType,
+    targetType: subjectType,
     reminderVariant: item.variant,
     reminderKindLabel: buildReminderKindLabel(item.variant, item.scheduledKind ?? null),
     scheduledKind: item.scheduledKind ?? null,
@@ -435,6 +396,9 @@ function normalizeReminderFromTypedItem(item: ReminderItem): DashboardReminderRo
     rentalDurationMonths: item.rentalDurationMonths ?? null,
     rentalPeriodStartedAtIso: item.rentalPeriodStartedAt ?? null,
     rentalPeriodEndsAtIso: item.rentalPeriodEndsAt ?? null,
+    property: propertyPreview,
+    client: clientPreview,
+    actions: item.actions ?? DISABLED_ACTIONS,
   };
 }
 
@@ -444,7 +408,7 @@ function collectRowsFromArray(rawList: JsonValue[]): DashboardReminderRow[] {
     const row = normalizeReminderRow(item);
     if (row) rows.push(row);
   }
-  return sortDashboardReminderRows(rows);
+  return rows;
 }
 
 function collectRowsFromTypedArray(items: ReminderItem[]): DashboardReminderRow[] {
@@ -455,7 +419,7 @@ function collectRowsFromTypedArray(items: ReminderItem[]): DashboardReminderRow[
       rows.push(row);
     }
   }
-  return sortDashboardReminderRows(rows);
+  return rows;
 }
 
 function isGetRemindersResponse(
@@ -502,20 +466,84 @@ function extractReminderArrayFromEnvelope(data: JsonObject): JsonValue[] | null 
   return null;
 }
 
+function paginationFromRecord(
+  data: JsonObject,
+  reminderCount: number,
+): Pick<NormalizedRemindersList, "total" | "page" | "limit"> {
+  const page = asNumber(data.page, 1);
+  const limit = asNumber(data.limit, reminderCount || 20);
+  const total = asNumber(data.total, reminderCount);
+  return {
+    total: Number.isFinite(total) ? total : reminderCount,
+    page: Number.isFinite(page) && page > 0 ? Math.floor(page) : 1,
+    limit: Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : reminderCount || 20,
+  };
+}
+
 export function normalizeDashboardRemindersList(
   data: GetRemindersResponse | JsonValue,
-): DashboardReminderRow[] {
+): NormalizedRemindersList {
   if (isGetRemindersResponse(data)) {
-    return collectRowsFromTypedArray(data.reminders);
+    const reminders = collectRowsFromTypedArray(data.reminders);
+    return {
+      reminders,
+      total: data.total,
+      page: data.page,
+      limit: data.limit,
+    };
   }
   if (Array.isArray(data)) {
-    return collectRowsFromArray(data);
+    const reminders = collectRowsFromArray(data);
+    return {
+      reminders,
+      total: reminders.length,
+      page: 1,
+      limit: reminders.length || 20,
+    };
   }
 
-  if (!isJsonObject(data)) return [];
+  if (!isJsonObject(data)) {
+    return { reminders: [], total: 0, page: 1, limit: 20 };
+  }
 
   const rawList = extractReminderArrayFromEnvelope(data);
-  if (rawList === null) return [];
+  if (rawList === null) {
+    return { reminders: [], total: 0, page: 1, limit: 20 };
+  }
 
-  return collectRowsFromArray(rawList);
+  const reminders = collectRowsFromArray(rawList);
+  return {
+    reminders,
+    ...paginationFromRecord(data, reminders.length),
+  };
+}
+
+export function isKeepStyleReminder(variant: DashboardReminderVariant): boolean {
+  return variant === "SCHEDULED_PROPERTY" || variant === "SCHEDULED_CLIENT";
+}
+
+export function isLifecycleReminderId(reminderId: string): boolean {
+  return (
+    reminderId.startsWith(LISTING_VERIFICATION_ID_PREFIX) ||
+    reminderId.startsWith(CLIENT_REMINDER_ID_PREFIX)
+  );
+}
+
+export function isLifecycleVerificationReminder(
+  reminder: Pick<DashboardReminderRow, "id" | "reminderVariant">,
+): boolean {
+  if (
+    reminder.reminderVariant === "LISTING_VERIFICATION" ||
+    reminder.reminderVariant === "CLIENT_REMINDER"
+  ) {
+    return true;
+  }
+  return isLifecycleReminderId(reminder.id);
+}
+
+export function isAlarmOverlayReminder(reminder: DashboardReminderRow): boolean {
+  if (isLifecycleVerificationReminder(reminder)) {
+    return false;
+  }
+  return isKeepStyleReminder(reminder.reminderVariant) || reminder.actions.canSnooze;
 }

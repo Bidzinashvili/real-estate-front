@@ -24,7 +24,7 @@ export function useAddClientComment(): UseAddClientCommentResult {
       return result;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Could not post comment right now.";
+        err instanceof Error ? err.message : "კომენტარის გაგზავნა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {
@@ -46,7 +46,7 @@ export function useAddClientComment(): UseAddClientCommentResult {
       const message =
         err instanceof Error
           ? err.message
-          : "Could not post internal comment right now.";
+          : "შიდა კომენტარის გაგზავნა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

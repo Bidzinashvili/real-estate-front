@@ -5,8 +5,8 @@ type DashboardActionsProps = {
 export function DashboardActions({ isAdmin }: DashboardActionsProps) {
   return (
     <section className="mt-2">
-      <h2 className="mb-3 text-sm font-semibold text-slate-800">
-        What would you like to do?
+      <h2 className="mb-3 text-sm font-semibold text-foreground">
+        რისი გაკეთება გსურთ?
       </h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -15,17 +15,16 @@ export function DashboardActions({ isAdmin }: DashboardActionsProps) {
           onClick={() => {
             window.location.href = "/properties";
           }}
-          className="group flex flex-col items-start gap-2 rounded-xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+          className="group flex flex-col items-start gap-2 rounded-xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition hover:bg-muted"
         >
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-            Properties
+          <span className="inline-flex items-center rounded-full bg-success-muted px-3 py-1 text-xs font-medium text-success">
+            განცხადებები
           </span>
-          <p className="text-sm font-medium text-slate-900">
-            See and manage all properties
+          <p className="text-sm font-medium text-foreground">
+            განცხადებების ნახვა და მართვა
           </p>
-          <p className="text-xs text-slate-600">
-            Add new homes, update details, and keep everything tidy in one
-            place.
+          <p className="text-xs text-muted-foreground">
+            დაამატეთ ახალი განცხადებები და განაახლეთ დეტალები ერთ სივრცეში.
           </p>
         </button>
 
@@ -35,19 +34,38 @@ export function DashboardActions({ isAdmin }: DashboardActionsProps) {
             onClick={() => {
               window.location.href = "/agents";
             }}
-            className="group flex flex-col items-start gap-2 rounded-xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+            className="group flex flex-col items-start gap-2 rounded-xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition hover:bg-muted"
           >
-            <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-              Agents
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              აგენტები
             </span>
-            <p className="text-sm font-medium text-slate-900">
-              Look after your team
+            <p className="text-sm font-medium text-foreground">
+              გუნდის მართვა
             </p>
-            <p className="text-xs text-slate-600">
-              Invite new agents and keep track of who is working on what.
+            <p className="text-xs text-muted-foreground">
+              მოიწვიეთ ახალი აგენტები და აკონტროლეთ სამუშაო.
             </p>
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "/collaborations";
+          }}
+          className="group flex flex-col items-start gap-2 rounded-xl bg-card p-4 text-left shadow-sm ring-1 ring-border transition hover:bg-muted"
+        >
+          <span className="inline-flex items-center rounded-full bg-warning-muted px-3 py-1 text-xs font-medium text-warning-foreground">
+            თანამშრომლობა
+          </span>
+          <p className="text-sm font-medium text-foreground">
+            {isAdmin ? "მოთხოვნების დამტკიცება" : "თანამშრომლობის მოთხოვნები"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isAdmin
+              ? "დაამტკიცეთ მიღებული მოთხოვნები და აკონტროლეთ განცხადებები."
+              : "ნახეთ შემოსული და გაგზავნილი თანამშრომლობის მოთხოვნები."}
+          </p>
+        </button>
       </div>
     </section>
   );

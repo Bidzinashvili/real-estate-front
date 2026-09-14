@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
+import { formatHotelScopeLabel, formatPropertyTypeLabel } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
-import { formatPropertyStatusLabel } from "@/features/properties/types";
 import type { Property } from "@/features/properties/types";
+import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
+import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 
 type AdminPropertiesSectionProps = {
   properties: Property[];
@@ -16,79 +18,89 @@ export function AdminPropertiesSection({
   error,
 }: AdminPropertiesSectionProps) {
   if (isLoading) {
-    return <p className="text-sm text-slate-600">Loading properties…</p>;
+    return <p className="text-sm text-muted-foreground">განცხადებები იტვირთება…</p>;
   }
 
   if (error) {
-    return <p className="text-sm text-red-600">{error}</p>;
+    return <p className="text-sm text-destructive">{error}</p>;
   }
 
   return (
     <section className="mt-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-800">Your properties</h2>
+        <h2 className="text-sm font-semibold text-foreground">ჩემი განცხადებები</h2>
         <Link
           href="/properties/new"
-          className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-slate-800"
+          className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white transition hover:bg-primary/90"
         >
-          Add property
+          განცხადების დამატება
         </Link>
       </div>
 
       {properties.length === 0 ? (
-        <p className="text-sm text-slate-600">
-          You don&apos;t have any properties yet.
+        <p className="text-sm text-muted-foreground">
+          განცხადებები ჯერ არ გაქვთ.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-xl bg-white text-sm shadow-sm ring-1 ring-slate-200">
+        <div className="overflow-hidden rounded-xl bg-card text-sm shadow-sm ring-1 ring-border">
           <table className="min-w-full border-collapse">
-            <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500">
+            <thead className="bg-muted text-left text-xs font-medium text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">Type</th>
-                <th className="hidden px-4 py-3 sm:table-cell">Status</th>
-                <th className="hidden px-4 py-3 md:table-cell">Location</th>
-                <th className="hidden px-4 py-3 md:table-cell">Address</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="hidden px-4 py-3 lg:table-cell">Owner</th>
-                <th className="px-4 py-3 text-right">Created</th>
-                <th className="px-4 py-3 text-right">Details</th>
+                <th className="px-4 py-3">ტიპი</th>
+                <th className="hidden px-4 py-3 sm:table-cell">სტატუსი</th>
+                <th className="hidden px-4 py-3 md:table-cell">მდებარეობა</th>
+                <th className="hidden px-4 py-3 md:table-cell">მისამართი</th>
+                <th className="px-4 py-3">ფასი</th>
+                <th className="hidden px-4 py-3 lg:table-cell">მესაკუთრე</th>
+                <th className="px-4 py-3 text-right">შექმნილია</th>
+                <th className="px-4 py-3 text-right">დეტალები</th>
               </tr>
             </thead>
 
             <tbody>
               {properties.map((property) => (
-                <tr key={property.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 text-slate-900">
-                    {property.propertyType}
+                <tr key={property.id} className="border-t border-border">
+                  <td className="px-4 py-3 text-foreground">
+                    {formatPropertyTypeLabel(property.propertyType) ?? property.propertyType}
                     {property.propertyType === "HOTEL" && property.hotelScope
                       ? ` (${formatHotelScopeLabel(property.hotelScope)})`
                       : ""}{" "}
                     • {formatDealTypeLabel(property.dealType)}
                   </td>
-                  <td className="hidden px-4 py-3 text-slate-700 sm:table-cell">
-                    {formatPropertyStatusLabel(property.status)}
-                  </td>
-                  <td className="hidden px-4 py-3 text-slate-700 md:table-cell">
+                    <td className="hidden px-4 py-3 text-foreground sm:table-cell">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <LifecycleStatusBadge
+                          kind="property"
+                          status={property.status}
+                          outcomeSource={property.outcomeSource}
+                          verificationReason={property.verificationReason}
+                          isArchived={isPropertyArchived(property)}
+                          size="sm"
+                        />
+                        <HideFromOthersBadge isHidden={property.hideFromOthers === true} />
+                      </div>
+                    </td>
+                  <td className="hidden px-4 py-3 text-foreground md:table-cell">
                     {property.city} / {property.district}
                   </td>
-                  <td className="hidden px-4 py-3 text-slate-700 md:table-cell">
+                  <td className="hidden px-4 py-3 text-foreground md:table-cell">
                     {property.address}
                   </td>
-                  <td className="px-4 py-3 text-slate-700">
+                  <td className="px-4 py-3 text-foreground">
                     {property.pricePublic.toLocaleString()}
                   </td>
-                  <td className="hidden px-4 py-3 text-slate-700 lg:table-cell">
-                    {property.ownerName}
+                  <td className="hidden px-4 py-3 text-foreground lg:table-cell">
+                    {property.propertyOwner?.name ?? property.ownerName ?? ""}
                   </td>
-                  <td className="px-4 py-3 text-right text-slate-700">
+                  <td className="px-4 py-3 text-right text-foreground">
                     {new Date(property.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/properties/${property.id}`}
-                      className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white transition hover:bg-slate-800"
+                      className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white transition hover:bg-primary/90"
                     >
-                      View
+                      ნახვა
                     </Link>
                   </td>
                 </tr>

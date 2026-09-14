@@ -1,18 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
+import {
+  FREQUENT_RENTAL_PERIOD_OPTIONS,
+  type FrequentRentalPeriodValue,
+} from "@/widgets/AddProperty/MinRentalPeriodField";
 import { SelectField } from "@/widgets/AddProperty/addPropertyFormFields";
 import { EditableNumericTextInput } from "@/widgets/PropertyDetails/PropertyFormControls";
 import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
-
-function presetValueFromMonths(
-  months: number | undefined,
-): "" | "1" | "3" | "6" | "12" {
-  if (months === 1 || months === 3 || months === 6 || months === 12) {
-    return String(months) as "1" | "3" | "6" | "12";
-  }
-  return "";
-}
 
 type MinRentalPeriodEditFieldProps = {
   dealType: DealType;
@@ -27,37 +23,28 @@ export function MinRentalPeriodEditField({
   months,
   onMonthsChange,
 }: MinRentalPeriodEditFieldProps) {
-  if (dealType !== "RENT") return null;
+  const [frequentRentalPeriod, setFrequentRentalPeriod] =
+    useState<FrequentRentalPeriodValue>("");
 
-  const presetOptions = [
-    { value: "" as const, label: "Quick select (months)" },
-    { value: "1" as const, label: "1 month" },
-    { value: "3" as const, label: "3 months" },
-    { value: "6" as const, label: "6 months" },
-    { value: "12" as const, label: "12 months" },
-  ];
+  if (dealType !== "RENT" && dealType !== "DAILY_RENT") return null;
 
   return (
     <div className="space-y-3 sm:col-span-2">
       <div className="grid gap-4 sm:grid-cols-2">
         <EditableNumericTextInput
-          label="Min Rental Period (months)"
+          label="მინიმალური ქირის ვადა (თვე)"
           value={months}
           onValueChange={onMonthsChange}
           parse={parseIntegerInput}
           inputMode="numeric"
-          placeholder="Enter minimum rental period in months"
+          placeholder="შეიყვანეთ მინიმალური ქირის ვადა თვეებში"
         />
         <SelectField
-          id={`${idPrefix}MinRentalPreset`}
-          label="Common lengths"
-          value={presetValueFromMonths(months)}
-          onChange={(preset) => {
-            if (preset !== "") {
-              onMonthsChange(Number.parseInt(preset, 10));
-            }
-          }}
-          options={presetOptions}
+          id={`${idPrefix}FrequentRentalPeriod`}
+          label="ხშირი ვადები"
+          value={frequentRentalPeriod}
+          onChange={setFrequentRentalPeriod}
+          options={FREQUENT_RENTAL_PERIOD_OPTIONS}
         />
       </div>
     </div>

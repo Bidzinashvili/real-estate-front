@@ -7,16 +7,19 @@ import {
   KITCHEN_TYPES,
 } from "@/features/clients/clientEnums";
 import type { LockState } from "@/features/clients/clientApi.types";
+import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
+import { OUTCOME_SOURCES } from "@/features/lifecycle/lifecycleEnums";
 
 const LOCK_STATES: [LockState, LockState, LockState] = ["none", "locked", "frozen"];
 
 export const lockStateSchema = z.enum(LOCK_STATES);
 
 const lockStateFieldSchema = z.preprocess((candidate): LockState => {
-  if (typeof candidate === "string") {
-    if (candidate === "none" || candidate === "locked" || candidate === "frozen") {
-      return candidate;
-    }
+  if (candidate === "frozen") {
+    return "frozen";
+  }
+  if (candidate === "locked") {
+    return "locked";
   }
   return "none";
 }, lockStateSchema);
@@ -77,8 +80,13 @@ const lockedBooleanFieldSchema = z.object({
   lock: lockStateFieldSchema,
 });
 
-const lockedPartialRenovationFieldSchema = z.object({
-  value: z.union([z.enum(RENOVATION_VALUES), z.literal("")]).optional(),
+const lockedPreferenceFieldSchema = z.object({
+  value: z.enum(CLIENT_PREFERENCE_VALUES),
+  lock: lockStateFieldSchema,
+});
+
+const lockedRenovationsFieldSchema = z.object({
+  value: z.array(z.enum(RENOVATION_VALUES)).max(20).default([]),
   lock: lockStateFieldSchema,
 });
 
@@ -99,21 +107,22 @@ const lockedStringArrayListFieldSchema = z.object({
 
 export const clientFormSchema = z
   .object({
-    name: z.string().min(1, "Name is required").max(500),
+    name: z.string().min(1, "სახელი სავალდებულოა").max(500),
     phones: z
-      .array(z.string().min(1, "Phone cannot be empty"))
-      .min(1, "At least one phone is required")
+      .array(z.string().min(1, "ტელეფონი არ შეიძლება იყოს ცარიელი"))
+      .min(1, "საჭიროა მინიმუმ ერთი ტელეფონი")
       .max(50),
     whatsapp: z.string().max(64).optional().or(z.literal("")),
     budgetMin: lockedPartialNumberFieldSchema,
     budgetMax: lockedPartialNumberFieldSchema,
     dealType: z.enum(DEAL_TYPES),
-    description: z.string().min(1, "Description is required").max(20000),
+    description: z.string().min(1, "აღწერა სავალდებულოა").max(20000),
     pet: lockedPartialStringFieldSchema,
     districts: lockedStringArrayFieldSchema,
     addresses: lockedStringArrayFieldSchema,
     labels: lockedStringArrayFieldSchema,
     status: z.union([z.enum(CLIENT_STATUSES), z.literal("")]).optional(),
+    outcomeSource: z.union([z.enum(OUTCOME_SOURCES), z.literal("")]).optional(),
     reminderDate: z.string().optional().or(z.literal("")),
     relatedPersons: z.array(relatedPersonSchema).max(100).optional().default([]),
     minRooms: lockedIntNonNegFieldSchema,
@@ -123,23 +132,23 @@ export const clientFormSchema = z
     minFloor: lockedIntFieldSchema,
     maxFloor: lockedIntFieldSchema,
     excludeLastFloor: lockedBooleanFieldSchema,
-    renovation: lockedPartialRenovationFieldSchema,
+    renovations: lockedRenovationsFieldSchema,
     buildingCondition: lockedPartialBuildingConditionFieldSchema,
     projectExclude: lockedStringArrayListFieldSchema,
     minArea: lockedNumberFieldSchema,
     maxArea: lockedNumberFieldSchema,
-    hasBalcony: lockedBooleanFieldSchema,
+    hasBalcony: lockedPreferenceFieldSchema,
     balconyAreaMin: lockedNumberFieldSchema,
     balconyAreaMax: lockedNumberFieldSchema,
-    goodView: lockedBooleanFieldSchema,
-    elevator: lockedBooleanFieldSchema,
-    centralHeating: lockedBooleanFieldSchema,
-    airConditioner: lockedBooleanFieldSchema,
+    goodView: lockedPreferenceFieldSchema,
+    elevator: lockedPreferenceFieldSchema,
+    centralHeating: lockedPreferenceFieldSchema,
+    airConditioner: lockedPreferenceFieldSchema,
     kitchenType: lockedPartialKitchenTypeFieldSchema,
-    furnished: lockedBooleanFieldSchema,
+    furnished: lockedPreferenceFieldSchema,
     minBathrooms: lockedIntNonNegFieldSchema,
     maxBathrooms: lockedIntNonNegFieldSchema,
-    parking: lockedBooleanFieldSchema,
+    parking: lockedPreferenceFieldSchema,
     minRentalPeriod: lockedPartialNumberFieldSchema,
   })
   .superRefine((data, context) => {
@@ -152,7 +161,7 @@ export const clientFormSchema = z
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Budget min must be less than or equal to budget max",
+        message: "მინიმალური ბიუჯეტი არ უნდა აღემატებოდეს მაქსიმალურს",
         path: ["budgetMin", "value"],
       });
     }
@@ -162,7 +171,7 @@ export const clientFormSchema = z
     if (roomsMinVal !== undefined && roomsMaxVal !== undefined && roomsMinVal > roomsMaxVal) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Rooms from must be less than or equal to rooms to",
+        message: "ოთახების მინიმუმი არ უნდა აღემატებოდეს მაქსიმუმს",
         path: ["minRooms", "value"],
       });
     }
@@ -176,7 +185,7 @@ export const clientFormSchema = z
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Bedrooms from must be less than or equal to bedrooms to",
+        message: "საძინებლების მინიმუმი არ უნდა აღემატებოდეს მაქსიმუმს",
         path: ["minBedrooms", "value"],
       });
     }
@@ -190,7 +199,7 @@ export const clientFormSchema = z
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Min floor must be less than or equal to max floor",
+        message: "მინიმალური სართული არ უნდა აღემატებოდეს მაქსიმალურს",
         path: ["minFloor", "value"],
       });
     }
@@ -204,7 +213,7 @@ export const clientFormSchema = z
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Bathrooms from must be less than or equal to bathrooms to",
+        message: "სველი წერტილების მინიმუმი არ უნდა აღემატებოდეს მაქსიმუმს",
         path: ["minBathrooms", "value"],
       });
     }
@@ -214,7 +223,7 @@ export const clientFormSchema = z
     if (areaMinVal !== undefined && areaMaxVal !== undefined && areaMinVal > areaMaxVal) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Area from must be less than or equal to area to",
+        message: "ფართობის მინიმუმი არ უნდა აღემატებოდეს მაქსიმუმს",
         path: ["minArea", "value"],
       });
     }
@@ -228,7 +237,7 @@ export const clientFormSchema = z
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Balcony area min must be less than or equal to max",
+        message: "აივნის ფართობის მინიმუმი არ უნდა აღემატებოდეს მაქსიმუმს",
         path: ["balconyAreaMin", "value"],
       });
     }
@@ -241,8 +250,16 @@ export const clientFormSchema = z
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Min rental period is only valid for Rent or Daily rent",
+        message: "მინიმალური ქირის ვადა მხოლოდ ქირავნობისთვისაა",
         path: ["minRentalPeriod", "value"],
+      });
+    }
+
+    if (data.status === "INACTIVE" && (data.outcomeSource === undefined || data.outcomeSource === "")) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "აირჩიეთ: მე ან სხვამ",
+        path: ["outcomeSource"],
       });
     }
   });
@@ -254,6 +271,7 @@ export const emptyClientFormDefaults: ClientFormValues = {
   phones: ["+995"],
   whatsapp: "+995",
   status: "",
+  outcomeSource: "",
   reminderDate: "",
   budgetMin: { value: undefined, lock: "none" },
   budgetMax: { value: undefined, lock: "none" },
@@ -270,23 +288,23 @@ export const emptyClientFormDefaults: ClientFormValues = {
   maxBedrooms: { value: undefined, lock: "none" },
   minFloor: { value: undefined, lock: "none" },
   maxFloor: { value: undefined, lock: "none" },
-  excludeLastFloor: { value: undefined, lock: "none" },
-  renovation: { value: "", lock: "none" },
+  excludeLastFloor: { value: false, lock: "none" },
+  renovations: { value: [], lock: "none" },
   buildingCondition: { value: "", lock: "none" },
   projectExclude: { value: [], lock: "none" },
   minArea: { value: undefined, lock: "none" },
   maxArea: { value: undefined, lock: "none" },
-  hasBalcony: { value: undefined, lock: "none" },
+  hasBalcony: { value: "NOT_SET", lock: "none" },
   balconyAreaMin: { value: undefined, lock: "none" },
   balconyAreaMax: { value: undefined, lock: "none" },
-  goodView: { value: undefined, lock: "none" },
-  elevator: { value: undefined, lock: "none" },
-  centralHeating: { value: undefined, lock: "none" },
-  airConditioner: { value: undefined, lock: "none" },
+  goodView: { value: "NOT_SET", lock: "none" },
+  elevator: { value: "NOT_SET", lock: "none" },
+  centralHeating: { value: "NOT_SET", lock: "none" },
+  airConditioner: { value: "NOT_SET", lock: "none" },
   kitchenType: { value: "", lock: "none" },
-  furnished: { value: undefined, lock: "none" },
+  furnished: { value: "NOT_SET", lock: "none" },
   minBathrooms: { value: undefined, lock: "none" },
   maxBathrooms: { value: undefined, lock: "none" },
-  parking: { value: undefined, lock: "none" },
+  parking: { value: "NOT_SET", lock: "none" },
   minRentalPeriod: { value: undefined, lock: "none" },
 };

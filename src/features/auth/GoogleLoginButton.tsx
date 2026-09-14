@@ -7,7 +7,7 @@ type GoogleLoginButtonProps = {
   title?: string;
 };
 
-function GoogleLoginButton({ title = "Google Login" }: GoogleLoginButtonProps) {
+function GoogleLoginButton({ title = "Google-ით შესვლა" }: GoogleLoginButtonProps) {
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function GoogleLoginButton({ title = "Google Login" }: GoogleLoginButtonProps) {
           console.log("✅ /auth/google response:", result);
         } catch (error) {
           console.error("❌ Error during Google authentication:", error);
-          alert("Failed to sign in with Google. Check console for details.");
+          alert("Google-ით შესვლა ვერ მოხერხდა.");
         }
       },
     });

@@ -29,7 +29,7 @@ export function useCreateClientInviteLink(): UseCreateClientInviteLinkResult {
       const message =
         err instanceof Error
           ? err.message
-          : "Could not create this invite link right now.";
+          : "მოწვევის ბმულის შექმნა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

@@ -7,9 +7,57 @@ import type {
 } from "@/features/properties/getPropertiesQuery";
 import {
   DEFAULT_CATALOG_URL_STATE,
+  type PropertyBalconyFilter,
   type PropertyCatalogUrlState,
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { PropertyType } from "@/features/properties/types";
+import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { RecordColor } from "@/features/recordColor/recordColor";
+
+const ADVANCED_FILTER_DEFAULTS: Pick<
+  PropertyCatalogUrlState,
+  | "lifecycleStatus"
+  | "city"
+  | "selectedLabelIds"
+  | "selectedLabelNames"
+  | "minArea"
+  | "maxArea"
+  | "roomsFrom"
+  | "roomsTo"
+  | "bedrooms"
+  | "floorFrom"
+  | "floorTo"
+  | "totalFloors"
+  | "balcony"
+  | "yardArea"
+  | "houseArea"
+  | "landArea"
+  | "commercialArea"
+  | "lastOpenedFrom"
+  | "lastOpenedTo"
+  | "neverOpened"
+> = {
+  lifecycleStatus: DEFAULT_CATALOG_URL_STATE.lifecycleStatus,
+  city: DEFAULT_CATALOG_URL_STATE.city,
+  selectedLabelIds: DEFAULT_CATALOG_URL_STATE.selectedLabelIds,
+  selectedLabelNames: DEFAULT_CATALOG_URL_STATE.selectedLabelNames,
+  minArea: DEFAULT_CATALOG_URL_STATE.minArea,
+  maxArea: DEFAULT_CATALOG_URL_STATE.maxArea,
+  roomsFrom: DEFAULT_CATALOG_URL_STATE.roomsFrom,
+  roomsTo: DEFAULT_CATALOG_URL_STATE.roomsTo,
+  bedrooms: DEFAULT_CATALOG_URL_STATE.bedrooms,
+  floorFrom: DEFAULT_CATALOG_URL_STATE.floorFrom,
+  floorTo: DEFAULT_CATALOG_URL_STATE.floorTo,
+  totalFloors: DEFAULT_CATALOG_URL_STATE.totalFloors,
+  balcony: DEFAULT_CATALOG_URL_STATE.balcony,
+  yardArea: DEFAULT_CATALOG_URL_STATE.yardArea,
+  houseArea: DEFAULT_CATALOG_URL_STATE.houseArea,
+  landArea: DEFAULT_CATALOG_URL_STATE.landArea,
+  commercialArea: DEFAULT_CATALOG_URL_STATE.commercialArea,
+  lastOpenedFrom: DEFAULT_CATALOG_URL_STATE.lastOpenedFrom,
+  lastOpenedTo: DEFAULT_CATALOG_URL_STATE.lastOpenedTo,
+  neverOpened: DEFAULT_CATALOG_URL_STATE.neverOpened,
+};
 
 export function createPropertiesCatalogFilterSetters(args: {
   bumpPage: (patch: Partial<PropertyCatalogUrlState>) => void;
@@ -22,6 +70,7 @@ export function createPropertiesCatalogFilterSetters(args: {
     setSearchInput: (value: string) => {
       setState((previousState) => ({ ...previousState, searchInput: value, page: 1 }));
     },
+    setSelectedColors: (value: RecordColor[]) => bumpPage({ selectedColors: value }),
     setSelectedLabelIds: (value: string[]) => bumpPage({ selectedLabelIds: value }),
     setSelectedLabelNames: (value: string[]) => bumpPage({ selectedLabelNames: value }),
     setDealType: (value: DealType | "") => bumpPage({ dealType: value }),
@@ -35,15 +84,40 @@ export function createPropertiesCatalogFilterSetters(args: {
     setMaxPrice: (value: string) => bumpPage({ maxPrice: value }),
     setMinArea: (value: string) => bumpPage({ minArea: value }),
     setMaxArea: (value: string) => bumpPage({ maxArea: value }),
-    setRooms: (value: string) => bumpPage({ rooms: value }),
+    setRoomsFrom: (value: string) => bumpPage({ roomsFrom: value }),
+    setRoomsTo: (value: string) => bumpPage({ roomsTo: value }),
     setBedrooms: (value: string) => bumpPage({ bedrooms: value }),
-    setFloor: (value: string) => bumpPage({ floor: value }),
+    setFloorFrom: (value: string) => bumpPage({ floorFrom: value }),
+    setFloorTo: (value: string) => bumpPage({ floorTo: value }),
+    setTotalFloors: (value: string) => bumpPage({ totalFloors: value }),
+    setBalcony: (value: PropertyBalconyFilter) => bumpPage({ balcony: value }),
     setYardArea: (value: string) => bumpPage({ yardArea: value }),
     setHouseArea: (value: string) => bumpPage({ houseArea: value }),
     setLandArea: (value: string) => bumpPage({ landArea: value }),
     setCommercialArea: (value: string) => bumpPage({ commercialArea: value }),
+    setCreatedFrom: (value: string) => bumpPage({ createdFrom: value }),
+    setCreatedTo: (value: string) => bumpPage({ createdTo: value }),
+    setCreatedDateRange: (value: { createdFrom: string; createdTo: string }) =>
+      bumpPage(value),
+    setLastOpenedDateRange: (value: {
+      lastOpenedFrom: string;
+      lastOpenedTo: string;
+    }) =>
+      bumpPage({
+        ...value,
+        neverOpened: false,
+      }),
+    setNeverOpened: (value: boolean) =>
+      bumpPage(
+        value
+          ? { neverOpened: true, lastOpenedFrom: "", lastOpenedTo: "" }
+          : { neverOpened: false },
+      ),
+    setReadyToUpload: (value: boolean) => bumpPage({ readyToUpload: value }),
     setShowMyProperties: (value: boolean) =>
       bumpPage({ showMyProperties: value }),
+    setListScope: (value: DatabaseListScope) => bumpPage({ listScope: value }),
+    setShowArchived: (value: boolean) => bumpPage({ showArchived: value }),
     setSortBy: (value: PropertySortBy) => bumpPage({ sortBy: value }),
     setOrder: (value: PropertyListSortOrder) => bumpPage({ order: value }),
     setPage: (value: number) => {
@@ -52,35 +126,67 @@ export function createPropertiesCatalogFilterSetters(args: {
     setLimit: (value: number) => {
       setState((previousState) => ({ ...previousState, limit: value, page: 1 }));
     },
+    resetAdvancedFilters: () => {
+      bumpPage({ ...ADVANCED_FILTER_DEFAULTS });
+    },
     resetFilters: () => {
-      setState({ ...DEFAULT_CATALOG_URL_STATE });
+      setState((previousState) => ({
+        ...DEFAULT_CATALOG_URL_STATE,
+        listScope: previousState.listScope,
+        sortBy: previousState.sortBy,
+        order: previousState.order,
+        limit: previousState.limit,
+      }));
       resetDebouncedTextFilters();
     },
   };
 }
 
+export function countAdvancedCatalogFilters(
+  state: PropertyCatalogUrlState,
+): number {
+  let advancedFilterCount = 0;
+  if (state.selectedLabelIds.length > 0 || state.selectedLabelNames.length > 0) {
+    advancedFilterCount += 1;
+  }
+  if (state.lifecycleStatus) advancedFilterCount += 1;
+  if (state.city.trim()) advancedFilterCount += 1;
+  if (state.minArea.trim()) advancedFilterCount += 1;
+  if (state.maxArea.trim()) advancedFilterCount += 1;
+  if (state.roomsFrom.trim() || state.roomsTo.trim()) advancedFilterCount += 1;
+  if (state.bedrooms.trim()) advancedFilterCount += 1;
+  if (state.floorFrom.trim() || state.floorTo.trim()) advancedFilterCount += 1;
+  if (state.totalFloors.trim()) advancedFilterCount += 1;
+  if (state.balcony) advancedFilterCount += 1;
+  if (state.yardArea.trim()) advancedFilterCount += 1;
+  if (state.houseArea.trim()) advancedFilterCount += 1;
+  if (state.landArea.trim()) advancedFilterCount += 1;
+  if (state.commercialArea.trim()) advancedFilterCount += 1;
+  if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) {
+    advancedFilterCount += 1;
+  }
+  if (state.neverOpened) advancedFilterCount += 1;
+  return advancedFilterCount;
+}
+
+export function hasClearableCatalogFilters(
+  state: PropertyCatalogUrlState,
+): boolean {
+  if (state.searchInput.trim()) return true;
+  if (state.selectedColors.length > 0) return true;
+  if (state.dealType) return true;
+  if (state.propertyType) return true;
+  if (state.district.trim()) return true;
+  if (state.minPrice.trim() || state.maxPrice.trim()) return true;
+  if (state.createdFrom.trim() || state.createdTo.trim()) return true;
+  if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) return true;
+  if (state.neverOpened) return true;
+  if (state.readyToUpload) return true;
+  return countAdvancedCatalogFilters(state) > 0;
+}
+
 export function countActiveCatalogFilters(
   state: PropertyCatalogUrlState,
 ): number {
-  let activeFilterCount = 0;
-  if (state.searchInput.trim()) activeFilterCount += 1;
-  if (state.selectedLabelIds.length > 0 || state.selectedLabelNames.length > 0) activeFilterCount += 1;
-  if (state.dealType) activeFilterCount += 1;
-  if (state.lifecycleStatus) activeFilterCount += 1;
-  if (state.propertyType) activeFilterCount += 1;
-  if (state.city.trim()) activeFilterCount += 1;
-  if (state.district.trim()) activeFilterCount += 1;
-  if (state.minPrice.trim()) activeFilterCount += 1;
-  if (state.maxPrice.trim()) activeFilterCount += 1;
-  if (state.minArea.trim()) activeFilterCount += 1;
-  if (state.maxArea.trim()) activeFilterCount += 1;
-  if (state.rooms.trim()) activeFilterCount += 1;
-  if (state.bedrooms.trim()) activeFilterCount += 1;
-  if (state.floor.trim()) activeFilterCount += 1;
-  if (state.yardArea.trim()) activeFilterCount += 1;
-  if (state.houseArea.trim()) activeFilterCount += 1;
-  if (state.landArea.trim()) activeFilterCount += 1;
-  if (state.commercialArea.trim()) activeFilterCount += 1;
-  if (state.showMyProperties) activeFilterCount += 1;
-  return activeFilterCount;
+  return countAdvancedCatalogFilters(state);
 }

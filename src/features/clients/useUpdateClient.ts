@@ -25,7 +25,7 @@ export function useUpdateClient(): UseUpdateClientResult {
       const message =
         err instanceof Error
           ? err.message
-          : "Could not save client changes right now.";
+          : "კლიენტის ცვლილებების შენახვა ვერ მოხერხდა.";
       setError(message);
       throw err;
     } finally {

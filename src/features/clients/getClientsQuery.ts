@@ -1,12 +1,16 @@
-import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
+import type { ClientStatus } from "@/features/clients/clientEnums";
+import { isClientStatus } from "@/features/clients/clientEnums";
 import type { ClientsListResponse } from "@/features/clients/types";
-import type { JsonValue } from "@/shared/lib/jsonValue";
 import type {
   GetClientsQuery,
   ClientSortBy,
   SortOrder,
 } from "@/features/clients/clientApi.types";
 import { DEFAULT_CLIENT_LIST_FILTER_LOCK } from "@/features/clients/clientApi.types";
+import {
+  appendRecordColorsToSearchParams,
+  normalizeRecordColors,
+} from "@/features/recordColor/recordColorQuery";
 
 export type { GetClientsQuery, ClientSortBy, SortOrder };
 
@@ -14,51 +18,91 @@ export type ClientSortOrder = SortOrder;
 
 export type ClientsListResult = ClientsListResponse;
 
+export const DISTRICT_FILTER_MIN_LENGTH = 3;
+
+export const DISTRICT_FILTER_DEBOUNCE_MS = 400;
+
 export function isClientSortBy(value: string): value is ClientSortBy {
-  return value === "createdAt" || value === "updatedAt" || value === "name";
+  return (
+    value === "createdAt" ||
+    value === "updatedAt" ||
+    value === "name" ||
+    value === "noteLastOpenedAt"
+  );
 }
 
 export function isClientSortOrder(value: string): value is SortOrder {
   return value === "asc" || value === "desc";
 }
 
-function encodeJsonParam(value: JsonValue): string {
-  return encodeURIComponent(JSON.stringify(value));
+function toLockedQueryJson(value: { value?: unknown; lock: string }): string {
+  return JSON.stringify(value);
 }
 
 export function toGetClientsSearchParams(
   query: GetClientsQuery | undefined,
-): Record<string, string> {
-  if (!query) return {};
+): URLSearchParams {
+  const out = new URLSearchParams();
+  if (!query) return out;
 
-  const out: Record<string, string> = {};
-
+  const trimmedSearch = query.search?.trim() ?? "";
+  if (trimmedSearch !== "") {
+    out.set("search", trimmedSearch);
+  }
+  if (query.createdFrom) {
+    out.set("createdFrom", query.createdFrom);
+  }
+  if (query.createdTo) {
+    out.set("createdTo", query.createdTo);
+  }
+  if (query.neverOpened === true) {
+    out.set("neverOpened", "true");
+  } else {
+    if (query.lastOpenedFrom) {
+      out.set("lastOpenedFrom", query.lastOpenedFrom);
+    }
+    if (query.lastOpenedTo) {
+      out.set("lastOpenedTo", query.lastOpenedTo);
+    }
+  }
   if (query.district !== undefined) {
-    out.district = encodeJsonParam(query.district);
+    out.set("district", toLockedQueryJson(query.district));
   }
   if (query.budgetMin !== undefined) {
-    out.budgetMin = encodeJsonParam(query.budgetMin);
+    out.set("budgetMin", toLockedQueryJson(query.budgetMin));
   }
   if (query.budgetMax !== undefined) {
-    out.budgetMax = encodeJsonParam(query.budgetMax);
+    out.set("budgetMax", toLockedQueryJson(query.budgetMax));
   }
   if (query.dealType) {
-    out.dealType = query.dealType;
+    out.set("dealType", query.dealType);
   }
   if (query.status !== undefined) {
-    out.status = encodeJsonParam(query.status);
+    out.set("status", toLockedQueryJson(query.status));
   }
   if (query.sortBy) {
-    out.sortBy = query.sortBy;
+    out.set("sortBy", query.sortBy);
   }
   if (query.order) {
-    out.order = query.order;
+    out.set("order", query.order);
   }
   if (query.page !== undefined && Number.isFinite(query.page)) {
-    out.page = String(query.page);
+    out.set("page", String(query.page));
   }
   if (query.limit !== undefined && Number.isFinite(query.limit)) {
-    out.limit = String(query.limit);
+    out.set("limit", String(query.limit));
+  }
+  if (query.archived === true) {
+    out.set("archived", "true");
+  } else if (query.archived === false) {
+    out.set("archived", "false");
+  }
+  if (query.scope) {
+    out.set("scope", query.scope);
+  }
+  appendRecordColorsToSearchParams(out, normalizeRecordColors(query.color));
+  if (query.adminMode === true) {
+    out.set("adminMode", "true");
   }
 
   return out;
@@ -66,7 +110,7 @@ export function toGetClientsSearchParams(
 
 export function buildDistrictFilterParam(value: string): GetClientsQuery["district"] {
   const trimmed = value.trim();
-  if (!trimmed) {
+  if (Array.from(trimmed).length < DISTRICT_FILTER_MIN_LENGTH) {
     return undefined;
   }
   return {
@@ -75,19 +119,17 @@ export function buildDistrictFilterParam(value: string): GetClientsQuery["distri
   };
 }
 
-export function buildBudgetFilterParam(
-  raw: string,
-): GetClientsQuery["budgetMin"] | GetClientsQuery["budgetMax"] {
+export function buildBudgetFilterParam(raw: string): GetClientsQuery["budgetMin"] {
   const trimmed = raw.trim();
   if (trimmed === "") {
     return undefined;
   }
-  const parsed = Number(trimmed);
-  if (!Number.isFinite(parsed)) {
+  const parsedNumber = Number(trimmed);
+  if (!Number.isFinite(parsedNumber)) {
     return undefined;
   }
   return {
-    value: parsed,
+    value: parsedNumber,
     lock: DEFAULT_CLIENT_LIST_FILTER_LOCK,
   };
 }
@@ -95,7 +137,7 @@ export function buildBudgetFilterParam(
 export function buildStatusFilterParam(
   status: ClientStatus | "",
 ): GetClientsQuery["status"] {
-  if (status === "") {
+  if (status === "" || !isClientStatus(status)) {
     return undefined;
   }
   return {

@@ -18,8 +18,8 @@ export async function fetchDistricts(
     if (axios.isAxiosError(error)) {
       const response = error.response;
       const fallbackMessage = response
-        ? `Failed to load districts: ${response.status} ${response.statusText ?? ""}`.trim()
-        : "Failed to load districts: network error";
+        ? `უბნების ჩატვირთვა ვერ მოხერხდა: ${response.status} ${response.statusText ?? ""}`.trim()
+        : "უბნების ჩატვირთვა ვერ მოხერხდა: ქსელის შეცდომა";
       const parsedError = parseStandardApiError(
         response?.data,
         response?.status ?? 500,

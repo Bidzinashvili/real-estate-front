@@ -2,27 +2,12 @@
 
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
 import {
-  DEAL_TYPE_OPTIONS,
-  isDealType,
-  type DealType,
-} from "@/features/properties/dealType";
-import { PROPERTY_TYPE_OPTIONS } from "@/features/properties/addPropertyFormOptions";
-import {
-  isPropertyListSortOrder,
-  isPropertySortBy,
-} from "@/features/properties/getPropertiesQuery";
-import {
   isPropertyStatus,
   PROPERTY_STATUS_FILTER_OPTIONS,
+  type PropertyStatus,
 } from "@/features/properties/types";
 import { CATALOG_LIMIT_OPTIONS } from "@/features/properties/propertyCatalogUrlParams";
-import {
-  isPropertyType,
-  type PropertyStatus,
-  type PropertyType,
-} from "@/features/properties/types";
 import type { UsePropertiesCatalogResult } from "@/features/properties/usePropertiesCatalog";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
 import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
 import {
   PROPERTY_CATALOG_INPUT_CLASS as INPUT_CLASS,
@@ -30,26 +15,9 @@ import {
   PROPERTY_CATALOG_SELECT_CLASS as SELECT_CLASS,
 } from "@/widgets/Properties/propertyCatalogFilterSharedStyles";
 import { PropertyCatalogMoreFiltersDetails } from "@/widgets/Properties/propertyCatalogMoreFiltersDetails";
-
-const SORT_OPTIONS = [
-  { value: "createdAt", label: "Newest" },
-  { value: "pricePublic", label: "Price" },
-] as const;
-
-const ORDER_OPTIONS = [
-  { value: "desc", label: "High → low" },
-  { value: "asc", label: "Low → high" },
-] as const;
-
-function parseDealTypeSelectValue(raw: string): DealType | "" {
-  if (raw === "") return "";
-  return isDealType(raw) ? raw : "";
-}
-
-function parsePropertyTypeSelectValue(raw: string): PropertyType | "" {
-  if (raw === "") return "";
-  return isPropertyType(raw) ? raw : "";
-}
+import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
+import { NeverOpenedFilter } from "@/widgets/DatabaseList/NeverOpenedFilter";
+import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 
 function parseLifecycleStatusFilterValue(raw: string): PropertyStatus | "" {
   if (raw === "") return "";
@@ -72,31 +40,10 @@ export function PropertyCatalogFilterFields({
   return (
     <div className="space-y-5">
       <div>
-        <span className={LABEL_CLASS}>Deal type</span>
+        <span className={LABEL_CLASS}>განცხადების სტატუსი</span>
         <NativeSelectSurface>
           <select
-            aria-label="Filter by deal type"
-            value={state.dealType}
-            onChange={(event) =>
-              catalog.setDealType(parseDealTypeSelectValue(event.target.value))
-            }
-            className={SELECT_CLASS}
-          >
-            <option value="">All deals</option>
-            {DEAL_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </NativeSelectSurface>
-      </div>
-
-      <div>
-        <span className={LABEL_CLASS}>Listing status</span>
-        <NativeSelectSurface>
-          <select
-            aria-label="Filter by listing lifecycle status"
+            aria-label="სტატუსით გაფილტვრა"
             value={state.lifecycleStatus}
             onChange={(event) =>
               catalog.setLifecycleStatus(
@@ -115,170 +62,100 @@ export function PropertyCatalogFilterFields({
       </div>
 
       <div>
-        <span className={LABEL_CLASS}>Property type</span>
-        <NativeSelectSurface>
-          <select
-            aria-label="Filter by property type"
-            value={state.propertyType}
-            onChange={(event) =>
-              catalog.setPropertyType(parsePropertyTypeSelectValue(event.target.value))
-            }
-            className={SELECT_CLASS}
-          >
-            <option value="">All types</option>
-            {PROPERTY_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </NativeSelectSurface>
-      </div>
-
-      <LabelAutocompleteChipsInput
-        id="catalogLabels"
-        label="Labels"
-        selectedLabels={catalog.selectedLabels}
-        onChange={catalog.setSelectedLabels}
-        placeholder="Type to search labels"
-      />
-
-      <div>
-        <span className={LABEL_CLASS}>City</span>
+        <span className={LABEL_CLASS}>ქალაქი</span>
         <input
           type="text"
           value={state.city}
           onChange={(event) => catalog.setCity(event.target.value)}
           className={INPUT_CLASS}
-          placeholder="City contains…"
+          placeholder="ქალაქი შეიცავს…"
           autoComplete="address-level2"
         />
       </div>
 
-      <div>
-        <span className={LABEL_CLASS}>District</span>
-        <input
-          type="text"
-          value={state.district}
-          onChange={(event) => catalog.setDistrict(event.target.value)}
-          className={INPUT_CLASS}
-          placeholder="District contains…"
-        />
-      </div>
+      <LabelAutocompleteChipsInput
+        id="catalogLabels"
+        label="ლეიბლები"
+        selectedLabels={catalog.selectedLabels}
+        onChange={catalog.setSelectedLabels}
+        placeholder="აკრიფეთ ლეიბლის მოსაძებნად"
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <span className={LABEL_CLASS}>Min price (₾)</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={state.minPrice}
-            onChange={(event) => catalog.setMinPrice(event.target.value)}
-            className={INPUT_CLASS}
-            placeholder="Min"
-          />
-        </div>
-        <div>
-          <span className={LABEL_CLASS}>Max price (₾)</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={state.maxPrice}
-            onChange={(event) => catalog.setMaxPrice(event.target.value)}
-            className={INPUT_CLASS}
-            placeholder="Max"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <span className={LABEL_CLASS}>Min area (m²)</span>
+          <span className={LABEL_CLASS}>მინ. ფართობი (მ²)</span>
           <input
             type="text"
             inputMode="decimal"
             value={state.minArea}
             onChange={(event) => catalog.setMinArea(event.target.value)}
             className={INPUT_CLASS}
-            placeholder="Min"
+            placeholder="მინ."
           />
         </div>
         <div>
-          <span className={LABEL_CLASS}>Max area (m²)</span>
+          <span className={LABEL_CLASS}>მაქს. ფართობი (მ²)</span>
           <input
             type="text"
             inputMode="decimal"
             value={state.maxArea}
             onChange={(event) => catalog.setMaxArea(event.target.value)}
             className={INPUT_CLASS}
-            placeholder="Max"
+            placeholder="მაქს."
           />
         </div>
       </div>
 
       <PropertyCatalogMoreFiltersDetails catalog={catalog} />
 
-      <div>
-        <span className={LABEL_CLASS}>Sort</span>
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2">
-          <InlineSelect
-            aria-label="Sort listings by"
-            value={state.sortBy}
-            onChange={(selectedValue) => {
-              if (isPropertySortBy(selectedValue)) catalog.setSortBy(selectedValue);
-            }}
-            options={SORT_OPTIONS}
-            className="min-w-0 flex-1 text-sm"
-          />
-          <span className="h-4 w-px shrink-0 bg-slate-200" />
-          <InlineSelect
-            aria-label="Sort direction"
-            value={state.order}
-            onChange={(selectedValue) => {
-              if (isPropertyListSortOrder(selectedValue)) catalog.setOrder(selectedValue);
-            }}
-            options={ORDER_OPTIONS}
-            className="min-w-0 flex-1 text-sm"
-          />
-        </div>
-      </div>
+      <CreatedAtDateRangeFilter
+        createdFrom={state.lastOpenedFrom}
+        createdTo={state.lastOpenedTo}
+        disabled={state.neverOpened}
+        label={NOTE_LAST_OPENED_COPY.filterLabel}
+        fromAriaLabel={NOTE_LAST_OPENED_COPY.filterFromAria}
+        toAriaLabel={NOTE_LAST_OPENED_COPY.filterToAria}
+        onChange={({ createdFrom, createdTo }) =>
+          catalog.setLastOpenedDateRange({
+            lastOpenedFrom: createdFrom,
+            lastOpenedTo: createdTo,
+          })
+        }
+      />
+      <NeverOpenedFilter
+        checked={state.neverOpened}
+        onChange={catalog.setNeverOpened}
+      />
 
       <div>
-        <span className={LABEL_CLASS}>Per page</span>
+        <span className={LABEL_CLASS}>გვერდზე</span>
         <NativeSelectSurface>
           <select
-            aria-label="Results per page"
+            aria-label="შედეგები გვერდზე"
             value={String(state.limit)}
             onChange={(event) => catalog.setLimit(Number(event.target.value))}
             className={SELECT_CLASS}
           >
             {CATALOG_LIMIT_OPTIONS.map((limitOption) => (
               <option key={limitOption} value={limitOption}>
-                {limitOption} listings
+                {limitOption} განცხადება
               </option>
             ))}
           </select>
         </NativeSelectSurface>
       </div>
 
-      <div className="flex flex-wrap gap-2 pt-1">
-        <button
-          type="button"
-          onClick={() => catalog.resetFilters()}
-          className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-        >
-          Clear all
-        </button>
-        {showMobileFooter && (
+      {showMobileFooter ? (
+        <div className="flex flex-wrap gap-2 pt-1">
           <button
             type="button"
             onClick={onApplyMobile}
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
-            Show results
+            შედეგების ჩვენება
           </button>
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,26 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getClientById } from "@/features/clients/api";
 import type { ClientDetail } from "@/features/clients/types";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseClientDetailsResult = {
   client: ClientDetail | null;
   isLoading: boolean;
   error: string | null;
+  refetch: () => Promise<void>;
+  applyNoteLastOpenedAt: (openedAt: string | null) => void;
 };
 
 export function useClientDetails(id: string): UseClientDetailsResult {
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
+
+  const applyNoteLastOpenedAt = useCallback((openedAt: string | null) => {
+    setClient((previous) => {
+      if (!previous || previous.noteLastOpenedAt === undefined) {
+        return previous;
+      }
+      return { ...previous, noteLastOpenedAt: openedAt };
+    });
+  }, []);
+
+  const refetch = async () => {
+    if (!id) return;
+    try {
+      const result = await getClientById(id);
+      setClient(result);
+      setError(null);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
+      setError(message);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
 
     let cancelled = false;
 
-    const loadClient = async () => {
+    const runLoad = async () => {
       setIsLoading(true);
       setError(null);
 
@@ -34,7 +62,7 @@ export function useClientDetails(id: string): UseClientDetailsResult {
           const message =
             err instanceof Error
               ? err.message
-              : "Could not load this client right now.";
+              : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
           setError(message);
         }
       } finally {
@@ -44,12 +72,12 @@ export function useClientDetails(id: string): UseClientDetailsResult {
       }
     };
 
-    void loadClient();
+    void runLoad();
 
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isAdminMode]);
 
-  return { client, isLoading, error };
+  return { client, isLoading, error, refetch, applyNoteLastOpenedAt };
 }

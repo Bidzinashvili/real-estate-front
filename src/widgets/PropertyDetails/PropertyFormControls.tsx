@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import type { InputHTMLAttributes } from "react";
+import { sanitizeTwoDigitNumericInput } from "@/shared/lib/twoDigitNumericInput";
+
+const propertyDetailsEditableControlClassName = (widthClassName: string) =>
+  `block ${widthClassName} rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-muted`;
 
 export const propertyDetailsEditableInputClassName =
-  "block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50";
+  propertyDetailsEditableControlClassName("w-full");
 
 const inputClassName = propertyDetailsEditableInputClassName;
+const compactDigitInputClassName = `${propertyDetailsEditableControlClassName("w-20")} text-center tabular-nums`;
 
 export function EditableNumericTextInput({
   label,
@@ -35,7 +40,7 @@ export function EditableNumericTextInput({
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-slate-800">{label}</label>
+      <label className="block text-sm font-medium text-foreground">{label}</label>
       <input
         type="text"
         inputMode={inputMode}
@@ -76,6 +81,42 @@ export function EditableNumericTextInput({
   );
 }
 
+export function EditableTwoDigitNumericInput({
+  label,
+  value,
+  onValueChange,
+  disabled = false,
+}: {
+  label: string;
+  value: number | undefined;
+  onValueChange: (next: number | undefined) => void;
+  disabled?: boolean;
+}) {
+  const display = value === undefined ? "" : String(value);
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="\d{1,2}"
+        maxLength={2}
+        autoComplete="off"
+        value={display}
+        onChange={(event) => {
+          const sanitizedValue = sanitizeTwoDigitNumericInput(event.target.value);
+          onValueChange(
+            sanitizedValue === "" ? undefined : Number(sanitizedValue),
+          );
+        }}
+        disabled={disabled}
+        className={compactDigitInputClassName}
+      />
+    </div>
+  );
+}
+
 export function EditableTextInput({
   label,
   value,
@@ -89,7 +130,7 @@ export function EditableTextInput({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-slate-800">{label}</label>
+      <label className="block text-sm font-medium text-foreground">{label}</label>
       <input
         type="text"
         value={value}
@@ -113,8 +154,8 @@ export function EditableCheckbox({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-      <label className="block text-sm font-medium text-slate-800">{label}</label>
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2">
+      <label className="block text-sm font-medium text-foreground">{label}</label>
       <input
         type="checkbox"
         checked={checked}
