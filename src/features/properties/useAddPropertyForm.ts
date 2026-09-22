@@ -7,6 +7,7 @@ import { buildCreatePropertyPayload } from "@/features/properties/addPropertyFor
 import {
   initialFormState,
   subtypeFromPropertyType,
+  type ExternalIdFormRow,
   type FormState,
 } from "@/features/properties/addPropertyFormState";
 import {
@@ -20,13 +21,40 @@ import {
 } from "@/features/properties/addPropertyFormValidation";
 import { useCreateProperty } from "@/features/properties/useCreateProperty";
 import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
+import {
+  DEFAULT_PROPERTY_CURRENCY,
+  isSupportedListingCurrency,
+} from "@/features/currency/types";
+import { toStoredProjectName } from "@/features/properties/projectName";
+import { parseExternalIdPlatform } from "@/features/properties/types";
+import {
+  parseBalconyCount,
+  remapBalconyNeedsVerification,
+} from "@/features/properties/listingBalcony";
 
 const addPropertyDraftStorageKey = "draft:property:new";
 
 type LegacyAddPropertyDraft = FormState & {
   listingLifecycleStatus?: unknown;
   verificationReminderLocal?: unknown;
+  kitchenTypeDefaultVersion?: unknown;
 };
+
+function normalizeDraftExternalIds(
+  rows: ExternalIdFormRow[] | undefined,
+): ExternalIdFormRow[] {
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+
+  return rows.flatMap((row) => {
+    const platform = parseExternalIdPlatform(row.platform);
+    if (!platform) {
+      return [];
+    }
+    return [{ ...row, platform }];
+  });
+}
 
 function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
   const initialState = initialFormState();
@@ -37,10 +65,18 @@ function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
   const {
     listingLifecycleStatus: legacyListingLifecycleStatus,
     verificationReminderLocal: legacyVerificationReminderLocal,
+    kitchenTypeDefaultVersion: legacyKitchenTypeDefaultVersion,
     ...restoredFields
   } = restoredDraft as LegacyAddPropertyDraft;
   void legacyListingLifecycleStatus;
   void legacyVerificationReminderLocal;
+  void legacyKitchenTypeDefaultVersion;
+
+  const restoredBathroomCount = restoredFields.apartment?.bathrooms;
+  const bathrooms =
+    typeof restoredBathroomCount === "string" && restoredBathroomCount.trim() !== ""
+      ? restoredBathroomCount
+      : initialState.apartment.bathrooms;
 
   const restoredAssignment = restoredFields.ownerAssignment;
   const ownerAssignment = restoredAssignment
@@ -62,11 +98,38 @@ function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
   return {
     ...initialState,
     ...restoredFields,
+    currency: isSupportedListingCurrency(String(restoredFields.currency ?? ""))
+      ? restoredFields.currency
+      : DEFAULT_PROPERTY_CURRENCY,
     ownerAssignment,
-    apartment: { ...initialState.apartment, ...restoredFields.apartment },
-    privateHouse: { ...initialState.privateHouse, ...restoredFields.privateHouse },
+    apartment: {
+      ...initialState.apartment,
+      ...restoredFields.apartment,
+      kitchenType: initialState.apartment.kitchenType,
+      bathrooms,
+      project: toStoredProjectName(
+        restoredFields.apartment?.project ?? initialState.apartment.project,
+      ),
+      balconyCount: parseBalconyCount(restoredFields.apartment?.balconyCount),
+      veranda: restoredFields.apartment?.veranda === true,
+      needsVerification: remapBalconyNeedsVerification(
+        restoredFields.apartment?.needsVerification ??
+          initialState.apartment.needsVerification,
+      ),
+    },
+    privateHouse: {
+      ...initialState.privateHouse,
+      ...restoredFields.privateHouse,
+      balconyCount: parseBalconyCount(restoredFields.privateHouse?.balconyCount),
+      veranda: restoredFields.privateHouse?.veranda === true,
+      needsVerification: remapBalconyNeedsVerification(
+        restoredFields.privateHouse?.needsVerification ??
+          initialState.privateHouse.needsVerification,
+      ),
+    },
     landPlot: { ...initialState.landPlot, ...restoredFields.landPlot },
     commercial: { ...initialState.commercial, ...restoredFields.commercial },
+    externalIds: normalizeDraftExternalIds(restoredFields.externalIds),
   };
 }
 

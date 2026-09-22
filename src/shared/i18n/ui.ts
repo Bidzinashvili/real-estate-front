@@ -120,3 +120,6 @@ export function atLeastOneMonthMessage(label: string): string {
 export function wholeNumberAtLeastOneMessage(label: string): string {
   return `${label} უნდა იყოს მთელი რიცხვი და მინიმუმ 1.`;
 }
+
+export const INVALID_EXTERNAL_ID_PLATFORM_MESSAGE =
+  "გარე ID-ის პლატფორმა არასწორია. აირჩიეთ MyHome ან SS.ge.";

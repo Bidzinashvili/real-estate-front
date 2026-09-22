@@ -9,7 +9,7 @@ import { useCurrentUser } from "@/shared/hooks";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import type { Client } from "@/features/clients/types";
 import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import {
   DEAL_TYPES,
   CLIENT_STATUSES,
@@ -39,7 +39,6 @@ import { AdvancedSearchSheet } from "@/widgets/DatabaseList/AdvancedSearchSheet"
 import { NeverOpenedFilter } from "@/widgets/DatabaseList/NeverOpenedFilter";
 import { CLIENT_LIST_DEFAULT_LIMIT } from "@/features/clients/clientListUrlParams";
 import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
 
 const SORT_OPTIONS: { value: ClientSortBy; label: string }[] = [
   { value: "createdAt", label: "ატვირთვის თარიღი" },
@@ -217,16 +216,17 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
         />
         <OnlyMineToggle isActive={isMineScope} onToggle={toggleOnlyMine} />
         <AdminModeToggle />
-        <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
-          <span className="hidden font-medium sm:inline">სორტირება</span>
-          <InlineSelect
+        <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto">
+          <OptionChips
+            label="სორტირება"
             aria-label="კლიენტების სორტირება"
             value={state.sortBy}
             onChange={handleSortChange}
             options={SORT_OPTIONS}
+            size="compact"
           />
-          <span className="h-4 w-px bg-border" />
-          <InlineSelect
+          <OptionChips
+            label="მიმართულება"
             aria-label="სორტირების მიმართულება"
             value={state.order}
             onChange={handleOrderChange}
@@ -235,6 +235,7 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
                 ? LAST_OPENED_ORDER_OPTIONS
                 : ORDER_OPTIONS
             }
+            size="compact"
           />
         </div>
       </div>
@@ -249,15 +250,15 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
       />
 
       <div className="flex flex-col gap-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+        <OptionChips
+          label="გარიგების ტიპი"
+          aria-label="გარიგების ტიპით გაფილტვრა"
+          value={state.dealType}
+          onChange={handleDealTypeChange}
+          options={DEAL_TYPE_OPTIONS}
+          size="compact"
+        />
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
-            <InlineSelect
-              aria-label="გარიგების ტიპით გაფილტვრა"
-              value={state.dealType}
-              onChange={handleDealTypeChange}
-              options={DEAL_TYPE_OPTIONS}
-            />
-          </div>
           <input
             type="text"
             value={state.district}
@@ -318,23 +319,13 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
         }
       >
         <div className="space-y-3">
-          <span className="block text-xs font-medium text-muted-foreground">
-            სტატუსი
-          </span>
-          <NativeSelectSurface>
-            <select
-              aria-label="სტატუსით გაფილტვრა"
-              value={state.status}
-              onChange={(event) => handleStatusChange(event.target.value)}
-              className="w-full appearance-none rounded-lg border border-border bg-card py-2 pl-3 pr-10 text-sm text-foreground shadow-sm outline-none focus:border-primary"
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value || "all"} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </NativeSelectSurface>
+          <OptionChips
+            label="სტატუსი"
+            aria-label="სტატუსით გაფილტვრა"
+            value={state.status}
+            onChange={handleStatusChange}
+            options={STATUS_OPTIONS}
+          />
           <CreatedAtDateRangeFilter
             createdFrom={state.lastOpenedFrom}
             createdTo={state.lastOpenedTo}

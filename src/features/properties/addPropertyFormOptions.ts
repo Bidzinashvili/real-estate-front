@@ -19,19 +19,24 @@ import {
   LAND_CATEGORIES,
 } from "@/features/properties/types";
 import {
-  BUILDING_AGE_TYPE_FIELD_LABEL,
   BUILDING_AGE_TYPE_LABELS,
   BUILDING_CONDITION_LABELS,
-  CLIENT_PREFERENCE_LABELS,
+  BUILDING_STRUCTURE_FIELD_LABEL,
   COMMERCIAL_STATUS_LABELS,
   HOTEL_SCOPE_LABELS,
+  KITCHEN_TYPE_FIELD_LABEL,
+  APARTMENT_PROJECT_FIELD_LABEL,
   KITCHEN_TYPE_LABELS,
   LAND_CATEGORY_LABELS,
   PROPERTY_TYPE_LABELS,
   RENOVATION_LABELS,
 } from "@/shared/i18n/enumLabels";
 
-export { BUILDING_AGE_TYPE_FIELD_LABEL };
+export {
+  BUILDING_STRUCTURE_FIELD_LABEL,
+  KITCHEN_TYPE_FIELD_LABEL,
+  APARTMENT_PROJECT_FIELD_LABEL,
+};
 
 export const GEORGIAN_CITY_OPTIONS = [
   { value: "თბილისი", label: "თბილისი" },
@@ -83,27 +88,49 @@ export const BUILDING_CONDITION_OPTIONS: ReadonlyArray<{
   value: BuildingCondition;
   label: string;
 }> = [
-  { value: "OLD", label: BUILDING_CONDITION_LABELS.OLD },
   { value: "NEW", label: BUILDING_CONDITION_LABELS.NEW },
+  { value: "OLD", label: BUILDING_CONDITION_LABELS.OLD },
   { value: "UNDER_CONSTRUCTION", label: BUILDING_CONDITION_LABELS.UNDER_CONSTRUCTION },
 ];
 
-export const BUILDING_AGE_TYPE_SELECT_OPTIONS: ReadonlyArray<{
-  value: BuildingAgeType | "";
+export const BUILDING_AGE_TYPE_OPTIONS: ReadonlyArray<{
+  value: BuildingAgeType;
   label: string;
 }> = [
-  { value: "", label: CLIENT_PREFERENCE_LABELS.NOT_SET },
-  { value: "NEW", label: BUILDING_AGE_TYPE_LABELS.NEW },
-  { value: "OLD", label: BUILDING_AGE_TYPE_LABELS.OLD },
+  { value: "NEW_OLD", label: BUILDING_AGE_TYPE_LABELS.NEW_OLD },
+  { value: "NEW_GOOD", label: BUILDING_AGE_TYPE_LABELS.NEW_GOOD },
 ];
 
 export const KITCHEN_TYPE_OPTIONS: ReadonlyArray<{
   value: KitchenType;
   label: string;
 }> = [
-  { value: "SEPARATE", label: KITCHEN_TYPE_LABELS.SEPARATE },
   { value: "STUDIO", label: KITCHEN_TYPE_LABELS.STUDIO },
+  { value: "SEPARATE", label: KITCHEN_TYPE_LABELS.SEPARATE },
 ];
+
+export const DEFAULT_NEW_APARTMENT_KITCHEN_TYPE: KitchenType = "STUDIO";
+
+export const DEFAULT_NEW_APARTMENT_BATHROOM_COUNT = "1";
+
+const BATHROOM_COUNT_CHIP_VALUES = ["1", "2", "3", "4", "5"] as const;
+
+export function bathroomCountChipOptions(
+  currentValue: string,
+): ReadonlyArray<{ value: string; label: string }> {
+  const options = BATHROOM_COUNT_CHIP_VALUES.map((countValue) => ({
+    value: countValue,
+    label: countValue,
+  }));
+  const trimmedValue = currentValue.trim();
+  if (
+    trimmedValue !== "" &&
+    !(BATHROOM_COUNT_CHIP_VALUES as readonly string[]).includes(trimmedValue)
+  ) {
+    return [...options, { value: trimmedValue, label: trimmedValue }];
+  }
+  return options;
+}
 
 export const LAND_CATEGORY_SELECT_OPTIONS: ReadonlyArray<{
   value: LandCategory | "";
@@ -224,6 +251,41 @@ export function formatBuildingAgeTypeLabel(
     return BUILDING_AGE_TYPE_LABELS[trimmed];
   }
   return null;
+}
+
+export function formatBuildingStructureDisplay(
+  condition: string | null | undefined,
+  ageType?: string | null | undefined,
+): string | null {
+  const conditionLabel = formatBuildingConditionLabel(condition);
+  if (!conditionLabel) return null;
+  if (condition === "NEW") {
+    const ageTypeLabel = formatBuildingAgeTypeLabel(ageType);
+    if (ageTypeLabel) {
+      return `${conditionLabel} · ${ageTypeLabel}`;
+    }
+  }
+  return conditionLabel;
+}
+
+export function parseBuildingConditionFilterValue(
+  raw: string,
+): BuildingCondition | "" {
+  if (raw === "") return "";
+  return isBuildingCondition(raw) ? raw : "";
+}
+
+export function parseBuildingAgeTypeFilterValue(
+  raw: string,
+): BuildingAgeType | "" {
+  if (raw === "") return "";
+  return isBuildingAgeType(raw) ? raw : "";
+}
+
+export function propertyTypeAllowsBuildingAgeType(
+  propertyType: PropertyType | "",
+): boolean {
+  return propertyType === "" || propertyType === "APARTMENT";
 }
 
 export function formatKitchenTypeLabel(

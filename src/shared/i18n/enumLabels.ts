@@ -30,20 +30,24 @@ export const RENOVATION_LABELS = {
 } as const;
 
 export const BUILDING_CONDITION_LABELS = {
-  OLD: "ძველი",
   NEW: "ახალი",
+  OLD: "ძველი",
   UNDER_CONSTRUCTION: "მშენებარე",
 } as const;
 
 export const BUILDING_AGE_TYPE_LABELS = {
-  NEW: "ახალი",
-  OLD: "ძველი",
+  NEW_OLD: "ახალძველი",
+  NEW_GOOD: "ახალი კარგი",
 } as const;
 
-export const BUILDING_AGE_TYPE_FIELD_LABEL = "კორპუსის ტიპი";
+export const BUILDING_STRUCTURE_FIELD_LABEL = "კორპუსი";
+
+export const KITCHEN_TYPE_FIELD_LABEL = "სამზარეულო";
+
+export const APARTMENT_PROJECT_FIELD_LABEL = "არასტანდარტული";
 
 export const KITCHEN_TYPE_LABELS = {
-  SEPARATE: "გამოყოფილი",
+  SEPARATE: "ცალკე",
   STUDIO: "სტუდიო",
 } as const;
 
@@ -113,9 +117,30 @@ export const BOOLEAN_DISPLAY_LABELS = {
   no: "არა",
 } as const;
 
+export const LISTING_PARKING_FIELD_LABEL = "პარკინგი";
+export const LISTING_PARKING_SPACES_FIELD_LABEL = "პარკინგის ადგილები";
+
+export const LISTING_PARKING_LABELS = {
+  NO: "არა",
+  YES: "კი",
+  TO_VERIFY: "გადასამოწმებელი",
+} as const;
+
+export const LISTING_PARKING_TYPE_LABELS = {
+  SHARED_YARD: "საერთო ეზოს პარკინგი",
+  PRIVATE_YARD: "საკუთარი ეზოს პარკინგი",
+  UNDERGROUND: "მიწისქვეშა პარკინგი",
+  GARAGE: "ავტოფარეხი",
+} as const;
+
 export const LABEL_TYPE_LABELS = {
   STREET: "ქუჩა",
   CUSTOM: "საკუთარი",
+} as const;
+
+export const EXTERNAL_ID_PLATFORM_LABELS = {
+  MYHOME: "MyHome",
+  SS_GE: "SS.ge",
 } as const;
 
 export function lookupEnumLabel(

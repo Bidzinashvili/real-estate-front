@@ -6,8 +6,17 @@ import {
   PROPERTY_CATALOG_LABEL_CLASS as LABEL_CLASS,
 } from "@/widgets/Properties/propertyCatalogFilterSharedStyles";
 import { NumericRangeFields } from "@/widgets/DatabaseList/NumericRangeFields";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
-import type { PropertyBalconyFilter } from "@/features/properties/propertyCatalogUrlParams";
+import { MultiOptionChips, OptionChips } from "@/shared/ui/OptionChips";
+import type {
+  PropertyBalconyFilter,
+  PropertyParkingFilter,
+} from "@/features/properties/propertyCatalogUrlParams";
+import {
+  LISTING_PARKING_OPTIONS,
+  LISTING_PARKING_TYPE_OPTIONS,
+  parseListingParkingFilterValue,
+} from "@/features/properties/listingParking";
+import { LISTING_PARKING_FIELD_LABEL } from "@/shared/i18n/enumLabels";
 
 const BALCONY_OPTIONS: ReadonlyArray<{
   value: PropertyBalconyFilter;
@@ -17,6 +26,11 @@ const BALCONY_OPTIONS: ReadonlyArray<{
   { value: "true", label: "არის" },
   { value: "false", label: "არ არის" },
 ];
+
+const PARKING_FILTER_OPTIONS: ReadonlyArray<{
+  value: PropertyParkingFilter;
+  label: string;
+}> = [{ value: "", label: "ყველა" }, ...LISTING_PARKING_OPTIONS];
 
 type PropertyCatalogMoreFiltersDetailsProps = {
   catalog: UsePropertiesCatalogResult;
@@ -33,6 +47,7 @@ export function PropertyCatalogMoreFiltersDetails({
   catalog,
 }: PropertyCatalogMoreFiltersDetailsProps) {
   const { state } = catalog;
+  const showParkingTypes = state.parking !== "NO" && state.parking !== "TO_VERIFY";
 
   return (
     <div className="space-y-4">
@@ -79,24 +94,35 @@ export function PropertyCatalogMoreFiltersDetails({
           placeholder="სულ სართული"
         />
       </div>
-      <div>
-        <span className={LABEL_CLASS}>აივანი</span>
-        <NativeSelectSurface>
-          <select
-            aria-label="აივნით გაფილტვრა"
-            value={state.balcony}
-            onChange={(event) =>
-              catalog.setBalcony(parseBalconySelectValue(event.target.value))
-            }
-            className="w-full appearance-none rounded-lg border border-border bg-card py-2 pl-3 pr-10 text-sm text-foreground shadow-sm outline-none focus:border-primary"
-          >
-            {BALCONY_OPTIONS.map((option) => (
-              <option key={option.value || "all"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </NativeSelectSurface>
+      <OptionChips
+        label="აივანი"
+        labelClassName={LABEL_CLASS}
+        aria-label="აივნით გაფილტვრა"
+        value={state.balcony}
+        onChange={(selectedValue) =>
+          catalog.setBalcony(parseBalconySelectValue(selectedValue))
+        }
+        options={BALCONY_OPTIONS}
+      />
+      <div className="space-y-3">
+        <OptionChips
+          label={LISTING_PARKING_FIELD_LABEL}
+          labelClassName={LABEL_CLASS}
+          aria-label="პარკინგით გაფილტვრა"
+          value={state.parking}
+          onChange={(selectedValue) =>
+            catalog.setParking(parseListingParkingFilterValue(selectedValue))
+          }
+          options={PARKING_FILTER_OPTIONS}
+        />
+        {showParkingTypes ? (
+          <MultiOptionChips
+            aria-label="პარკინგის ტიპით გაფილტვრა"
+            value={state.parkingTypes}
+            onChange={catalog.setParkingTypes}
+            options={LISTING_PARKING_TYPE_OPTIONS}
+          />
+        ) : null}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

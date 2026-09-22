@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { UpdatePropertyRequestBody } from "@/features/properties/propertyApiTypes";
 import type { RecordColor } from "@/features/recordColor/recordColor";
@@ -12,6 +13,9 @@ import type {
   HotelScope,
   KitchenType,
   LandCategory,
+  ListingParking,
+  ListingParkingType,
+  ExternalIdPlatform,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
 import type { NestedPropertyOwnerInput } from "@/features/propertyOwners/types";
@@ -52,13 +56,17 @@ export type PropertyApartmentCreate = {
   floor: number;
   totalFloors: number;
   ceilingHeight?: number;
+  balconyCount?: number;
   balconyArea?: number;
+  veranda?: boolean;
   needsVerification?: string[];
   elevator?: boolean | null;
   centralHeating?: boolean | null;
   airConditioner?: boolean | null;
   kitchenType: KitchenType;
   furnished?: boolean | null;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
   buildingNumber?: string;
   project?: string;
@@ -76,11 +84,15 @@ export type PropertyPrivateHouseCreate = {
   totalArea: number;
   rooms: number;
   bedrooms: number;
+  balconyCount?: number;
   balconyArea?: number;
+  veranda?: boolean;
   needsVerification?: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
   pool: boolean;
   fruitTrees: boolean;
@@ -117,6 +129,8 @@ export type PropertyCommercialCreate = {
   needsVerification?: string[];
   centralHeating: boolean;
   airConditioner: boolean;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
   electricity: boolean;
   water: boolean;
@@ -138,6 +152,7 @@ export type CreatePropertyDto = {
   district?: string;
   address: string;
   pricePublic: number;
+  currency: SupportedListingCurrency;
   ownerName?: string;
   ownerPhones?: string[];
   cadastralCode?: string;
@@ -148,7 +163,7 @@ export type CreatePropertyDto = {
   myHomeId?: string;
   ssGeId?: string;
   externalIds?: Array<{
-    platform: "MYHOME" | "SSGE";
+    platform: ExternalIdPlatform;
     value: string;
     enteredAt?: string;
   }>;

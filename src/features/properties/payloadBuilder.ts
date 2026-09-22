@@ -2,8 +2,11 @@ import { isTbilisiCity } from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import { persistPropertyFieldLocks, buildPropertyFieldLocksUpdate } from "@/features/matching/persistEntityLock";
 import { buildPatchNeedsVerification } from "@/features/properties/apartmentVerification";
+import { omitBalconyCountIfToVerify } from "@/features/properties/listingBalcony";
+import { sanitizeListingParkingPatch } from "@/features/properties/listingParking";
 import type {
   CommercialStatus,
   HotelScope,
@@ -15,6 +18,7 @@ import type {
   PropertyType,
   PropertyUpdatePayload,
 } from "@/features/properties/types";
+import { buildingAgeTypeForCondition } from "@/features/properties/types";
 
 export type PropertyFormLandPlot = {
   landArea?: number;
@@ -29,12 +33,14 @@ export type PropertyFormValues = {
   propertyType: PropertyType;
   hotelScope: HotelScope | null;
   dealType: DealType;
+  hideFromOthers: boolean;
   city: string;
   district: string;
   address: string;
   selectedStreetId: string | null;
   pricePublic: number | undefined;
   priceInternal: number | undefined;
+  currency: SupportedListingCurrency;
   publicComment: string;
   privateComment: string;
   internalText: string;
@@ -45,6 +51,21 @@ export type PropertyFormValues = {
   commercial: PropertyCommercialUpdate | null;
   fieldLocks: PropertyFieldLocks;
 };
+
+function arePrimitiveArraysEqual(left: unknown, right: unknown): boolean {
+  if (!Array.isArray(left) || !Array.isArray(right)) {
+    return false;
+  }
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let itemIndex = 0; itemIndex < left.length; itemIndex += 1) {
+    if (left[itemIndex] !== right[itemIndex]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function addIfChanged<T extends Record<string, unknown>>(
   base: T | null,
@@ -60,6 +81,12 @@ function addIfChanged<T extends Record<string, unknown>>(
     const prev = base?.[key];
     if (next === undefined) continue;
     if (typeof next === "number" && Number.isNaN(next)) continue;
+    if (Array.isArray(next) || Array.isArray(prev)) {
+      if (!arePrimitiveArraysEqual(next, prev)) {
+        result[String(key)] = next;
+      }
+      continue;
+    }
     if (next !== prev) {
       result[String(key)] = next;
     }
@@ -85,7 +112,7 @@ function collectVerifiedApartmentKeys(
   }
   if (patch.goodView === true || patch.goodView === false) verifiedKeys.push("goodView");
   if (typeof patch.parkingSpaces === "number") verifiedKeys.push("parkingSpaces");
-  if (typeof patch.balconyArea === "number") verifiedKeys.push("balconyArea");
+  if (typeof patch.balconyCount === "number") verifiedKeys.push("balconyCount");
   return verifiedKeys;
 }
 
@@ -103,17 +130,34 @@ function buildApartmentPatch(
   const currentWithoutNv = { ...current, needsVerification: undefined };
   const valuePatch = addIfChanged(initialWithoutNv, currentWithoutNv);
   const merged = mergeMinRentalPeriodIntoPatch(initial, current, valuePatch) ?? {};
-  const verifiedKeysInPatch = collectVerifiedApartmentKeys(merged);
+  const resolvedAgeType = buildingAgeTypeForCondition(
+    current.buildingCondition ?? initial?.buildingCondition,
+    current.buildingAgeType,
+  );
+  const initialAgeType = buildingAgeTypeForCondition(
+    initial?.buildingCondition,
+    initial?.buildingAgeType,
+  );
+  if (resolvedAgeType !== initialAgeType) {
+    merged.buildingAgeType = resolvedAgeType;
+  } else {
+    delete merged.buildingAgeType;
+  }
+  const sanitizedMerged = omitBalconyCountIfToVerify(
+    merged,
+    current.needsVerification ?? [],
+  );
+  const verifiedKeysInPatch = collectVerifiedApartmentKeys(sanitizedMerged);
   const needsVerification = buildPatchNeedsVerification({
     initialNeedsVerification: initial?.needsVerification ?? [],
     currentNeedsVerification: current.needsVerification ?? [],
     verifiedKeysInPatch,
   });
   if (needsVerification !== undefined) {
-    merged.needsVerification = needsVerification;
+    sanitizedMerged.needsVerification = needsVerification;
   }
 
-  return Object.keys(merged).length > 0 ? merged : undefined;
+  return Object.keys(sanitizedMerged).length > 0 ? sanitizedMerged : undefined;
 }
 
 function mergeMinRentalPeriodIntoPatch<T extends Record<string, unknown>>(
@@ -231,6 +275,10 @@ export function buildPropertyUpdatePayload(
     payload.dealType = current.dealType;
   }
 
+  if (initial.hideFromOthers !== current.hideFromOthers) {
+    payload.hideFromOthers = current.hideFromOthers;
+  }
+
   if (listingPropertyType === "HOTEL") {
     const initialScope = initial.hotelScope ?? null;
     const currentScope = current.hotelScope ?? null;
@@ -253,6 +301,9 @@ export function buildPropertyUpdatePayload(
       payload.priceInternal = current.priceInternal;
     }
   }
+  if (initial.currency !== current.currency) {
+    payload.currency = current.currency;
+  }
   if (initial.publicComment !== current.publicComment) {
     payload.publicComment = current.publicComment;
   }
@@ -271,23 +322,42 @@ export function buildPropertyUpdatePayload(
     payload.removeLabelIds = labelPatch.removeLabelIds;
   }
 
-  const apartmentPatch = buildApartmentPatch(initial.apartment, current.apartment);
+  const apartmentPatch = sanitizeListingParkingPatch(
+    buildApartmentPatch(initial.apartment, current.apartment),
+    current.apartment?.parking ?? initial.apartment?.parking,
+  );
   if (apartmentPatch) payload.apartment = apartmentPatch;
 
-  const privateHousePatch = mergeMinRentalPeriodIntoPatch(
+  const privateHouseValuePatch = mergeMinRentalPeriodIntoPatch(
     initial.privateHouse,
     current.privateHouse,
     addIfChanged(initial.privateHouse, current.privateHouse),
+  );
+  const privateHouseBalconyPatch =
+    privateHouseValuePatch && current.privateHouse
+      ? omitBalconyCountIfToVerify(
+          privateHouseValuePatch,
+          current.privateHouse.needsVerification ?? [],
+        )
+      : privateHouseValuePatch;
+  const privateHousePatch = sanitizeListingParkingPatch(
+    privateHouseBalconyPatch && Object.keys(privateHouseBalconyPatch).length > 0
+      ? privateHouseBalconyPatch
+      : undefined,
+    current.privateHouse?.parking ?? initial.privateHouse?.parking,
   );
   if (privateHousePatch) payload.privateHouse = privateHousePatch;
 
   const landPlot = buildLandPlotPatch(initial.landPlot, current.landPlot);
   if (landPlot) payload.landPlot = landPlot;
 
-  const commercialPatch = mergeMinRentalPeriodIntoPatch(
-    initial.commercial,
-    current.commercial,
-    addIfChanged(initial.commercial, current.commercial),
+  const commercialPatch = sanitizeListingParkingPatch(
+    mergeMinRentalPeriodIntoPatch(
+      initial.commercial,
+      current.commercial,
+      addIfChanged(initial.commercial, current.commercial),
+    ),
+    current.commercial?.parking ?? initial.commercial?.parking,
   );
   if (commercialPatch) payload.commercial = commercialPatch;
 

@@ -10,6 +10,22 @@ import {
   type PropertySortBy,
 } from "@/features/properties/getPropertiesQuery";
 import { isPropertyType, type PropertyType } from "@/features/properties/types";
+import type {
+  BuildingAgeType,
+  BuildingCondition,
+  ListingParking,
+  ListingParkingType,
+} from "@/features/properties/propertyModelTypes";
+import {
+  parseBuildingAgeTypeFilterValue,
+  parseBuildingConditionFilterValue,
+  propertyTypeAllowsBuildingAgeType,
+} from "@/features/properties/addPropertyFormOptions";
+import { buildingAgeTypeForCondition } from "@/features/properties/propertyModelTypes";
+import {
+  parseListingParkingFilterValue,
+  parseListingParkingTypes,
+} from "@/features/properties/listingParking";
 import {
   parseDecimalInput,
   parseIntegerInput,
@@ -34,6 +50,7 @@ import {
 export const CATALOG_LIMIT_OPTIONS = [10, 20, 50] as const;
 
 export type PropertyBalconyFilter = "" | "true" | "false";
+export type PropertyParkingFilter = "" | ListingParking;
 
 export type PropertyCatalogUrlState = {
   searchInput: string;
@@ -46,6 +63,8 @@ export type PropertyCatalogUrlState = {
   dealType: DealType | "";
   lifecycleStatus: PropertyStatus | "";
   propertyType: PropertyType | "";
+  buildingCondition: BuildingCondition | "";
+  buildingAgeType: BuildingAgeType | "";
   city: string;
   district: string;
   minPrice: string;
@@ -59,6 +78,8 @@ export type PropertyCatalogUrlState = {
   floorTo: string;
   totalFloors: string;
   balcony: PropertyBalconyFilter;
+  parking: PropertyParkingFilter;
+  parkingTypes: ListingParkingType[];
   yardArea: string;
   houseArea: string;
   landArea: string;
@@ -131,6 +152,8 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   dealType: "",
   lifecycleStatus: "",
   propertyType: "",
+  buildingCondition: "",
+  buildingAgeType: "",
   city: "",
   district: "",
   minPrice: "",
@@ -144,6 +167,8 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   floorTo: "",
   totalFloors: "",
   balcony: "",
+  parking: "",
+  parkingTypes: [],
   yardArea: "",
   houseArea: "",
   landArea: "",
@@ -159,6 +184,21 @@ export const DEFAULT_CATALOG_URL_STATE: PropertyCatalogUrlState = {
   page: 1,
   limit: CATALOG_LIMIT_OPTIONS[0],
 };
+
+function resolveCatalogBuildingAgeType(
+  state: Pick<
+    PropertyCatalogUrlState,
+    "propertyType" | "buildingCondition" | "buildingAgeType"
+  >,
+): BuildingAgeType | "" {
+  if (!propertyTypeAllowsBuildingAgeType(state.propertyType)) {
+    return "";
+  }
+  return buildingAgeTypeForCondition(
+    state.buildingCondition,
+    state.buildingAgeType,
+  ) ?? "";
+}
 
 function parsePositiveInt(raw: string | null, fallback: number): number {
   if (raw === null || raw === "") return fallback;
@@ -220,6 +260,22 @@ export function parsePropertyCatalogUrl(
   const status = searchParams.get("status");
   if (status && isPropertyStatus(status)) next.lifecycleStatus = status;
 
+  const buildingCondition = parseBuildingConditionFilterValue(
+    searchParams.get("buildingCondition") ?? "",
+  );
+  if (buildingCondition) next.buildingCondition = buildingCondition;
+
+  const buildingAgeType = parseBuildingAgeTypeFilterValue(
+    searchParams.get("buildingAgeType") ?? "",
+  );
+  if (
+    buildingAgeType &&
+    buildingCondition === "NEW" &&
+    propertyTypeAllowsBuildingAgeType(next.propertyType)
+  ) {
+    next.buildingAgeType = buildingAgeType;
+  }
+
   const city = searchParams.get("city");
   if (city) next.city = city;
 
@@ -262,6 +318,15 @@ export function parsePropertyCatalogUrl(
   if (totalFloors) next.totalFloors = totalFloors;
 
   next.balcony = parseBalconyFilter(searchParams.get("balcony"));
+
+  const parking = parseListingParkingFilterValue(searchParams.get("parking") ?? "");
+  if (parking) next.parking = parking;
+
+  const parkingTypes = parseListingParkingTypes(searchParams.getAll("parkingTypes"));
+  next.parkingTypes =
+    next.parking === "NO" || next.parking === "TO_VERIFY"
+      ? []
+      : parkingTypes;
 
   const yardArea = searchParams.get("yardArea");
   if (yardArea) next.yardArea = yardArea;
@@ -319,6 +384,13 @@ export function propertyCatalogUrlStateToSearchParams(
   if (state.propertyType) params.set("type", state.propertyType);
   if (state.dealType) params.set("dealType", state.dealType);
   if (state.lifecycleStatus) params.set("status", state.lifecycleStatus);
+  if (state.buildingCondition) {
+    params.set("buildingCondition", state.buildingCondition);
+  }
+  const catalogAgeType = resolveCatalogBuildingAgeType(state);
+  if (catalogAgeType) {
+    params.set("buildingAgeType", catalogAgeType);
+  }
   if (textFilters.city.trim()) params.set("city", textFilters.city.trim());
   if (textFilters.district.trim()) params.set("district", textFilters.district.trim());
   if (textFilters.minPrice.trim()) params.set("minPrice", textFilters.minPrice.trim());
@@ -353,6 +425,12 @@ export function propertyCatalogUrlStateToSearchParams(
   if (floorRange) params.set("floorRange", floorRange);
 
   if (state.balcony) params.set("balcony", state.balcony);
+  if (state.parking) params.set("parking", state.parking);
+  const catalogParkingTypes =
+    state.parking === "NO" || state.parking === "TO_VERIFY" ? [] : state.parkingTypes;
+  for (const parkingType of catalogParkingTypes) {
+    params.append("parkingTypes", parkingType);
+  }
 
   const createdDates = resolveCreatedDateQuery(state.createdFrom, state.createdTo);
   if (!createdDates.error && createdDates.createdFrom) {
@@ -447,6 +525,11 @@ export function catalogStateToApiQuery(
     totalFloors: parseIntegerInput(textFilters.totalFloors),
     balcony:
       state.balcony === "true" ? true : state.balcony === "false" ? false : undefined,
+    parking: state.parking || undefined,
+    parkingTypes:
+      state.parking === "NO" || state.parking === "TO_VERIFY" || state.parkingTypes.length === 0
+        ? undefined
+        : state.parkingTypes,
     yardArea: parseDecimalInput(textFilters.yardArea),
     houseArea: parseDecimalInput(textFilters.houseArea),
     landArea: parseDecimalInput(textFilters.landArea),
@@ -463,6 +546,8 @@ export function catalogStateToApiQuery(
         : lastOpenedDates.lastOpenedTo,
     neverOpened: state.neverOpened ? true : undefined,
     readyToUpload: state.readyToUpload ? true : undefined,
+    buildingCondition: state.buildingCondition || undefined,
+    buildingAgeType: resolveCatalogBuildingAgeType(state) || undefined,
     sortBy: state.sortBy,
     order: state.order,
     page: state.page,

@@ -7,6 +7,7 @@ import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientRequirements } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
 import { ClientDetailsRequirementRow } from "./ClientDetailsRequirementRow";
+import { formatProjectDisplayName } from "@/features/properties/projectName";
 
 type ClientDetailsRequirementsSectionProps = {
   requirements: ClientRequirements;
@@ -100,7 +101,7 @@ export function ClientDetailsRequirementsSection({
           onLockChange={(nextLock) => onLockChange("renovations", nextLock)}
         />
         <ClientDetailsRequirementRow
-          label="შენობის მდგომარეობა"
+          label="კორპუსი"
           value={
             req.buildingCondition ? BUILDING_CONDITION_LABELS[req.buildingCondition] : null
           }
@@ -187,7 +188,9 @@ export function ClientDetailsRequirementsSection({
           </div>
           <span className="text-sm font-medium text-foreground">
             {(req.projectExclude ?? []).length > 0
-              ? (req.projectExclude ?? []).join(", ")
+              ? (req.projectExclude ?? [])
+                  .map((projectName) => formatProjectDisplayName(projectName))
+                  .join(", ")
               : "—"}
           </span>
         </div>

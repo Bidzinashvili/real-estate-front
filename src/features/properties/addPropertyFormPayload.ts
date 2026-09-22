@@ -5,7 +5,7 @@ import {
   isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import {
-  isBuildingAgeType,
+  buildingAgeTypeForCondition,
   isCommercialStatus,
   isLandCategory,
 } from "@/features/properties/types";
@@ -19,6 +19,9 @@ import {
   omitUnspecifiedBoolean,
   sanitizeNeedsVerification,
 } from "@/features/properties/apartmentVerification";
+import { toStoredProjectName } from "@/features/properties/projectName";
+import { listingParkingWriteFields } from "@/features/properties/listingParking";
+import { listingBalconyCreateFields } from "@/features/properties/listingBalcony";
 import { buildOwnerWritePayload } from "@/features/propertyOwners/ownerContactDrafts";
 import {
   atLeastOneMessage,
@@ -156,9 +159,11 @@ export function buildCreatePropertyPayload(
   const payload: CreatePropertyDto = {
     propertyType: form.propertyType,
     dealType: form.dealType,
+    hideFromOthers: form.hideFromOthers,
     city,
     address,
     pricePublic,
+    currency: form.currency,
   };
   if (ownerWrite.payload && "ownerId" in ownerWrite.payload) {
     payload.ownerId = ownerWrite.payload.ownerId;
@@ -182,7 +187,7 @@ export function buildCreatePropertyPayload(
     externalIds.find((externalId) => externalId.platform === "MYHOME")?.value ??
     form.myHomeId.trim();
   const ssGeId =
-    externalIds.find((externalId) => externalId.platform === "SSGE")?.value ??
+    externalIds.find((externalId) => externalId.platform === "SS_GE")?.value ??
     form.ssGeId.trim();
 
   if (myHomeId) payload.myHomeId = myHomeId;
@@ -225,13 +230,19 @@ export function buildCreatePropertyPayload(
       ),
       kitchenType: apartment.kitchenType,
     };
-    if (!createNeedsVerification.includes("balconyArea")) {
-      payload.apartment.balconyArea = parseOptionalNumber(
-        apartment.balconyArea,
-        "ბინის აივნის ფართობი",
-        errors,
-      );
-    }
+    Object.assign(
+      payload.apartment,
+      listingBalconyCreateFields({
+        balconyCount: apartment.balconyCount,
+        needsVerification: createNeedsVerification,
+        balconyArea: parseOptionalNumber(
+          apartment.balconyArea,
+          "ბინის აივნის ფართობი",
+          errors,
+        ),
+        veranda: apartment.veranda,
+      }),
+    );
     if (!createNeedsVerification.includes("parkingSpaces")) {
       payload.apartment.parkingSpaces = parseOptionalNumber(
         apartment.parkingSpaces,
@@ -239,6 +250,10 @@ export function buildCreatePropertyPayload(
         errors,
       );
     }
+    Object.assign(
+      payload.apartment,
+      listingParkingWriteFields(apartment.parking, apartment.parkingTypes),
+    );
     const elevatorValue = omitUnspecifiedBoolean(apartment.elevator);
     if (elevatorValue !== undefined) payload.apartment.elevator = elevatorValue;
     const centralHeatingValue = omitUnspecifiedBoolean(apartment.centralHeating);
@@ -262,13 +277,17 @@ export function buildCreatePropertyPayload(
     if (createNeedsVerification.length > 0) {
       payload.apartment.needsVerification = createNeedsVerification;
     }
-    if (isBuildingAgeType(apartment.buildingAgeType)) {
-      payload.apartment.buildingAgeType = apartment.buildingAgeType;
+    const buildingAgeType = buildingAgeTypeForCondition(
+      apartment.buildingCondition,
+      apartment.buildingAgeType,
+    );
+    if (buildingAgeType) {
+      payload.apartment.buildingAgeType = buildingAgeType;
     }
     if (apartment.buildingNumber.trim()) {
       payload.apartment.buildingNumber = apartment.buildingNumber.trim();
     }
-    if (apartment.project.trim()) payload.apartment.project = apartment.project.trim();
+    if (apartment.project.trim()) payload.apartment.project = toStoredProjectName(apartment.project);
     if (apartment.renovation.trim()) {
       payload.apartment.renovation = apartment.renovation.trim();
     }
@@ -294,12 +313,6 @@ export function buildCreatePropertyPayload(
       totalArea: parseNumber(privateHouse.totalArea, "საერთო ფართობი", errors),
       rooms: parseNumber(privateHouse.rooms, "კერძო სახლის ოთახები", errors),
       bedrooms: parseNumber(privateHouse.bedrooms, "კერძო სახლის საძინებლები", errors),
-      balconyArea: parseOptionalNumber(
-        privateHouse.balconyArea,
-        "კერძო სახლის აივნის ფართობი",
-        errors,
-      ),
-      needsVerification: privateHouse.needsVerification,
       centralHeating: privateHouse.centralHeating,
       airConditioner: privateHouse.airConditioner,
       furnished: privateHouse.furnished,
@@ -308,6 +321,7 @@ export function buildCreatePropertyPayload(
         "კერძო სახლის პარკინგის ადგილები",
         errors,
       ),
+      ...listingParkingWriteFields(privateHouse.parking, privateHouse.parkingTypes),
       pool: privateHouse.pool,
       fruitTrees: privateHouse.fruitTrees,
       electricity: privateHouse.electricity,
@@ -315,6 +329,22 @@ export function buildCreatePropertyPayload(
       gas: privateHouse.gas,
       sewage: privateHouse.sewage,
     };
+    Object.assign(
+      payload.privateHouse,
+      listingBalconyCreateFields({
+        balconyCount: privateHouse.balconyCount,
+        needsVerification: privateHouse.needsVerification,
+        balconyArea: parseOptionalNumber(
+          privateHouse.balconyArea,
+          "კერძო სახლის აივნის ფართობი",
+          errors,
+        ),
+        veranda: privateHouse.veranda,
+      }),
+    );
+    if (privateHouse.needsVerification.length > 0) {
+      payload.privateHouse.needsVerification = privateHouse.needsVerification;
+    }
     if (privateHouse.renovation.trim()) {
       payload.privateHouse.renovation = privateHouse.renovation.trim();
     }
@@ -381,6 +411,7 @@ export function buildCreatePropertyPayload(
         "კომერციული პარკინგის ადგილები",
         errors,
       ),
+      ...listingParkingWriteFields(commercial.parking, commercial.parkingTypes),
       needsVerification: commercial.needsVerification,
       electricity: commercial.electricity,
       water: commercial.water,

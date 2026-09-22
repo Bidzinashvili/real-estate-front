@@ -38,7 +38,7 @@ export const APARTMENT_VERIFIABLE_FIELDS = [
   "petsAllowed",
   "goodView",
   "parkingSpaces",
-  "balconyArea",
+  "balconyCount",
 ] as const;
 
 export type ApartmentVerifiableField = (typeof APARTMENT_VERIFIABLE_FIELDS)[number];

@@ -10,7 +10,7 @@ import {
 import { clientProfileHref } from "@/features/clientProfiles/clientProfileRoutes";
 import { formatClientProfileDealTypes } from "@/features/clientProfiles/display";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { ClientProfileOccurrenceLines } from "@/widgets/ClientProfiles/ClientProfileOccurrenceLines";
 
 const BLACKLIST_FILTER_OPTIONS = [
@@ -80,14 +80,15 @@ export function ClientProfilesView() {
           placeholder="ძებნა სახელით ან ნომრით…"
           className="h-8 w-full max-w-sm rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
         />
-        <InlineSelect
+        <OptionChips
+          aria-label="შავი სიის ფილტრი"
           value={blacklistFilter}
-          onChange={(value) => {
-            setBlacklistFilter(value as BlacklistFilterValue);
+          onChange={(selectedValue) => {
+            setBlacklistFilter(selectedValue);
             setPage(1);
           }}
           options={BLACKLIST_FILTER_OPTIONS}
-          aria-label="შავი სიის ფილტრი"
+          size="compact"
         />
       </div>
 

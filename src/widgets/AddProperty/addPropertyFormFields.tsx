@@ -1,16 +1,12 @@
 "use client";
 
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
 
 const addPropertyControlShellClassName = (horizontalPadClassName: string) =>
   `block w-full rounded-lg border border-border bg-card ${horizontalPadClassName} py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary`;
 
-export function addPropertyInputClassName() {
-  return addPropertyControlShellClassName("px-3");
-}
-
-export function addPropertySelectClassName() {
-  return `${addPropertyControlShellClassName("pl-3 pr-10")} appearance-none`;
+export function addPropertyInputClassName(horizontalPadClassName = "px-3") {
+  return addPropertyControlShellClassName(horizontalPadClassName);
 }
 
 type FieldProps = {
@@ -18,12 +14,14 @@ type FieldProps = {
   label: string;
   value: string;
   onChange: (next: string) => void;
+  onBlur?: () => void;
   type?: "text" | "number" | "tel";
   required?: boolean;
   error?: string;
   readOnly?: boolean;
   placeholder?: string;
   name?: string;
+  leadingSymbol?: string;
 };
 
 export function TextField({
@@ -31,29 +29,39 @@ export function TextField({
   label,
   value,
   onChange,
+  onBlur,
   type = "text",
   required,
   error,
   readOnly,
   placeholder,
   name,
+  leadingSymbol,
 }: FieldProps) {
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
       </label>
-      <input
-        id={id}
-        name={name}
-        type={type}
-        value={value}
-        required={required}
-        readOnly={readOnly}
-        placeholder={placeholder}
-        onChange={readOnly ? undefined : (event) => onChange(event.target.value)}
-        className={`${addPropertyInputClassName()} ${error ? "border-destructive focus:border-destructive" : ""} ${readOnly ? "cursor-default bg-muted text-foreground" : ""}`}
-      />
+      <div className="relative">
+        {leadingSymbol ? (
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex w-8 items-center justify-center text-sm font-semibold text-foreground">
+            {leadingSymbol}
+          </span>
+        ) : null}
+        <input
+          id={id}
+          name={name}
+          type={type}
+          value={value}
+          required={required}
+          readOnly={readOnly}
+          placeholder={placeholder}
+          onChange={readOnly ? undefined : (event) => onChange(event.target.value)}
+          onBlur={readOnly ? undefined : onBlur}
+          className={`${addPropertyInputClassName(leadingSymbol ? "pl-8 pr-3" : "px-3")} ${error ? "border-destructive focus:border-destructive" : ""} ${readOnly ? "cursor-default bg-muted text-foreground" : ""}`}
+        />
+      </div>
       {error ? (
         <p className="text-xs text-destructive" role="alert">
           {error}
@@ -85,32 +93,17 @@ export function SelectField<T extends string>({
   required = false,
 }: SelectProps<T>) {
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">
-        {label}
-      </label>
-      <NativeSelectSurface>
-        <select
-          id={id}
-          value={value}
-          disabled={disabled}
-          required={required}
-          onChange={(event) => onChange(event.target.value as T)}
-          className={`${addPropertySelectClassName()} ${error ? "border-destructive focus:border-destructive" : ""} ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </NativeSelectSurface>
-      {error ? (
-        <p className="text-xs text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    <OptionChips
+      id={id}
+      label={label}
+      labelClassName={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}
+      value={value}
+      onChange={onChange}
+      options={options}
+      disabled={disabled}
+      required={required}
+      error={error}
+    />
   );
 }
 

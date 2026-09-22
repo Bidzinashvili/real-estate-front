@@ -8,14 +8,20 @@ import {
   readAuthorizedPrivateComment,
 } from "@/features/properties/authorizedPropertyFields";
 import {
-  formatBuildingAgeTypeLabel,
-  formatBuildingConditionLabel,
+  formatBuildingStructureDisplay,
   formatHotelScopeLabel,
   formatKitchenTypeLabel,
   formatPropertyTypeLabel,
   formatRenovationLabel,
 } from "@/features/properties/addPropertyFormOptions";
-import { BUILDING_AGE_TYPE_FIELD_LABEL } from "@/shared/i18n/enumLabels";
+import { BUILDING_STRUCTURE_FIELD_LABEL, EXTERNAL_ID_PLATFORM_LABELS, KITCHEN_TYPE_FIELD_LABEL, APARTMENT_PROJECT_FIELD_LABEL, LISTING_PARKING_FIELD_LABEL, LISTING_PARKING_SPACES_FIELD_LABEL, lookupEnumLabel } from "@/shared/i18n/enumLabels";
+import { formatProjectDisplayName } from "@/features/properties/projectName";
+import { formatListingParkingDisplay } from "@/features/properties/listingParking";
+import {
+  BALCONY_FIELD_LABEL,
+  BALCONY_VERANDA_LABEL,
+  formatBalconyCountDisplay,
+} from "@/features/properties/listingBalcony";
 import {
   DetailDateTime,
   DetailMultiline,
@@ -124,7 +130,8 @@ export function PropertyDetailsReadOnlySections({
             <p className="font-medium text-foreground">გარე ID-ები</p>
             {activeExternalIds.map((externalId) => (
               <p key={externalId.id}>
-                {externalId.platform}: {externalId.value}
+                {lookupEnumLabel(EXTERNAL_ID_PLATFORM_LABELS, externalId.platform)}:{" "}
+                {externalId.value}
               </p>
             ))}
           </div>
@@ -182,17 +189,19 @@ export function PropertyDetailsReadOnlySections({
               />
             ) : null}
             <DetailText
-              label="შენობის მდგომარეობა"
-              value={formatBuildingConditionLabel(property.apartment.buildingCondition)}
-            />
-            <DetailText
-              label={BUILDING_AGE_TYPE_FIELD_LABEL}
-              value={formatBuildingAgeTypeLabel(property.apartment.buildingAgeType)}
+              label={BUILDING_STRUCTURE_FIELD_LABEL}
+              value={formatBuildingStructureDisplay(
+                property.apartment.buildingCondition,
+                property.apartment.buildingAgeType,
+              )}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <DetailText label="პროექტი" value={property.apartment.project} />
+            <DetailText
+              label={APARTMENT_PROJECT_FIELD_LABEL}
+              value={formatProjectDisplayName(property.apartment.project)}
+            />
             <DetailText
               label="რემონტი"
               value={formatRenovationLabel(property.apartment.renovation)}
@@ -210,11 +219,23 @@ export function PropertyDetailsReadOnlySections({
               value={property.apartment.ceilingHeight}
               suffix="მ"
             />
-            <DetailNumber
-              label="აივნის ფართობი"
-              value={property.apartment.balconyArea}
-              suffix="მ²"
+            <DetailText
+              label={BALCONY_FIELD_LABEL}
+              value={formatBalconyCountDisplay({
+                balconyCount: property.apartment.balconyCount,
+                needsVerification: property.apartment.needsVerification,
+              })}
             />
+            {property.apartment.balconyArea != null ? (
+              <DetailNumber
+                label="აივნის ფართობი"
+                value={property.apartment.balconyArea}
+                suffix="მ²"
+              />
+            ) : null}
+            {property.apartment.veranda === true ? (
+              <DetailText label={BALCONY_VERANDA_LABEL} value="კი" />
+            ) : null}
             {property.dealType === "RENT" || property.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="მინიმალური ქირის ვადა (თვე)"
@@ -249,7 +270,7 @@ export function PropertyDetailsReadOnlySections({
               )}
             />
             <DetailText
-              label="სამზარეულოს ტიპი"
+              label={KITCHEN_TYPE_FIELD_LABEL}
               value={formatKitchenTypeLabel(property.apartment.kitchenType)}
             />
           </div>
@@ -260,8 +281,15 @@ export function PropertyDetailsReadOnlySections({
               value={property.apartment.furnished}
               isToBeVerified={property.apartment.needsVerification.includes("furnished")}
             />
+            <DetailText
+              label={LISTING_PARKING_FIELD_LABEL}
+              value={formatListingParkingDisplay(
+                property.apartment.parking,
+                property.apartment.parkingTypes,
+              )}
+            />
             <DetailNumber
-              label="პარკინგის ადგილები"
+              label={LISTING_PARKING_SPACES_FIELD_LABEL}
               value={property.apartment.parkingSpaces}
             />
             <DetailVerification

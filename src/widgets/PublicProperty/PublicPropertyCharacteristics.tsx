@@ -1,6 +1,5 @@
 import {
-  formatBuildingAgeTypeLabel,
-  formatBuildingConditionLabel,
+  formatBuildingStructureDisplay,
   formatKitchenTypeLabel,
   formatLandCategoryLabel,
   formatLandUsageLabel,
@@ -8,12 +7,18 @@ import {
 } from "@/features/properties/addPropertyFormOptions";
 import { isRentalDealType } from "@/features/properties/propertyStatus";
 import {
-  BUILDING_AGE_TYPE_FIELD_LABEL,
+  BUILDING_STRUCTURE_FIELD_LABEL,
+  KITCHEN_TYPE_FIELD_LABEL,
+  APARTMENT_PROJECT_FIELD_LABEL,
   COMMERCIAL_STATUS_LABELS,
+  LISTING_PARKING_SPACES_FIELD_LABEL,
   lookupEnumLabel,
 } from "@/shared/i18n/enumLabels";
 import type { PublicProperty } from "@/features/propertyShare/publicPropertyTypes";
+import { formatProjectDisplayName } from "@/features/properties/projectName";
 import {
+  ListingParkingFact,
+  ListingBalconyFacts,
   PropertyViewFact,
   PropertyViewFactGrid,
 } from "@/widgets/PropertyDetails/PropertyViewFact";
@@ -106,24 +111,23 @@ export function PublicPropertyCharacteristics({
       />,
       <PublicTextFact
         key="building"
-        label="შენობის მდგომარეობა"
-        value={formatBuildingConditionLabel(apartment.buildingCondition)}
-      />,
-      <PublicTextFact
-        key="buildingAge"
-        label={BUILDING_AGE_TYPE_FIELD_LABEL}
-        value={formatBuildingAgeTypeLabel(apartment.buildingAgeType)}
+        label={BUILDING_STRUCTURE_FIELD_LABEL}
+        value={formatBuildingStructureDisplay(
+          apartment.buildingCondition,
+          apartment.buildingAgeType,
+        )}
       />,
       <PublicTextFact
         key="kitchen"
-        label="სამზარეულოს ტიპი"
+        label={KITCHEN_TYPE_FIELD_LABEL}
         value={formatKitchenTypeLabel(apartment.kitchenType)}
       />,
-      <PublicNumberFact
+      <ListingBalconyFacts
         key="balcony"
-        label="აივნის ფართობი"
-        value={apartment.balconyArea}
-        suffix="მ²"
+        balconyCount={apartment.balconyCount}
+        needsVerification={apartment.needsVerification}
+        balconyArea={apartment.balconyArea}
+        veranda={apartment.veranda}
       />,
       showRentPeriod ? (
         <PublicNumberFact
@@ -133,8 +137,21 @@ export function PublicPropertyCharacteristics({
           suffix="თვე"
         />
       ) : null,
-      <PublicTextFact key="project" label="პროექტი" value={apartment.project} />,
-      <PublicNumberFact key="parking" label="პარკინგი" value={apartment.parkingSpaces} />,
+      <PublicTextFact
+        key="project"
+        label={APARTMENT_PROJECT_FIELD_LABEL}
+        value={formatProjectDisplayName(apartment.project)}
+      />,
+      <ListingParkingFact
+        key="parking"
+        parking={apartment.parking}
+        parkingTypes={apartment.parkingTypes}
+      />,
+      <PublicNumberFact
+        key="parkingSpaces"
+        label={LISTING_PARKING_SPACES_FIELD_LABEL}
+        value={apartment.parkingSpaces}
+      />,
     ];
     const comfort = [
       <PublicBooleanFact key="elevator" label="ლიფტი" value={apartment.elevator} />,
@@ -181,7 +198,13 @@ export function PublicPropertyCharacteristics({
       <PublicNumberFact key="total" label="საერთო ფართობი" value={house.totalArea} suffix="მ²" />,
       <PublicNumberFact key="rooms" label="ოთახები" value={house.rooms} />,
       <PublicNumberFact key="bedrooms" label="საძინებლები" value={house.bedrooms} />,
-      <PublicNumberFact key="balcony" label="აივნის ფართობი" value={house.balconyArea} suffix="მ²" />,
+      <ListingBalconyFacts
+        key="balcony"
+        balconyCount={house.balconyCount}
+        needsVerification={house.needsVerification}
+        balconyArea={house.balconyArea}
+        veranda={house.veranda}
+      />,
       <PublicTextFact
         key="renovation"
         label="რემონტი"
@@ -189,8 +212,8 @@ export function PublicPropertyCharacteristics({
       />,
       <PublicTextFact
         key="building"
-        label="შენობის მდგომარეობა"
-        value={formatBuildingConditionLabel(house.buildingCondition)}
+        label={BUILDING_STRUCTURE_FIELD_LABEL}
+        value={formatBuildingStructureDisplay(house.buildingCondition)}
       />,
       showRentPeriod ? (
         <PublicNumberFact
@@ -200,7 +223,16 @@ export function PublicPropertyCharacteristics({
           suffix="თვე"
         />
       ) : null,
-      <PublicNumberFact key="parking" label="პარკინგი" value={house.parkingSpaces} />,
+      <ListingParkingFact
+        key="parking"
+        parking={house.parking}
+        parkingTypes={house.parkingTypes}
+      />,
+      <PublicNumberFact
+        key="parkingSpaces"
+        label={LISTING_PARKING_SPACES_FIELD_LABEL}
+        value={house.parkingSpaces}
+      />,
     ];
     const comfort = [
       <PublicBooleanFact key="heating" label="ცენტრალური გათბობა" value={house.centralHeating} />,
@@ -317,7 +349,16 @@ export function PublicPropertyCharacteristics({
           suffix="თვე"
         />
       ) : null,
-      <PublicNumberFact key="parking" label="პარკინგი" value={commercial.parkingSpaces} />,
+      <ListingParkingFact
+        key="parking"
+        parking={commercial.parking}
+        parkingTypes={commercial.parkingTypes}
+      />,
+      <PublicNumberFact
+        key="parkingSpaces"
+        label={LISTING_PARKING_SPACES_FIELD_LABEL}
+        value={commercial.parkingSpaces}
+      />,
     ];
     const comfort = [
       <PublicBooleanFact

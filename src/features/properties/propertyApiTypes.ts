@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type {
@@ -8,6 +9,9 @@ import type {
   HotelScope,
   KitchenType,
   LandCategory,
+  ListingParking,
+  ListingParkingType,
+  ExternalIdPlatform,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
@@ -69,7 +73,11 @@ export type GetPropertiesQueryApi = {
   lastOpenedTo?: string;
   neverOpened?: boolean;
   readyToUpload?: boolean;
+  buildingCondition?: BuildingCondition;
+  buildingAgeType?: BuildingAgeType;
   adminMode?: boolean;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
 };
 
 export type PropertyImageEntry = {
@@ -80,7 +88,7 @@ export type PropertyImageEntry = {
 
 export type PropertyExternalIdApi = {
   id: string;
-  platform: "MYHOME" | "SSGE";
+  platform: ExternalIdPlatform;
   value: string;
   enteredAt: string;
   archivedAt: string | null;
@@ -104,13 +112,17 @@ export type ApartmentApi = {
   floor: number;
   totalFloors: number;
   ceilingHeight: number | null;
+  balconyCount: number | null;
   balconyArea: number | null;
+  veranda: boolean;
   needsVerification: string[];
   elevator: boolean | null;
   centralHeating: boolean | null;
   airConditioner: boolean | null;
   kitchenType: KitchenType;
   furnished: boolean | null;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
@@ -128,11 +140,15 @@ export type PrivateHouseApi = {
   renovation: string | null;
   rooms: number;
   bedrooms: number;
+  balconyCount: number | null;
   balconyArea: number | null;
+  veranda: boolean;
   needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   pool: boolean;
   fruitTrees: boolean;
@@ -173,6 +189,8 @@ export type CommercialApi = {
   needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   electricity: boolean;
   water: boolean;
@@ -194,6 +212,7 @@ export type PropertyApi = EntityVerificationFields & {
   title?: string | null;
   cadastralCode: string | null;
   pricePublic: number;
+  currency: SupportedListingCurrency;
   priceInternal?: number | null;
   ownerName?: string;
   ownerPhones?: string[];
@@ -256,6 +275,7 @@ export type CreatePropertyBase = {
   address: string;
   cadastralCode?: string;
   pricePublic: number;
+  currency: SupportedListingCurrency;
   priceInternal?: number;
   ownerName?: string;
   ownerPhones?: string[];
@@ -265,7 +285,7 @@ export type CreatePropertyBase = {
   myHomeId?: string;
   ssGeId?: string;
   externalIds?: Array<{
-    platform: "MYHOME" | "SSGE";
+    platform: ExternalIdPlatform;
     value: string;
     enteredAt?: string;
   }>;
@@ -289,13 +309,17 @@ export type CreateApartmentPayload = {
   floor: number;
   totalFloors: number;
   ceilingHeight?: number;
+  balconyCount?: number;
   balconyArea?: number;
+  veranda?: boolean;
   needsVerification?: string[];
   elevator?: boolean | null;
   centralHeating?: boolean | null;
   airConditioner?: boolean | null;
   kitchenType: KitchenType;
   furnished?: boolean | null;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
   petsAllowed?: boolean | null;
   minRentalPeriod?: number;
@@ -311,11 +335,15 @@ export type CreatePrivateHousePayload = {
   renovation?: string;
   rooms: number;
   bedrooms: number;
+  balconyCount?: number;
   balconyArea?: number;
+  veranda?: boolean;
   needsVerification?: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
   pool: boolean;
   fruitTrees: boolean;
@@ -352,6 +380,8 @@ export type CreateCommercialPayload = {
   needsVerification?: string[];
   centralHeating: boolean;
   airConditioner: boolean;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
   electricity: boolean;
   water: boolean;
@@ -403,6 +433,7 @@ export type UpdatePropertyRequestBody = {
   address?: string;
   pricePublic?: number;
   priceInternal?: number;
+  currency?: SupportedListingCurrency;
   publicComment?: string;
   privateComment?: string;
   internalText?: string;
@@ -416,13 +447,17 @@ export type UpdatePropertyRequestBody = {
     bedrooms?: number;
     totalFloors?: number;
     ceilingHeight?: number;
+    balconyCount?: number | null;
     balconyArea?: number | null;
+    veranda?: boolean;
     needsVerification?: string[];
     floor?: number;
     renovation?: string;
     buildingCondition?: BuildingCondition;
     buildingAgeType?: BuildingAgeType | null;
     furnished?: boolean | null;
+    parking?: ListingParking;
+    parkingTypes?: ListingParkingType[];
     parkingSpaces?: number | null;
     minRentalPeriod?: number | null;
     elevator?: boolean | null;
@@ -438,13 +473,18 @@ export type UpdatePropertyRequestBody = {
     houseArea?: number;
     yardArea?: number;
     totalArea?: number;
+    balconyCount?: number | null;
     balconyArea?: number | null;
+    veranda?: boolean;
+    parking?: ListingParking;
+    parkingTypes?: ListingParkingType[];
     parkingSpaces?: number | null;
     needsVerification?: string[];
     pool?: boolean;
     fruitTrees?: boolean;
     renovation?: string;
     furnished?: boolean;
+    buildingCondition?: BuildingCondition;
     minRentalPeriod?: number | null;
   };
   landPlot?: {
@@ -459,6 +499,8 @@ export type UpdatePropertyRequestBody = {
     area?: number;
     totalFloors?: number;
     ceilingHeight?: number;
+    parking?: ListingParking;
+    parkingTypes?: ListingParkingType[];
     parkingSpaces?: number | null;
     needsVerification?: string[];
     airConditioner?: boolean;
@@ -472,7 +514,9 @@ export type GeneratePublicTextApartmentDraft = {
   rooms?: number;
   bedrooms?: number;
   kitchenType?: KitchenType;
+  balconyCount?: number;
   balconyArea?: number;
+  veranda?: boolean;
   goodView?: boolean;
   furnished?: boolean;
   airConditioner?: boolean;

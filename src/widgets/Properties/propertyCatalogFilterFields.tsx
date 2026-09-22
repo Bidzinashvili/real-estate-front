@@ -8,11 +8,10 @@ import {
 } from "@/features/properties/types";
 import { CATALOG_LIMIT_OPTIONS } from "@/features/properties/propertyCatalogUrlParams";
 import type { UsePropertiesCatalogResult } from "@/features/properties/usePropertiesCatalog";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import {
   PROPERTY_CATALOG_INPUT_CLASS as INPUT_CLASS,
   PROPERTY_CATALOG_LABEL_CLASS as LABEL_CLASS,
-  PROPERTY_CATALOG_SELECT_CLASS as SELECT_CLASS,
 } from "@/widgets/Properties/propertyCatalogFilterSharedStyles";
 import { PropertyCatalogMoreFiltersDetails } from "@/widgets/Properties/propertyCatalogMoreFiltersDetails";
 import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
@@ -39,27 +38,16 @@ export function PropertyCatalogFilterFields({
 
   return (
     <div className="space-y-5">
-      <div>
-        <span className={LABEL_CLASS}>განცხადების სტატუსი</span>
-        <NativeSelectSurface>
-          <select
-            aria-label="სტატუსით გაფილტვრა"
-            value={state.lifecycleStatus}
-            onChange={(event) =>
-              catalog.setLifecycleStatus(
-                parseLifecycleStatusFilterValue(event.target.value),
-              )
-            }
-            className={SELECT_CLASS}
-          >
-            {PROPERTY_STATUS_FILTER_OPTIONS.map((option) => (
-              <option key={option.value || "all"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </NativeSelectSurface>
-      </div>
+      <OptionChips
+        label="განცხადების სტატუსი"
+        labelClassName={LABEL_CLASS}
+        aria-label="სტატუსით გაფილტვრა"
+        value={state.lifecycleStatus}
+        onChange={(selectedValue) =>
+          catalog.setLifecycleStatus(parseLifecycleStatusFilterValue(selectedValue))
+        }
+        options={PROPERTY_STATUS_FILTER_OPTIONS}
+      />
 
       <div>
         <span className={LABEL_CLASS}>ქალაქი</span>
@@ -127,23 +115,17 @@ export function PropertyCatalogFilterFields({
         onChange={catalog.setNeverOpened}
       />
 
-      <div>
-        <span className={LABEL_CLASS}>გვერდზე</span>
-        <NativeSelectSurface>
-          <select
-            aria-label="შედეგები გვერდზე"
-            value={String(state.limit)}
-            onChange={(event) => catalog.setLimit(Number(event.target.value))}
-            className={SELECT_CLASS}
-          >
-            {CATALOG_LIMIT_OPTIONS.map((limitOption) => (
-              <option key={limitOption} value={limitOption}>
-                {limitOption} განცხადება
-              </option>
-            ))}
-          </select>
-        </NativeSelectSurface>
-      </div>
+      <OptionChips
+        label="გვერდზე"
+        labelClassName={LABEL_CLASS}
+        aria-label="შედეგები გვერდზე"
+        value={String(state.limit)}
+        onChange={(selectedValue) => catalog.setLimit(Number(selectedValue))}
+        options={CATALOG_LIMIT_OPTIONS.map((limitOption) => ({
+          value: String(limitOption),
+          label: `${limitOption} განცხადება`,
+        }))}
+      />
 
       {showMobileFooter ? (
         <div className="flex flex-wrap gap-2 pt-1">

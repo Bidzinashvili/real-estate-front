@@ -3,8 +3,7 @@
 import { useMemo } from "react";
 import { useDistricts } from "@/features/districts/useDistricts";
 import type { DistrictGroup } from "@/features/districts/districtTypes";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
-import { addPropertySelectClassName } from "@/widgets/AddProperty/addPropertyFormFields";
+import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
 
 export type Selection = { group: string; neighborhood: string } | null;
 
@@ -46,8 +45,29 @@ export function DistrictNeighborhoodPicker({
   );
 
   const neighborhoods = selectedGroup?.neighborhoods ?? [];
-
   const isSelectDisabled = disabled || isLoading || Boolean(loadError);
+
+  const districtGroupOptions = [
+    { value: "", label: "აირჩიეთ უბნების ჯგუფი" },
+    ...availableDistricts.map((districtGroup) => ({
+      value: districtGroup.name,
+      label: districtGroup.name,
+    })),
+  ];
+
+  const neighborhoodOptions = [
+    {
+      value: "",
+      label:
+        selectedGroupName === ""
+          ? "ჯერ აირჩიეთ უბნების ჯგუფი"
+          : "აირჩიეთ უბანი",
+    },
+    ...neighborhoods.map((neighborhoodName) => ({
+      value: neighborhoodName,
+      label: neighborhoodName,
+    })),
+  ];
 
   if (loadError) {
     return (
@@ -75,36 +95,7 @@ export function DistrictNeighborhoodPicker({
         <p className="block text-sm font-medium text-foreground">
           უბნები და უბნის ნაწილები
         </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="districtGroup" className="block text-sm font-medium text-foreground">
-              უბნის ჯგუფი
-            </label>
-            <NativeSelectSurface>
-              <select
-                id="districtGroup"
-                disabled
-                className={addPropertySelectClassName()}
-              >
-                <option>იტვირთება...</option>
-              </select>
-            </NativeSelectSurface>
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="districtNeighborhood" className="block text-sm font-medium text-foreground">
-              უბანი
-            </label>
-            <NativeSelectSurface>
-              <select
-                id="districtNeighborhood"
-                disabled
-                className={addPropertySelectClassName()}
-              >
-                <option>იტვირთება...</option>
-              </select>
-            </NativeSelectSurface>
-          </div>
-        </div>
+        <p className="text-sm text-muted-foreground">იტვირთება...</p>
       </div>
     );
   }
@@ -131,80 +122,44 @@ export function DistrictNeighborhoodPicker({
 
   return (
     <div className="space-y-1.5 sm:col-span-2">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="districtGroup" className="block text-sm font-medium text-foreground">
-            უბნის ჯგუფი
-          </label>
-          <NativeSelectSurface>
-            <select
-              id="districtGroup"
-              value={selectedGroupName}
-              disabled={isSelectDisabled}
-              onChange={(event) => {
-                const nextGroup = event.target.value;
-                if (nextGroup === "") {
-                  onChange(null);
-                  return;
-                }
-
-                onChange({ group: nextGroup, neighborhood: "" });
-              }}
-              className={`${addPropertySelectClassName()} ${isSelectDisabled ? "cursor-not-allowed opacity-60" : ""}`}
-            >
-              <option value="">აირჩიეთ უბნების ჯგუფი</option>
-              {availableDistricts.map((districtGroup) => (
-                <option key={districtGroup.name} value={districtGroup.name}>
-                  {districtGroup.name}
-                </option>
-              ))}
-            </select>
-          </NativeSelectSurface>
-        </div>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="districtNeighborhood"
-            className="block text-sm font-medium text-foreground"
-          >
-            უბანი
-          </label>
-          <NativeSelectSurface>
-            <select
-              id="districtNeighborhood"
-              value={selectedNeighborhood}
-              disabled={isSelectDisabled || selectedGroupName === ""}
-              onChange={(event) => {
-                const nextNeighborhood = event.target.value;
-                if (nextNeighborhood === "") {
-                  onChange(
-                    selectedGroupName === ""
-                      ? null
-                      : { group: selectedGroupName, neighborhood: "" },
-                  );
-                  return;
-                }
-
-                onChange({
-                  group: selectedGroupName,
-                  neighborhood: nextNeighborhood,
-                });
-              }}
-              className={`${addPropertySelectClassName()} ${isSelectDisabled || selectedGroupName === "" ? "cursor-not-allowed opacity-60" : ""}`}
-            >
-              <option value="">
-                {selectedGroupName === ""
-                  ? "ჯერ აირჩიეთ უბნების ჯგუფი"
-                  : "აირჩიეთ უბანი"}
-              </option>
-              {neighborhoods.map((neighborhoodName) => (
-                <option key={neighborhoodName} value={neighborhoodName}>
-                  {neighborhoodName}
-                </option>
-              ))}
-            </select>
-          </NativeSelectSurface>
-        </div>
+      <div className="grid gap-4">
+        <OptionChips
+          id="districtGroup"
+          label="უბნის ჯგუფი"
+          labelClassName={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}
+          value={selectedGroupName}
+          disabled={isSelectDisabled}
+          onChange={(nextGroup) => {
+            if (nextGroup === "") {
+              onChange(null);
+              return;
+            }
+            onChange({ group: nextGroup, neighborhood: "" });
+          }}
+          options={districtGroupOptions}
+        />
+        <OptionChips
+          id="districtNeighborhood"
+          label="უბანი"
+          labelClassName={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}
+          value={selectedNeighborhood}
+          disabled={isSelectDisabled || selectedGroupName === ""}
+          onChange={(nextNeighborhood) => {
+            if (nextNeighborhood === "") {
+              onChange(
+                selectedGroupName === ""
+                  ? null
+                  : { group: selectedGroupName, neighborhood: "" },
+              );
+              return;
+            }
+            onChange({
+              group: selectedGroupName,
+              neighborhood: nextNeighborhood,
+            });
+          }}
+          options={neighborhoodOptions}
+        />
       </div>
       {error ? (
         <p className="text-xs text-destructive" role="alert">

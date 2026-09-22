@@ -4,6 +4,7 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
 import { addPropertyInputClassName } from "@/widgets/AddProperty/addPropertyFormFields";
+import { formatProjectHashtag, toStoredProjectName } from "@/features/properties/projectName";
 
 type ProjectSuggestion = {
   name: string;
@@ -21,8 +22,7 @@ type HashtagPickerProps = {
 };
 
 function displayHashtag(value: string): string {
-  const trimmedValue = value.trim().replace(/^#+/, "");
-  return trimmedValue === "" ? "" : `#${trimmedValue}`;
+  return formatProjectHashtag(value);
 }
 
 export function HashtagPicker({ id, label, value, onChange }: HashtagPickerProps) {
@@ -49,7 +49,7 @@ export function HashtagPicker({ id, label, value, onChange }: HashtagPickerProps
       void axios
         .get<ProjectsResponse>(`${apiBaseUrl}/projects`, {
           headers: { Authorization: `Bearer ${token}` },
-          params: { query: query.replace(/^#+/, ""), limit: 8 },
+          params: { query: toStoredProjectName(query, value), limit: 8 },
           signal: controller.signal,
         })
         .then((response) => setSuggestions(response.data.projects ?? []))
@@ -64,12 +64,12 @@ export function HashtagPicker({ id, label, value, onChange }: HashtagPickerProps
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [query]);
+  }, [query, value]);
 
   function handleValueChange(nextValue: string) {
-    const normalizedValue = nextValue.replace(/^#+/, "");
-    setQuery(normalizedValue);
-    onChange(normalizedValue);
+    const storedName = toStoredProjectName(nextValue, value);
+    setQuery(storedName);
+    onChange(storedName);
   }
 
   return (

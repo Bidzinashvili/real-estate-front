@@ -11,6 +11,7 @@ import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import { FloorInput } from "@/shared/components/FloorInput";
 import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
+import { ListingParkingFields } from "@/widgets/AddProperty/ListingParkingFields";
 
 type Props = {
   dealType: DealType;
@@ -115,6 +116,12 @@ export function AddPropertyCommercialSection({
             />
           </div>
         ))}
+        <ListingParkingFields
+          idPrefix="cm"
+          parking={commercial.parking}
+          parkingTypes={commercial.parkingTypes}
+          onChange={(nextParking) => patchCommercial(nextParking)}
+        />
         <TextField
           id="cmParking"
           label="პარკინგის ადგილები"

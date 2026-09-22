@@ -5,7 +5,12 @@ import {
   CLIENT_PREFERENCE_VALUES,
   type ClientPreferenceValue,
 } from "@/features/matching/matchingEnums";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips } from "@/shared/ui/OptionChips";
+
+const CLIENT_PREFERENCE_OPTIONS = CLIENT_PREFERENCE_VALUES.map((preferenceValue) => ({
+  value: preferenceValue,
+  label: CLIENT_PREFERENCE_LABELS[preferenceValue],
+}));
 
 type ClientPreferenceValueControlProps = {
   id?: string;
@@ -21,20 +26,13 @@ export function ClientPreferenceValueControl({
   disabled = false,
 }: ClientPreferenceValueControlProps) {
   return (
-    <NativeSelectSurface>
-      <select
-        id={id}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value as ClientPreferenceValue)}
-        className="block w-full appearance-none rounded-lg border border-border bg-card py-2 pl-3 pr-10 text-sm text-foreground outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-muted"
-      >
-        {CLIENT_PREFERENCE_VALUES.map((preferenceValue) => (
-          <option key={preferenceValue} value={preferenceValue}>
-            {CLIENT_PREFERENCE_LABELS[preferenceValue]}
-          </option>
-        ))}
-      </select>
-    </NativeSelectSurface>
+    <OptionChips
+      id={id}
+      aria-label="პრეფერენცია"
+      value={value}
+      onChange={onChange}
+      options={CLIENT_PREFERENCE_OPTIONS}
+      disabled={disabled}
+    />
   );
 }

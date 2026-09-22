@@ -28,6 +28,7 @@ import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import { LabeledSelect } from "@/shared/ui/LabeledSelect";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
+  EditableCheckbox,
   EditableNumericTextInput,
   propertyDetailsEditableInputClassName,
 } from "@/widgets/PropertyDetails/PropertyFormControls";
@@ -49,13 +50,17 @@ import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matchi
 import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
 import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
 import { buildGeneratePublicTextDraftFromEditForm } from "@/features/properties/generatePublicTextDraft";
+import { ListingPriceEquivalentHint } from "@/features/currency/ListingPriceEquivalentHint";
+import { PriceCurrencyToggle } from "@/features/currency/PriceCurrencyToggle";
+import { listingCurrencySymbol } from "@/features/currency/types";
+import type { SupportedListingCurrency } from "@/features/currency/types";
+import { HIDE_FROM_OTHERS_COPY } from "@/features/hideFromOthers/hideFromOthersCopy";
 
 type PropertyDetailsEditableSectionsProps = {
   values: PropertyFormValues;
   canEdit: boolean;
   showInternalPrice: boolean;
   showPrivateNotes: boolean;
-  readOnlyPrivateHouseBalcony?: number | null;
   onDealTypeChange: (value: DealType) => void;
   onHotelScopeChange: (raw: string) => void;
   onFieldChange: (
@@ -67,6 +72,8 @@ type PropertyDetailsEditableSectionsProps = {
     field: "pricePublic" | "priceInternal",
     value: number | undefined,
   ) => void;
+  onCurrencyChange: (nextCurrency: SupportedListingCurrency) => void;
+  onHideFromOthersChange: (nextHidden: boolean) => void;
   onLabelsChange: (value: LabelSelection[]) => void;
   onCommentChange: (
     field: "publicComment" | "privateComment" | "internalText",
@@ -102,11 +109,12 @@ export function PropertyDetailsEditableSections({
   canEdit,
   showInternalPrice,
   showPrivateNotes,
-  readOnlyPrivateHouseBalcony,
   onDealTypeChange,
   onHotelScopeChange,
   onFieldChange,
   onPriceChange,
+  onCurrencyChange,
+  onHideFromOthersChange,
   onLabelsChange,
   onCommentChange,
   setApartment,
@@ -167,7 +175,6 @@ export function PropertyDetailsEditableSections({
         values={values}
         showInternalPrice={showInternalPrice}
         showPrivateNotes={showPrivateNotes}
-        readOnlyPrivateHouseBalcony={readOnlyPrivateHouseBalcony}
       />
     );
   }
@@ -251,49 +258,71 @@ export function PropertyDetailsEditableSections({
         />
       )}
 
-      <div
-        className={`grid gap-4 sm:grid-cols-2 ${showInternalPrice ? "" : "max-w-md"}`}
-      >
-        <div className="space-y-1.5">
-          {values.propertyType === "APARTMENT" ? (
-            <FieldWithLock
-              lock={readPropertyFieldLock(values.fieldLocks, "price")}
-              onLockChange={(nextLock: LockState) =>
-                setFieldLocks(applyPropertyFieldLock(values.fieldLocks, "price", nextLock))
-              }
-            >
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-foreground">ფასი</p>
+          <PriceCurrencyToggle
+            value={values.currency}
+            onChange={onCurrencyChange}
+          />
+        </div>
+        <div
+          className={`grid gap-4 sm:grid-cols-2 ${showInternalPrice ? "" : "max-w-md"}`}
+        >
+          <div className="space-y-1.5">
+            {values.propertyType === "APARTMENT" ? (
+              <FieldWithLock
+                lock={readPropertyFieldLock(values.fieldLocks, "price")}
+                onLockChange={(nextLock: LockState) =>
+                  setFieldLocks(applyPropertyFieldLock(values.fieldLocks, "price", nextLock))
+                }
+              >
+                <EditableNumericTextInput
+                  label="საჯარო ფასი"
+                  value={values.pricePublic}
+                  onValueChange={(next) => onPriceChange("pricePublic", next)}
+                  parse={parseIntegerInput}
+                  inputMode="numeric"
+                  leadingSymbol={listingCurrencySymbol(values.currency)}
+                />
+              </FieldWithLock>
+            ) : (
               <EditableNumericTextInput
                 label="საჯარო ფასი"
                 value={values.pricePublic}
                 onValueChange={(next) => onPriceChange("pricePublic", next)}
                 parse={parseIntegerInput}
                 inputMode="numeric"
+                leadingSymbol={listingCurrencySymbol(values.currency)}
               />
-            </FieldWithLock>
-          ) : (
-            <EditableNumericTextInput
-              label="საჯარო ფასი"
-              value={values.pricePublic}
-              onValueChange={(next) => onPriceChange("pricePublic", next)}
-              parse={parseIntegerInput}
-              inputMode="numeric"
+            )}
+            <ListingPriceEquivalentHint
+              amount={values.pricePublic}
+              fromCurrency={values.currency}
             />
+            {pricePerSquareMeter !== null ? (
+              <p className="text-xs font-medium text-muted-foreground">
+                {formatPricePerSquareMeter(pricePerSquareMeter, values.currency)}
+              </p>
+            ) : null}
+          </div>
+          {showInternalPrice && (
+            <div className="space-y-1.5">
+              <EditableNumericTextInput
+                label="შიდა ფასი"
+                value={values.priceInternal}
+                onValueChange={(next) => onPriceChange("priceInternal", next)}
+                parse={parseIntegerInput}
+                inputMode="numeric"
+                leadingSymbol={listingCurrencySymbol(values.currency)}
+              />
+              <ListingPriceEquivalentHint
+                amount={values.priceInternal}
+                fromCurrency={values.currency}
+              />
+            </div>
           )}
-          {pricePerSquareMeter !== null ? (
-            <p className="text-xs font-medium text-muted-foreground">
-              {formatPricePerSquareMeter(pricePerSquareMeter)}
-            </p>
-          ) : null}
         </div>
-        {showInternalPrice && (
-          <EditableNumericTextInput
-            label="შიდა ფასი"
-            value={values.priceInternal}
-            onValueChange={(next) => onPriceChange("priceInternal", next)}
-            parse={parseIntegerInput}
-            inputMode="numeric"
-          />
-        )}
       </div>
 
       <div className="space-y-1.5">
@@ -306,6 +335,12 @@ export function PropertyDetailsEditableSections({
           placeholder="აკრიფეთ ლეიბლის მოსაძებნად ან დასამატებლად"
         />
       </div>
+
+      <EditableCheckbox
+        label={HIDE_FROM_OTHERS_COPY.actionLabel}
+        checked={values.hideFromOthers}
+        onChange={onHideFromOthersChange}
+      />
 
       <PublicCommentGenerateField
         id="publicComment"

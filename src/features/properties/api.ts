@@ -13,6 +13,7 @@ import type {
   Property,
   PropertyListResponse,
   PropertyUpdatePayload,
+  ExternalIdPlatform,
 } from "@/features/properties/types";
 import {
   normalizeCreatePropertyResponse,
@@ -374,16 +375,37 @@ export async function restoreProperty(id: string): Promise<Property | null> {
 
 export async function addPropertyExternalId(
   propertyId: string,
-  payload: { platform: "MYHOME" | "SSGE"; value: string; enteredAt?: string },
+  payload: { platform: ExternalIdPlatform; value: string; enteredAt?: string },
 ): Promise<void> {
   const { baseUrl, headers } = getAuthHeaders();
 
-  await axios.post(`${baseUrl}/properties/${propertyId}/external-ids`, payload, {
-    headers: {
-      ...headers,
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    await axios.post(`${baseUrl}/properties/${propertyId}/external-ids`, payload, {
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 409
+          ? "ეს გარე ID უკვე გამოყენებულია."
+          : status === 403
+            ? "გარე ID-ის დამატების უფლება არ გაქვთ."
+            : status === 401
+              ? "ავტორიზაცია საჭიროა."
+              : "გარე ID-ის დამატება ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        status,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
 }
 
 export async function archivePropertyExternalId(

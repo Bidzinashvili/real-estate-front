@@ -107,7 +107,9 @@ export interface ApartmentMatchingFields {
   renovation?: Renovation | null;
   buildingCondition: BuildingCondition;
   project?: string | null;
+  balconyCount?: number | null;
   balconyArea?: number | null;
+  veranda?: boolean | null;
   parkingSpaces?: number | null;
   goodView?: boolean | null;
   bathrooms?: number | null;
@@ -155,7 +157,9 @@ export interface PropertyMatchSummary {
     renovation: Renovation | null;
     buildingCondition: string | null;
     project: string | null;
+    balconyCount: number | null;
     balconyArea: number | null;
+    veranda: boolean | null;
     goodView: boolean | null;
     elevator: boolean | null;
     centralHeating: boolean | null;

@@ -1,4 +1,5 @@
 import type { DealType } from "@/features/properties/dealType";
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
@@ -45,7 +46,7 @@ export function isBuildingCondition(value: string): value is BuildingCondition {
   return (BUILDING_CONDITIONS as readonly string[]).includes(value);
 }
 
-export const BUILDING_AGE_TYPES = ["NEW", "OLD"] as const;
+export const BUILDING_AGE_TYPES = ["NEW_OLD", "NEW_GOOD"] as const;
 export type BuildingAgeType = (typeof BUILDING_AGE_TYPES)[number];
 
 export function isBuildingAgeType(value: string): value is BuildingAgeType {
@@ -55,6 +56,19 @@ export function isBuildingAgeType(value: string): value is BuildingAgeType {
 export function parseBuildingAgeType(value: unknown): BuildingAgeType | null {
   const stringCandidate = typeof value === "string" ? value.trim() : "";
   return isBuildingAgeType(stringCandidate) ? stringCandidate : null;
+}
+
+export function buildingAgeTypeForCondition(
+  condition: string | null | undefined,
+  ageType: string | null | undefined,
+): BuildingAgeType | null {
+  if (condition !== "NEW") {
+    return null;
+  }
+  if (typeof ageType === "string" && isBuildingAgeType(ageType)) {
+    return ageType;
+  }
+  return null;
 }
 
 export const KITCHEN_TYPES = ["SEPARATE", "STUDIO"] as const;
@@ -114,15 +128,53 @@ export function parseRenovationForForm(
   return isRenovation(trimmed) ? trimmed : "";
 }
 
+export const LISTING_PARKING_VALUES = ["NO", "YES", "TO_VERIFY"] as const;
+export type ListingParking = (typeof LISTING_PARKING_VALUES)[number];
+
+export function isListingParking(value: string): value is ListingParking {
+  return (LISTING_PARKING_VALUES as readonly string[]).includes(value);
+}
+
+export const DEFAULT_LISTING_PARKING: ListingParking = "TO_VERIFY";
+
+export const LISTING_PARKING_TYPES = [
+  "SHARED_YARD",
+  "PRIVATE_YARD",
+  "UNDERGROUND",
+  "GARAGE",
+] as const;
+export type ListingParkingType = (typeof LISTING_PARKING_TYPES)[number];
+
+export function isListingParkingType(value: string): value is ListingParkingType {
+  return (LISTING_PARKING_TYPES as readonly string[]).includes(value);
+}
+
 export type PropertyListingImage = {
   id?: string;
   url: string;
   originalName: string;
 };
 
+export const EXTERNAL_ID_PLATFORMS = ["MYHOME", "SS_GE"] as const;
+export type ExternalIdPlatform = (typeof EXTERNAL_ID_PLATFORMS)[number];
+
+export function isExternalIdPlatform(value: string): value is ExternalIdPlatform {
+  return (EXTERNAL_ID_PLATFORMS as readonly string[]).includes(value);
+}
+
+export function parseExternalIdPlatform(value: unknown): ExternalIdPlatform | null {
+  if (value === "MYHOME") {
+    return "MYHOME";
+  }
+  if (value === "SS_GE" || value === "SSGE") {
+    return "SS_GE";
+  }
+  return null;
+}
+
 export type PropertyExternalId = {
   id: string;
-  platform: "MYHOME" | "SSGE";
+  platform: ExternalIdPlatform;
   value: string;
   enteredAt: string;
   archivedAt: string | null;
@@ -142,13 +194,17 @@ export type PropertyApartment = {
   floor: number;
   totalFloors: number;
   ceilingHeight: number | null;
+  balconyCount: number | null;
   balconyArea: number | null;
+  veranda: boolean;
   needsVerification: string[];
   elevator: boolean | null;
   centralHeating: boolean | null;
   airConditioner: boolean | null;
   kitchenType: KitchenType;
   furnished: boolean | null;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
@@ -166,11 +222,15 @@ export type PropertyPrivateHouse = {
   renovation: string | null;
   rooms: number;
   bedrooms: number;
+  balconyCount: number | null;
   balconyArea: number | null;
+  veranda: boolean;
   needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   pool: boolean;
   fruitTrees: boolean;
@@ -211,6 +271,8 @@ export type PropertyCommercial = {
   needsVerification: string[];
   centralHeating: boolean;
   airConditioner: boolean;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   electricity: boolean;
   water: boolean;
@@ -232,6 +294,7 @@ export type Property = EntityVerificationFields & {
   title?: string | null;
   cadastralCode: string | null;
   pricePublic: number;
+  currency: SupportedListingCurrency;
   priceInternal?: number | null;
   ownerName?: string;
   ownerPhones?: string[];

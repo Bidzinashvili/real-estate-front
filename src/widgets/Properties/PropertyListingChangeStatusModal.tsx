@@ -14,7 +14,7 @@ import {
 import type { OutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { datetimeLocalValueToIso } from "@/shared/lib/datetimeLocalIso";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 
 const FIELD_CLASS =
@@ -184,34 +184,21 @@ export function PropertyListingChangeStatusModal({
         </h2>
 
         <div className="mt-4 space-y-4">
-          <div>
-            <label
-              htmlFor={`modal-status-${property.id}`}
-              className="mb-1 block text-xs font-medium text-muted-foreground"
-            >
-              განცხადების სტატუსი
-            </label>
-            <NativeSelectSurface>
-              <select
-                id={`modal-status-${property.id}`}
-                aria-label="განცხადების სტატუსი"
-                value={selectedStatus}
-                onChange={(event) => {
-                  const raw = event.target.value;
-                  if (isPropertyStatus(raw)) {
-                    setSelectedStatus(raw);
-                  }
-                }}
-                className={FIELD_CLASS}
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {formatPropertyStatusLabel(status)}
-                  </option>
-                ))}
-              </select>
-            </NativeSelectSurface>
-          </div>
+          <OptionChips
+            id={`modal-status-${property.id}`}
+            label="განცხადების სტატუსი"
+            aria-label="განცხადების სტატუსი"
+            value={selectedStatus}
+            onChange={(rawStatus) => {
+              if (isPropertyStatus(rawStatus)) {
+                setSelectedStatus(rawStatus);
+              }
+            }}
+            options={statusOptions.map((status) => ({
+              value: status,
+              label: formatPropertyStatusLabel(status),
+            }))}
+          />
 
           {needsOutcomeSource(selectedStatus) ? (
             <div>
@@ -229,35 +216,16 @@ export function PropertyListingChangeStatusModal({
               <p className="text-xs font-medium text-muted-foreground">
                 ქირის გადამოწმების შეხსენება
               </p>
-              <div className="flex flex-col gap-2">
-                <label className="inline-flex items-center gap-2 text-sm text-foreground">
-                  <input
-                    type="radio"
-                    name={`rental-reminder-${property.id}`}
-                    checked={rentalReminderChoice === "RENTAL_6M_MINUS_15D"}
-                    onChange={() => setRentalReminderChoice("RENTAL_6M_MINUS_15D")}
-                  />
-                  6 თვე (-15 დღე)
-                </label>
-                <label className="inline-flex items-center gap-2 text-sm text-foreground">
-                  <input
-                    type="radio"
-                    name={`rental-reminder-${property.id}`}
-                    checked={rentalReminderChoice === "RENTAL_1Y_MINUS_15D"}
-                    onChange={() => setRentalReminderChoice("RENTAL_1Y_MINUS_15D")}
-                  />
-                  1 წელი (-15 დღე)
-                </label>
-                <label className="inline-flex items-center gap-2 text-sm text-foreground">
-                  <input
-                    type="radio"
-                    name={`rental-reminder-${property.id}`}
-                    checked={rentalReminderChoice === "CUSTOM_DATE"}
-                    onChange={() => setRentalReminderChoice("CUSTOM_DATE")}
-                  />
-                  კონკრეტული თარიღი
-                </label>
-              </div>
+              <OptionChips
+                aria-label="ქირის გადამოწმების შეხსენება"
+                value={rentalReminderChoice}
+                onChange={setRentalReminderChoice}
+                options={[
+                  { value: "RENTAL_6M_MINUS_15D", label: "6 თვე (-15 დღე)" },
+                  { value: "RENTAL_1Y_MINUS_15D", label: "1 წელი (-15 დღე)" },
+                  { value: "CUSTOM_DATE", label: "კონკრეტული თარიღი" },
+                ]}
+              />
               {rentalReminderChoice === "CUSTOM_DATE" ? (
                 <input
                   type="datetime-local"

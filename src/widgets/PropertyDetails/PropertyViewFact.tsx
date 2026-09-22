@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
 import type { LockState } from "@/features/matching/matchingEnums";
+import { formatListingParkingDisplay } from "@/features/properties/listingParking";
+import type { ListingParking, ListingParkingType } from "@/features/properties/types";
+import { LISTING_PARKING_FIELD_LABEL } from "@/shared/i18n/enumLabels";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import { NEEDS_VERIFICATION_LABEL } from "@/widgets/PropertyDetails/propertyViewFormatters";
+import {
+  BALCONY_FIELD_LABEL,
+  BALCONY_VERANDA_LABEL,
+  formatBalconyCountDisplay,
+  isBalconyUiToVerify,
+} from "@/features/properties/listingBalcony";
 
 export type PropertyViewFactTone = "default" | "verify" | "yes" | "no";
 
@@ -174,4 +183,64 @@ export function OptionalTextFact({ label, value, lock, onLockChange }: OptionalT
       onLockChange={onLockChange}
     />
   );
+}
+
+type ListingParkingFactProps = {
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
+};
+
+export function ListingParkingFact({ parking, parkingTypes }: ListingParkingFactProps) {
+  const tone: PropertyViewFactTone =
+    parking === "YES" ? "yes" : parking === "NO" ? "no" : "verify";
+
+  return (
+    <PropertyViewFact
+      label={LISTING_PARKING_FIELD_LABEL}
+      value={formatListingParkingDisplay(parking, parkingTypes)}
+      tone={tone}
+    />
+  );
+}
+
+type ListingBalconyFactsProps = {
+  balconyCount: number | null | undefined;
+  needsVerification?: string[] | null;
+  balconyArea?: number | null;
+  veranda?: boolean | null;
+  lock?: LockState;
+  onLockChange?: (next: LockState) => void;
+};
+
+export function ListingBalconyFacts({
+  balconyCount,
+  needsVerification,
+  balconyArea,
+  veranda,
+  lock,
+  onLockChange,
+}: ListingBalconyFactsProps) {
+  const isToVerify = isBalconyUiToVerify(balconyCount, needsVerification);
+  const formattedArea =
+    balconyArea !== null && balconyArea !== undefined && Number.isFinite(balconyArea)
+      ? `${balconyArea.toLocaleString()} მ²`
+      : null;
+  const facts = [
+    <PropertyViewFact
+      key="count"
+      label={BALCONY_FIELD_LABEL}
+      value={formatBalconyCountDisplay({ balconyCount, needsVerification })}
+      tone={isToVerify ? "verify" : balconyCount === 0 ? "no" : "default"}
+      lock={lock}
+      onLockChange={onLockChange}
+    />,
+    formattedArea ? (
+      <PropertyViewFact key="area" label="აივნის ფართობი" value={formattedArea} />
+    ) : null,
+    veranda === true ? (
+      <PropertyViewFact key="veranda" label={BALCONY_VERANDA_LABEL} value="კი" tone="yes" />
+    ) : null,
+  ];
+
+  return <>{facts}</>;
 }

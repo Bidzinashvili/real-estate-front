@@ -1,4 +1,5 @@
 import type { Property } from "@/features/properties/types";
+import { EXTERNAL_ID_PLATFORM_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 
 type PropertyViewMetaCardProps = {
   property: Property;
@@ -75,7 +76,8 @@ export function PropertyViewMetaCard({ property }: PropertyViewMetaCardProps) {
             <dd className="mt-1 space-y-1 text-sm text-foreground">
               {activeExternalIds.map((externalId) => (
                 <p key={externalId.id}>
-                  {externalId.platform}: {externalId.value}
+                  {lookupEnumLabel(EXTERNAL_ID_PLATFORM_LABELS, externalId.platform)}:{" "}
+                  {externalId.value}
                 </p>
               ))}
             </dd>

@@ -1,7 +1,10 @@
+import type { SupportedListingCurrency } from "@/features/currency/types";
+import { listingCurrencySymbol } from "@/features/currency/types";
 import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import {
   formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
+  formatBuildingStructureDisplay,
   formatHotelScopeLabel,
   formatKitchenTypeLabel,
   formatLandCategoryLabel,
@@ -47,6 +50,16 @@ export function formatGelAmount(amount: number | null | undefined): string | nul
     return null;
   }
   return `${amount.toLocaleString()} ₾`;
+}
+
+export function formatListingAmount(
+  amount: number | null | undefined,
+  currency: SupportedListingCurrency,
+): string | null {
+  if (amount === null || amount === undefined || Number.isNaN(amount)) {
+    return null;
+  }
+  return `${listingCurrencySymbol(currency)} ${amount.toLocaleString()}`;
 }
 
 export function formatPropertyDateTime(isoTimestamp: string | null | undefined): string | null {
@@ -96,6 +109,7 @@ export function propertyStatusBadgeClass(status: PropertyStatus): string {
 export {
   formatBuildingAgeTypeLabel,
   formatBuildingConditionLabel,
+  formatBuildingStructureDisplay,
   formatDealTypeLabel,
   formatKitchenTypeLabel,
   formatLandCategoryLabel,

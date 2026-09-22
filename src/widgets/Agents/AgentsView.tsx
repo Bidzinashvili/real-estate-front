@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAgentsList } from "@/features/agents/useAgentsList";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { PasswordSetBadge } from "@/widgets/Agents/PasswordSetBadge";
 
 const PAGE_SIZE = 10;
@@ -113,20 +113,22 @@ export function AgentsView() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow-sm">
-            <span className="hidden font-medium sm:inline">სორტირება</span>
-            <InlineSelect
+          <div className="flex w-full flex-col gap-2 sm:w-auto">
+            <OptionChips
+              label="სორტირება"
               aria-label="აგენტების სორტირება"
               value={sortBy}
-              onChange={(value) => handleSortChange(value as SortBy)}
+              onChange={(selectedValue) => handleSortChange(selectedValue as SortBy)}
               options={AGENT_SORT_OPTIONS}
+              size="compact"
             />
-            <span className="h-4 w-px bg-border" />
-            <InlineSelect
+            <OptionChips
+              label="მიმართულება"
               aria-label="სორტირების მიმართულება"
               value={order}
-              onChange={(value) => handleOrderChange(value as Order)}
+              onChange={(selectedValue) => handleOrderChange(selectedValue as Order)}
               options={ORDER_OPTIONS}
+              size="compact"
             />
           </div>
         </div>

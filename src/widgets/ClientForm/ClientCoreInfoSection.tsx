@@ -25,6 +25,7 @@ import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 import { ClientProfileLookupSignals } from "@/widgets/ClientProfiles/ClientProfileLookupSignals";
 import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
+import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
 
 const clientPhoneInputClassName =
   "shadow-none block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary";
@@ -266,19 +267,20 @@ export function ClientCoreInfoSection({
           className={`grid grid-cols-1 gap-4 ${showClientStatusField ? "sm:grid-cols-2" : ""}`}
         >
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-foreground">
-              გარიგების ტიპი <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...register("dealType")}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-            >
-              {dealOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <Controller
+              name="dealType"
+              control={control}
+              render={({ field }) => (
+                <OptionChips
+                  label="გარიგების ტიპი"
+                  labelClassName={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={dealOptions}
+                />
+              )}
+            />
             {fieldDescriptions?.dealType ? (
               <p className="text-xs text-muted-foreground">{fieldDescriptions.dealType}</p>
             ) : null}
@@ -286,19 +288,26 @@ export function ClientCoreInfoSection({
 
           {showClientStatusField ? (
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">სტატუსი</label>
-              <select
-                {...register("status")}
-                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-              >
-                {optionalStatusChoice && <option value="">არ არის მითითებული</option>}
-                {showDefaultStatusOption && <option value="">ნაგულისხმევი (აქტიური)</option>}
-                {statusSelectOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <OptionChips
+                    label="სტატუსი"
+                    labelClassName={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={[
+                      ...(optionalStatusChoice
+                        ? [{ value: "", label: "არ არის მითითებული" }]
+                        : showDefaultStatusOption
+                          ? [{ value: "", label: "ნაგულისხმევი (აქტიური)" }]
+                          : []),
+                      ...statusSelectOptions,
+                    ]}
+                  />
+                )}
+              />
               {fieldDescriptions?.status ? (
                 <p className="text-xs text-muted-foreground">{fieldDescriptions.status}</p>
               ) : null}

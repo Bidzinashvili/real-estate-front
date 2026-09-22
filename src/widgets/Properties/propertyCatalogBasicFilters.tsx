@@ -5,13 +5,18 @@ import {
   isDealType,
   type DealType,
 } from "@/features/properties/dealType";
-import { PROPERTY_TYPE_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import {
+  PROPERTY_TYPE_OPTIONS,
+  propertyTypeAllowsBuildingAgeType,
+} from "@/features/properties/addPropertyFormOptions";
 import { isPropertyType, type PropertyType } from "@/features/properties/types";
+import { BuildingStructureFields } from "@/widgets/AddProperty/BuildingStructureFields";
 import type { UsePropertiesCatalogResult } from "@/features/properties/usePropertiesCatalog";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
 import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
 import { READY_TO_UPLOAD_COPY } from "@/features/readyToUpload/readyToUploadCopy";
+import { PROPERTY_CATALOG_LABEL_CLASS as LABEL_CLASS } from "@/widgets/Properties/propertyCatalogFilterSharedStyles";
 
 function parseDealTypeSelectValue(raw: string): DealType | "" {
   if (raw === "") return "";
@@ -23,7 +28,7 @@ function parsePropertyTypeSelectValue(raw: string): PropertyType | "" {
   return isPropertyType(raw) ? raw : "";
 }
 
-const DEAL_TYPE_FILTER_OPTIONS = [
+const DEAL_TYPE_FILTER_OPTIONS: ReadonlyArray<{ value: DealType | ""; label: string }> = [
   { value: "", label: "ყველა გარიგება" },
   ...DEAL_TYPE_OPTIONS.map((option) => ({
     value: option.value,
@@ -31,7 +36,10 @@ const DEAL_TYPE_FILTER_OPTIONS = [
   })),
 ];
 
-const PROPERTY_TYPE_FILTER_OPTIONS = [
+const PROPERTY_TYPE_FILTER_OPTIONS: ReadonlyArray<{
+  value: PropertyType | "";
+  label: string;
+}> = [
   { value: "", label: "ყველა ტიპი" },
   ...PROPERTY_TYPE_OPTIONS.map((option) => ({
     value: option.value,
@@ -52,27 +60,39 @@ export function PropertyCatalogBasicFilters({
 
   return (
     <div className="flex flex-col gap-3">
+      <OptionChips
+        label="გარიგების ტიპი"
+        labelClassName={LABEL_CLASS}
+        aria-label="გარიგების ტიპით გაფილტვრა"
+        value={state.dealType}
+        onChange={(selectedValue) =>
+          catalog.setDealType(parseDealTypeSelectValue(selectedValue))
+        }
+        options={DEAL_TYPE_FILTER_OPTIONS}
+        size="compact"
+      />
+      <OptionChips
+        label="ტიპი"
+        labelClassName={LABEL_CLASS}
+        aria-label="ტიპით გაფილტვრა"
+        value={state.propertyType}
+        onChange={(selectedValue) =>
+          catalog.setPropertyType(parsePropertyTypeSelectValue(selectedValue))
+        }
+        options={PROPERTY_TYPE_FILTER_OPTIONS}
+        size="compact"
+      />
+      <BuildingStructureFields
+        idPrefix="catalog"
+        buildingCondition={state.buildingCondition}
+        buildingAgeType={state.buildingAgeType}
+        showAgeType={propertyTypeAllowsBuildingAgeType(state.propertyType)}
+        allowEmptyCondition
+        size="compact"
+        labelClassName={LABEL_CLASS}
+        onChange={catalog.setBuildingStructure}
+      />
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
-          <InlineSelect
-            aria-label="გარიგების ტიპით გაფილტვრა"
-            value={state.dealType}
-            onChange={(selectedValue) =>
-              catalog.setDealType(parseDealTypeSelectValue(selectedValue))
-            }
-            options={DEAL_TYPE_FILTER_OPTIONS}
-          />
-        </div>
-        <div className="flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
-          <InlineSelect
-            aria-label="ტიპით გაფილტვრა"
-            value={state.propertyType}
-            onChange={(selectedValue) =>
-              catalog.setPropertyType(parsePropertyTypeSelectValue(selectedValue))
-            }
-            options={PROPERTY_TYPE_FILTER_OPTIONS}
-          />
-        </div>
         <input
           type="text"
           value={state.district}

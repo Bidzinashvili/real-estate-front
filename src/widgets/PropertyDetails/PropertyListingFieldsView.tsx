@@ -1,5 +1,6 @@
 "use client";
 
+import { listingCurrencySymbol } from "@/features/currency/types";
 import {
   formatHotelScopeLabelOrUnset,
   formatLandCategoryLabel,
@@ -7,9 +8,20 @@ import {
   isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
+import { HIDE_FROM_OTHERS_COPY } from "@/features/hideFromOthers/hideFromOthersCopy";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
 import { calculatePricePerSquareMeter } from "@/features/properties/pricePerSquareMeter";
 import { CANONICAL_AREA_MISSING_LABEL, canonicalPropertyArea } from "@/features/properties/propertyArea";
+import { formatListingParkingDisplay } from "@/features/properties/listingParking";
+import {
+  BALCONY_FIELD_LABEL,
+  BALCONY_VERANDA_LABEL,
+  formatBalconyCountDisplay,
+} from "@/features/properties/listingBalcony";
+import {
+  LISTING_PARKING_FIELD_LABEL,
+  LISTING_PARKING_SPACES_FIELD_LABEL,
+} from "@/shared/i18n/enumLabels";
 import {
   DetailMultiline,
   DetailNumber,
@@ -21,14 +33,12 @@ type PropertyListingFieldsViewProps = {
   values: PropertyFormValues;
   showInternalPrice: boolean;
   showPrivateNotes: boolean;
-  readOnlyPrivateHouseBalcony?: number | null;
 };
 
 export function PropertyListingFieldsView({
   values,
   showInternalPrice,
   showPrivateNotes,
-  readOnlyPrivateHouseBalcony,
 }: PropertyListingFieldsViewProps) {
   const areaSquareMeters = canonicalPropertyArea(values);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
@@ -51,6 +61,11 @@ export function PropertyListingFieldsView({
           value={formatDealTypeLabel(values.dealType)}
         />
 
+        <DetailYesNo
+          label={HIDE_FROM_OTHERS_COPY.actionLabel}
+          value={values.hideFromOthers}
+        />
+
         {values.propertyType === "HOTEL" && (
           <DetailText
             label="სასტუმროს ტიპი"
@@ -71,19 +86,19 @@ export function PropertyListingFieldsView({
           <DetailNumber
             label="საჯარო ფასი"
             value={values.pricePublic}
-            suffix="₾"
+            suffix={listingCurrencySymbol(values.currency)}
           />
           {showInternalPrice && (
             <DetailNumber
               label="შიდა ფასი"
               value={values.priceInternal}
-              suffix="₾"
+              suffix={listingCurrencySymbol(values.currency)}
             />
           )}
           <DetailNumber
             label="ფასი მ²-ზე"
             value={pricePerSquareMeter}
-            suffix="₾"
+            suffix={listingCurrencySymbol(values.currency)}
           />
         </div>
 
@@ -123,13 +138,36 @@ export function PropertyListingFieldsView({
               value={values.apartment.ceilingHeight}
               suffix="მ"
             />
-            <DetailNumber
-              label="აივნის ფართობი"
-              value={values.apartment.balconyArea}
-              suffix="მ²"
+            <DetailText
+              label={BALCONY_FIELD_LABEL}
+              value={formatBalconyCountDisplay({
+                balconyCount: values.apartment.balconyCount,
+                needsVerification: values.apartment.needsVerification,
+              })}
+            />
+            {values.apartment.balconyArea != null ? (
+              <DetailNumber
+                label="აივნის ფართობი"
+                value={values.apartment.balconyArea}
+                suffix="მ²"
+              />
+            ) : null}
+            {values.apartment.veranda === true ? (
+              <DetailText label={BALCONY_VERANDA_LABEL} value="კი" />
+            ) : null}
+            <DetailText
+              label={LISTING_PARKING_FIELD_LABEL}
+              value={
+                values.apartment.parking
+                  ? formatListingParkingDisplay(
+                      values.apartment.parking,
+                      values.apartment.parkingTypes ?? [],
+                    )
+                  : null
+              }
             />
             <DetailNumber
-              label="პარკინგის ადგილები"
+              label={LISTING_PARKING_SPACES_FIELD_LABEL}
               value={values.apartment.parkingSpaces}
             />
             <DetailYesNo
@@ -169,11 +207,36 @@ export function PropertyListingFieldsView({
               requirePositive
               empty={CANONICAL_AREA_MISSING_LABEL}
             />
-            {readOnlyPrivateHouseBalcony !== undefined ? (
-              <DetailNumber label="აივნის ფართობი" value={readOnlyPrivateHouseBalcony} />
+            <DetailText
+              label={BALCONY_FIELD_LABEL}
+              value={formatBalconyCountDisplay({
+                balconyCount: values.privateHouse.balconyCount,
+                needsVerification: values.privateHouse.needsVerification,
+              })}
+            />
+            {values.privateHouse.balconyArea != null ? (
+              <DetailNumber
+                label="აივნის ფართობი"
+                value={values.privateHouse.balconyArea}
+                suffix="მ²"
+              />
             ) : null}
+            {values.privateHouse.veranda === true ? (
+              <DetailText label={BALCONY_VERANDA_LABEL} value="კი" />
+            ) : null}
+            <DetailText
+              label={LISTING_PARKING_FIELD_LABEL}
+              value={
+                values.privateHouse.parking
+                  ? formatListingParkingDisplay(
+                      values.privateHouse.parking,
+                      values.privateHouse.parkingTypes ?? [],
+                    )
+                  : null
+              }
+            />
             <DetailNumber
-              label="პარკინგის ადგილები"
+              label={LISTING_PARKING_SPACES_FIELD_LABEL}
               value={values.privateHouse.parkingSpaces}
             />
             <DetailYesNo
@@ -256,8 +319,19 @@ export function PropertyListingFieldsView({
               value={values.commercial.ceilingHeight}
               suffix="მ"
             />
+            <DetailText
+              label={LISTING_PARKING_FIELD_LABEL}
+              value={
+                values.commercial.parking
+                  ? formatListingParkingDisplay(
+                      values.commercial.parking,
+                      values.commercial.parkingTypes ?? [],
+                    )
+                  : null
+              }
+            />
             <DetailNumber
-              label="პარკინგის ადგილები"
+              label={LISTING_PARKING_SPACES_FIELD_LABEL}
               value={values.commercial.parkingSpaces}
             />
             <DetailYesNo

@@ -1,11 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
-import {
-  appendHistoryDateEntry,
-  applyEmptyHistoryDatePrefix,
-} from "@/shared/lib/historyDatePrefix";
+import { useLayoutEffect, useRef } from "react";
+import { applyHistoryNoteTextChange } from "@/shared/lib/historyDatePrefix";
 import { cn } from "@/shared/lib/utils";
 
 type HistoryNoteFieldProps = {
@@ -32,53 +28,78 @@ export function HistoryNoteField({
   hint,
 }: HistoryNoteFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [shouldMoveCursorToEnd, setShouldMoveCursorToEnd] = useState(false);
+  const caretStartRef = useRef(0);
+  const caretEndRef = useRef(0);
+  const pendingCursorPositionRef = useRef<number | null>(null);
+  const hasRefreshedLeadingDateRef = useRef(false);
 
-  useLayoutEffect(() => {
-    if (!shouldMoveCursorToEnd) {
-      return;
-    }
+  function rememberCaret() {
     const textarea = textareaRef.current;
-    setShouldMoveCursorToEnd(false);
     if (!textarea) {
       return;
     }
-    textarea.focus();
-    const cursorPosition = textarea.value.length;
-    textarea.setSelectionRange(cursorPosition, cursorPosition);
-  }, [shouldMoveCursorToEnd, value]);
-
-  function handleChange(rawValue: string) {
-    onChange(applyEmptyHistoryDatePrefix(value, rawValue));
+    caretStartRef.current = textarea.selectionStart;
+    caretEndRef.current = textarea.selectionEnd;
   }
 
-  function handleNewEntry() {
-    onChange(appendHistoryDateEntry(value));
-    setShouldMoveCursorToEnd(true);
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    const cursorPosition = pendingCursorPositionRef.current;
+    if (!textarea || cursorPosition === null) {
+      return;
+    }
+    pendingCursorPositionRef.current = null;
+    const boundedPosition = Math.min(
+      Math.max(cursorPosition, 0),
+      textarea.value.length,
+    );
+    textarea.focus();
+    textarea.setSelectionRange(boundedPosition, boundedPosition);
+  }, [value]);
+
+  function handleChange(rawValue: string, nativeSelectionStart: number) {
+    const shouldRefreshLeadingDate = !hasRefreshedLeadingDateRef.current;
+    const nextValue = applyHistoryNoteTextChange({
+      previousValue: value,
+      rawValue,
+      caretStart: caretStartRef.current,
+      caretEnd: caretEndRef.current,
+      shouldRefreshLeadingDate,
+    });
+    const hasMeaningfulEdit =
+      nextValue !== rawValue || value.trim() !== rawValue.trim();
+    if (hasMeaningfulEdit) {
+      hasRefreshedLeadingDateRef.current = true;
+    }
+    const cursorOffset = nextValue.length - rawValue.length;
+    const nextCursor = nativeSelectionStart + cursorOffset;
+    if (nextValue !== rawValue) {
+      pendingCursorPositionRef.current = nextCursor;
+    }
+    caretStartRef.current = nextCursor;
+    caretEndRef.current = nextCursor;
+    onChange(nextValue);
   }
 
   return (
     <div className="space-y-1.5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <label htmlFor={id} className="block text-sm font-medium text-foreground">
-          {label}
-          {required ? <span className="text-red-500"> *</span> : null}
-        </label>
-        <button
-          type="button"
-          onClick={handleNewEntry}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:text-primary/80"
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden />
-          ახალი ჩანაწერი
-        </button>
-      </div>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
+        {label}
+        {required ? <span className="text-red-500"> *</span> : null}
+      </label>
       <textarea
         ref={textareaRef}
         id={id}
         rows={rows}
         value={value}
-        onChange={(event) => handleChange(event.target.value)}
+        onFocus={rememberCaret}
+        onSelect={rememberCaret}
+        onKeyDown={rememberCaret}
+        onKeyUp={rememberCaret}
+        onClick={rememberCaret}
+        onChange={(event) =>
+          handleChange(event.target.value, event.target.selectionStart)
+        }
         className={cn(textareaClassName)}
       />
       {error ? (

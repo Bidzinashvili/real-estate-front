@@ -1,16 +1,18 @@
 import type { Property } from "@/features/properties/types";
 import type { LockState, PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
-import { BUILDING_AGE_TYPE_FIELD_LABEL } from "@/shared/i18n/enumLabels";
+import { BUILDING_STRUCTURE_FIELD_LABEL, KITCHEN_TYPE_FIELD_LABEL, APARTMENT_PROJECT_FIELD_LABEL } from "@/shared/i18n/enumLabels";
+import { formatProjectDisplayName } from "@/features/properties/projectName";
 import {
+  ListingParkingFact,
+  ListingBalconyFacts,
   OptionalTextFact,
   PropertyViewFactGrid,
   VerifiableBooleanFact,
   VerifiableNumberFact,
 } from "@/widgets/PropertyDetails/PropertyViewFact";
 import {
-  formatBuildingAgeTypeLabel,
-  formatBuildingConditionLabel,
+  formatBuildingStructureDisplay,
   formatCommercialStatusLabel,
   formatKitchenTypeLabel,
   formatLandCategoryLabel,
@@ -104,27 +106,23 @@ export function PropertyViewCharacteristics({
               {...lockProps("renovation")}
             />
             <OptionalTextFact
-              label="შენობის მდგომარეობა"
-              value={formatBuildingConditionLabel(property.apartment.buildingCondition)}
+              label={BUILDING_STRUCTURE_FIELD_LABEL}
+              value={formatBuildingStructureDisplay(
+                property.apartment.buildingCondition,
+                property.apartment.buildingAgeType,
+              )}
               {...lockProps("buildingCondition")}
             />
             <OptionalTextFact
-              label={BUILDING_AGE_TYPE_FIELD_LABEL}
-              value={formatBuildingAgeTypeLabel(property.apartment.buildingAgeType)}
-            />
-            <OptionalTextFact
-              label="სამზარეულოს ტიპი"
+              label={KITCHEN_TYPE_FIELD_LABEL}
               value={formatKitchenTypeLabel(property.apartment.kitchenType)}
               {...lockProps("kitchenType")}
             />
-            <VerifiableNumberFact
-              label="აივნის ფართობი"
-              value={property.apartment.balconyArea}
-              isToBeVerified={needsVerificationIncludes(
-                property.apartment.needsVerification,
-                "balconyArea",
-              )}
-              suffix="მ²"
+            <ListingBalconyFacts
+              balconyCount={property.apartment.balconyCount}
+              needsVerification={property.apartment.needsVerification}
+              balconyArea={property.apartment.balconyArea}
+              veranda={property.apartment.veranda}
               {...lockProps("balconyArea")}
             />
             {showRentPeriod ? (
@@ -137,8 +135,8 @@ export function PropertyViewCharacteristics({
               />
             ) : null}
             <OptionalTextFact
-              label="პროექტი"
-              value={property.apartment.project}
+              label={APARTMENT_PROJECT_FIELD_LABEL}
+              value={formatProjectDisplayName(property.apartment.project)}
               {...lockProps("project")}
             />
             {property.apartment.buildingNumber !== undefined ? (
@@ -147,8 +145,12 @@ export function PropertyViewCharacteristics({
                 value={property.apartment.buildingNumber}
               />
             ) : null}
+            <ListingParkingFact
+              parking={property.apartment.parking}
+              parkingTypes={property.apartment.parkingTypes}
+            />
             <VerifiableNumberFact
-              label="პარკინგი"
+              label="პარკინგის ადგილები"
               value={property.apartment.parkingSpaces}
               isToBeVerified={needsVerificationIncludes(
                 property.apartment.needsVerification,
@@ -252,19 +254,21 @@ export function PropertyViewCharacteristics({
               value={property.privateHouse.bedrooms}
               isToBeVerified={false}
             />
-            <VerifiableNumberFact
-              label="აივნის ფართობი"
-              value={property.privateHouse.balconyArea}
-              isToBeVerified={false}
-              suffix="მ²"
+            <ListingBalconyFacts
+              balconyCount={property.privateHouse.balconyCount}
+              needsVerification={property.privateHouse.needsVerification}
+              balconyArea={property.privateHouse.balconyArea}
+              veranda={property.privateHouse.veranda}
             />
             <OptionalTextFact
               label="რემონტი"
               value={formatRenovationLabel(property.privateHouse.renovation)}
             />
             <OptionalTextFact
-              label="შენობის მდგომარეობა"
-              value={formatBuildingConditionLabel(property.privateHouse.buildingCondition)}
+              label={BUILDING_STRUCTURE_FIELD_LABEL}
+              value={formatBuildingStructureDisplay(
+                property.privateHouse.buildingCondition,
+              )}
             />
             {showRentPeriod ? (
               <VerifiableNumberFact
@@ -274,8 +278,12 @@ export function PropertyViewCharacteristics({
                 suffix="თვე"
               />
             ) : null}
+            <ListingParkingFact
+              parking={property.privateHouse.parking}
+              parkingTypes={property.privateHouse.parkingTypes}
+            />
             <VerifiableNumberFact
-              label="პარკინგი"
+              label="პარკინგის ადგილები"
               value={property.privateHouse.parkingSpaces}
               isToBeVerified={false}
             />
@@ -468,8 +476,12 @@ export function PropertyViewCharacteristics({
                 suffix="თვე"
               />
             ) : null}
+            <ListingParkingFact
+              parking={property.commercial.parking}
+              parkingTypes={property.commercial.parkingTypes}
+            />
             <VerifiableNumberFact
-              label="პარკინგი"
+              label="პარკინგის ადგილები"
               value={property.commercial.parkingSpaces}
               isToBeVerified={false}
             />

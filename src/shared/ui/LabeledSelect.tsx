@@ -1,6 +1,6 @@
 "use client";
 
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
 
 export type LabeledSelectOption = { value: string; label: string };
 
@@ -21,31 +21,15 @@ export function LabeledSelect({
   options,
   disabled,
 }: LabeledSelectProps) {
-  const selectId = id ?? label.replace(/\s+/g, "-").toLowerCase();
-
   return (
-    <div className="space-y-1.5">
-      <label
-        htmlFor={selectId}
-        className="block text-sm font-medium text-foreground"
-      >
-        {label}
-      </label>
-      <NativeSelectSurface>
-        <select
-          id={selectId}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          disabled={disabled}
-          className="block w-full appearance-none rounded-lg border border-border bg-card pl-3 pr-10 py-2 text-sm text-foreground shadow-sm outline-none ring-0 disabled:cursor-not-allowed disabled:bg-muted"
-        >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </NativeSelectSurface>
-    </div>
+    <OptionChips
+      id={id}
+      label={label}
+      labelClassName={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}
+      value={value}
+      onChange={onChange}
+      options={options}
+      disabled={disabled}
+    />
   );
 }

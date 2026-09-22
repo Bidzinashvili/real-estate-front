@@ -29,8 +29,14 @@ import {
   type CatalogDebouncedTextState,
   type PropertyBalconyFilter,
   type PropertyCatalogUrlState,
+  type PropertyParkingFilter,
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { Property, PropertyType } from "@/features/properties/types";
+import type {
+  BuildingAgeType,
+  BuildingCondition,
+  ListingParkingType,
+} from "@/features/properties/propertyModelTypes";
 import { useUserStore } from "@/shared/stores";
 import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
@@ -162,6 +168,12 @@ export type UsePropertiesCatalogResult = {
   setDealType: (value: DealType | "") => void;
   setLifecycleStatus: (value: PropertyStatus | "") => void;
   setPropertyType: (value: PropertyType | "") => void;
+  setBuildingCondition: (value: BuildingCondition | "") => void;
+  setBuildingAgeType: (value: BuildingAgeType | "") => void;
+  setBuildingStructure: (value: {
+    buildingCondition: BuildingCondition | "";
+    buildingAgeType: BuildingAgeType | "";
+  }) => void;
   setCity: (value: string) => void;
   setDistrict: (value: string) => void;
   setMinPrice: (value: string) => void;
@@ -175,6 +187,8 @@ export type UsePropertiesCatalogResult = {
   setFloorTo: (value: string) => void;
   setTotalFloors: (value: string) => void;
   setBalcony: (value: PropertyBalconyFilter) => void;
+  setParking: (value: PropertyParkingFilter) => void;
+  setParkingTypes: (value: ListingParkingType[]) => void;
   setYardArea: (value: string) => void;
   setHouseArea: (value: string) => void;
   setLandArea: (value: string) => void;
@@ -354,6 +368,8 @@ export function usePropertiesCatalog(
     state.dealType,
     state.lifecycleStatus,
     state.propertyType,
+    state.buildingCondition,
+    state.buildingAgeType,
     state.selectedLabelIds,
     state.selectedLabelNames,
     state.selectedColors,

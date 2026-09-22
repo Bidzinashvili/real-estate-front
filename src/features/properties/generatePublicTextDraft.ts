@@ -1,8 +1,9 @@
 import { omitUnspecifiedBoolean } from "@/features/properties/apartmentVerification";
+import { isBalconyUiToVerify } from "@/features/properties/listingBalcony";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { PropertyFormValues } from "@/features/properties/payloadBuilder";
 import {
-  isBuildingAgeType,
+  buildingAgeTypeForCondition,
   isKitchenType,
   type BuildingAgeType,
   type KitchenType,
@@ -40,11 +41,15 @@ function parseOptionalInteger(
 }
 
 type ApartmentDraftSource = {
+  buildingCondition?: string | null;
   buildingAgeType?: BuildingAgeType | "" | null;
   rooms?: string | number | null;
   bedrooms?: string | number | null;
   kitchenType?: KitchenType | null;
+  balconyCount?: number | null;
   balconyArea?: string | number | null;
+  veranda?: boolean | null;
+  needsVerification?: string[] | null;
   goodView?: boolean | null;
   furnished?: boolean | null;
   airConditioner?: boolean | null;
@@ -55,8 +60,12 @@ function buildApartmentDraft(
 ): GeneratePublicTextApartmentDraft | undefined {
   const apartment: GeneratePublicTextApartmentDraft = {};
 
-  if (source.buildingAgeType && isBuildingAgeType(source.buildingAgeType)) {
-    apartment.buildingAgeType = source.buildingAgeType;
+  const buildingAgeType = buildingAgeTypeForCondition(
+    source.buildingCondition,
+    source.buildingAgeType,
+  );
+  if (buildingAgeType) {
+    apartment.buildingAgeType = buildingAgeType;
   }
 
   const rooms = parseOptionalInteger(source.rooms);
@@ -73,9 +82,21 @@ function buildApartmentDraft(
     apartment.kitchenType = source.kitchenType;
   }
 
+  if (!isBalconyUiToVerify(source.balconyCount, source.needsVerification)) {
+    const balconyCount = parseOptionalInteger(source.balconyCount);
+    if (balconyCount !== undefined) {
+      apartment.balconyCount = balconyCount;
+    }
+  }
+
   const balconyArea = parseOptionalFiniteNumber(source.balconyArea);
   if (balconyArea !== undefined) {
     apartment.balconyArea = balconyArea;
+  }
+
+  const veranda = omitUnspecifiedBoolean(source.veranda);
+  if (veranda !== undefined) {
+    apartment.veranda = veranda;
   }
 
   const goodView = omitUnspecifiedBoolean(source.goodView);

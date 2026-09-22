@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { generatePropertyPublicText } from "@/features/properties/api";
+import { formatGeneratedPublicText } from "@/features/properties/formatGeneratedPublicText";
 import { GENERATE_PUBLIC_TEXT_COPY } from "@/features/properties/generatePublicTextCopy";
 import type { GeneratePublicTextDraft } from "@/features/properties/propertyApiTypes";
 
@@ -46,7 +47,12 @@ export function useGeneratePublicText(): UseGeneratePublicTextResult {
 
   const generateFromDraft = useCallback(
     (draft: GeneratePublicTextDraft) => {
-      return runGeneration(() => generatePropertyPublicText(draft));
+      return runGeneration(async () => {
+        const response = await generatePropertyPublicText(draft);
+        return {
+          text: formatGeneratedPublicText(response.text, draft.dealType),
+        };
+      });
     },
     [runGeneration],
   );

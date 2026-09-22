@@ -1,7 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
-import { DEAL_TYPE_OPTIONS } from "@/features/properties/dealType";
+import { DEAL_TYPE_OPTIONS, type DealType } from "@/features/properties/dealType";
 import {
   HOTEL_SCOPE_FORM_OPTIONS,
   GEORGIAN_CITY_OPTIONS,
@@ -12,6 +13,7 @@ import type { HotelScope } from "@/features/properties/types";
 import { StreetAutocompleteField } from "@/features/streets/StreetAutocompleteField";
 import {
   addPropertyInputClassName,
+  CheckboxField,
   SelectField,
   TextField,
 } from "@/widgets/AddProperty/addPropertyFormFields";
@@ -20,7 +22,7 @@ import type { FormErrors } from "@/features/properties/addPropertyFormValidation
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
 import { ImageUploadField } from "@/widgets/AddProperty/ImageUploadField";
 import { ExternalIdList } from "@/shared/components/ExternalIdList";
-import { applyLinkedPropertyPriceInputChange } from "@/features/properties/linkedPropertyPrices";
+import { resolveCreatePublicPriceSuggestion } from "@/features/properties/linkedPropertyPrices";
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
@@ -33,6 +35,14 @@ import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwn
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
 import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
 import { buildGeneratePublicTextDraftFromCreateForm } from "@/features/properties/generatePublicTextDraft";
+import {
+  ListingPriceEquivalentHint,
+  parseListingAmountForHint,
+} from "@/features/currency/ListingPriceEquivalentHint";
+import { PriceCurrencyToggle } from "@/features/currency/PriceCurrencyToggle";
+import { listingCurrencySymbol } from "@/features/currency/types";
+import type { SupportedListingCurrency } from "@/features/currency/types";
+import { HIDE_FROM_OTHERS_COPY } from "@/features/hideFromOthers/hideFromOthersCopy";
 
 function parseFormNumber(value: string): number | null {
   const trimmedValue = value.trim();
@@ -98,31 +108,57 @@ export function AddPropertyCoreFields({
   onBuildingNumberChange,
 }: Props) {
   const showMatchingLocks = form.propertyType === "APARTMENT";
+  const hasManuallyEditedPublicPriceRef = useRef(false);
+  const lastSuggestedPublicInputRef = useRef<string | null>(null);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     parseFormNumber(form.pricePublic),
     getCreateAreaSquareMeters(form),
   );
+  const currencySymbol = listingCurrencySymbol(form.currency);
+  const internalPriceAmount = parseListingAmountForHint(form.priceInternal);
+  const publicPriceAmount = parseListingAmountForHint(form.pricePublic);
+
+  function applySuggestedPublicPrice(nextInternalInput: string, dealType: DealType) {
+    const suggestion = resolveCreatePublicPriceSuggestion({
+      dealType,
+      nextInternalInput,
+      currentPublicInput: form.pricePublic,
+      hasManuallyEditedPublicPrice: hasManuallyEditedPublicPriceRef.current,
+      lastSuggestedPublicInput: lastSuggestedPublicInputRef.current,
+    });
+
+    if (suggestion.kind === "unchanged") {
+      return;
+    }
+
+    if (suggestion.kind === "keepManual") {
+      hasManuallyEditedPublicPriceRef.current = true;
+      return;
+    }
+
+    lastSuggestedPublicInputRef.current =
+      suggestion.publicInput === "" ? null : suggestion.publicInput;
+    updateForm("pricePublic", suggestion.publicInput);
+  }
 
   function handleInternalPriceChange(value: string) {
-    const linkedPrices = applyLinkedPropertyPriceInputChange({
-      changedField: "priceInternal",
-      nextInput: value,
-      currentInternal: form.priceInternal,
-      currentPublic: form.pricePublic,
-    });
-    updateForm("priceInternal", linkedPrices.priceInternal);
-    updateForm("pricePublic", linkedPrices.pricePublic);
+    updateForm("priceInternal", value);
+    applySuggestedPublicPrice(value, form.dealType);
   }
 
   function handlePublicPriceChange(value: string) {
-    const linkedPrices = applyLinkedPropertyPriceInputChange({
-      changedField: "pricePublic",
-      nextInput: value,
-      currentInternal: form.priceInternal,
-      currentPublic: form.pricePublic,
-    });
-    updateForm("priceInternal", linkedPrices.priceInternal);
-    updateForm("pricePublic", linkedPrices.pricePublic);
+    hasManuallyEditedPublicPriceRef.current = true;
+    lastSuggestedPublicInputRef.current = null;
+    updateForm("pricePublic", value);
+  }
+
+  function handleDealTypeChange(value: DealType) {
+    updateForm("dealType", value);
+    applySuggestedPublicPrice(form.priceInternal, value);
+  }
+
+  function handleCurrencyChange(nextCurrency: SupportedListingCurrency) {
+    updateForm("currency", nextCurrency);
   }
 
   function handleOwnerAssignmentChange(nextAssignment: PropertyOwnerAssignment) {
@@ -157,7 +193,7 @@ export function AddPropertyCoreFields({
         id="dealType"
         label="გარიგების ტიპი"
         value={form.dealType}
-        onChange={(value) => updateForm("dealType", value)}
+        onChange={handleDealTypeChange}
         options={DEAL_TYPE_OPTIONS}
       />
       <SelectField
@@ -234,14 +270,36 @@ export function AddPropertyCoreFields({
           placeholder="აკრიფეთ ლეიბლის მოსაძებნად ან დასამატებლად"
         />
       </div>
-      <TextField
-        id="priceInternal"
-        label="შიდა ფასი"
-        value={form.priceInternal}
-        onChange={handleInternalPriceChange}
-        type="number"
-        error={fieldErrors.priceInternal}
-      />
+      <div className="sm:col-span-2">
+        <CheckboxField
+          id="hideFromOthers"
+          label={HIDE_FROM_OTHERS_COPY.actionLabel}
+          checked={form.hideFromOthers}
+          onChange={(checked) => updateForm("hideFromOthers", checked)}
+        />
+      </div>
+      <div className="flex items-center justify-between gap-3 sm:col-span-2">
+        <p className="text-sm font-medium text-foreground">ფასი</p>
+        <PriceCurrencyToggle
+          value={form.currency}
+          onChange={handleCurrencyChange}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <TextField
+          id="priceInternal"
+          label="შიდა ფასი"
+          value={form.priceInternal}
+          onChange={handleInternalPriceChange}
+          type="number"
+          error={fieldErrors.priceInternal}
+          leadingSymbol={currencySymbol}
+        />
+        <ListingPriceEquivalentHint
+          amount={internalPriceAmount}
+          fromCurrency={form.currency}
+        />
+      </div>
       <div className="space-y-1.5">
         {showMatchingLocks ? (
           <FieldWithLock
@@ -258,6 +316,7 @@ export function AddPropertyCoreFields({
               type="number"
               required
               error={fieldErrors.pricePublic}
+              leadingSymbol={currencySymbol}
             />
           </FieldWithLock>
         ) : (
@@ -269,11 +328,16 @@ export function AddPropertyCoreFields({
             type="number"
             required
             error={fieldErrors.pricePublic}
+            leadingSymbol={currencySymbol}
           />
         )}
+        <ListingPriceEquivalentHint
+          amount={publicPriceAmount}
+          fromCurrency={form.currency}
+        />
         {pricePerSquareMeter !== null ? (
           <p className="text-xs font-medium text-muted-foreground">
-            {formatPricePerSquareMeter(pricePerSquareMeter)}
+            {formatPricePerSquareMeter(pricePerSquareMeter, form.currency)}
           </p>
         ) : null}
       </div>

@@ -1,5 +1,10 @@
 import type { DealType } from "@/features/properties/dealType";
-import type { HotelScope, PropertyType } from "@/features/properties/propertyModelTypes";
+import type {
+  HotelScope,
+  ListingParking,
+  ListingParkingType,
+  PropertyType,
+} from "@/features/properties/propertyModelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 
 export type PublicPropertyImage = {
@@ -18,7 +23,10 @@ export type PublicApartment = {
   floor: number | null;
   totalFloors: number | null;
   ceilingHeight: number | null;
+  balconyCount: number | null;
   balconyArea: number | null;
+  veranda: boolean | null;
+  needsVerification: string[];
   elevator: boolean | null;
   goodView: boolean | null;
   bathrooms: number | null;
@@ -26,6 +34,8 @@ export type PublicApartment = {
   airConditioner: boolean | null;
   kitchenType: string | null;
   furnished: boolean | null;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   petsAllowed: boolean | null;
   minRentalPeriod: number | null;
@@ -41,10 +51,15 @@ export type PublicPrivateHouse = {
   renovation: string | null;
   rooms: number | null;
   bedrooms: number | null;
+  balconyCount: number | null;
   balconyArea: number | null;
+  veranda: boolean | null;
+  needsVerification: string[];
   centralHeating: boolean | null;
   airConditioner: boolean | null;
   furnished: boolean | null;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   pool: boolean | null;
   fruitTrees: boolean | null;
@@ -81,6 +96,8 @@ export type PublicCommercial = {
   centralHeating: boolean | null;
   airConditioner: boolean | null;
   furnished: boolean | null;
+  parking: ListingParking;
+  parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
   electricity: boolean | null;
   water: boolean | null;

@@ -11,9 +11,9 @@ import type {
   ConvertCurrencyParams,
   ConvertCurrencyResponse,
   GetUsdRateParams,
-  SupportedListingCurrency,
   UsdRateResponse,
 } from "@/features/currency/types";
+import { isSupportedListingCurrency } from "@/features/currency/types";
 
 const MAX_CONVERT_AMOUNT = 1e15;
 
@@ -23,10 +23,6 @@ function getCurrencyApiBaseUrl(): string {
     throw new Error("API მისამართი არ არის კონფიგურირებული");
   }
   return baseUrl;
-}
-
-function isSupportedCurrency(value: string): value is SupportedListingCurrency {
-  return value === "USD" || value === "GEL";
 }
 
 function normalizeUsdRateResponse(data: JsonValue): UsdRateResponse | null {
@@ -46,7 +42,7 @@ function normalizeConvertResponse(data: JsonValue): ConvertCurrencyResponse | nu
   if (!isJsonObject(data)) return null;
   const fromRaw = asString(data.from);
   const toRaw = asString(data.to);
-  if (!isSupportedCurrency(fromRaw) || !isSupportedCurrency(toRaw)) return null;
+  if (!isSupportedListingCurrency(fromRaw) || !isSupportedListingCurrency(toRaw)) return null;
   return {
     from: fromRaw,
     to: toRaw,

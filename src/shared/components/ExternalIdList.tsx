@@ -7,10 +7,13 @@ import type {
   ExternalIdPlatform,
 } from "@/features/properties/addPropertyFormState";
 import {
-  addPropertyInputClassName,
-  addPropertySelectClassName,
+    addPropertyInputClassName,
 } from "@/widgets/AddProperty/addPropertyFormFields";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips } from "@/shared/ui/OptionChips";
+import {
+  EXTERNAL_ID_PLATFORM_LABELS,
+  lookupEnumLabel,
+} from "@/shared/i18n";
 
 type ExternalIdListProps = {
   ids: ExternalIdFormRow[];
@@ -18,8 +21,8 @@ type ExternalIdListProps = {
 };
 
 const platformOptions: Array<{ value: ExternalIdPlatform; label: string }> = [
-  { value: "MYHOME", label: "MyHome" },
-  { value: "SSGE", label: "SS.ge" },
+  { value: "MYHOME", label: EXTERNAL_ID_PLATFORM_LABELS.MYHOME },
+  { value: "SS_GE", label: EXTERNAL_ID_PLATFORM_LABELS.SS_GE },
 ];
 
 function newLocalId(): string {
@@ -104,24 +107,18 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
           </p>
         ) : (
           activeIds.map((externalId) => (
-            <div key={externalId.localId} className="grid gap-2 sm:grid-cols-[9rem_1fr_7rem_2rem]">
-              <NativeSelectSurface>
-                <select
-                  value={externalId.platform}
-                  onChange={(event) =>
-                    handleUpdateId(externalId.localId, {
-                      platform: event.target.value as ExternalIdPlatform,
-                    })
-                  }
-                  className={addPropertySelectClassName()}
-                >
-                  {platformOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </NativeSelectSurface>
+            <div key={externalId.localId} className="grid gap-2 sm:grid-cols-[auto_1fr_7rem_2rem] sm:items-center">
+              <OptionChips
+                aria-label="პლატფორმა"
+                value={externalId.platform}
+                onChange={(selectedPlatform) =>
+                  handleUpdateId(externalId.localId, {
+                    platform: selectedPlatform,
+                  })
+                }
+                options={platformOptions}
+                size="compact"
+              />
               <input
                 value={externalId.value}
                 onChange={(event) =>
@@ -169,7 +166,8 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
                   className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground"
                 >
                   <span>
-                    {externalId.platform}: {externalId.value} ({displayDate(externalId.enteredAt)})
+                    {lookupEnumLabel(EXTERNAL_ID_PLATFORM_LABELS, externalId.platform)}:{" "}
+                    {externalId.value} ({displayDate(externalId.enteredAt)})
                   </span>
                   <button
                     type="button"

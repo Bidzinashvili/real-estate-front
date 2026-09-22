@@ -6,6 +6,12 @@ import {
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { Property, PropertyType } from "@/features/properties/types";
+import type {
+  BuildingAgeType,
+  BuildingCondition,
+  ListingParking,
+  ListingParkingType,
+} from "@/features/properties/propertyModelTypes";
 import type { LockState } from "@/features/matching/matchingEnums";
 import type { RecordColor } from "@/features/recordColor/recordColor";
 import {
@@ -63,6 +69,10 @@ export type GetPropertiesQuery = {
   lastOpenedTo?: string;
   neverOpened?: boolean;
   readyToUpload?: boolean;
+  buildingCondition?: BuildingCondition;
+  buildingAgeType?: BuildingAgeType;
+  parking?: ListingParking;
+  parkingTypes?: ListingParkingType[];
   labelIds?: string[];
   labelNames?: string[];
   color?: RecordColor[];
@@ -225,6 +235,10 @@ export function toGetPropertiesSearchParams(
   if (query.readyToUpload === true) {
     out.set("readyToUpload", "true");
   }
+  appendString(out, "buildingCondition", query.buildingCondition);
+  appendString(out, "buildingAgeType", query.buildingAgeType);
+  appendString(out, "parking", query.parking);
+  appendArray(out, "parkingTypes", query.parkingTypes);
 
   return out;
 }

@@ -9,8 +9,15 @@ import {
   DEFAULT_CATALOG_URL_STATE,
   type PropertyBalconyFilter,
   type PropertyCatalogUrlState,
+  type PropertyParkingFilter,
 } from "@/features/properties/propertyCatalogUrlParams";
 import type { PropertyType } from "@/features/properties/types";
+import type {
+  BuildingAgeType,
+  BuildingCondition,
+  ListingParkingType,
+} from "@/features/properties/propertyModelTypes";
+import { propertyTypeAllowsBuildingAgeType } from "@/features/properties/addPropertyFormOptions";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 import type { RecordColor } from "@/features/recordColor/recordColor";
 
@@ -29,6 +36,8 @@ const ADVANCED_FILTER_DEFAULTS: Pick<
   | "floorTo"
   | "totalFloors"
   | "balcony"
+  | "parking"
+  | "parkingTypes"
   | "yardArea"
   | "houseArea"
   | "landArea"
@@ -50,6 +59,8 @@ const ADVANCED_FILTER_DEFAULTS: Pick<
   floorTo: DEFAULT_CATALOG_URL_STATE.floorTo,
   totalFloors: DEFAULT_CATALOG_URL_STATE.totalFloors,
   balcony: DEFAULT_CATALOG_URL_STATE.balcony,
+  parking: DEFAULT_CATALOG_URL_STATE.parking,
+  parkingTypes: DEFAULT_CATALOG_URL_STATE.parkingTypes,
   yardArea: DEFAULT_CATALOG_URL_STATE.yardArea,
   houseArea: DEFAULT_CATALOG_URL_STATE.houseArea,
   landArea: DEFAULT_CATALOG_URL_STATE.landArea,
@@ -77,7 +88,26 @@ export function createPropertiesCatalogFilterSetters(args: {
     setLifecycleStatus: (value: PropertyStatus | "") =>
       bumpPage({ lifecycleStatus: value }),
     setPropertyType: (value: PropertyType | "") =>
-      bumpPage({ propertyType: value }),
+      bumpPage({
+        propertyType: value,
+        ...(propertyTypeAllowsBuildingAgeType(value) ? {} : { buildingAgeType: "" }),
+      }),
+    setBuildingCondition: (value: BuildingCondition | "") =>
+      bumpPage({
+        buildingCondition: value,
+        ...(value === "NEW" ? {} : { buildingAgeType: "" }),
+      }),
+    setBuildingAgeType: (value: BuildingAgeType | "") =>
+      bumpPage({ buildingAgeType: value }),
+    setBuildingStructure: (value: {
+      buildingCondition: BuildingCondition | "";
+      buildingAgeType: BuildingAgeType | "";
+    }) =>
+      bumpPage({
+        buildingCondition: value.buildingCondition,
+        buildingAgeType:
+          value.buildingCondition === "NEW" ? value.buildingAgeType : "",
+      }),
     setCity: (value: string) => bumpPage({ city: value }),
     setDistrict: (value: string) => bumpPage({ district: value }),
     setMinPrice: (value: string) => bumpPage({ minPrice: value }),
@@ -91,6 +121,12 @@ export function createPropertiesCatalogFilterSetters(args: {
     setFloorTo: (value: string) => bumpPage({ floorTo: value }),
     setTotalFloors: (value: string) => bumpPage({ totalFloors: value }),
     setBalcony: (value: PropertyBalconyFilter) => bumpPage({ balcony: value }),
+    setParking: (value: PropertyParkingFilter) =>
+      bumpPage({
+        parking: value,
+        ...(value === "NO" || value === "TO_VERIFY" ? { parkingTypes: [] } : {}),
+      }),
+    setParkingTypes: (value: ListingParkingType[]) => bumpPage({ parkingTypes: value }),
     setYardArea: (value: string) => bumpPage({ yardArea: value }),
     setHouseArea: (value: string) => bumpPage({ houseArea: value }),
     setLandArea: (value: string) => bumpPage({ landArea: value }),
@@ -158,6 +194,8 @@ export function countAdvancedCatalogFilters(
   if (state.floorFrom.trim() || state.floorTo.trim()) advancedFilterCount += 1;
   if (state.totalFloors.trim()) advancedFilterCount += 1;
   if (state.balcony) advancedFilterCount += 1;
+  if (state.parking) advancedFilterCount += 1;
+  if (state.parkingTypes.length > 0) advancedFilterCount += 1;
   if (state.yardArea.trim()) advancedFilterCount += 1;
   if (state.houseArea.trim()) advancedFilterCount += 1;
   if (state.landArea.trim()) advancedFilterCount += 1;
@@ -176,6 +214,8 @@ export function hasClearableCatalogFilters(
   if (state.selectedColors.length > 0) return true;
   if (state.dealType) return true;
   if (state.propertyType) return true;
+  if (state.buildingCondition) return true;
+  if (state.buildingAgeType) return true;
   if (state.district.trim()) return true;
   if (state.minPrice.trim() || state.maxPrice.trim()) return true;
   if (state.createdFrom.trim() || state.createdTo.trim()) return true;

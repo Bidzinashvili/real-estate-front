@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import type { InputHTMLAttributes } from "react";
 import { sanitizeTwoDigitNumericInput } from "@/shared/lib/twoDigitNumericInput";
 
-const propertyDetailsEditableControlClassName = (widthClassName: string) =>
-  `block ${widthClassName} rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-muted`;
+const propertyDetailsEditableControlClassName = (
+  widthClassName: string,
+  horizontalPadClassName = "px-3",
+) =>
+  `block ${widthClassName} rounded-lg border border-border bg-card ${horizontalPadClassName} py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-muted`;
 
 export const propertyDetailsEditableInputClassName =
   propertyDetailsEditableControlClassName("w-full");
@@ -21,6 +24,7 @@ export function EditableNumericTextInput({
   disabled = false,
   inputMode = "decimal",
   placeholder,
+  leadingSymbol,
 }: {
   label: string;
   value: number | undefined;
@@ -29,6 +33,7 @@ export function EditableNumericTextInput({
   disabled?: boolean;
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   placeholder?: string;
+  leadingSymbol?: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -37,46 +42,56 @@ export function EditableNumericTextInput({
   }, [value]);
 
   const display = draft !== null ? draft : value === undefined ? "" : String(value);
+  const inputClassNameWithPrefix = leadingSymbol
+    ? propertyDetailsEditableControlClassName("w-full", "pl-8 pr-3")
+    : inputClassName;
 
   return (
     <div className="space-y-1.5">
       <label className="block text-sm font-medium text-foreground">{label}</label>
-      <input
-        type="text"
-        inputMode={inputMode}
-        autoComplete="off"
-        placeholder={placeholder}
-        value={display}
-        onChange={(event) => {
-          const raw = event.target.value;
-          setDraft(raw);
-          if (raw.trim() === "") {
-            onValueChange(undefined);
-            return;
-          }
-          const parsed = parse(raw);
-          if (parsed !== undefined) {
-            onValueChange(parsed);
-          }
-        }}
-        onBlur={() => {
-          setDraft((currentDraft) => {
-            if (currentDraft === null) return null;
-            const trimmed = currentDraft.trim();
-            if (trimmed === "") {
+      <div className="relative">
+        {leadingSymbol ? (
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex w-8 items-center justify-center text-sm font-semibold text-foreground">
+            {leadingSymbol}
+          </span>
+        ) : null}
+        <input
+          type="text"
+          inputMode={inputMode}
+          autoComplete="off"
+          placeholder={placeholder}
+          value={display}
+          onChange={(event) => {
+            const raw = event.target.value;
+            setDraft(raw);
+            if (raw.trim() === "") {
               onValueChange(undefined);
-            } else {
-              const parsed = parse(trimmed);
-              if (parsed !== undefined) {
-                onValueChange(parsed);
-              }
+              return;
             }
-            return null;
-          });
-        }}
-        disabled={disabled}
-        className={inputClassName}
-      />
+            const parsed = parse(raw);
+            if (parsed !== undefined) {
+              onValueChange(parsed);
+            }
+          }}
+          onBlur={() => {
+            setDraft((currentDraft) => {
+              if (currentDraft === null) return null;
+              const trimmed = currentDraft.trim();
+              if (trimmed === "") {
+                onValueChange(undefined);
+              } else {
+                const parsed = parse(trimmed);
+                if (parsed !== undefined) {
+                  onValueChange(parsed);
+                }
+              }
+              return null;
+            });
+          }}
+          disabled={disabled}
+          className={inputClassNameWithPrefix}
+        />
+      </div>
     </div>
   );
 }

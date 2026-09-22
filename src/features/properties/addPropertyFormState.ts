@@ -1,30 +1,40 @@
 import type { DealType } from "@/features/properties/dealType";
 import {
+  DEFAULT_NEW_APARTMENT_BATHROOM_COUNT,
+  DEFAULT_NEW_APARTMENT_KITCHEN_TYPE,
   TBILISI_CITY,
   type GeorgianCity,
 } from "@/features/properties/addPropertyFormOptions";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
-import type {
-  BuildingAgeType,
-  BuildingCondition,
-  CommercialStatus,
-  HotelScope,
-  KitchenType,
-  LandCategory,
-  PropertyType,
-  Renovation,
+import type { SupportedListingCurrency } from "@/features/currency/types";
+import { DEFAULT_PROPERTY_CURRENCY } from "@/features/currency/types";
+import {
+  DEFAULT_LISTING_PARKING,
+  type BuildingAgeType,
+  type BuildingCondition,
+  type CommercialStatus,
+  type ExternalIdPlatform,
+  type HotelScope,
+  type KitchenType,
+  type LandCategory,
+  type ListingParking,
+  type ListingParkingType,
+  type PropertyType,
+  type Renovation,
 } from "@/features/properties/types";
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
 import { emptyOwnerAssignment } from "@/features/propertyOwners/ownerContactDrafts";
+import { INTERNAL_NON_STANDARD_PROJECT } from "@/features/properties/projectName";
+import { DEFAULT_NEW_BALCONY_NEEDS_VERIFICATION } from "@/features/properties/listingBalcony";
+
+export type { ExternalIdPlatform };
 
 export type AddPropertyActiveSubtype =
   | "apartment"
   | "privateHouse"
   | "landPlot"
   | "commercial";
-
-export type ExternalIdPlatform = "MYHOME" | "SSGE";
 
 export type ExternalIdFormRow = {
   localId: string;
@@ -38,6 +48,7 @@ export type FormState = {
   propertyType: PropertyType;
   hotelScope: HotelScope | "";
   dealType: DealType;
+  hideFromOthers: boolean;
   city: GeorgianCity;
   district: string;
   districtGroup: string;
@@ -45,6 +56,7 @@ export type FormState = {
   selectedStreetId: string | null;
   labels: LabelSelection[];
   pricePublic: string;
+  currency: SupportedListingCurrency;
   ownerAssignment: PropertyOwnerAssignment;
   ownerName: string;
   ownerPhones: string[];
@@ -67,13 +79,17 @@ export type FormState = {
     floor: string;
     totalFloors: string;
     ceilingHeight: string;
+    balconyCount: number | null;
     balconyArea: string;
+    veranda: boolean;
     needsVerification: string[];
     elevator: boolean | null;
     centralHeating: boolean | null;
     airConditioner: boolean | null;
     kitchenType: KitchenType;
     furnished: boolean | null;
+    parking: ListingParking;
+    parkingTypes: ListingParkingType[];
     parkingSpaces: string;
     buildingNumber: string;
     project: string;
@@ -90,11 +106,15 @@ export type FormState = {
     totalArea: string;
     rooms: string;
     bedrooms: string;
+    balconyCount: number | null;
     balconyArea: string;
+    veranda: boolean;
     needsVerification: string[];
     centralHeating: boolean;
     airConditioner: boolean;
     furnished: boolean;
+    parking: ListingParking;
+    parkingTypes: ListingParkingType[];
     parkingSpaces: string;
     pool: boolean;
     fruitTrees: boolean;
@@ -128,6 +148,8 @@ export type FormState = {
     ceilingHeight: string;
     centralHeating: boolean;
     airConditioner: boolean;
+    parking: ListingParking;
+    parkingTypes: ListingParkingType[];
     parkingSpaces: string;
     needsVerification: string[];
     electricity: boolean;
@@ -144,6 +166,7 @@ export function initialFormState(): FormState {
     propertyType: "APARTMENT",
     hotelScope: "",
     dealType: "RENT",
+    hideFromOthers: false,
     city: TBILISI_CITY,
     district: "",
     districtGroup: "",
@@ -151,6 +174,7 @@ export function initialFormState(): FormState {
     selectedStreetId: null,
     labels: [],
     pricePublic: "",
+    currency: DEFAULT_PROPERTY_CURRENCY,
     ownerAssignment: emptyOwnerAssignment(),
     ownerName: "",
     ownerPhones: ["+995"],
@@ -173,21 +197,25 @@ export function initialFormState(): FormState {
       floor: "",
       totalFloors: "",
       ceilingHeight: "",
+      balconyCount: null,
       balconyArea: "",
-      needsVerification: [],
+      veranda: false,
+      needsVerification: [...DEFAULT_NEW_BALCONY_NEEDS_VERIFICATION],
       elevator: null,
       centralHeating: null,
       airConditioner: null,
-      kitchenType: "SEPARATE",
+      kitchenType: DEFAULT_NEW_APARTMENT_KITCHEN_TYPE,
       furnished: null,
+      parking: DEFAULT_LISTING_PARKING,
+      parkingTypes: [],
       parkingSpaces: "",
       buildingNumber: "",
-      project: "Non-standard",
+      project: INTERNAL_NON_STANDARD_PROJECT,
       renovation: "NEW_RENOVATED",
       petsAllowed: null,
       minRentalPeriod: "",
       goodView: null,
-      bathrooms: "",
+      bathrooms: DEFAULT_NEW_APARTMENT_BATHROOM_COUNT,
     },
     privateHouse: {
       buildingCondition: "NEW",
@@ -196,11 +224,15 @@ export function initialFormState(): FormState {
       totalArea: "",
       rooms: "",
       bedrooms: "",
+      balconyCount: null,
       balconyArea: "",
-      needsVerification: [],
+      veranda: false,
+      needsVerification: [...DEFAULT_NEW_BALCONY_NEEDS_VERIFICATION],
       centralHeating: false,
       airConditioner: false,
       furnished: false,
+      parking: DEFAULT_LISTING_PARKING,
+      parkingTypes: [],
       parkingSpaces: "",
       pool: false,
       fruitTrees: false,
@@ -234,6 +266,8 @@ export function initialFormState(): FormState {
       ceilingHeight: "",
       centralHeating: false,
       airConditioner: false,
+      parking: DEFAULT_LISTING_PARKING,
+      parkingTypes: [],
       parkingSpaces: "",
       needsVerification: [],
       electricity: false,

@@ -1,3 +1,5 @@
+import { INVALID_EXTERNAL_ID_PLATFORM_MESSAGE } from "@/shared/i18n/ui";
+
 export type FieldErrors = Record<string, string[]>;
 
 export type StandardApiError = {
@@ -33,15 +35,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function rewriteUserFacingApiMessage(message: string): string {
+  if (/platform must be one of the following values/i.test(message)) {
+    return INVALID_EXTERNAL_ID_PLATFORM_MESSAGE;
+  }
+  return message;
+}
+
 function asMessage(value: unknown): string | string[] | null {
   if (typeof value === "string" && value.trim()) {
-    return value.trim();
+    return rewriteUserFacingApiMessage(value.trim());
   }
 
   if (Array.isArray(value)) {
     const items = value
       .filter((item): item is string => typeof item === "string")
-      .map((item) => item.trim())
+      .map((item) => rewriteUserFacingApiMessage(item.trim()))
       .filter(Boolean);
     return items.length > 0 ? items : null;
   }
@@ -58,7 +67,7 @@ function asFieldErrors(value: unknown): FieldErrors | undefined {
 
     const errors = fieldValue
       .filter((item): item is string => typeof item === "string")
-      .map((item) => item.trim())
+      .map((item) => rewriteUserFacingApiMessage(item.trim()))
       .filter(Boolean);
 
     if (errors.length > 0) {
@@ -111,4 +120,3 @@ export function parseStandardApiError(
     profileIds: profileIds && profileIds.length > 0 ? profileIds : undefined,
   };
 }
-

@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
-import {
-  BUILDING_CONDITION_OPTIONS,
-  RENOVATION_SELECT_OPTIONS,
-} from "@/features/properties/addPropertyFormOptions";
+import { RENOVATION_SELECT_OPTIONS } from "@/features/properties/addPropertyFormOptions";
+import { isBuildingCondition } from "@/features/properties/types";
+import { BuildingStructureFields } from "@/widgets/AddProperty/BuildingStructureFields";
 import {
   CheckboxField,
   SelectField,
@@ -19,6 +18,8 @@ import {
   syncedBedroomsStringFromRoomsRaw,
 } from "@/widgets/AddProperty/roomsBedroomsSyncHelpers";
 import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
+import { ListingParkingFields } from "@/widgets/AddProperty/ListingParkingFields";
+import { ListingBalconyFields } from "@/widgets/AddProperty/ListingBalconyFields";
 
 function parseAreaNumber(rawInput: string): number {
   const trimmedInput = rawInput.trim();
@@ -108,13 +109,19 @@ export function AddPropertyPrivateHouseSection({
     <section className="space-y-3 rounded-xl border border-border bg-muted p-4">
       <h2 className="text-sm font-semibold text-foreground">კერძო სახლის დეტალები</h2>
       <div className="grid gap-4 sm:grid-cols-2">
-        <SelectField
-          id="phBuildingCondition"
-          label="შენობის მდგომარეობა"
-          value={privateHouse.buildingCondition}
-          onChange={(value) => patchPrivateHouse({ buildingCondition: value })}
-          options={BUILDING_CONDITION_OPTIONS}
-        />
+        <div className="sm:col-span-2">
+          <BuildingStructureFields
+            idPrefix="ph"
+            buildingCondition={privateHouse.buildingCondition}
+            showAgeType={false}
+            onChange={({ buildingCondition }) => {
+              if (!isBuildingCondition(buildingCondition)) {
+                return;
+              }
+              patchPrivateHouse({ buildingCondition });
+            }}
+          />
+        </div>
         <TextField
           id="phHouseArea"
           label="სახლის ფართობი"
@@ -176,13 +183,14 @@ export function AddPropertyPrivateHouseSection({
             error={fieldErrors["privateHouse.minRentalPeriod"]}
           />
         ) : null}
-        <TextField
-          id="phBalconyArea"
-          label="აივნის ჯამური ფართობი (მ²)"
-          type="number"
-          value={privateHouse.balconyArea}
-          onChange={(value) => patchPrivateHouse({ balconyArea: value })}
-          error={fieldErrors["privateHouse.balconyArea"]}
+        <ListingBalconyFields
+          idPrefix="ph"
+          balconyCount={privateHouse.balconyCount}
+          needsVerification={privateHouse.needsVerification}
+          balconyArea={privateHouse.balconyArea}
+          veranda={privateHouse.veranda}
+          onChange={(nextBalcony) => patchPrivateHouse(nextBalcony)}
+          balconyAreaError={fieldErrors["privateHouse.balconyArea"]}
         />
         {[
           {
@@ -227,6 +235,12 @@ export function AddPropertyPrivateHouseSection({
             />
           </div>
         ))}
+        <ListingParkingFields
+          idPrefix="ph"
+          parking={privateHouse.parking}
+          parkingTypes={privateHouse.parkingTypes}
+          onChange={(nextParking) => patchPrivateHouse(nextParking)}
+        />
         <TextField
           id="phParking"
           label="პარკინგის ადგილები"

@@ -9,7 +9,7 @@ import {
 } from "@/features/properties/pricePerSquareMeter";
 import {
   formatDealTypeLabel,
-  formatGelAmount,
+  formatListingAmount,
   formatPropertyFullAddress,
   propertyAreaSquareMeters,
   propertyTypeDisplayLabel,
@@ -45,8 +45,8 @@ export function PropertyViewSummaryCard({
   verifySuccessMessage = null,
   onVerify,
 }: PropertyViewSummaryCardProps) {
-  const publicPrice = formatGelAmount(property.pricePublic);
-  const internalPrice = formatGelAmount(property.priceInternal);
+  const publicPrice = formatListingAmount(property.pricePublic, property.currency);
+  const internalPrice = formatListingAmount(property.priceInternal, property.currency);
   const areaSquareMeters = propertyAreaSquareMeters(property);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     property.pricePublic,
@@ -78,7 +78,7 @@ export function PropertyViewSummaryCard({
         </p>
         {pricePerSquareMeter !== null ? (
           <p className="text-xs font-medium text-muted-foreground">
-            {formatPricePerSquareMeter(pricePerSquareMeter)}
+            {formatPricePerSquareMeter(pricePerSquareMeter, property.currency)}
           </p>
         ) : null}
       </div>

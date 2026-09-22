@@ -7,6 +7,8 @@ import {
 } from "@/features/propertyOwners/types";
 import { isPhoneLike } from "@/features/propertyOwners/phoneLike";
 
+const INITIAL_PRIMARY_CONTACT_LOCAL_ID = "contact-initial-primary";
+
 export function createContactLocalId(): string {
   return `contact-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -15,13 +17,23 @@ export function createOwnerContactDraft(
   phone = "",
   label = PRIMARY_CONTACT_LABEL,
   isPrimary = false,
+  localId?: string,
 ): OwnerContactDraft {
   return {
-    localId: createContactLocalId(),
+    localId: localId ?? createContactLocalId(),
     label,
     phone,
     isPrimary,
   };
+}
+
+function createInitialPrimaryContactDraft(): OwnerContactDraft {
+  return createOwnerContactDraft(
+    "",
+    PRIMARY_CONTACT_LABEL,
+    true,
+    INITIAL_PRIMARY_CONTACT_LOCAL_ID,
+  );
 }
 
 export function emptyOwnerAssignment(): PropertyOwnerAssignment {
@@ -33,7 +45,7 @@ export function emptyOwnerAssignment(): PropertyOwnerAssignment {
     matchedContactPhone: "",
     name: "",
     comment: "",
-    contacts: [createOwnerContactDraft("", PRIMARY_CONTACT_LABEL, true)],
+    contacts: [createInitialPrimaryContactDraft()],
   };
 }
 
@@ -51,7 +63,7 @@ export function ensureOnePrimaryContact(
   contacts: OwnerContactDraft[],
 ): OwnerContactDraft[] {
   if (contacts.length === 0) {
-    return [createOwnerContactDraft("", PRIMARY_CONTACT_LABEL, true)];
+    return [createInitialPrimaryContactDraft()];
   }
   const primaryContact = contacts.find((contact) => contact.isPrimary);
   if (primaryContact) {
@@ -68,7 +80,7 @@ export function contactsFromLegacyPhones(
     .filter((phone) => phone !== "" && phone !== "+995");
 
   if (trimmedPhones.length === 0) {
-    return [createOwnerContactDraft("", PRIMARY_CONTACT_LABEL, true)];
+    return [createInitialPrimaryContactDraft()];
   }
 
   return ensureOnePrimaryContact(
@@ -77,6 +89,7 @@ export function contactsFromLegacyPhones(
         phone,
         phoneIndex === 0 ? PRIMARY_CONTACT_LABEL : "",
         phoneIndex === 0,
+        `contact-legacy-${phoneIndex}`,
       ),
     ),
   );

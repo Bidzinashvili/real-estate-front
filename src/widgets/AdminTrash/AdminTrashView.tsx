@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, Trash2, X } from "lucide-react";
 import { useCurrentUser } from "@/shared/hooks";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { formatPageOfWithTotal } from "@/shared/i18n/ui";
 import { formatLifecycleDateTime } from "@/features/lifecycle/formatLifecycleDate";
 import { isRecordArchived } from "@/features/lifecycle/isRecordArchived";
@@ -240,20 +240,26 @@ export function AdminTrashView() {
               <Search className="h-4 w-4" aria-hidden="true" />
             </button>
           </form>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow-sm">
-            <span className="hidden font-medium sm:inline">{TRASH_COPY.sortLabel}</span>
-            <InlineSelect
+          <div className="flex w-full flex-col gap-2 sm:w-auto">
+            <OptionChips
+              label={TRASH_COPY.sortLabel}
               aria-label={TRASH_COPY.sortLabel}
               value={sortBy}
-              onChange={(value) => replaceQuery({ sortBy: value === "deletedAt" ? null : value })}
+              onChange={(selectedValue) =>
+                replaceQuery({ sortBy: selectedValue === "deletedAt" ? null : selectedValue })
+              }
               options={SORT_OPTIONS}
+              size="compact"
             />
-            <span className="h-4 w-px bg-border" />
-            <InlineSelect
+            <OptionChips
+              label="მიმართულება"
               aria-label="სორტირების მიმართულება"
               value={order}
-              onChange={(value) => replaceQuery({ order: value === "desc" ? null : value })}
+              onChange={(selectedValue) =>
+                replaceQuery({ order: selectedValue === "desc" ? null : selectedValue })
+              }
               options={ORDER_OPTIONS}
+              size="compact"
             />
           </div>
         </div>

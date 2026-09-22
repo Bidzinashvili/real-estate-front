@@ -11,11 +11,8 @@ import {
 } from "@/features/clients/clientEnums";
 import type { Client } from "@/features/clients/types";
 import type { OutcomeSource } from "@/features/lifecycle/lifecycleEnums";
-import { NativeSelectSurface } from "@/shared/ui/NativeSelectSurface";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
-
-const FIELD_CLASS =
-  "h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary";
 
 type ClientChangeStatusModalProps = {
   open: boolean;
@@ -115,29 +112,19 @@ export function ClientChangeStatusModal({
       >
         <h2 className="text-base font-semibold text-foreground">სტატუსის შეცვლა</h2>
         <div className="mt-4 space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              კლიენტის სტატუსი
-            </label>
-            <NativeSelectSurface>
-              <select
-                value={selectedStatus}
-                onChange={(event) => {
-                  const raw = event.target.value;
-                  if (isClientStatus(raw)) {
-                    setSelectedStatus(raw);
-                  }
-                }}
-                className={FIELD_CLASS}
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {CLIENT_STATUS_LABELS[status]}
-                  </option>
-                ))}
-              </select>
-            </NativeSelectSurface>
-          </div>
+          <OptionChips
+            label="კლიენტის სტატუსი"
+            value={selectedStatus}
+            onChange={(rawStatus) => {
+              if (isClientStatus(rawStatus)) {
+                setSelectedStatus(rawStatus);
+              }
+            }}
+            options={statusOptions.map((status) => ({
+              value: status,
+              label: CLIENT_STATUS_LABELS[status],
+            }))}
+          />
           {selectedStatus === "INACTIVE" ? (
             <div>
               <p className="mb-1 text-xs font-medium text-muted-foreground">ვინ დაასრულა</p>

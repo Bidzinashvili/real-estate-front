@@ -3,16 +3,21 @@
 import { useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import {
-  BUILDING_AGE_TYPE_FIELD_LABEL,
-  BUILDING_AGE_TYPE_SELECT_OPTIONS,
-  BUILDING_CONDITION_OPTIONS,
+  bathroomCountChipOptions,
+  DEFAULT_NEW_APARTMENT_BATHROOM_COUNT,
+  DEFAULT_NEW_APARTMENT_KITCHEN_TYPE,
+  KITCHEN_TYPE_FIELD_LABEL,
   KITCHEN_TYPE_OPTIONS,
+  APARTMENT_PROJECT_FIELD_LABEL,
   RENOVATION_SELECT_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
-import { isBuildingAgeType } from "@/features/properties/types";
+import { isBuildingCondition } from "@/features/properties/types";
 import { SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
+import { BuildingStructureFields } from "@/widgets/AddProperty/BuildingStructureFields";
 import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import { VerifiableBooleanField } from "@/widgets/AddProperty/VerifiableBooleanField";
+import { ListingParkingFields } from "@/widgets/AddProperty/ListingParkingFields";
+import { ListingBalconyFields } from "@/widgets/AddProperty/ListingBalconyFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
 import {
@@ -56,7 +61,7 @@ function NumericVerificationRow({
   id: string;
   label: string;
   value: string;
-  fieldKey: "parkingSpaces" | "balconyArea";
+  fieldKey: "parkingSpaces";
   error?: string;
   needsVerification: string[];
   onValueChange: (next: string) => void;
@@ -104,6 +109,10 @@ export function AddPropertyApartmentSection({
 }: Props) {
   const [isBedroomsManuallyEdited, setIsBedroomsManuallyEdited] = useState(false);
   const isRentalDeal = dealType === "RENT" || dealType === "DAILY_RENT";
+  const bathroomCountValue =
+    apartment.bathrooms.trim() === ""
+      ? DEFAULT_NEW_APARTMENT_BATHROOM_COUNT
+      : apartment.bathrooms;
 
   function handleRoomsChange(value: string) {
     patchApartment({
@@ -146,50 +155,24 @@ export function AddPropertyApartmentSection({
       <h2 className="text-sm font-semibold text-foreground">ბინის დეტალები</h2>
       <MatchingLockHint />
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
-            <SelectField
-              id="aptBuildingCondition"
-              label="შენობის მდგომარეობა"
-              value={apartment.buildingCondition}
-              onChange={(value) => patchApartment({ buildingCondition: value })}
-              options={BUILDING_CONDITION_OPTIONS}
-            />
-          </div>
-          <div className="pt-7">
-            <PreferenceLockButton
-              value={readPropertyFieldLock(fieldLocks, "buildingCondition")}
-              onChange={(nextLock) => handleFieldLockChange("buildingCondition", nextLock)}
-            />
-          </div>
-        </div>
-        <SelectField
-          id="aptBuildingAgeType"
-          label={BUILDING_AGE_TYPE_FIELD_LABEL}
-          value={apartment.buildingAgeType}
-          onChange={(value) =>
-            patchApartment({
-              buildingAgeType: isBuildingAgeType(value) ? value : "",
-            })
-          }
-          options={BUILDING_AGE_TYPE_SELECT_OPTIONS}
-        />
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
-            <SelectField
-              id="aptKitchenType"
-              label="სამზარეულოს ტიპი"
-              value={apartment.kitchenType}
-              onChange={(value) => patchApartment({ kitchenType: value })}
-              options={KITCHEN_TYPE_OPTIONS}
-            />
-          </div>
-          <div className="pt-7">
-            <PreferenceLockButton
-              value={readPropertyFieldLock(fieldLocks, "kitchenType")}
-              onChange={(nextLock) => handleFieldLockChange("kitchenType", nextLock)}
-            />
-          </div>
+        <div className="sm:col-span-2">
+          <BuildingStructureFields
+            idPrefix="apt"
+            buildingCondition={apartment.buildingCondition}
+            buildingAgeType={apartment.buildingAgeType}
+            showAgeType
+            lock={readPropertyFieldLock(fieldLocks, "buildingCondition")}
+            onLockChange={(nextLock) => handleFieldLockChange("buildingCondition", nextLock)}
+            onChange={({ buildingCondition, buildingAgeType }) => {
+              if (!isBuildingCondition(buildingCondition)) {
+                return;
+              }
+              patchApartment({
+                buildingCondition,
+                buildingAgeType,
+              });
+            }}
+          />
         </div>
         <div className="flex items-start gap-2">
           <div className="flex-1">
@@ -279,12 +262,12 @@ export function AddPropertyApartmentSection({
         />
         <div className="flex items-start gap-2">
           <div className="flex-1">
-            <TextField
+            <SelectField
               id="aptBathrooms"
               label="სველი წერტილები"
-              type="number"
-              value={apartment.bathrooms}
+              value={bathroomCountValue}
               onChange={(value) => patchApartment({ bathrooms: value })}
+              options={bathroomCountChipOptions(bathroomCountValue)}
               error={fieldErrors["apartment.bathrooms"]}
             />
           </div>
@@ -299,7 +282,7 @@ export function AddPropertyApartmentSection({
           <div className="flex-1">
             <HashtagPicker
               id="aptProject"
-              label="პროექტი"
+              label={APARTMENT_PROJECT_FIELD_LABEL}
               value={apartment.project}
               onChange={(value) => patchApartment({ project: value })}
             />
@@ -328,6 +311,23 @@ export function AddPropertyApartmentSection({
             />
           </div>
         </div>
+        <div className="flex items-start gap-2">
+          <div className="flex-1">
+            <SelectField
+              id="aptKitchenType"
+              label={KITCHEN_TYPE_FIELD_LABEL}
+              value={apartment.kitchenType || DEFAULT_NEW_APARTMENT_KITCHEN_TYPE}
+              onChange={(value) => patchApartment({ kitchenType: value })}
+              options={KITCHEN_TYPE_OPTIONS}
+            />
+          </div>
+          <div className="pt-7">
+            <PreferenceLockButton
+              value={readPropertyFieldLock(fieldLocks, "kitchenType")}
+              onChange={(nextLock) => handleFieldLockChange("kitchenType", nextLock)}
+            />
+          </div>
+        </div>
         {isRentalDeal && (
           <div className="flex items-start gap-2 sm:col-span-2">
             <div className="flex-1">
@@ -346,19 +346,28 @@ export function AddPropertyApartmentSection({
             </div>
           </div>
         )}
-        <NumericVerificationRow
-          id="aptBalconyArea"
-          label="აივნის ჯამური ფართობი (მ²)"
-          value={apartment.balconyArea}
-          fieldKey="balconyArea"
-          error={fieldErrors["apartment.balconyArea"]}
-          needsVerification={apartment.needsVerification}
-          onValueChange={(value) => patchApartment({ balconyArea: value })}
-          onNeedsVerificationChange={(nextFields) =>
-            patchApartment({ needsVerification: nextFields })
-          }
-          lock={readPropertyFieldLock(fieldLocks, "balconyArea")}
-          onLockChange={(nextLock) => handleFieldLockChange("balconyArea", nextLock)}
+        <div className="sm:col-span-2">
+          <FieldWithLock
+            lock={readPropertyFieldLock(fieldLocks, "balconyArea")}
+            onLockChange={(nextLock) => handleFieldLockChange("balconyArea", nextLock)}
+            labelOffset={false}
+          >
+            <ListingBalconyFields
+              idPrefix="apt"
+              balconyCount={apartment.balconyCount}
+              needsVerification={apartment.needsVerification}
+              balconyArea={apartment.balconyArea}
+              veranda={apartment.veranda}
+              onChange={(nextBalcony) => patchApartment(nextBalcony)}
+              balconyAreaError={fieldErrors["apartment.balconyArea"]}
+            />
+          </FieldWithLock>
+        </div>
+        <ListingParkingFields
+          idPrefix="apt"
+          parking={apartment.parking}
+          parkingTypes={apartment.parkingTypes}
+          onChange={(nextParking) => patchApartment(nextParking)}
         />
         <NumericVerificationRow
           id="aptParking"

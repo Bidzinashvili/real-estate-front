@@ -18,6 +18,7 @@ import {
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
 import { ClientPreferenceValueControl } from "@/widgets/ClientForm/ClientPreferenceValueControl";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
+import { OptionChips } from "@/shared/ui/OptionChips";
 
 const splitLines = (value: string) =>
   value
@@ -335,7 +336,7 @@ export function ClientRequirementsSection({
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <label className="block flex-1 text-sm font-medium text-foreground">
-                შენობის მდგომარეობა
+                კორპუსი
               </label>
               {showLockForPath("buildingCondition") ? (
                 <Controller
@@ -351,18 +352,15 @@ export function ClientRequirementsSection({
               name="buildingCondition.value"
               control={control}
               render={({ field }) => (
-                <select
+                <OptionChips
+                  aria-label="კორპუსი"
                   value={field.value ?? ""}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                >
-                  <option value="">ნებისმიერი</option>
-                  {buildingOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={field.onChange}
+                  options={[
+                    { value: "", label: "ნებისმიერი" },
+                    ...buildingOptions,
+                  ]}
+                />
               )}
             />
             {fieldDescriptions?.buildingCondition ? (
@@ -387,18 +385,15 @@ export function ClientRequirementsSection({
               name="kitchenType.value"
               control={control}
               render={({ field }) => (
-                <select
+                <OptionChips
+                  aria-label="სამზარეულოს ტიპი"
                   value={field.value ?? ""}
-                  onChange={(event) => field.onChange(event.target.value)}
-                  className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                >
-                  <option value="">ნებისმიერი</option>
-                  {kitchenOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={field.onChange}
+                  options={[
+                    { value: "", label: "ნებისმიერი" },
+                    ...kitchenOptions,
+                  ]}
+                />
               )}
             />
             {fieldDescriptions?.kitchenType ? (

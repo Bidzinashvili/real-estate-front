@@ -7,6 +7,7 @@ import {
   isTbilisiCity,
 } from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import {
   buildPropertyUpdatePayload,
   type PropertyFormLandPlot,
@@ -21,7 +22,6 @@ import {
   isHotelScope,
   parseRenovationForForm,
 } from "@/features/properties/types";
-import { applyLinkedPropertyPriceChange } from "@/features/properties/linkedPropertyPrices";
 import { getApiBaseUrl } from "@/shared/lib/auth";
 import { requiredFieldMessage, wholeNumberAtLeastOneMessage, greaterThanZeroMessage } from "@/shared/i18n/ui";
 import {
@@ -138,12 +138,14 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
       propertyType: property.propertyType,
       hotelScope: property.hotelScope ?? null,
       dealType: property.dealType,
+      hideFromOthers: property.hideFromOthers === true,
       city: property.city,
       district: property.district,
       address: property.address,
       selectedStreetId: property.streetId,
       pricePublic: property.pricePublic,
       priceInternal: property.priceInternal ?? undefined,
+      currency: property.currency,
       publicComment: property.publicComment ?? property.description ?? "",
       privateComment: property.privateComment ?? property.comment ?? "",
       internalText: property.internalText ?? property.internalComment ?? "",
@@ -159,14 +161,21 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             bedrooms: property.apartment.bedrooms,
             totalFloors: property.apartment.totalFloors,
             ceilingHeight: property.apartment.ceilingHeight ?? undefined,
+            balconyCount: property.apartment.balconyCount,
             balconyArea: property.apartment.balconyArea,
+            veranda: property.apartment.veranda,
             needsVerification: property.apartment.needsVerification,
             floor: property.apartment.floor,
             project: property.apartment.project ?? "",
             renovation: parseRenovationForForm(property.apartment.renovation),
             buildingCondition: property.apartment.buildingCondition,
-            buildingAgeType: property.apartment.buildingAgeType,
+            buildingAgeType:
+              property.apartment.buildingCondition === "NEW"
+                ? property.apartment.buildingAgeType
+                : null,
             furnished: property.apartment.furnished,
+            parking: property.apartment.parking,
+            parkingTypes: property.apartment.parkingTypes,
             parkingSpaces: property.apartment.parkingSpaces,
             minRentalPeriod: property.apartment.minRentalPeriod ?? undefined,
             elevator: property.apartment.elevator,
@@ -183,13 +192,18 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             houseArea: hydratePositiveArea(property.privateHouse.houseArea),
             yardArea: property.privateHouse.yardArea,
             totalArea: hydratePositiveArea(property.privateHouse.totalArea),
+            balconyCount: property.privateHouse.balconyCount,
             balconyArea: property.privateHouse.balconyArea,
+            veranda: property.privateHouse.veranda,
+            parking: property.privateHouse.parking,
+            parkingTypes: property.privateHouse.parkingTypes,
             parkingSpaces: property.privateHouse.parkingSpaces,
             needsVerification: property.privateHouse.needsVerification,
             pool: property.privateHouse.pool,
             fruitTrees: property.privateHouse.fruitTrees,
             renovation: parseRenovationForForm(property.privateHouse.renovation),
             furnished: property.privateHouse.furnished,
+            buildingCondition: property.privateHouse.buildingCondition,
             minRentalPeriod: property.privateHouse.minRentalPeriod ?? undefined,
           }
         : null,
@@ -208,6 +222,8 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             area: hydratePositiveArea(property.commercial.area),
             totalFloors: property.commercial.totalFloors ?? undefined,
             ceilingHeight: property.commercial.ceilingHeight ?? undefined,
+            parking: property.commercial.parking,
+            parkingTypes: property.commercial.parkingTypes,
             parkingSpaces: property.commercial.parkingSpaces,
             needsVerification: property.commercial.needsVerification,
             airConditioner: property.commercial.airConditioner,
@@ -301,24 +317,11 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     field: "pricePublic" | "priceInternal",
     value: number | undefined,
   ) => {
-    setValues((prev) => {
-      if (field === "pricePublic" && !showInternalPrice) {
-        return { ...prev, pricePublic: value };
-      }
+    setValues((prev) => ({ ...prev, [field]: value }));
+  };
 
-      const nextPrices = applyLinkedPropertyPriceChange({
-        changedField: field,
-        nextValue: value,
-        currentInternal: prev.priceInternal,
-        currentPublic: prev.pricePublic,
-      });
-
-      return {
-        ...prev,
-        priceInternal: nextPrices.priceInternal,
-        pricePublic: nextPrices.pricePublic,
-      };
-    });
+  const handleCurrencyChange = (nextCurrency: SupportedListingCurrency) => {
+    setValues((prev) => ({ ...prev, currency: nextCurrency }));
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -541,11 +544,12 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             canEdit={false}
             showInternalPrice={showInternalPrice}
             showPrivateNotes={showPrivateNotes}
-            readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={() => {}}
             onFieldChange={handleFieldChange}
             onPriceChange={handlePriceChange}
+            onCurrencyChange={handleCurrencyChange}
+            onHideFromOthersChange={() => {}}
             onLabelsChange={() => {}}
             onCommentChange={() => {}}
             setApartment={setApartment}
@@ -572,7 +576,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             canEdit={canEdit}
             showInternalPrice={showInternalPrice}
             showPrivateNotes={showPrivateNotes}
-            readOnlyPrivateHouseBalcony={property.privateHouse?.balconyArea}
             onDealTypeChange={handleDealTypeChange}
             onHotelScopeChange={(raw) => {
               setValues((prev) => {
@@ -587,6 +590,10 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             }}
             onFieldChange={handleFieldChange}
             onPriceChange={handlePriceChange}
+            onCurrencyChange={handleCurrencyChange}
+            onHideFromOthersChange={(nextHidden) =>
+              setValues((prev) => ({ ...prev, hideFromOthers: nextHidden }))
+            }
             onLabelsChange={(value) => setValues((prev) => ({ ...prev, labels: value }))}
             onCommentChange={(field, value) =>
               setValues((prev) => ({ ...prev, [field]: value }))

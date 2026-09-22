@@ -7,6 +7,7 @@ import { useUndoSnackbarStore } from "@/features/recordUndo/undoSnackbarStore";
 import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import { useCatalogPriceDisplayStore } from "@/shared/stores/catalogPriceDisplayStore";
 import { clearGelToUsdCache } from "@/features/currency/gelToUsdConvertCache";
+import { clearUsdRateCache } from "@/features/currency/usdRateCache";
 import { clearTemporaryLockSessions } from "@/features/matching/temporaryLockSession";
 import {
   isSessionExpiredMessage,
@@ -24,6 +25,7 @@ export function clearAuthenticatedCaches(): void {
   useAdminModeStore.getState().resetAdminMode();
   useCatalogPriceDisplayStore.getState().setDisplayCurrency("GEL");
   clearGelToUsdCache();
+  clearUsdRateCache();
   clearTemporaryLockSessions();
 }
 

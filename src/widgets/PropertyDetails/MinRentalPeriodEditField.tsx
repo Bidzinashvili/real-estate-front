@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { DealType } from "@/features/properties/dealType";
 import {
   FREQUENT_RENTAL_PERIOD_OPTIONS,
@@ -17,15 +16,22 @@ type MinRentalPeriodEditFieldProps = {
   onMonthsChange: (next: number | undefined) => void;
 };
 
+function frequentRentalPeriodFromMonths(
+  months: number | undefined,
+): FrequentRentalPeriodValue {
+  if (months === 1) return "1";
+  if (months === 3) return "3";
+  if (months === 6) return "6";
+  if (months === 12) return "12";
+  return "";
+}
+
 export function MinRentalPeriodEditField({
   dealType,
   idPrefix,
   months,
   onMonthsChange,
 }: MinRentalPeriodEditFieldProps) {
-  const [frequentRentalPeriod, setFrequentRentalPeriod] =
-    useState<FrequentRentalPeriodValue>("");
-
   if (dealType !== "RENT" && dealType !== "DAILY_RENT") return null;
 
   return (
@@ -42,8 +48,13 @@ export function MinRentalPeriodEditField({
         <SelectField
           id={`${idPrefix}FrequentRentalPeriod`}
           label="ხშირი ვადები"
-          value={frequentRentalPeriod}
-          onChange={setFrequentRentalPeriod}
+          value={frequentRentalPeriodFromMonths(months)}
+          onChange={(selectedValue) => {
+            if (selectedValue === "") {
+              return;
+            }
+            onMonthsChange(Number(selectedValue));
+          }}
           options={FREQUENT_RENTAL_PERIOD_OPTIONS}
         />
       </div>

@@ -1,3 +1,8 @@
+import { parseListingParkingSelection } from "@/features/properties/listingParking";
+import {
+  parseBalconyCount,
+  remapBalconyNeedsVerification,
+} from "@/features/properties/listingBalcony";
 import { parseDealType } from "@/features/properties/dealType";
 import type { LabelDto, LabelType } from "@/features/labels/labelTypes";
 import { parsePropertyStatus } from "@/features/properties/propertyStatus";
@@ -8,6 +13,7 @@ import {
   isKitchenType,
   isLandCategory,
   parseBuildingAgeType,
+  parseExternalIdPlatform,
   parsePropertyType,
 } from "@/features/properties/propertyModelTypes";
 import type {
@@ -39,6 +45,7 @@ import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerific
 import { normalizePropertyOwnerSummary } from "@/features/propertyOwners/normalizers";
 import { parseReminderSummary } from "@/features/reminders/reminderSummary";
 import { parseRecordColor } from "@/features/recordColor/recordColor";
+import { parseSupportedListingCurrency } from "@/features/currency/types";
 
 function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
   const candidate = typeof value === "string" ? value.trim() : "";
@@ -66,15 +73,8 @@ function parseHotelScope(value: JsonValue | undefined): HotelScope | null {
   return isHotelScope(candidate) ? candidate : null;
 }
 
-function asBalconyCount(value: JsonValue | undefined): number {
-  if (value === undefined || value === null) {
-    return 0;
-  }
-  if (typeof value === "boolean") {
-    return value ? 1 : 0;
-  }
-  const parsed = asNumber(value, 0);
-  return Math.max(0, Math.trunc(parsed));
+function asBalconyCount(value: JsonValue | undefined): number | null {
+  return parseBalconyCount(value);
 }
 
 function asStringArray(value: JsonValue | undefined): string[] {
@@ -286,9 +286,7 @@ function normalizeExternalIds(value: unknown): PropertyExternalId[] | undefined 
     .map((item): PropertyExternalId | null => {
       if (!isJsonObject(item)) return null;
 
-      const platform = item.platform === "MYHOME" || item.platform === "SSGE"
-        ? item.platform
-        : null;
+      const platform = parseExternalIdPlatform(item.platform);
       const id = asString(item.id).trim();
       const externalValue = asString(item.value).trim();
 
@@ -324,13 +322,21 @@ function normalizeApartment(value: unknown): PropertyApartment | null {
     floor: asNumber(value.floor),
     totalFloors: asNumber(value.totalFloors),
     ceilingHeight: asNullableNumber(value.ceilingHeight),
-    balconyArea: asNullableNumber(value.balconyArea ?? value.balcony),
-    needsVerification: asStringArray(value.needsVerification),
+    balconyCount: asBalconyCount(value.balconyCount),
+    balconyArea: asNullableNumber(value.balconyArea),
+    veranda: asBoolean(value.veranda),
+    needsVerification: remapBalconyNeedsVerification(
+      asStringArray(value.needsVerification),
+    ),
     elevator: asNullableBoolean(value.elevator),
     centralHeating: asNullableBoolean(value.centralHeating),
     airConditioner: asNullableBoolean(value.airConditioner),
     kitchenType: parseKitchenType(value.kitchenType),
     furnished: asNullableBoolean(value.furnished),
+    ...parseListingParkingSelection({
+      parking: value.parking,
+      parkingTypes: value.parkingTypes,
+    }),
     parkingSpaces: asNullableNumber(value.parkingSpaces),
     petsAllowed: asNullableBoolean(value.petsAllowed),
     minRentalPeriod: asNullableNumber(value.minRentalPeriod),
@@ -354,11 +360,19 @@ function normalizePrivateHouse(
     renovation: asNullableString(value.renovation),
     rooms: asNumber(value.rooms),
     bedrooms: asNumber(value.bedrooms),
-    balconyArea: asNullableNumber(value.balconyArea ?? value.balcony),
-    needsVerification: asStringArray(value.needsVerification),
+    balconyCount: asBalconyCount(value.balconyCount),
+    balconyArea: asNullableNumber(value.balconyArea),
+    veranda: asBoolean(value.veranda),
+    needsVerification: remapBalconyNeedsVerification(
+      asStringArray(value.needsVerification),
+    ),
     centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
     furnished: asBoolean(value.furnished),
+    ...parseListingParkingSelection({
+      parking: value.parking,
+      parkingTypes: value.parkingTypes,
+    }),
     parkingSpaces: asNullableNumber(value.parkingSpaces),
     pool: asBoolean(value.pool),
     fruitTrees: asBoolean(value.fruitTrees),
@@ -407,6 +421,10 @@ function normalizeCommercial(value: unknown): PropertyCommercial | null {
     needsVerification: asStringArray(value.needsVerification),
     centralHeating: asBoolean(value.centralHeating),
     airConditioner: asBoolean(value.airConditioner),
+    ...parseListingParkingSelection({
+      parking: value.parking,
+      parkingTypes: value.parkingTypes,
+    }),
     parkingSpaces: asNullableNumber(value.parkingSpaces),
     electricity: asBoolean(value.electricity),
     water: asBoolean(value.water),
@@ -439,6 +457,7 @@ export function normalizeProperty(value: unknown): Property | null {
     ...optionalRecord("title", readOptionalNullableString(value, "title")),
     cadastralCode: asNullableString(value.cadastralCode),
     pricePublic: asNumber(value.pricePublic),
+    currency: parseSupportedListingCurrency(value.currency),
     ...optionalRecord("priceInternal", readOptionalNullableNumber(value, "priceInternal")),
     ...optionalRecord("ownerName", readOptionalString(value, "ownerName")),
     ...optionalRecord("ownerPhones", readOptionalStringArray(value, "ownerPhones")),

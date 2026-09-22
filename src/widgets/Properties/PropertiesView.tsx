@@ -16,7 +16,7 @@ import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { canManageProperty } from "@/features/properties/listingVisibility";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
-import { InlineSelect } from "@/shared/ui/InlineSelect";
+import { OptionChips } from "@/shared/ui/OptionChips";
 import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 import {
   isPropertyListSortOrder,
@@ -128,18 +128,19 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
             isAuthLoading={isAuthLoading}
           />
           <AdminModeToggle />
-          <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm">
-            <span className="hidden font-medium sm:inline">სორტირება</span>
-            <InlineSelect
+          <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto">
+            <OptionChips
+              label="სორტირება"
               aria-label="სორტირება"
               value={state.sortBy}
               onChange={(selectedValue) => {
                 if (isPropertySortBy(selectedValue)) catalog.setSortBy(selectedValue);
               }}
               options={SORT_OPTIONS}
+              size="compact"
             />
-            <span className="h-4 w-px bg-border" />
-            <InlineSelect
+            <OptionChips
+              label="მიმართულება"
               aria-label="მიმართულება"
               value={state.order}
               onChange={(selectedValue) => {
@@ -150,6 +151,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
                   ? LAST_OPENED_ORDER_OPTIONS
                   : ORDER_OPTIONS
               }
+              size="compact"
             />
           </div>
         </div>
