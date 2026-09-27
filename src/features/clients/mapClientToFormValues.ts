@@ -5,6 +5,10 @@ import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { isClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
+import {
+  districtsFormValueForCity,
+  inferClientCityFromDistricts,
+} from "@/features/clients/clientCities";
 
 function isoToDatetimeLocal(iso: string | null): string {
   if (!iso) {
@@ -45,6 +49,7 @@ function wrapLockedPreference(
 
 export function mapClientDetailToFormValues(client: ClientDetail): ClientFormValues {
   const req = client.requirements;
+  const inferredCity = inferClientCityFromDistricts(client.districts);
   return {
     ...emptyClientFormDefaults,
     name: client.name,
@@ -55,7 +60,11 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     dealType: client.dealType,
     description: client.description,
     pet: { value: client.pet ?? "", lock: persistEntityLock(client.petLock ?? "none") },
-    districts: { value: client.districts, lock: persistEntityLock(client.districtsLock ?? "none") },
+    city: inferredCity,
+    districts: {
+      value: districtsFormValueForCity(inferredCity, client.districts),
+      lock: persistEntityLock(client.districtsLock ?? "none"),
+    },
     addresses: { value: client.addresses, lock: persistEntityLock(client.addressesLock ?? "none") },
     labels: { value: client.labels, lock: persistEntityLock(client.labelsLock ?? "none") },
     status: client.status,

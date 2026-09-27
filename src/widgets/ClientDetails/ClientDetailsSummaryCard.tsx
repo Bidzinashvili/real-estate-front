@@ -14,6 +14,10 @@ import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorS
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
 import { NoteLastOpenedLabel } from "@/widgets/NoteLastOpened/NoteLastOpenedLabel";
 import { cn } from "@/shared/lib/utils";
+import {
+  inferClientCityFromDistricts,
+  shouldShowTbilisiNeighborhoods,
+} from "@/features/clients/clientCities";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
@@ -28,6 +32,9 @@ export function ClientDetailsSummaryCard({
 }: ClientDetailsSummaryCardProps) {
   const phones = client.phones ?? [];
   const districts = client.districts ?? [];
+  const inferredCity = inferClientCityFromDistricts(districts);
+  const showTbilisiNeighborhoods = shouldShowTbilisiNeighborhoods(inferredCity);
+  const neighborhoodNames = showTbilisiNeighborhoods ? districts : [];
   const addresses = client.addresses ?? [];
   const labels = client.labels ?? [];
   const districtsLock = getLock("districts", client.districtsLock);
@@ -209,7 +216,9 @@ export function ClientDetailsSummaryCard({
 
       {showDistrictsBlock && (
         <div className="mt-4 border-t border-border pt-4">
-          <div className="flex flex-wrap items-center gap-1.5">
+          <p className="text-xs text-muted-foreground">ქალაქი</p>
+          <p className="mt-1 text-sm text-foreground">{inferredCity}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-1.5">
             <p className="text-xs text-muted-foreground">უბნები</p>
             <ClientDetailsLockBadge
               lock={districtsLock}
@@ -217,8 +226,8 @@ export function ClientDetailsSummaryCard({
             />
           </div>
           <div className="mt-1 space-y-0.5">
-            {districts.length > 0 ? (
-              districts.map((district, districtIndex) => (
+            {showTbilisiNeighborhoods && neighborhoodNames.length > 0 ? (
+              neighborhoodNames.map((district, districtIndex) => (
                 <p key={districtIndex} className="text-sm text-foreground">
                   {district}
                 </p>

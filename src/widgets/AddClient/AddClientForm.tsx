@@ -21,6 +21,9 @@ import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequiremen
 import { ClientRelatedPersonsSection } from "@/widgets/ClientForm/ClientRelatedPersonsSection";
 import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
 import { stripTemporaryLocksFromClientForm } from "@/features/matching/collectTemporaryLocks";
+import { preventImplicitFormSubmitOnEnter } from "@/shared/lib/preventImplicitFormSubmitOnEnter";
+import { ClientFormRequiredFieldsSummary } from "@/widgets/ClientForm/ClientFormRequiredFieldsSummary";
+import { useClientFormValidationNotice } from "@/widgets/ClientForm/useClientFormValidationNotice";
 
 const addClientDraftStorageKey = "draft:client:new";
 
@@ -30,7 +33,13 @@ export function AddClientForm() {
   const { restoredDraft, isDraftReady, saveDraft, clearDraft } =
     useLocalStorageDraft<ClientFormValues>(addClientDraftStorageKey);
   const [isDraftApplied, setIsDraftApplied] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const hasCommittedSubmitRef = useRef(false);
+  const {
+    showRequiredFieldsSummary,
+    onInvalidSubmit,
+    clearValidationNotice,
+  } = useClientFormValidationNotice();
 
   const {
     register,
@@ -63,6 +72,10 @@ export function AddClientForm() {
   const watchedFormValues = watch();
   const selectedDealType = watch("dealType");
   const isRentDeal = selectedDealType === "RENT" || selectedDealType === "DAILY_RENT";
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isDraftReady) {
@@ -99,20 +112,19 @@ export function AddClientForm() {
   }, [isDraftApplied, isDraftReady, saveDraft, watchedFormValues]);
 
   const onSubmit = async (values: ClientFormValues) => {
+    clearValidationNotice();
     try {
       const clientCreatePayload = buildCreateClientDto(values);
       const created = await create(clientCreatePayload);
       hasCommittedSubmitRef.current = true;
       clearDraft();
       router.push(`/clients/${created.id}`);
-    } catch (error) {
-      console.error("Add client submit failed", error);
+    } catch {
+      // API error is surfaced via `error` from useCreateClient.
     }
   };
 
-  const onInvalidSubmit = (formErrors: typeof errors) => {
-    console.error("Add client form validation failed", formErrors);
-  };
+  const isFormReady = hasMounted && isDraftReady && isDraftApplied;
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -122,7 +134,17 @@ export function AddClientForm() {
         <MatchingLockHint />
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} className="space-y-8" noValidate>
+      {!isFormReady ? (
+        <p className="text-sm text-muted-foreground">იტვირთება…</p>
+      ) : null}
+
+      {isFormReady ? (
+      <form
+        onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
+        onKeyDown={preventImplicitFormSubmitOnEnter}
+        className="space-y-8"
+        noValidate
+      >
         <ClientCoreInfoSection
           control={control}
           register={register}
@@ -139,7 +161,7 @@ export function AddClientForm() {
           }))}
         />
 
-        <ClientLocationSection control={control} />
+        <ClientLocationSection control={control} setValue={setValue} />
 
         <ClientBudgetSection control={control} errors={errors} />
 
@@ -156,6 +178,8 @@ export function AddClientForm() {
           appendPerson={appendPerson}
           removePerson={removePerson}
         />
+
+        <ClientFormRequiredFieldsSummary visible={showRequiredFieldsSummary} />
 
         {error && (
           <p className="text-sm text-destructive" role="alert">
@@ -182,6 +206,7 @@ export function AddClientForm() {
           </button>
         </div>
       </form>
+      ) : null}
     </div>
   );
 }

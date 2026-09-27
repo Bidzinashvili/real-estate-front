@@ -32,6 +32,10 @@ import {
   wholeNumberMessage,
   wholeNumberOfMonthsMessage,
 } from "@/shared/i18n/ui";
+import {
+  isSupportedListingCurrency,
+  DEFAULT_PROPERTY_CURRENCY,
+} from "@/features/currency/types";
 
 function normalizeLabels(labels: LabelSelection[]): string[] {
   const uniqueLabels = new Map<string, string>();
@@ -163,7 +167,9 @@ export function buildCreatePropertyPayload(
     city,
     address,
     pricePublic,
-    currency: form.currency,
+    currency: isSupportedListingCurrency(form.currency)
+      ? form.currency
+      : DEFAULT_PROPERTY_CURRENCY,
   };
   if (ownerWrite.payload && "ownerId" in ownerWrite.payload) {
     payload.ownerId = ownerWrite.payload.ownerId;

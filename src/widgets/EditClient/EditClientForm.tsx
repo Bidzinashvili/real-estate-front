@@ -29,6 +29,9 @@ import { clientMatchesHref } from "@/features/matching/matchingRoutes";
 import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
 import { useCurrentUser } from "@/shared/hooks";
 import { ui } from "@/shared/i18n/ui";
+import { preventImplicitFormSubmitOnEnter } from "@/shared/lib/preventImplicitFormSubmitOnEnter";
+import { ClientFormRequiredFieldsSummary } from "@/widgets/ClientForm/ClientFormRequiredFieldsSummary";
+import { useClientFormValidationNotice } from "@/widgets/ClientForm/useClientFormValidationNotice";
 
 type EditClientFormProps = {
   clientId: string;
@@ -79,8 +82,14 @@ function EditClientFormInner({
   const watchedFormValues = watch();
   const isRentDeal = selectedDealType === "RENT" || selectedDealType === "DAILY_RENT";
   const temporaryLockedFields = collectClientFormTemporaryLocks(watchedFormValues);
+  const {
+    showRequiredFieldsSummary,
+    onInvalidSubmit,
+    clearValidationNotice,
+  } = useClientFormValidationNotice();
 
   const onSubmit = async (values: ClientFormValues) => {
+    clearValidationNotice();
     const dto = buildUpdateClientDto(values);
     await update(clientId, dto);
     router.push(`/clients/${clientId}`);
@@ -116,7 +125,12 @@ function EditClientFormInner({
         ) : null}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
+        onKeyDown={preventImplicitFormSubmitOnEnter}
+        className="space-y-8"
+        noValidate
+      >
         <ClientCoreInfoSection
           control={control}
           register={register}
@@ -139,7 +153,7 @@ function EditClientFormInner({
           }))}
         />
 
-        <ClientLocationSection control={control} />
+        <ClientLocationSection control={control} setValue={setValue} />
 
         <ClientBudgetSection control={control} errors={errors} />
 
@@ -156,6 +170,8 @@ function EditClientFormInner({
           appendPerson={appendPerson}
           removePerson={removePerson}
         />
+
+        <ClientFormRequiredFieldsSummary visible={showRequiredFieldsSummary} />
 
         {error && (
           <p className="text-sm text-destructive" role="alert">

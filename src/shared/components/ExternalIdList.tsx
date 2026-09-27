@@ -6,9 +6,7 @@ import type {
   ExternalIdFormRow,
   ExternalIdPlatform,
 } from "@/features/properties/addPropertyFormState";
-import {
-    addPropertyInputClassName,
-} from "@/widgets/AddProperty/addPropertyFormFields";
+import { addPropertyInputClassName } from "@/widgets/AddProperty/addPropertyFormFields";
 import { OptionChips } from "@/shared/ui/OptionChips";
 import {
   EXTERNAL_ID_PLATFORM_LABELS,

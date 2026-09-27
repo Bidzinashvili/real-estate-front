@@ -1,0 +1,255 @@
+[
+  {
+    "feature": "1 SALE price persistence",
+    "steps": "New property SALE; internal=100; accept public 103; set public=110; create; reload edit; patch public only",
+    "request": {
+      "method": "POST",
+      "endpoint": "/properties",
+      "body": {
+        "priceInternal": 100,
+        "pricePublic": 110
+      },
+      "status": 201
+    },
+    "response": {
+      "id": "490b6524-4332-4af2-a003-50b1664e71df",
+      "priceInternal": 100,
+      "pricePublic": 110
+    },
+    "reloadEdit": {
+      "internal": "100",
+      "public": "110",
+      "hasInternal": true
+    },
+    "apiGet": {
+      "priceInternal": 100,
+      "pricePublic": 110
+    },
+    "expected": {
+      "priceInternal": 100,
+      "pricePublic": 110
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "2 RENT persistence (ქირავდება)",
+    "steps": "Create ქირავდება; internal 100; public 110; POST; reload edit",
+    "request": {
+      "method": "POST",
+      "endpoint": "/properties",
+      "body": {
+        "priceInternal": 100,
+        "pricePublic": 110,
+        "dealType": "RENT"
+      },
+      "status": 201
+    },
+    "response": {
+      "id": "91e1cdca-fcd8-4748-bb4e-55f2a916662d",
+      "priceInternal": 100,
+      "pricePublic": 110,
+      "dealType": "RENT"
+    },
+    "reloadEdit": {
+      "internal": "100",
+      "public": "110",
+      "hasInternal": true
+    },
+    "expected": {
+      "priceInternal": 100,
+      "pricePublic": 110,
+      "no103Markup": true
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "2 RENT persistence (დღიურად ქირავდება)",
+    "steps": "Create დღიურად ქირავდება; internal 100; public 110; POST; reload edit",
+    "request": {
+      "method": "POST",
+      "endpoint": "/properties",
+      "body": {
+        "priceInternal": 100,
+        "pricePublic": 110,
+        "dealType": "DAILY_RENT"
+      },
+      "status": 201
+    },
+    "response": {
+      "id": "f21cd5e5-278a-4f3d-b9f1-4138437d5ab3",
+      "priceInternal": 100,
+      "pricePublic": 110,
+      "dealType": "DAILY_RENT"
+    },
+    "reloadEdit": {
+      "internal": "100",
+      "public": "110",
+      "hasInternal": true
+    },
+    "expected": {
+      "priceInternal": 100,
+      "pricePublic": 110,
+      "no103Markup": true
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "3 Currency USD",
+    "steps": "Create with currency USD; save; reload edit",
+    "request": {
+      "method": "POST",
+      "endpoint": "/properties",
+      "body": {
+        "currency": "USD",
+        "priceInternal": 200,
+        "pricePublic": 250
+      },
+      "status": 201
+    },
+    "reloadEdit": {
+      "currency": "USD",
+      "internal": "200",
+      "public": "250",
+      "hasInternal": true
+    },
+    "expected": {
+      "currency": "USD",
+      "pricesUnchanged": {
+        "internal": "200",
+        "public": "250"
+      }
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "3 Currency GEL",
+    "steps": "Create with currency GEL; save; reload edit",
+    "request": {
+      "method": "POST",
+      "endpoint": "/properties",
+      "body": {
+        "currency": "GEL",
+        "priceInternal": 200,
+        "pricePublic": 250
+      },
+      "status": 201
+    },
+    "reloadEdit": {
+      "currency": "GEL",
+      "internal": "200",
+      "public": "250",
+      "hasInternal": true
+    },
+    "expected": {
+      "currency": "GEL",
+      "pricesUnchanged": {
+        "internal": "200",
+        "public": "250"
+      }
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "4A Building NEW + NEW_GOOD",
+    "steps": "Apartment NEW + NEW_GOOD; POST; GET reload",
+    "request": {
+      "method": "POST",
+      "body": {
+        "buildingCondition": "NEW",
+        "buildingAgeType": "NEW_GOOD"
+      },
+      "status": 201
+    },
+    "reloadEdit": {},
+    "expected": {
+      "buildingCondition": "NEW",
+      "buildingAgeType": "NEW_GOOD"
+    },
+    "result": "FAIL"
+  },
+  {
+    "feature": "4B Building NEW→OLD before save",
+    "steps": "Select NEW then OLD; POST",
+    "request": {
+      "method": "POST",
+      "body": {
+        "buildingCondition": "OLD"
+      },
+      "status": 201
+    },
+    "expected": {
+      "buildingCondition": "OLD",
+      "noBuildingAgeType": true
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "5A Parking YES + types",
+    "steps": "Parking YES + types; POST",
+    "request": {
+      "method": "POST",
+      "body": {
+        "parking": "YES",
+        "parkingTypes": [
+          "UNDERGROUND",
+          "GARAGE"
+        ]
+      },
+      "status": 201
+    },
+    "expected": {
+      "parking": "YES",
+      "parkingTypesPresent": true
+    },
+    "result": "PASS",
+    "note": {
+      "parking": "YES",
+      "parkingTypes": [
+        "UNDERGROUND",
+        "GARAGE"
+      ]
+    }
+  },
+  {
+    "feature": "11 Client Enter + validation",
+    "steps": "Enter in name; then Save empty required",
+    "request": {
+      "method": "POST during Enter",
+      "blocked": true
+    },
+    "reloadEdit": {
+      "summaryVisible": true,
+      "nameError": true
+    },
+    "expected": {
+      "noPostOnEnter": true,
+      "georgianValidation": true
+    },
+    "result": "PASS"
+  },
+  {
+    "feature": "8 Client Tbilisi neighborhoods POST",
+    "steps": "New client; Tbilisi; check neighborhood; POST; GET",
+    "request": {
+      "method": "POST",
+      "endpoint": "/clients",
+      "districts": {
+        "value": [
+          "ვაკე"
+        ],
+        "lock": "none"
+      },
+      "status": 201
+    },
+    "response": {
+      "id": "ce36ba0b-85dd-4284-98e1-cef3c5c8c842"
+    },
+    "reloadEdit": {
+      "value": [
+        "ვაკე"
+      ],
+      "lock": "none"
+    },
+    "result": "PASS"
+  }
+]

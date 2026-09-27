@@ -187,11 +187,16 @@ export function ClientCoreInfoSection({
               ტელეფონის დამატება
             </button>
           </div>
-          {errors.phones && (
+          {errors.phones?.[0]?.message ? (
+            <p className="text-xs text-destructive" role="alert">
+              {errors.phones[0]?.message}
+            </p>
+          ) : null}
+          {errors.phones && !errors.phones[0]?.message ? (
             <p className="text-xs text-destructive" role="alert">
               {errors.phones.message ?? errors.phones.root?.message}
             </p>
-          )}
+          ) : null}
           {fieldDescriptions?.phones ? (
             <p className="text-xs text-muted-foreground">{fieldDescriptions.phones}</p>
           ) : null}

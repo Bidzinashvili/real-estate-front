@@ -9,6 +9,24 @@ import {
 import type { LockState } from "@/features/clients/clientApi.types";
 import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
 import { OUTCOME_SOURCES } from "@/features/lifecycle/lifecycleEnums";
+import { CLIENT_CITY_TBILISI, CLIENT_CITY_VALUES } from "@/features/clients/clientCities";
+import {
+  GEORGIAN_PHONE_PREFIX,
+  normalizeGeorgianPhone,
+} from "@/shared/lib/normalizeGeorgianPhone";
+
+function isIncompleteClientPhone(rawPhone: string): boolean {
+  const trimmedPhone = rawPhone.trim();
+  if (trimmedPhone === "") {
+    return true;
+  }
+  const normalizedPhone = normalizeGeorgianPhone(trimmedPhone);
+  if (normalizedPhone === GEORGIAN_PHONE_PREFIX) {
+    return true;
+  }
+  const digitsOnly = normalizedPhone.replace(/\D/g, "");
+  return digitsOnly.length <= 3;
+}
 
 const LOCK_STATES: [LockState, LockState, LockState] = ["none", "locked", "frozen"];
 
@@ -107,10 +125,10 @@ const lockedStringArrayListFieldSchema = z.object({
 
 export const clientFormSchema = z
   .object({
-    name: z.string().min(1, "სახელი სავალდებულოა").max(500),
+    name: z.string().min(1, "სრული სახელი სავალდებულოა").max(500),
     phones: z
-      .array(z.string().min(1, "ტელეფონი არ შეიძლება იყოს ცარიელი"))
-      .min(1, "საჭიროა მინიმუმ ერთი ტელეფონი")
+      .array(z.string().min(1, "ტელეფონის ნომერი სავალდებულოა"))
+      .min(1, "ტელეფონის ნომერი სავალდებულოა")
       .max(50),
     whatsapp: z.string().max(64).optional().or(z.literal("")),
     budgetMin: lockedPartialNumberFieldSchema,
@@ -118,6 +136,7 @@ export const clientFormSchema = z
     dealType: z.enum(DEAL_TYPES),
     description: z.string().min(1, "აღწერა სავალდებულოა").max(20000),
     pet: lockedPartialStringFieldSchema,
+    city: z.enum(CLIENT_CITY_VALUES),
     districts: lockedStringArrayFieldSchema,
     addresses: lockedStringArrayFieldSchema,
     labels: lockedStringArrayFieldSchema,
@@ -152,6 +171,15 @@ export const clientFormSchema = z
     minRentalPeriod: lockedPartialNumberFieldSchema,
   })
   .superRefine((data, context) => {
+    const primaryPhone = data.phones[0] ?? "";
+    if (isIncompleteClientPhone(primaryPhone)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "ტელეფონის ნომერი სავალდებულოა",
+        path: ["phones", 0],
+      });
+    }
+
     const budgetMinVal = data.budgetMin.value;
     const budgetMaxVal = data.budgetMax.value;
     if (
@@ -278,6 +306,7 @@ export const emptyClientFormDefaults: ClientFormValues = {
   dealType: "SALE",
   description: "",
   pet: { value: "", lock: "none" },
+  city: CLIENT_CITY_TBILISI,
   districts: { value: [], lock: "none" },
   addresses: { value: [], lock: "none" },
   labels: { value: [], lock: "none" },

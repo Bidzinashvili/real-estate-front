@@ -100,8 +100,10 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
 
   useEffect(() => {
     if (isLoading || error || properties.length === 0) return;
-    const publicPrices = properties.map((property) => property.pricePublic);
-    void prefetchGelToUsdForAmounts(publicPrices);
+    const gelListingPrices = properties
+      .filter((property) => property.currency === "GEL")
+      .map((property) => property.pricePublic);
+    void prefetchGelToUsdForAmounts(gelListingPrices);
   }, [catalogPrefetchKey, error, isLoading, properties]);
 
   return (

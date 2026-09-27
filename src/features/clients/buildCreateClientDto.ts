@@ -12,6 +12,7 @@ import {
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
+import { districtsPayloadValueForCity } from "@/features/clients/clientCities";
 
 function phonesForIdentitySubmit(phones: string[]): string[] {
   return phones
@@ -243,7 +244,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
     dealType: values.dealType,
     description: values.description,
     districts: {
-      value: filterStringList(values.districts.value),
+      value: districtsPayloadValueForCity(values.city, values.districts.value),
       lock: persistEntityLock(values.districts.lock),
     },
     addresses: {
@@ -293,7 +294,7 @@ export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayl
     dealType: values.dealType,
     description: values.description,
     districts: {
-      value: filterStringList(values.districts.value),
+      value: districtsPayloadValueForCity(values.city, values.districts.value),
       lock: persistEntityLock(values.districts.lock),
     },
     addresses: {

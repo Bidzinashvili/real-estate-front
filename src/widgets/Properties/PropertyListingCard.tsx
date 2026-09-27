@@ -213,6 +213,7 @@ export function PropertyListingCard({
         <div className="flex items-start justify-between gap-3">
           <PropertyListingCardPriceRow
             pricePublic={property.pricePublic}
+            listingCurrency={property.currency}
             areaSquareMeters={areaSquareMeters}
           />
           <span className="flex shrink-0 flex-col items-end gap-1">

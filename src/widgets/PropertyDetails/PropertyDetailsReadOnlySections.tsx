@@ -14,7 +14,15 @@ import {
   formatPropertyTypeLabel,
   formatRenovationLabel,
 } from "@/features/properties/addPropertyFormOptions";
-import { BUILDING_STRUCTURE_FIELD_LABEL, EXTERNAL_ID_PLATFORM_LABELS, KITCHEN_TYPE_FIELD_LABEL, APARTMENT_PROJECT_FIELD_LABEL, LISTING_PARKING_FIELD_LABEL, LISTING_PARKING_SPACES_FIELD_LABEL, lookupEnumLabel } from "@/shared/i18n/enumLabels";
+import {
+  APARTMENT_PROJECT_FIELD_LABEL,
+  BUILDING_STRUCTURE_FIELD_LABEL,
+  EXTERNAL_ID_PLATFORM_LABELS,
+  KITCHEN_TYPE_FIELD_LABEL,
+  LISTING_PARKING_FIELD_LABEL,
+  LISTING_PARKING_SPACES_FIELD_LABEL,
+  lookupEnumLabel,
+} from "@/shared/i18n/enumLabels";
 import { formatProjectDisplayName } from "@/features/properties/projectName";
 import { formatListingParkingDisplay } from "@/features/properties/listingParking";
 import {

@@ -32,6 +32,7 @@ import { OnlyMineToggle } from "@/widgets/DatabaseList/OnlyMineToggle";
 import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { ClientListCard } from "@/widgets/Clients/ClientListCard";
+import { NeighborhoodChecklist } from "@/widgets/Districts/NeighborhoodChecklist";
 import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
 import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
 import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
@@ -258,14 +259,16 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
           options={DEAL_TYPE_OPTIONS}
           size="compact"
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="text"
-            value={state.district}
-            onChange={(event) => setDistrict(event.target.value)}
-            placeholder="უბანი…"
-            className="h-8 w-36 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">უბანი</p>
+          <NeighborhoodChecklist
+            selectedNeighborhoods={state.district.trim() === "" ? [] : [state.district]}
+            onChange={(nextNeighborhoods) => setDistrict(nextNeighborhoods[0] ?? "")}
+            selectionMode="single"
+            compact
           />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="number"
             value={state.budgetMinInput}
