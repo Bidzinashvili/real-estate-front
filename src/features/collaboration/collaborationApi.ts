@@ -28,7 +28,7 @@ function collaborationFallback(status: number, defaultMessage: string): string {
     return "თანამშრომლობის ჩანაწერი ვერ მოიძებნა.";
   }
   if (status === 409) {
-    return "მოთხოვნა უკვე დამუშავებულია ან დუბლირდება.";
+    return "ამ ჩანაწერზე აქტიური თანამშრომლობის მოთხოვნა უკვე არსებობს.";
   }
   return defaultMessage;
 }

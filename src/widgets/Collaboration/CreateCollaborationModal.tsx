@@ -14,7 +14,7 @@ import { useCollaborationAgentOptions } from "@/features/collaboration/useCollab
 
 type CreateCollaborationModalProps = {
   open: boolean;
-  propertyId: string;
+  propertyId?: string;
   clientId?: string;
   onClose: () => void;
 };
@@ -36,6 +36,14 @@ export function CreateCollaborationModal({
     enabled: open && neededCount > 0,
     search,
   });
+
+  const isClientOnly = !propertyId && Boolean(clientId);
+  const targetDescription = useMemo(() => {
+    if (isClientOnly) {
+      return "ამ კლიენტისთვის";
+    }
+    return "ამ განცხადებისთვის";
+  }, [isClientOnly]);
 
   const availableAgents = useMemo(
     () =>
@@ -66,6 +74,10 @@ export function CreateCollaborationModal({
   }
 
   async function handleSubmit() {
+    if (!propertyId && !clientId) {
+      setSubmitError("თანამშრომლობის მიზანი ვერ განისაზღვრა.");
+      return;
+    }
     if (selectedAgents.length !== neededCount) {
       setSubmitError(
         neededCount === 0
@@ -80,8 +92,8 @@ export function CreateCollaborationModal({
     setSubmitError(null);
     try {
       const created = await createCollaboration({
-        propertyId,
         split,
+        ...(propertyId ? { propertyId } : {}),
         ...(clientId ? { clientId } : {}),
         ...(neededCount > 0
           ? { additionalParticipantIds: selectedAgents.map((agentOption) => agentOption.id) }
@@ -101,7 +113,7 @@ export function CreateCollaborationModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-primary/40 px-4 py-8 sm:items-center">
+    <div className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-primary/40 px-4 py-8 sm:items-center">
       <div
         role="dialog"
         aria-modal="true"
@@ -112,7 +124,7 @@ export function CreateCollaborationModal({
           მინდა თანამშრომლობა
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          აირჩიეთ თანამშრომლობის წილი ამ განცხადებისთვის. ეს არ არის შესაბამისობის პროცენტი.
+          აირჩიეთ თანამშრომლობის წილი {targetDescription}. ეს არ არის შესაბამისობის პროცენტი.
         </p>
 
         <fieldset className="mt-4 space-y-2">

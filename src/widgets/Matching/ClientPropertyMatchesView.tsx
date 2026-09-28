@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
+import { carryArchiveNavigation } from "@/features/lifecycle/archiveNavigation";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useHideClientProperty } from "@/features/clientHiddenProperties/useHideClientProperty";
@@ -15,8 +16,11 @@ import { MatchingScopeToggle } from "@/widgets/Matching/MatchingScopeToggle";
 import { AppliedTemporaryLocksNotice } from "@/widgets/Matching/AppliedTemporaryLocksNotice";
 import { PropertyMatchCard } from "@/widgets/Matching/PropertyMatchCard";
 import { useClientDetails } from "@/features/clients/useClientDetails";
-import { useCurrentUser } from "@/shared/hooks";
-import { viewerCanManageRecord } from "@/features/databaseList/viewerOwnership";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
+import {
+  viewerCanManageRecord,
+  viewerOwnsRecord,
+} from "@/features/databaseList/viewerOwnership";
 import {
   canSharePropertyToClient,
   collectClientSharePhones,
@@ -32,10 +36,11 @@ export function ClientPropertyMatchesView({
   scope,
 }: ClientPropertyMatchesViewProps) {
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const accessViewer = useEffectiveAccessViewer();
   const { client } = useClientDetails(clientId);
-  const canShareToClient = client ? canSharePropertyToClient(user, client) : false;
-  const canHideProperty = client ? viewerCanManageRecord(client, user) : false;
+  const viewerOwnsClient = client ? viewerOwnsRecord(client, accessViewer) : false;
+  const canShareToClient = client ? canSharePropertyToClient(accessViewer, client) : false;
+  const canHideProperty = client ? viewerCanManageRecord(client, accessViewer) : false;
   const sharePhones = client ? collectClientSharePhones(client) : [];
   const { hideProperty, isPropertyPending } = useHideClientProperty(clientId);
   const [locallyHiddenIds, setLocallyHiddenIds] = useState<string[]>([]);
@@ -105,19 +110,21 @@ export function ClientPropertyMatchesView({
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
+        <ArchiveCarryLink
           href={`/clients/${clientId}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           კლიენტზე დაბრუნება
-        </Link>
+        </ArchiveCarryLink>
         <MatchingScopeToggle
           value={scope}
           globalLabel={ui.allListings}
           mineLabel={ui.myListings}
           onChange={(nextScope) => {
-            router.replace(clientMatchesHref(clientId, nextScope));
+            router.replace(
+              carryArchiveNavigation(clientMatchesHref(clientId, nextScope)),
+            );
           }}
         />
       </div>
@@ -150,7 +157,7 @@ export function ClientPropertyMatchesView({
               <PropertyMatchCard
                 key={match.id}
                 match={match}
-                clientId={clientId}
+                clientId={viewerOwnsClient ? clientId : undefined}
                 canShareToClient={canShareToClient}
                 sharePhones={sharePhones}
                 canHideProperty={canHideProperty}

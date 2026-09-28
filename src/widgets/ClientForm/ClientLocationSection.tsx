@@ -8,6 +8,7 @@ import {
   type UseFormSetValue,
 } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
+import { ClientLabelsField } from "@/widgets/ClientForm/ClientLabelsField";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import {
   CLIENT_CITY_OPTIONS,
@@ -44,22 +45,6 @@ export function ClientLocationSection({
     control,
     name: "addresses.value" as never,
   });
-  const {
-    fields: labelFields,
-    append: appendLabel,
-    remove: removeLabel,
-  } = useFieldArray({
-    control,
-    name: "labels.value" as never,
-  });
-  const addLabelEntry = () => {
-    appendLabel("");
-  };
-
-  const removeLabelEntry = (labelIndex: number) => {
-    removeLabel(labelIndex);
-  };
-
   return (
     <section className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
       <h2 className="mb-4 text-base font-semibold text-foreground">მდებარეობა</h2>
@@ -105,7 +90,7 @@ export function ClientLocationSection({
                   name="districts.lock"
                   control={control}
                   render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                   )}
                 />
               ) : null}
@@ -137,7 +122,7 @@ export function ClientLocationSection({
                 name="addresses.lock"
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}
@@ -190,57 +175,17 @@ export function ClientLocationSection({
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-start gap-2">
-            <label className="block flex-1 text-sm font-medium text-foreground">ლეიბლები</label>
-          </div>
-          <Controller
-            name={"labels.value" as never}
-            control={control}
-            render={({ field }) => (
-              <div className="space-y-2">
-                {labelFields.length > 0 ? (
-                  labelFields.map((labelField, labelIndex) => (
-                    <div key={labelField.id} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={field.value?.[labelIndex] ?? ""}
-                        onChange={(event) => {
-                          const currentLabels = (field.value ?? []) as string[];
-                          const nextLabels = [...currentLabels];
-                          nextLabels[labelIndex] = event.target.value;
-                          field.onChange(nextLabels);
-                        }}
-                        className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeLabelEntry(labelIndex)}
-                        className="flex-none text-muted-foreground transition hover:text-destructive"
-                        aria-label="ლეიბლის წაშლა"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground">დაამატეთ ლეიბლი დასაწყებად.</p>
-                )}
-                <button
-                  type="button"
-                  onClick={addLabelEntry}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-                >
-                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  ლეიბლის დამატება
-                </button>
-              </div>
-            )}
-          />
-          {fieldDescriptions?.labels ? (
-            <p className="text-xs text-muted-foreground">{fieldDescriptions.labels}</p>
-          ) : null}
-        </div>
+        <Controller
+          name={"labels.value" as never}
+          control={control}
+          render={({ field }) => (
+            <ClientLabelsField
+              value={(field.value ?? []) as string[]}
+              onChange={field.onChange}
+              fieldDescription={fieldDescriptions?.labels}
+            />
+          )}
+        />
       </div>
     </section>
   );

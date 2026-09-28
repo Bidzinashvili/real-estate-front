@@ -3,7 +3,11 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/shared/theme/ThemeProvider";
 
-export function ThemeToggle() {
+type ThemeToggleProps = {
+  compact?: boolean;
+};
+
+export function ThemeToggle({ compact = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const nextLabel = isDark ? "ღია რეჟიმი" : "მუქი რეჟიმი";
@@ -21,7 +25,7 @@ export function ThemeToggle() {
       ) : (
         <Moon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
       )}
-      <span className="hidden min-[820px]:inline">{nextLabel}</span>
+      <span className={compact ? "hidden" : "hidden min-[820px]:inline"}>{nextLabel}</span>
     </button>
   );
 }

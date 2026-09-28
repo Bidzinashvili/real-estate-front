@@ -150,5 +150,9 @@ export function resolveClientDetailLock(
   if (!isClientPersistableLockKey(fieldKey)) {
     return "none";
   }
-  return overlay[fieldKey] ?? readClientDetailPersistedLock(client, fieldKey);
+  const persistedLock = readClientDetailPersistedLock(client, fieldKey);
+  if (persistedLock === "frozen") {
+    return "frozen";
+  }
+  return overlay[fieldKey] ?? "none";
 }

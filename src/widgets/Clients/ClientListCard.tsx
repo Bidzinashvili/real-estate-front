@@ -13,7 +13,7 @@ import type { Client } from "@/features/clients/types";
 import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
 import { NoteReminderIndicator } from "@/widgets/Reminders/NoteReminderIndicator";
 import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
-import { isPrivacySafeSharedClient } from "@/features/databaseList/viewerOwnership";
+import { isAgencySharedClientView } from "@/features/databaseList/viewerOwnership";
 import {
   clientCompactStats,
   formatBudgetRange,
@@ -56,12 +56,13 @@ export function ClientListCard({
   onOpenReminder,
   onChanged,
 }: ClientListCardProps) {
-  const isSharedRow = isPrivacySafeSharedClient(client);
+  const isSharedRow = isAgencySharedClientView(client);
   const generatedTitle = formatSharedClientHeadline(client);
   const budgetLabel = formatBudgetRange(client.budgetMin, client.budgetMax);
   const locationLine = formatClientLocationLine(client);
   const compactStats = clientCompactStats(client);
-  const phoneLine = isSharedRow ? "" : (client.phones[0] ?? "");
+  const phoneLine =
+    canOpenDetail && !isSharedRow ? (client.phones[0] ?? "") : "";
   const { saveColor, isSaving: isSavingColor, error: colorError } =
     useUpdateRecordColor();
   const {
@@ -122,11 +123,15 @@ export function ClientListCard({
             outcomeSource={isSharedRow ? null : client.outcomeSource}
             verificationReason={client.verificationReason}
           />
-          <NoteReminderIndicator
-            summary={client.reminderSummary}
-            showSchedule
-          />
-          <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
+          {!isSharedRow ? (
+            <NoteReminderIndicator
+              summary={client.reminderSummary}
+              showSchedule
+            />
+          ) : null}
+          {!isSharedRow && client.hideFromOthers !== undefined ? (
+            <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
+          ) : null}
         </div>
 
         <p className="text-2xl font-semibold tracking-tight text-foreground">

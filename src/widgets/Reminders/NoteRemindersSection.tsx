@@ -1,22 +1,36 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bell } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRemindersList } from "@/features/reminders/useRemindersList";
-import { isKeepStyleReminder } from "@/features/reminders/dashboardReminderNormalizer";
-import { ReminderFeedCard } from "@/widgets/Reminders/ReminderFeedCard";
+import type { DashboardReminderRow } from "@/features/reminders/dashboardReminderNormalizer";
+import {
+  REMINDERS_PER_RECORD_LIMIT,
+  REMINDER_LIMIT_GEORGIAN_MESSAGE,
+} from "@/features/reminders/reminderErrorMessages";
+import { CompactScheduledReminderRow } from "@/widgets/Reminders/CompactScheduledReminderRow";
 import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
+
+function isManualScheduledReminderForTarget(
+  reminder: DashboardReminderRow,
+  targetType: "PROPERTY" | "CLIENT",
+): boolean {
+  if (targetType === "PROPERTY") {
+    return reminder.reminderVariant === "SCHEDULED_PROPERTY";
+  }
+  return reminder.reminderVariant === "SCHEDULED_CLIENT";
+}
 
 type NoteRemindersSectionProps =
   | {
       targetType: "PROPERTY";
       propertyId: string;
-      canCreate: boolean;
+      canManage: boolean;
     }
   | {
       targetType: "CLIENT";
       clientId: string;
-      canCreate: boolean;
+      canManage: boolean;
     };
 
 export function NoteRemindersSection(props: NoteRemindersSectionProps) {
@@ -26,8 +40,8 @@ export function NoteRemindersSection(props: NoteRemindersSectionProps) {
   const query = useMemo(
     () =>
       props.targetType === "PROPERTY"
-        ? { propertyId, timing: "ALL" as const, limit: 100, page: 1 }
-        : { clientId, timing: "ALL" as const, limit: 100, page: 1 },
+        ? { propertyId, timing: "ALL" as const, limit: REMINDERS_PER_RECORD_LIMIT, page: 1 }
+        : { clientId, timing: "ALL" as const, limit: REMINDERS_PER_RECORD_LIMIT, page: 1 },
     [props.targetType, propertyId, clientId],
   );
 
@@ -36,50 +50,66 @@ export function NoteRemindersSection(props: NoteRemindersSectionProps) {
     query,
   });
 
-  const manualReminders = reminders.filter((reminder) =>
-    isKeepStyleReminder(reminder.reminderVariant),
-  );
+  const manualReminders = useMemo(() => {
+    return reminders
+      .filter((reminder) => isManualScheduledReminderForTarget(reminder, props.targetType))
+      .slice()
+      .sort(
+        (left, right) =>
+          new Date(left.notifyAt).getTime() - new Date(right.notifyAt).getTime(),
+      );
+  }, [reminders]);
+
+  const isAtLimit = manualReminders.length >= REMINDERS_PER_RECORD_LIMIT;
 
   return (
     <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-foreground">დაგეგმილი შეხსენებები</h2>
-        {props.canCreate ? (
-          <button
-            type="button"
-            onClick={() => setIsPickerOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted"
-          >
-            <Bell className="h-3.5 w-3.5" aria-hidden />
-            შეხსენების დამატება
-          </button>
-        ) : null}
-      </div>
+      <h2 className="text-sm font-semibold text-foreground">შეხსენებები</h2>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">შეხსენებები იტვირთება…</p>
+        <p className="mt-3 text-sm text-muted-foreground">შეხსენებები იტვირთება…</p>
       ) : null}
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="mt-3 text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
+
       {!isLoading && !error && manualReminders.length === 0 ? (
-        <p className="text-sm text-muted-foreground">ამ ჩანაწერზე დაგეგმილი შეხსენება არ არის.</p>
+        <p className="mt-3 text-sm text-muted-foreground">ამ ჩანაწერზე დაგეგმილი შეხსენება არ არის.</p>
       ) : null}
+
       {!isLoading && !error && manualReminders.length > 0 ? (
-        <div className="space-y-3">
+        <div className="mt-3">
           {manualReminders.map((reminder) => (
-            <ReminderFeedCard
+            <CompactScheduledReminderRow
               key={reminder.id}
               reminder={reminder}
+              canManage={props.canManage}
               onChanged={() => void refetch()}
             />
           ))}
         </div>
       ) : null}
 
-      {isPickerOpen && props.canCreate ? (
+      {props.canManage ? (
+        <div className="mt-3">
+          {isAtLimit ? (
+            <p className="text-xs text-muted-foreground">{REMINDER_LIMIT_GEORGIAN_MESSAGE}</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsPickerOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              შეხსენების დამატება
+            </button>
+          )}
+        </div>
+      ) : null}
+
+      {isPickerOpen && props.canManage && !isAtLimit ? (
         <ReminderPickerModal
           mode="create"
           open

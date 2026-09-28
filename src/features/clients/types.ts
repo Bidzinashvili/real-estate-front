@@ -15,6 +15,7 @@ import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnu
 import type { ClientProfileCompact } from "@/features/clientProfiles/types";
 import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import type { ManagingAgentSummary } from "@/features/agents/managingAgentSummary";
 import type { RecordColor } from "@/features/recordColor/recordColor";
 import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
 
@@ -107,6 +108,7 @@ export type Comment = {
 export type Client = EntityVerificationFields & {
   id: UUID;
   userId: UUID;
+  managingAgent?: ManagingAgentSummary | null;
   ownedByViewer: boolean | null;
   hideFromOthers?: boolean;
   name: string;

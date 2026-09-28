@@ -40,6 +40,8 @@ import {
   DetailVerification,
 } from "@/widgets/PropertyDetails/DetailDisplay";
 import { OwnerProfileNameLink } from "@/widgets/PropertyOwners/OwnerProfileNameLink";
+import { usePropertyOwnerContactsForProperty } from "@/features/propertyOwners/usePropertyOwnerContactsForProperty";
+import { PropertyOwnerLabeledPhoneList } from "@/widgets/PropertyDetails/PropertyOwnerLabeledPhoneList";
 
 type PropertyDetailsReadOnlySectionsProps = {
   property: Property;
@@ -52,15 +54,15 @@ export function PropertyDetailsReadOnlySections({
   showPrivateNotes,
   hideOwnerFields = false,
 }: PropertyDetailsReadOnlySectionsProps) {
+  const showOwnerBlock =
+    !hideOwnerFields && hasAuthorizedOwnerInformation(property);
+  const { phoneDisplayItems } = usePropertyOwnerContactsForProperty(
+    property,
+    showOwnerBlock,
+  );
   const activeExternalIds = (property.externalIds ?? []).filter(
     (externalId) => externalId.archivedAt === null,
   );
-  const ownerPhones = (property.ownerPhones ?? [])
-    .map((ownerPhone) => ownerPhone.trim())
-    .filter((ownerPhone) => ownerPhone !== "")
-    .join(", ");
-  const showOwnerBlock =
-    !hideOwnerFields && hasAuthorizedOwnerInformation(property);
   const authorizedPrivateComment = readAuthorizedPrivateComment(property);
   const authorizedInternalText = readAuthorizedInternalText(property);
   const shouldShowPrivateNotes =
@@ -102,8 +104,16 @@ export function PropertyDetailsReadOnlySections({
             ) : property.ownerName?.trim() ? (
               <DetailText label="მესაკუთრის სახელი" value={property.ownerName} />
             ) : null}
-            {ownerPhones ? (
-              <DetailText label="მესაკუთრის ტელეფონები" value={ownerPhones} />
+            {phoneDisplayItems.length > 0 ? (
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  მესაკუთრის ტელეფონები
+                </p>
+                <PropertyOwnerLabeledPhoneList
+                  items={phoneDisplayItems}
+                  linkClassName="inline-flex items-center gap-1.5 text-sm text-foreground underline-offset-2 hover:underline"
+                />
+              </div>
             ) : null}
           </div>
         ) : null}
@@ -147,39 +157,29 @@ export function PropertyDetailsReadOnlySections({
 
       </section>
 
-      {shouldShowPrivateNotes || property.userId?.trim() ? (
+      {shouldShowPrivateNotes ? (
         <section className="space-y-3 pt-2" aria-labelledby="notes-heading">
           <h2 id="notes-heading" className="text-sm font-semibold text-foreground">
             შენიშვნები და დანართები
           </h2>
 
-          {shouldShowPrivateNotes ? (
-            <>
-              {authorizedPrivateComment ? (
-                <DetailMultiline
-                  label="კომენტარი ჩემთვის"
-                  value={authorizedPrivateComment}
-                />
-              ) : null}
-              {authorizedInternalText ? (
-                <DetailMultiline
-                  label="ატვირთვის ტექსტი"
-                  value={authorizedInternalText}
-                />
-              ) : null}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <DetailDateTime label="შეხსენების თარიღი" value={property.reminderDate} />
-                <DetailDateTime label="კომენტარის თარიღი" value={property.commentDate} />
-              </div>
-            </>
+          {authorizedPrivateComment ? (
+            <DetailMultiline
+              label="კომენტარი ჩემთვის"
+              value={authorizedPrivateComment}
+            />
+          ) : null}
+          {authorizedInternalText ? (
+            <DetailMultiline
+              label="ატვირთვის ტექსტი"
+              value={authorizedInternalText}
+            />
           ) : null}
 
-          {property.userId?.trim() ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <DetailText label="მიმაგრებული აგენტი" value={property.userId} />
-            </div>
-          ) : null}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailDateTime label="შეხსენების თარიღი" value={property.reminderDate} />
+            <DetailDateTime label="კომენტარის თარიღი" value={property.commentDate} />
+          </div>
         </section>
       ) : null}
 

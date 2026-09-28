@@ -14,7 +14,7 @@ import { formatDealTypeLabel } from "@/features/properties/dealType";
 import { formatPublicPropertyTitle } from "@/features/propertyShare/formatPublicPropertyTitle";
 import type { PublicProperty } from "@/features/propertyShare/publicPropertyTypes";
 import { canonicalPropertyArea } from "@/features/properties/propertyArea";
-import { formatGelAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
+import { formatListingAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { PropertyViewGallery } from "@/widgets/PropertyDetails/PropertyViewGallery";
 import { PublicPropertyCharacteristics } from "@/widgets/PublicProperty/PublicPropertyCharacteristics";
 
@@ -36,7 +36,7 @@ function publicFullAddress(property: PublicProperty): string {
 export function PublicPropertyView({ property }: PublicPropertyViewProps) {
   const apiBaseUrl = getApiBaseUrl();
   const headline = formatPublicPropertyTitle(property);
-  const publicPrice = formatGelAmount(property.pricePublic);
+  const publicPrice = formatListingAmount(property.pricePublic, property.currency);
   const areaSquareMeters = publicAreaSquareMeters(property);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     property.pricePublic,
@@ -92,7 +92,7 @@ export function PublicPropertyView({ property }: PublicPropertyViewProps) {
           </p>
           {pricePerSquareMeter !== null ? (
             <p className="mt-1 text-xs font-medium text-muted-foreground">
-              {formatPricePerSquareMeter(pricePerSquareMeter)}
+              {formatPricePerSquareMeter(pricePerSquareMeter, property.currency)}
             </p>
           ) : null}
 

@@ -1,7 +1,10 @@
-import { Phone } from "lucide-react";
+"use client";
+
 import type { Property } from "@/features/properties/types";
 import { hasAuthorizedOwnerInformation } from "@/features/properties/authorizedPropertyFields";
+import { usePropertyOwnerContactsForProperty } from "@/features/propertyOwners/usePropertyOwnerContactsForProperty";
 import { OwnerProfileNameLink } from "@/widgets/PropertyOwners/OwnerProfileNameLink";
+import { PropertyOwnerLabeledPhoneList } from "@/widgets/PropertyDetails/PropertyOwnerLabeledPhoneList";
 
 type PropertyViewContactCardProps = {
   property: Property;
@@ -12,21 +15,20 @@ function formatPhoneHref(raw: string): string {
 }
 
 export function PropertyViewContactCard({ property }: PropertyViewContactCardProps) {
+  const { phoneDisplayItems } = usePropertyOwnerContactsForProperty(property);
+
   if (!hasAuthorizedOwnerInformation(property)) {
     return null;
   }
 
   const propertyOwner = property.propertyOwner ?? null;
   const fallbackName = propertyOwner ? "" : property.ownerName?.trim() ?? "";
-  const ownerPhones = (property.ownerPhones ?? [])
-    .map((ownerPhone) => ownerPhone.trim())
-    .filter((ownerPhone) => ownerPhone !== "");
   const ownerWhatsapp = property.ownerWhatsapp?.trim() ?? "";
 
   if (
     !propertyOwner &&
     !fallbackName &&
-    ownerPhones.length === 0 &&
+    phoneDisplayItems.length === 0 &&
     ownerWhatsapp === ""
   ) {
     return null;
@@ -54,22 +56,10 @@ export function PropertyViewContactCard({ property }: PropertyViewContactCardPro
           </div>
         ) : null}
 
-        {ownerPhones.length > 0 ? (
+        {phoneDisplayItems.length > 0 ? (
           <div>
             <p className="text-xs text-muted-foreground">ტელეფონი</p>
-            <ul className="mt-1 space-y-1">
-              {ownerPhones.map((ownerPhone) => (
-                <li key={ownerPhone}>
-                  <a
-                    href={`tel:${formatPhoneHref(ownerPhone)}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline-offset-2 hover:underline"
-                  >
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-                    {ownerPhone}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <PropertyOwnerLabeledPhoneList items={phoneDisplayItems} />
           </div>
         ) : null}
 

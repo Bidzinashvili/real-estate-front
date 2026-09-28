@@ -57,6 +57,7 @@ export function PropertyDetailsLifecycleSection({
         status={property.status}
         archivedAt={property.archivedAt}
         lastVerifiedAt={property.lastVerifiedAt}
+        verificationOverdue={property.verificationOverdue}
         canManage={canVerify}
         isVerifying={isVerifying}
         error={verifyError}

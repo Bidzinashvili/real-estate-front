@@ -6,13 +6,20 @@ import {
   IDENTITY_CONFLICT_MESSAGE,
 } from "@/features/clientProfiles/identityConflict";
 import { toGetClientsSearchParams, type GetClientsQuery } from "@/features/clients/getClientsQuery";
-import { requestedAdminModeQuery } from "@/features/adminMode/requestedAdminModeQuery";
+import {
+  adminModeSearchParams,
+  withRequestedAdminMode,
+} from "@/features/adminMode/requestedAdminModeQuery";
 import {
   normalizeClient,
   normalizeClientDetail,
   normalizeClientsListResponse,
 } from "@/features/clients/normalizers";
 import { emitRecordMutationEvents } from "@/features/lifecycle/recordsChangedEvent";
+import {
+  UNARCHIVE_ERROR_BY_HTTP_STATUS,
+  UNARCHIVE_GENERIC_ERROR,
+} from "@/features/lifecycle/unarchiveErrorMessages";
 import { emitNoteOpenedEvent } from "@/features/noteLastOpened/noteOpenedEvent";
 import type {
   Client,
@@ -70,10 +77,7 @@ export async function getClients(
   requestOptions?: GetClientsRequestOptions,
 ): Promise<ClientsListResponse> {
   const { baseUrl, headers } = getBearerAuthContext();
-  const params = toGetClientsSearchParams({
-    ...query,
-    ...requestedAdminModeQuery(),
-  });
+  const params = toGetClientsSearchParams(withRequestedAdminMode(query));
 
   try {
     const res = await axios.get<GetClientsResponse>(`${baseUrl}/clients`, {
@@ -99,13 +103,16 @@ export async function getClients(
   }
 }
 
-export async function getClientById(id: string): Promise<ClientDetail> {
+export async function getClientById(
+  clientId: string,
+  requestOptions?: { adminMode?: boolean },
+): Promise<ClientDetail> {
   const { baseUrl, headers } = getBearerAuthContext();
 
   try {
-    const res = await axios.get<ClientDetailApi>(`${baseUrl}/clients/${id}`, {
+    const res = await axios.get<ClientDetailApi>(`${baseUrl}/clients/${clientId}`, {
       headers,
-      params: requestedAdminModeQuery(),
+      params: adminModeSearchParams(requestOptions?.adminMode),
     });
     return normalizeClientDetail(res.data);
   } catch (error) {
@@ -113,7 +120,7 @@ export async function getClientById(id: string): Promise<ClientDetail> {
       const status = error.response?.status ?? 500;
       const fallback =
         status === 403
-          ? "ამ კლიენტზე წვდომა არ გაქვთ"
+          ? "ამ კლიენტის მონაცემებზე წვდომა შეზღუდულია."
           : "კლიენტის ჩატვირთვა ვერ მოხერხდა.";
       const parsed = parseStandardApiError(
         error.response?.data,
@@ -246,12 +253,12 @@ async function postClientArchiveAction(
 ): Promise<Client> {
   const { baseUrl, headers } = getBearerAuthContext();
   const isRestore = action === "unarchive";
-  const fallbackByStatus: Record<number, string> = {
-    403: isRestore
-      ? "ამ კლიენტის არქივიდან დაბრუნების უფლება არ გაქვთ"
-      : "ამ კლიენტის დაარქივების უფლება არ გაქვთ",
-    404: "კლიენტი ვერ მოიძებნა.",
-  };
+  const fallbackByStatus: Record<number, string> = isRestore
+    ? { ...UNARCHIVE_ERROR_BY_HTTP_STATUS }
+    : {
+        403: "ამ კლიენტის დაარქივების უფლება არ გაქვთ",
+        404: "კლიენტი ვერ მოიძებნა.",
+      };
 
   try {
     const res = await axios.post<ClientApi>(
@@ -272,7 +279,7 @@ async function postClientArchiveAction(
       const fallback =
         fallbackByStatus[status] ??
         (isRestore
-          ? "კლიენტის არქივიდან დაბრუნება ვერ მოხერხდა."
+          ? UNARCHIVE_GENERIC_ERROR
           : "კლიენტის დაარქივება ვერ მოხერხდა.");
       const parsed = parseStandardApiError(
         error.response?.data,

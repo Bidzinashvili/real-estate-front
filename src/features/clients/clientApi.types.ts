@@ -28,6 +28,20 @@ export function cycleLockState(lock: LockState): LockState {
   return "none";
 }
 
+export function cycleClientFormLockState(lock: LockState): LockState {
+  if (lock === "frozen") {
+    return "none";
+  }
+  return "frozen";
+}
+
+export function cycleClientSearchLockState(lock: LockState): LockState {
+  if (lock === "locked") {
+    return "none";
+  }
+  return "locked";
+}
+
 export type Locked<Value> = { value: Value; lock: LockState };
 
 export type LockedPartial<Value> = { value?: Value; lock: LockState };

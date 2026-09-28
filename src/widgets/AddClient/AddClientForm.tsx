@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateClient } from "@/features/clients/useCreateClient";
 import { clientFormSchema, emptyClientFormDefaults } from "@/features/clients/clientFormSchema";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
+import type { Client } from "@/features/clients/types";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
 import {
   CLIENT_CREATE_STATUSES,
@@ -19,7 +20,7 @@ import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSectio
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
 import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequirementsSection";
 import { ClientRelatedPersonsSection } from "@/widgets/ClientForm/ClientRelatedPersonsSection";
-import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { ClientFormLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
 import { stripTemporaryLocksFromClientForm } from "@/features/matching/collectTemporaryLocks";
 import { preventImplicitFormSubmitOnEnter } from "@/shared/lib/preventImplicitFormSubmitOnEnter";
 import { ClientFormRequiredFieldsSummary } from "@/widgets/ClientForm/ClientFormRequiredFieldsSummary";
@@ -27,7 +28,17 @@ import { useClientFormValidationNotice } from "@/widgets/ClientForm/useClientFor
 
 const addClientDraftStorageKey = "draft:client:new";
 
-export function AddClientForm() {
+type AddClientFormProps = {
+  embedded?: boolean;
+  onClientCreated?: (client: Client) => void;
+  onCancelEmbedded?: () => void;
+};
+
+export function AddClientForm({
+  embedded = false,
+  onClientCreated,
+  onCancelEmbedded,
+}: AddClientFormProps) {
   const router = useRouter();
   const { create, isLoading, error } = useCreateClient();
   const { restoredDraft, isDraftReady, saveDraft, clearDraft } =
@@ -82,7 +93,7 @@ export function AddClientForm() {
       return;
     }
 
-    if (restoredDraft) {
+    if (!embedded && restoredDraft) {
       reset(
         stripTemporaryLocksFromClientForm({
           ...emptyClientFormDefaults,
@@ -97,10 +108,10 @@ export function AddClientForm() {
     }
 
     setIsDraftApplied(true);
-  }, [reset, isDraftReady, restoredDraft]);
+  }, [embedded, reset, isDraftReady, restoredDraft]);
 
   useEffect(() => {
-    if (hasCommittedSubmitRef.current) {
+    if (embedded || hasCommittedSubmitRef.current) {
       return;
     }
 
@@ -109,7 +120,7 @@ export function AddClientForm() {
     }
 
     saveDraft(stripTemporaryLocksFromClientForm(watchedFormValues));
-  }, [isDraftApplied, isDraftReady, saveDraft, watchedFormValues]);
+  }, [embedded, isDraftApplied, isDraftReady, saveDraft, watchedFormValues]);
 
   const onSubmit = async (values: ClientFormValues) => {
     clearValidationNotice();
@@ -118,6 +129,10 @@ export function AddClientForm() {
       const created = await create(clientCreatePayload);
       hasCommittedSubmitRef.current = true;
       clearDraft();
+      if (embedded && onClientCreated) {
+        onClientCreated(created);
+        return;
+      }
       router.push(`/clients/${created.id}`);
     } catch {
       // API error is surfaced via `error` from useCreateClient.
@@ -127,11 +142,17 @@ export function AddClientForm() {
   const isFormReady = hasMounted && isDraftReady && isDraftApplied;
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className={embedded ? "w-full" : "mx-auto w-full max-w-3xl"}>
       <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">კლიენტის დამატება</h1>
-        <p className="text-sm text-muted-foreground">შეავსეთ ქვემოთ მოცემული ველები ახალი კლიენტის დასამატებლად.</p>
-        <MatchingLockHint />
+        <h1 className={embedded ? "text-base font-semibold" : "text-2xl font-semibold tracking-tight"}>
+          კლიენტის დამატება
+        </h1>
+        {!embedded ? (
+          <p className="text-sm text-muted-foreground">
+            შეავსეთ ქვემოთ მოცემული ველები ახალი კლიენტის დასამატებლად.
+          </p>
+        ) : null}
+        {!embedded ? <ClientFormLockHint /> : null}
       </div>
 
       {!isFormReady ? (
@@ -191,6 +212,10 @@ export function AddClientForm() {
           <button
             type="button"
             onClick={() => {
+              if (embedded && onCancelEmbedded) {
+                onCancelEmbedded();
+                return;
+              }
               router.push("/clients");
             }}
             className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"

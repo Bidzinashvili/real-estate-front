@@ -13,8 +13,6 @@ import type {
   AddPropertyActiveSubtype,
   FormState,
 } from "@/features/properties/addPropertyFormState";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
-import { persistPropertyFieldLocks } from "@/features/matching/persistEntityLock";
 import {
   omitUnspecifiedBoolean,
   sanitizeNeedsVerification,
@@ -110,15 +108,6 @@ function isRentalDealType(dealType: FormState["dealType"]): boolean {
   return dealType === "RENT" || dealType === "DAILY_RENT";
 }
 
-function appendPersistedFieldLocks(
-  payload: CreatePropertyDto,
-  fieldLocks: PropertyFieldLocks,
-): void {
-  const persisted = persistPropertyFieldLocks(fieldLocks);
-  if (persisted) {
-    payload.fieldLocks = persisted;
-  }
-}
 function parseMinRentalPeriodForPayload(value: string, field: string, errors: string[]): number {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -443,8 +432,6 @@ export function buildCreatePropertyPayload(
       errors.push("სასტუმროს ტიპი სავალდებულოა.");
     }
   }
-
-  appendPersistedFieldLocks(payload, form.fieldLocks);
 
   return { payload: errors.length === 0 ? payload : null, errors };
 }

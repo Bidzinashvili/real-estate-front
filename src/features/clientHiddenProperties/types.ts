@@ -1,3 +1,4 @@
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import type { DealType } from "@/features/properties/dealType";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { PropertyType } from "@/features/properties/propertyModelTypes";
@@ -16,6 +17,7 @@ export type HiddenPropertyItem = {
   address: string;
   street: string | null;
   pricePublic: number;
+  currency: SupportedListingCurrency;
   status: PropertyStatus;
   archivedAt: string | null;
   coverImage: HiddenPropertyCoverImage | null;

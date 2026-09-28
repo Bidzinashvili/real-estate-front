@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
 import type { TemporaryLockKey } from "@/features/matching/matchingEnums";
 import {
   writeTemporaryLockSession,
@@ -39,7 +39,7 @@ export function MatchPercentActions({
 
   return (
     <div className={cn("inline-flex items-center gap-1.5", className)}>
-      <Link
+      <ArchiveCarryLink
         href={allHref}
         aria-label={allLabel}
         title={allLabel}
@@ -50,8 +50,8 @@ export function MatchPercentActions({
         className={`${ACTION_BASE} bg-success hover:bg-success/90`}
       >
         %
-      </Link>
-      <Link
+      </ArchiveCarryLink>
+      <ArchiveCarryLink
         href={mineHref}
         aria-label={mineLabel}
         title={mineLabel}
@@ -62,7 +62,7 @@ export function MatchPercentActions({
         className={`${ACTION_BASE} bg-violet-600 hover:bg-violet-700`}
       >
         %
-      </Link>
+      </ArchiveCarryLink>
     </div>
   );
 }

@@ -38,14 +38,13 @@ import {
   isJsonObject,
 } from "@/shared/lib/jsonValue";
 import type { JsonObject, JsonValue } from "@/shared/lib/jsonValue";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
-import { isPropertyFieldLockKey } from "@/features/matching/matchingEnums";
-import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
+import { parseViewerPendingVerificationRequest } from "@/features/propertyVerificationRequest/parseViewerPendingVerificationRequest";
 import { normalizePropertyOwnerSummary } from "@/features/propertyOwners/normalizers";
 import { parseReminderSummary } from "@/features/reminders/reminderSummary";
 import { parseRecordColor } from "@/features/recordColor/recordColor";
 import { parseSupportedListingCurrency } from "@/features/currency/types";
+import { readManagingAgentFromRecord } from "@/features/agents/managingAgentSummary";
 
 function parseBuildingCondition(value: JsonValue | undefined): BuildingCondition {
   const candidate = typeof value === "string" ? value.trim() : "";
@@ -85,22 +84,6 @@ function asStringArray(value: JsonValue | undefined): string[] {
   return value
     .map((item) => (typeof item === "string" ? item.trim() : ""))
     .filter((item) => item !== "");
-}
-
-function parseFieldLocks(value: JsonValue | undefined): PropertyFieldLocks | undefined {
-  if (!isJsonObject(value)) {
-    return undefined;
-  }
-  const fieldLocks: PropertyFieldLocks = {};
-  for (const [lockKey, lockValue] of Object.entries(value)) {
-    if (!isPropertyFieldLockKey(lockKey)) {
-      continue;
-    }
-    if (lockValue === "frozen") {
-      fieldLocks[lockKey] = persistEntityLock("frozen");
-    }
-  }
-  return Object.keys(fieldLocks).length > 0 ? fieldLocks : undefined;
 }
 
 function asCanonicalArea(value: JsonValue | undefined): number | null {
@@ -518,8 +501,17 @@ export function normalizeProperty(value: unknown): Property | null {
     ),
     deletedAt: asNullableString(value.deletedAt),
     ...optionalRecord("userId", readOptionalString(value, "userId")),
+    ...optionalRecord(
+      "managingAgent",
+      hasOwnJsonField(value, "agent") ||
+        hasOwnJsonField(value, "ownerAgent") ||
+        hasOwnJsonField(value, "user")
+        ? readManagingAgentFromRecord(value)
+        : undefined,
+    ),
     ownedByViewer:
       typeof value.ownedByViewer === "boolean" ? value.ownedByViewer : null,
+    viewerPendingVerificationRequest: parseViewerPendingVerificationRequest(value),
     ...optionalRecord("hideFromOthers", readOptionalBoolean(value, "hideFromOthers")),
     ...optionalRecord("readyToUpload", readOptionalBoolean(value, "readyToUpload")),
     color: parseRecordColor(value.color),
@@ -527,7 +519,6 @@ export function normalizeProperty(value: unknown): Property | null {
     privateHouse: normalizePrivateHouse(value.privateHouse),
     landPlot: normalizeLandPlot(value.landPlot),
     commercial: normalizeCommercial(value.commercial),
-    fieldLocks: parseFieldLocks(value.fieldLocks),
     ...optionalRecord(
       "reminderSummary",
       hasOwnJsonField(value, "reminderSummary")

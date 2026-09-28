@@ -6,7 +6,6 @@ import {
   type GeorgianCity,
 } from "@/features/properties/addPropertyFormOptions";
 import type { LabelSelection } from "@/features/labels/labelTypes";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type { SupportedListingCurrency } from "@/features/currency/types";
 import { DEFAULT_PROPERTY_CURRENCY } from "@/features/currency/types";
 import {
@@ -69,7 +68,6 @@ export type FormState = {
   publicComment: string;
   internalText: string;
   privateComment: string;
-  fieldLocks: PropertyFieldLocks;
   apartment: {
     buildingCondition: BuildingCondition;
     buildingAgeType: BuildingAgeType | "";
@@ -187,7 +185,6 @@ export function initialFormState(): FormState {
     publicComment: "",
     internalText: "",
     privateComment: "",
-    fieldLocks: {},
     apartment: {
       buildingCondition: "NEW",
       buildingAgeType: "",

@@ -10,6 +10,7 @@ import { canEditRecordColor, type RecordColor } from "@/features/recordColor/rec
 import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
 import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
 import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
+import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
 
 type ClientDetailsTopBarProps = {
   clientId: string;
@@ -25,6 +26,7 @@ type ClientDetailsTopBarProps = {
   hideFromOthers?: boolean;
   isSavingHideFromOthers: boolean;
   hideFromOthersError: string | null;
+  backLabel?: string;
   onNavigateToList: () => void;
   onNavigateToEdit: () => void;
   onRequestDelete: () => void;
@@ -33,6 +35,9 @@ type ClientDetailsTopBarProps = {
   onRequestRestore: () => void;
   onSelectColor: (color: RecordColor) => void;
   onToggleHideFromOthers: (nextHidden: boolean) => void;
+  canRequestCollaboration?: boolean;
+  collaborationClientId?: string;
+  recordOwnedByViewer?: boolean | null;
 };
 
 export function ClientDetailsTopBar({
@@ -49,6 +54,7 @@ export function ClientDetailsTopBar({
   hideFromOthers,
   isSavingHideFromOthers,
   hideFromOthersError,
+  backLabel = "ყველა კლიენტი",
   onNavigateToList,
   onNavigateToEdit,
   onRequestDelete,
@@ -57,6 +63,9 @@ export function ClientDetailsTopBar({
   onRequestRestore,
   onSelectColor,
   onToggleHideFromOthers,
+  canRequestCollaboration = false,
+  collaborationClientId,
+  recordOwnedByViewer = false,
 }: ClientDetailsTopBarProps) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -66,12 +75,17 @@ export function ClientDetailsTopBar({
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        ყველა კლიენტი
+        {backLabel}
       </button>
 
       <div className="flex flex-col items-end gap-1">
         <div className="flex flex-wrap items-center justify-end gap-2">
         <AdminModeToggle />
+        <RequestCollaborationButton
+          collaborationClientId={collaborationClientId}
+          canRequest={canRequestCollaboration}
+          recordOwnedByViewer={recordOwnedByViewer}
+        />
         {canEditRecordColor(canEditStatus, recordColor) && recordColor !== undefined ? (
           <RecordColorPicker
             value={recordColor}

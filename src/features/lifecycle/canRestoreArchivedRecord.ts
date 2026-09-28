@@ -7,6 +7,7 @@ const RESTORABLE_PROPERTY_STATUSES: ReadonlyArray<PropertyStatus> = [
   "FOR_SALE",
   "FOR_RENT",
   "AVAILABLE_SOON",
+  "NEEDS_VERIFICATION",
 ];
 
 const RESTORABLE_CLIENT_STATUSES: ReadonlyArray<ClientStatus> = [

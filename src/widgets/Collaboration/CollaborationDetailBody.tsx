@@ -11,18 +11,21 @@ import {
   COLLABORATION_SPLIT_LABELS,
   MONITORING_STATE_LABELS,
 } from "@/features/collaboration/collaborationLabels";
+import { parseSupportedListingCurrency } from "@/features/currency/types";
 import {
   CLIENT_STATUS_LABELS,
   DEAL_TYPE_LABELS,
   PROPERTY_STATUS_LABELS,
   lookupEnumLabel,
 } from "@/shared/i18n/enumLabels";
+import { formatListingAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
 import { CollaborationParticipantsList } from "@/widgets/Collaboration/CollaborationParticipantsList";
 import {
+  COLLABORATION_CLIENT_TARGET_LABEL,
   COLLABORATION_PROPERTY_DELETED_LABEL,
-  formatCollaborationPropertyAddress,
   formatCollaborationPropertyDistrict,
+  formatCollaborationRequestHeadline,
 } from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type CollaborationDetailBodyProps = {
@@ -59,6 +62,13 @@ export function CollaborationDetailBody({
 }: CollaborationDetailBodyProps) {
   const [confirmReject, setConfirmReject] = useState(false);
   const listing = collaboration.property;
+  const listingPriceLabel = listing
+    ? formatListingAmount(
+        listing.pricePublic,
+        parseSupportedListingCurrency(listing.currency),
+      )
+    : null;
+  const isClientOnlyCollaboration = !listing && Boolean(collaboration.clientId ?? collaboration.client);
   const identitiesRevealed = collaboration.status === "APPROVED" || isAdmin;
   const showRecipientActions = canRecipientDecide(
     collaboration.viewerRole,
@@ -73,40 +83,43 @@ export function CollaborationDetailBody({
         <div className="min-w-0 space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">თანამშრომლობის მოთხოვნა</h1>
           <p className="text-sm text-muted-foreground">
-            {formatCollaborationPropertyAddress(listing)}
+            {formatCollaborationRequestHeadline(collaboration, identitiesRevealed)}
             {listing
               ? ` · ${formatCollaborationPropertyDistrict(listing) ?? "—"}`
-              : ""}
+              : isClientOnlyCollaboration
+                ? ` · ${COLLABORATION_CLIENT_TARGET_LABEL}`
+                : ""}
           </p>
         </div>
         <CollaborationStatusBadge status={collaboration.status} />
       </div>
 
-      <section className="space-y-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
-        <h2 className="text-sm font-semibold text-foreground">განცხადება</h2>
-        {listing ? (
-          <>
-            <p className="text-sm text-foreground">
-              {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType} ·{" "}
-              {lookupEnumLabel(PROPERTY_STATUS_LABELS, listing.status) ?? listing.status}
-            </p>
-            <p className="text-sm font-medium text-foreground">
-              {listing.pricePublic.toLocaleString()}
-            </p>
-            {listing.publicComment ? (
-              <p className="text-sm text-muted-foreground">{listing.publicComment}</p>
-            ) : null}
-            <Link
-              href={`/properties/${listing.id}`}
-              className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
-            >
-              განცხადების გახსნა
-            </Link>
-          </>
-        ) : (
+      {listing ? (
+        <section className="space-y-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+          <h2 className="text-sm font-semibold text-foreground">განცხადება</h2>
+          <p className="text-sm text-foreground">
+            {lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType} ·{" "}
+            {lookupEnumLabel(PROPERTY_STATUS_LABELS, listing.status) ?? listing.status}
+          </p>
+          <p className="text-sm font-medium text-foreground">
+            {listingPriceLabel ?? "—"}
+          </p>
+          {listing.publicComment ? (
+            <p className="text-sm text-muted-foreground">{listing.publicComment}</p>
+          ) : null}
+          <Link
+            href={`/properties/${listing.id}`}
+            className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"
+          >
+            განცხადების გახსნა
+          </Link>
+        </section>
+      ) : isClientOnlyCollaboration ? null : (
+        <section className="space-y-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+          <h2 className="text-sm font-semibold text-foreground">განცხადება</h2>
           <p className="text-sm text-muted-foreground">{COLLABORATION_PROPERTY_DELETED_LABEL}</p>
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="space-y-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         <h2 className="text-sm font-semibold text-foreground">თანამშრომლობის წილი</h2>

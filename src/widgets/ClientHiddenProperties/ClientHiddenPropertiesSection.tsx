@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { isPrivacySafeSharedClient } from "@/features/databaseList/viewerOwnership";
+import { isAgencySharedClientView } from "@/features/databaseList/viewerOwnership";
 import { HIDDEN_PROPERTY_COPY } from "@/features/clientHiddenProperties/hiddenPropertyCopy";
 import { useClientHiddenProperties } from "@/features/clientHiddenProperties/useClientHiddenProperties";
 import { useUnhideClientProperty } from "@/features/clientHiddenProperties/useUnhideClientProperty";
@@ -22,7 +22,7 @@ export function ClientHiddenPropertiesSection({
   client,
   canManage,
 }: ClientHiddenPropertiesSectionProps) {
-  const isPrivacySafe = isPrivacySafeSharedClient(client);
+  const isPrivacySafe = isAgencySharedClientView(client);
   const { hiddenProperties, isLoading, error } = useClientHiddenProperties({
     clientId: client.id,
     enabled: !isPrivacySafe,

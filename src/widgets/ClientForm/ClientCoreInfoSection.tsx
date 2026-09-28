@@ -44,6 +44,7 @@ type ClientCoreInfoSectionProps = {
   showClientStatusField?: boolean;
   showReminderDateField?: boolean;
   showReminderHint?: boolean;
+  showClientProfileLookupSignals?: boolean;
   fieldDescriptions?: Record<string, string>;
   dealTypeSelectOptions?: EnumSelectOption[];
   clientStatusSelectOptions?: EnumSelectOption[];
@@ -64,6 +65,7 @@ export function ClientCoreInfoSection({
   showClientStatusField = true,
   showReminderDateField = true,
   showReminderHint = false,
+  showClientProfileLookupSignals = true,
   fieldDescriptions,
   dealTypeSelectOptions,
   clientStatusSelectOptions,
@@ -200,9 +202,11 @@ export function ClientCoreInfoSection({
           {fieldDescriptions?.phones ? (
             <p className="text-xs text-muted-foreground">{fieldDescriptions.phones}</p>
           ) : null}
-          <ClientProfileLookupSignals
-            phones={Array.isArray(watchedPhones) ? watchedPhones : []}
-          />
+          {showClientProfileLookupSignals ? (
+            <ClientProfileLookupSignals
+              phones={Array.isArray(watchedPhones) ? watchedPhones : []}
+            />
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -243,7 +247,7 @@ export function ClientCoreInfoSection({
                     name="pet.lock"
                     control={control}
                     render={({ field }) => (
-                      <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                      <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                     )}
                   />
                 ) : null}

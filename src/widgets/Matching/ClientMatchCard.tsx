@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { DealType } from "@/features/clients/clientEnums";
 import type { ScoredClientMatch } from "@/features/matching/matchingApi.types";
 import { MatchingCriteriaList } from "@/widgets/Matching/MatchingCriteriaList";
 import { MatchingScoreSummary } from "@/widgets/Matching/MatchingScoreSummary";
@@ -16,12 +17,14 @@ import { isClientStatus } from "@/features/clients/clientEnums";
 type ClientMatchCardProps = {
   match: ScoredClientMatch;
   propertyId: string;
+  dealType?: DealType;
   canRequestCollaboration?: boolean;
 };
 
 export function ClientMatchCard({
   match,
   propertyId,
+  dealType,
   canRequestCollaboration = true,
 }: ClientMatchCardProps) {
   const client = match.client;
@@ -71,7 +74,8 @@ export function ClientMatchCard({
         </Link>
         <RequestCollaborationButton
           propertyId={propertyId}
-          clientId={client.id}
+          dealType={dealType}
+          attachedClientId={client.ownedByViewer === true ? client.id : undefined}
           canRequest={canRequestCollaboration}
         />
       </div>

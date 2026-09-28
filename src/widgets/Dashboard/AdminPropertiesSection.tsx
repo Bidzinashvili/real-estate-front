@@ -5,6 +5,7 @@ import type { Property } from "@/features/properties/types";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
+import { formatListingAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 type AdminPropertiesSectionProps = {
   properties: Property[];
@@ -87,7 +88,7 @@ export function AdminPropertiesSection({
                     {property.address}
                   </td>
                   <td className="px-4 py-3 text-foreground">
-                    {property.pricePublic.toLocaleString()}
+                    {formatListingAmount(property.pricePublic, property.currency) ?? "—"}
                   </td>
                   <td className="hidden px-4 py-3 text-foreground lg:table-cell">
                     {property.propertyOwner?.name ?? property.ownerName ?? ""}

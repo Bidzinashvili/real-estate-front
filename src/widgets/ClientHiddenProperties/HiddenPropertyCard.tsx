@@ -7,6 +7,7 @@ import { HIDDEN_PROPERTY_COPY } from "@/features/clientHiddenProperties/hiddenPr
 import type { HiddenPropertyItem } from "@/features/clientHiddenProperties/types";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
+import { formatListingAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { getApiBaseUrl } from "@/shared/lib/auth";
 import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
@@ -67,7 +68,7 @@ export function HiddenPropertyCard({
               .join(" · ") || "—"}
           </p>
           <p className="text-sm font-medium text-foreground">
-            {item.pricePublic.toLocaleString()} ₾
+            {formatListingAmount(item.pricePublic, item.currency) ?? "—"}
           </p>
           {hiddenAtLabel ? (
             <p className="text-xs text-muted-foreground">

@@ -29,7 +29,7 @@ export function ClientBudgetSection({
                 name="budgetMin.lock"
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}
@@ -72,7 +72,7 @@ export function ClientBudgetSection({
                 name="budgetMax.lock"
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}

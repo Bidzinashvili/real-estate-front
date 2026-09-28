@@ -10,6 +10,7 @@ import type { Property } from "@/features/properties/types";
 import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 import { PropertyListingCardManager } from "@/widgets/Properties/PropertyListingCardManager";
+import { PropertyRowArchiveActions } from "@/widgets/Properties/PropertyRowArchiveActions";
 import { PropertyListingCardPriceRow } from "@/widgets/Properties/PropertyListingCardPriceRow";
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { ui } from "@/shared/i18n/ui";
@@ -337,6 +338,13 @@ export function PropertyListingCard({
                 mineLabel={`${ui.matchMine}: ${ui.myClients}`}
                 sessionKind="property"
                 entityId={property.id}
+              />
+            ) : null}
+            {canChangeStatus && onListingChanged ? (
+              <PropertyRowArchiveActions
+                property={property}
+                canManage={canChangeStatus}
+                onChanged={onListingChanged}
               />
             ) : null}
           </div>

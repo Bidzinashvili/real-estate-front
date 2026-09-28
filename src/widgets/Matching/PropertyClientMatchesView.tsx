@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
+import { carryArchiveNavigation } from "@/features/lifecycle/archiveNavigation";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { viewerOwnsRecord } from "@/features/databaseList/viewerOwnership";
 import { usePropertyClientMatches } from "@/features/matching/usePropertyClientMatches";
 import { type MatchScope } from "@/features/matching/matchingEnums";
 import { peekTemporaryLockSession } from "@/features/matching/temporaryLockSession";
@@ -14,6 +16,7 @@ import { MatchingScopeToggle } from "@/widgets/Matching/MatchingScopeToggle";
 import { AppliedTemporaryLocksNotice } from "@/widgets/Matching/AppliedTemporaryLocksNotice";
 import { ClientMatchCard } from "@/widgets/Matching/ClientMatchCard";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
 
 type PropertyClientMatchesViewProps = {
   propertyId: string;
@@ -25,7 +28,9 @@ export function PropertyClientMatchesView({
   scope,
 }: PropertyClientMatchesViewProps) {
   const router = useRouter();
+  const accessViewer = useEffectiveAccessViewer();
   const { property } = usePropertyDetails(propertyId);
+  const viewerOwnsProperty = property ? viewerOwnsRecord(property, accessViewer) : false;
   const [page, setPage] = useState(1);
   const [appliedScope, setAppliedScope] = useState(scope);
   const [temporaryLockedFields] = useState(() =>
@@ -60,19 +65,21 @@ export function PropertyClientMatchesView({
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
+        <ArchiveCarryLink
           href={`/properties/${propertyId}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           განცხადებაზე დაბრუნება
-        </Link>
+        </ArchiveCarryLink>
         <MatchingScopeToggle
           value={scope}
           globalLabel={ui.allClients}
           mineLabel={ui.myClients}
           onChange={(nextScope) => {
-            router.replace(propertyMatchesHref(propertyId, nextScope));
+            router.replace(
+              carryArchiveNavigation(propertyMatchesHref(propertyId, nextScope)),
+            );
           }}
         />
       </div>
@@ -106,7 +113,12 @@ export function PropertyClientMatchesView({
                 key={match.id}
                 match={match}
                 propertyId={propertyId}
-                canRequestCollaboration={!property?.hideFromOthers}
+                dealType={property?.dealType}
+                canRequestCollaboration={
+                  property !== null &&
+                  property.hideFromOthers !== true &&
+                  !viewerOwnsProperty
+                }
               />
             ))}
           </div>

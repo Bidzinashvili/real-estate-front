@@ -22,6 +22,7 @@ import {
   parseLockedRenovations,
   parseLockedStringArray,
   parseLockedStringNullable,
+  parseLockState,
   readParallelLock,
 } from "@/features/clients/parseClientApiLocks";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
@@ -31,6 +32,7 @@ import { normalizeClientProfileCompact } from "@/features/clientProfiles/normali
 import { parseReminderSummary } from "@/features/reminders/reminderSummary";
 import { parseRecordColor } from "@/features/recordColor/recordColor";
 import { isDatabaseListScope } from "@/features/databaseList/databaseListScope";
+import { readManagingAgentFromRecord } from "@/features/agents/managingAgentSummary";
 
 function mergeRequirementLock(
   parsedLock: LockState,
@@ -299,6 +301,34 @@ function normalizeRequirements(
   };
 }
 
+function formatPetDisplayValue(raw: JsonValue | undefined): string | null {
+  if (typeof raw === "boolean") {
+    return raw ? "კი" : "არა";
+  }
+  if (typeof raw === "string" && raw.trim() !== "") {
+    return raw;
+  }
+  return null;
+}
+
+function parseClientPetField(raw: JsonValue | undefined): {
+  value: string | null;
+  lock: LockState;
+} {
+  if (typeof raw === "boolean") {
+    return { value: formatPetDisplayValue(raw), lock: "none" };
+  }
+  if (isJsonObject(raw) && "value" in raw && "lock" in raw) {
+    const lock = parseLockState(raw.lock) ?? "none";
+    const displayValue = formatPetDisplayValue(raw.value);
+    if (displayValue !== null) {
+      return { value: displayValue, lock };
+    }
+    return parseLockedStringNullable(raw);
+  }
+  return parseLockedStringNullable(raw);
+}
+
 function parseClientDealType(value: JsonValue | undefined): Client["dealType"] {
   if (typeof value === "string" && isDealType(value)) {
     return value;
@@ -337,7 +367,7 @@ export function normalizeClient(client: ClientApi): Client {
   const labels = parseLockedStringArray(record.labels);
   const budgetMin = parseLockedNumberNullable(record.budgetMin);
   const budgetMax = parseLockedNumberNullable(record.budgetMax);
-  const pet = parseLockedStringNullable(record.pet);
+  const pet = parseClientPetField(record.pet);
   const phones = Array.isArray(client.phones)
     ? client.phones.filter((phone): phone is string => typeof phone === "string")
     : [];
@@ -345,9 +375,17 @@ export function normalizeClient(client: ClientApi): Client {
   return {
     ...client,
     userId: asString(record.userId),
+    ...optionalClientField(
+      "managingAgent",
+      hasOwnJsonField(record, "agent") ||
+        hasOwnJsonField(record, "ownerAgent") ||
+        hasOwnJsonField(record, "user")
+        ? readManagingAgentFromRecord(record)
+        : undefined,
+    ),
     ownedByViewer: typeof record.ownedByViewer === "boolean" ? record.ownedByViewer : null,
     ...optionalClientField("hideFromOthers", readOptionalBoolean(record, "hideFromOthers")),
-    color: parseRecordColor(record.color),
+    ...optionalClientField("color", parseRecordColor(record.color)),
     name: asString(record.name),
     description: asString(record.description),
     whatsapp: asNullableString(record.whatsapp),
@@ -383,7 +421,7 @@ export function normalizeClient(client: ClientApi): Client {
     ),
     pet: pet.value,
     petLock: persistEntityLock(coalesceLock(pet.lock, readParallelLock(record, "pet"))),
-    relatedPersons: client.relatedPersons ?? [],
+    relatedPersons: Array.isArray(client.relatedPersons) ? client.relatedPersons : [],
     requirements: normalizeRequirements(record.requirements, record),
     status: parseClientStatus(client.status),
     archivedAt: asNullableString(record.archivedAt),
@@ -401,8 +439,10 @@ export function normalizeClientDetail(detail: ClientDetailApi): ClientDetail {
   const base = normalizeClient(detail);
   return {
     ...base,
-    comments: detail.comments ?? [],
-    internalComments: detail.internalComments ?? [],
+    comments: Array.isArray(detail.comments) ? detail.comments : [],
+    internalComments: Array.isArray(detail.internalComments)
+      ? detail.internalComments
+      : [],
   };
 }
 

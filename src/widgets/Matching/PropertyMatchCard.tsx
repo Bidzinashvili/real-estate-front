@@ -15,7 +15,9 @@ import {
 import { DEAL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { isPropertyStatus } from "@/features/properties/propertyStatus";
+import { parseSupportedListingCurrency } from "@/features/currency/types";
 import { formatAreaSquareMeters } from "@/features/properties/propertyArea";
+import { formatListingAmount } from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 type PropertyMatchCardProps = {
   match: ScoredPropertyMatch;
@@ -52,6 +54,8 @@ export function PropertyMatchCard({
   canRequestCollaboration = true,
 }: PropertyMatchCardProps) {
   const listing = match.property;
+  const listingCurrency = parseSupportedListingCurrency(listing.currency);
+  const listingPriceLabel = formatListingAmount(listing.pricePublic, listingCurrency);
   const apartment = listing.apartment;
   const imageUrl = getMatchImageUrl(listing.images);
   const apartmentSummary = apartment
@@ -103,7 +107,7 @@ export function PropertyMatchCard({
           <p className="text-xs text-muted-foreground">{apartmentSummary}</p>
         ) : null}
         <p className="text-sm font-medium text-foreground">
-          {listing.pricePublic.toLocaleString()}
+          {listingPriceLabel ?? "—"}
         </p>
         {listing.publicComment?.trim() ? (
           <p className="line-clamp-3 text-xs text-muted-foreground">
@@ -131,8 +135,10 @@ export function PropertyMatchCard({
           ) : null}
           <RequestCollaborationButton
             propertyId={listing.id}
-            clientId={clientId}
+            dealType={listing.dealType}
+            attachedClientId={clientId}
             canRequest={canRequestCollaboration}
+            recordOwnedByViewer={listing.ownedByViewer}
           />
           {canHideProperty && onHideProperty ? (
             <HidePropertyMatchButton

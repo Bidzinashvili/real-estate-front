@@ -9,12 +9,11 @@ import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
 import { usePublicClientInvite } from "@/features/clientInviteLinks/usePublicClientInvite";
 import { useSubmitPublicClientInvite } from "@/features/clientInviteLinks/useSubmitPublicClientInvite";
 import { buildPublicInviteFormSchemaDerived } from "@/features/clientInviteLinks/formSchemaHints";
+import { preventImplicitFormSubmitOnEnter } from "@/shared/lib/preventImplicitFormSubmitOnEnter";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
 import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSection";
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
 import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequirementsSection";
-import type { Client } from "@/features/clients/types";
-
 type PublicClientInviteViewProps = {
   inviteToken: string;
 };
@@ -23,7 +22,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
   const loadState = usePublicClientInvite(inviteToken);
   const { submit, isLoading: isSubmitting, error: submitError } =
     useSubmitPublicClientInvite();
-  const [createdClient, setCreatedClient] = useState<Client | null>(null);
+  const [submitSuccessMessage, setSubmitSuccessMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -72,7 +71,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
     const dto = buildCreateClientDto(values);
     const result = await submit(inviteToken, dto);
     if (result) {
-      setCreatedClient(result);
+      setSubmitSuccessMessage(result.message);
     }
   };
 
@@ -116,14 +115,11 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
     );
   }
 
-  if (createdClient) {
+  if (submitSuccessMessage) {
     return (
       <div className="space-y-4 rounded-xl border border-emerald-200 bg-success-muted px-6 py-8 text-center shadow-sm">
         <h1 className="text-xl font-semibold text-success-foreground">გმადლობთ</h1>
-        <p className="text-sm text-success-foreground">
-          თქვენი მონაცემები წარმატებით გაიგზავნა. ნომერი:{" "}
-          <span className="font-mono font-medium">{createdClient.id}</span>
-        </p>
+        <p className="text-sm text-success-foreground">{submitSuccessMessage}</p>
       </div>
     );
   }
@@ -137,7 +133,12 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        onKeyDown={preventImplicitFormSubmitOnEnter}
+        className="space-y-8"
+        noValidate
+      >
         <ClientCoreInfoSection
           control={control}
           register={register}
@@ -149,6 +150,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
           isRentDeal={isRentDeal}
           showClientStatusField={false}
           showReminderDateField={false}
+          showClientProfileLookupSignals={false}
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
           dealTypeSelectOptions={formSchemaDerived.dealTypeSelectOptions}
           showLockForPath={formSchemaDerived.showLockForPath}

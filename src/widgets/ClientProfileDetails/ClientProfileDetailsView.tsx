@@ -6,7 +6,7 @@ import { useClientProfileDetails } from "@/features/clientProfiles/useClientProf
 import { CLIENT_PROFILES_LIST_HREF } from "@/features/clientProfiles/clientProfileRoutes";
 import { formatClientProfileDealTypes } from "@/features/clientProfiles/display";
 import { formatLifecycleDate } from "@/features/lifecycle/formatLifecycleDate";
-import { useCurrentUser } from "@/shared/hooks";
+import { useActiveAdminPrivileges } from "@/features/adminMode/useEffectiveAccessViewer";
 import { ClientProfileIdentityCard } from "@/widgets/ClientProfileDetails/ClientProfileIdentityCard";
 import { ClientProfilePhonesSection } from "@/widgets/ClientProfileDetails/ClientProfilePhonesSection";
 import { ClientProfileCommentSection } from "@/widgets/ClientProfileDetails/ClientProfileCommentSection";
@@ -24,8 +24,7 @@ export function ClientProfileDetailsView({
   profileId,
 }: ClientProfileDetailsViewProps) {
   const router = useRouter();
-  const { user } = useCurrentUser();
-  const isAdmin = user?.role === "ADMIN";
+  const hasAdminPrivileges = useActiveAdminPrivileges();
   const { profile, isLoading, error, statusCode, refetch } =
     useClientProfileDetails(profileId);
 
@@ -92,7 +91,7 @@ export function ClientProfileDetailsView({
             onUpdated={() => void refetch()}
           />
           <ClientProfileAuditSection audits={profile.audits} />
-          {isAdmin ? (
+          {hasAdminPrivileges ? (
             <ClientProfileMergeSection
               profile={profile}
               onUpdated={() => void refetch()}

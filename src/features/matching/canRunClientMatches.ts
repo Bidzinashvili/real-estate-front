@@ -25,7 +25,7 @@ export function canRunClientMatches(
     return true;
   }
   if (client.ownedByViewer === false) {
-    return false;
+    return user.role === "AGENT";
   }
   return user.role === "AGENT" && client.userId !== undefined && user.id === client.userId;
 }

@@ -6,6 +6,7 @@ import {
   createReminder,
   patchReminder,
 } from "@/features/reminders/remindersApi";
+import { toUserFacingReminderError } from "@/features/reminders/reminderErrorMessages";
 import {
   datetimeLocalValueToIso,
   isoToDatetimeLocalValue,
@@ -122,7 +123,6 @@ export function ReminderPickerModal(props: ReminderPickerModalProps) {
       } else if (props.target.targetType === "PROPERTY") {
         await createReminder({
           propertyId: props.target.propertyId,
-          kind: "CUSTOM",
           notifyAt: notifyIso,
           note: nextNote,
         });
@@ -136,11 +136,11 @@ export function ReminderPickerModal(props: ReminderPickerModalProps) {
       props.onSaved();
       props.onClose();
     } catch (errorUnknown) {
-      const message =
-        errorUnknown instanceof Error
-          ? errorUnknown.message
-          : "შეხსენების შენახვა ვერ მოხერხდა.";
-      setFormError(message);
+      const fallback =
+        props.mode === "edit"
+          ? "შეხსენების განახლება ვერ მოხერხდა."
+          : "შეხსენების დამატება ვერ მოხერხდა.";
+      setFormError(toUserFacingReminderError(errorUnknown, fallback));
     } finally {
       setIsSaving(false);
     }

@@ -3,11 +3,11 @@ import type { SupportedListingCurrency } from "@/features/currency/types";
 import type { LabelDto } from "@/features/labels/labelTypes";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import type { JsonValue } from "@/shared/lib/jsonValue";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type { EntityVerificationFields } from "@/features/lifecycle/lifecycleEnums";
 import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
 import type { PropertyOwnerSummary } from "@/features/propertyOwners/propertyOwnerSummary";
 import type { RecordColor } from "@/features/recordColor/recordColor";
+import type { ManagingAgentSummary } from "@/features/agents/managingAgentSummary";
 
 export type { DealType };
 export type { PropertyStatus };
@@ -322,7 +322,9 @@ export type Property = EntityVerificationFields & {
   noteLastOpenedAt?: string | null;
   deletedAt: string | null;
   userId?: string;
+  managingAgent?: ManagingAgentSummary | null;
   ownedByViewer: boolean | null;
+  viewerPendingVerificationRequest?: boolean;
   hideFromOthers?: boolean;
   readyToUpload?: boolean;
   color?: RecordColor;
@@ -331,6 +333,5 @@ export type Property = EntityVerificationFields & {
   privateHouse: PropertyPrivateHouse | null;
   landPlot: PropertyLandPlot | null;
   commercial: PropertyCommercial | null;
-  fieldLocks?: PropertyFieldLocks;
   reminderSummary?: ReminderSummary;
 };

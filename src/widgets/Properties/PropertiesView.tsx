@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePropertiesCatalog } from "@/features/properties/usePropertiesCatalog";
 import { getApiBaseUrl } from "@/shared/lib/auth";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
 import { useCurrentUser } from "@/shared/hooks";
 import { PropertyCatalogAdvancedSearch } from "@/widgets/Properties/propertyCatalogFilters";
 import { PropertyCatalogBasicFilters } from "@/widgets/Properties/propertyCatalogBasicFilters";
@@ -13,6 +14,7 @@ import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertC
 import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { appendArchiveNavigationSource } from "@/features/lifecycle/archiveNavigation";
 import { canManageProperty } from "@/features/properties/listingVisibility";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
@@ -47,6 +49,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
   const router = useRouter();
   const apiBaseUrl = getApiBaseUrl();
   const { user, isLoading: isAuthLoading } = useCurrentUser();
+  const accessViewer = useEffectiveAccessViewer();
   const isArchiveScope = listingScope === "archived";
   const catalog = usePropertiesCatalog({
     syncUrl: !isArchiveScope,
@@ -82,14 +85,17 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
 
   const handleViewProperty = useCallback(
     (propertyId: string) => {
-      router.push(`/properties/${propertyId}`);
+      const detailHref = `/properties/${propertyId}`;
+      router.push(
+        isArchiveScope ? appendArchiveNavigationSource(detailHref) : detailHref,
+      );
     },
-    [router],
+    [isArchiveScope, router],
   );
 
   const canChangeListingStatus = useCallback(
-    (listing: Property) => canManageProperty(user, listing),
-    [user],
+    (listing: Property) => canManageProperty(accessViewer, listing),
+    [accessViewer],
   );
 
   const catalogPrefetchKey = useMemo(

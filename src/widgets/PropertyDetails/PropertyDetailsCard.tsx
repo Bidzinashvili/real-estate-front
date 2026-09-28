@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
 import {
   GEORGIAN_CITY_OPTIONS,
   isTbilisiCity,
@@ -34,7 +34,6 @@ import { PropertyDetailsImageGallery } from "@/widgets/PropertyDetails/PropertyD
 import { PropertyDetailsLifecycleSection } from "@/widgets/PropertyDetails/PropertyDetailsLifecycleSection";
 import { PropertyDetailsReadOnlySections } from "@/widgets/PropertyDetails/PropertyDetailsReadOnlySections";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
-import { collectPropertyTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
 import { ui } from "@/shared/i18n/ui";
 import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
@@ -48,6 +47,7 @@ import {
   hasAuthorizedInternalPrice,
   hasAuthorizedPrivateNotes,
 } from "@/features/properties/authorizedPropertyFields";
+import { RecordManagingAgentLine } from "@/widgets/RecordManagingAgent/RecordManagingAgentLine";
 
 type PropertyDetailsCardBaseProps = {
   property: Property;
@@ -231,7 +231,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             minRentalPeriod: property.commercial.minRentalPeriod ?? undefined,
           }
         : null,
-      fieldLocks: property.fieldLocks ?? {},
     };
   }, [property]);
 
@@ -477,13 +476,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     void onSubmit(payload);
   };
 
-  const setFieldLocks = (nextLocks: PropertyFormValues["fieldLocks"]) => {
-    setValues((previousValues) => ({
-      ...previousValues,
-      fieldLocks: nextLocks,
-    }));
-  };
-
   const setApartment = (patch: PropertyApartmentUpdate) => {
     setValues((previousValues) => ({
       ...previousValues,
@@ -553,7 +545,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             onLabelsChange={() => {}}
             onCommentChange={() => {}}
             setApartment={setApartment}
-            setFieldLocks={setFieldLocks}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}
@@ -599,7 +590,6 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
               setValues((prev) => ({ ...prev, [field]: value }))
             }
             setApartment={setApartment}
-            setFieldLocks={setFieldLocks}
             setPrivateHouse={setPrivateHouse}
             setLandPlot={setLandPlot}
             setCommercial={setCommercial}
@@ -651,6 +641,11 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         <p className="mt-1 text-sm text-muted-foreground">
           ნახეთ განცხადების ინფორმაცია. დასაშვები ველების შესაცვლელად გამოიყენეთ რედაქტირება.
         </p>
+        <RecordManagingAgentLine
+          className="mt-2 text-sm text-muted-foreground"
+          userId={property.userId}
+          managingAgent={property.managingAgent}
+        />
         {detailsBody}
       </div>
     );
@@ -664,6 +659,11 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           <p className="mt-1 text-sm text-muted-foreground">
             განაახლეთ განცხადების ინფორმაცია. აგენტებს მხოლოდ საკუთარი განცხადებების რედაქტირება შეუძლიათ.
           </p>
+          <RecordManagingAgentLine
+            className="mt-2 text-sm text-muted-foreground"
+            userId={property.userId}
+            managingAgent={property.managingAgent}
+          />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {property.propertyType === "APARTMENT" ? (
@@ -674,15 +674,14 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
               mineLabel={`${ui.matchMine}: ${ui.myClients}`}
               sessionKind="property"
               entityId={property.id}
-              temporaryLockedFields={collectPropertyTemporaryLocks(values.fieldLocks)}
             />
           ) : null}
-          <Link
+          <ArchiveCarryLink
             href={`/properties/${property.id}`}
             className="inline-flex items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
             ობიექტის ნახვა
-          </Link>
+          </ArchiveCarryLink>
         </div>
       </div>
       {detailsBody}

@@ -15,9 +15,11 @@ import {
 import { CollaborationParticipantsList } from "@/widgets/Collaboration/CollaborationParticipantsList";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
 import {
+  COLLABORATION_CLIENT_TARGET_LABEL,
   COLLABORATION_PROPERTY_DELETED_LABEL,
   formatCollaborationPropertyAddress,
   formatCollaborationPropertyDistrict,
+  formatCollaborationRequestHeadline,
 } from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type CollaborationMonitorDetailsViewProps = {
@@ -81,9 +83,16 @@ export function CollaborationMonitorDetailsView({
                   განცხადების გახსნა
                 </Link>
               </>
+            ) : monitor.collaboration.client ? (
+              <p className="text-sm font-medium text-foreground">
+                {formatCollaborationRequestHeadline(monitor.collaboration, true)}
+              </p>
             ) : (
               <p className="text-sm text-muted-foreground">{COLLABORATION_PROPERTY_DELETED_LABEL}</p>
             )}
+            {!monitor.property && monitor.collaboration.client ? (
+              <p className="text-xs text-muted-foreground">{COLLABORATION_CLIENT_TARGET_LABEL}</p>
+            ) : null}
             <p className="text-sm text-foreground">
               სტატუსი:{" "}
               {lookupEnumLabel(PROPERTY_STATUS_LABELS, monitor.propertyStatus) ??

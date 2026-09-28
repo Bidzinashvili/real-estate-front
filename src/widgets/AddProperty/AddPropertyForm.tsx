@@ -44,8 +44,6 @@ export function AddPropertyForm() {
             fieldErrors={fieldErrors}
             images={images}
             imageError={imageError}
-            fieldLocks={form.fieldLocks}
-            patchFieldLocks={(nextLocks) => updateForm("fieldLocks", nextLocks)}
             updateForm={updateForm}
             updateAddress={updateAddress}
             onAddImages={addImages}
@@ -68,9 +66,7 @@ export function AddPropertyForm() {
               dealType={form.dealType}
               apartment={form.apartment}
               fieldErrors={fieldErrors}
-              fieldLocks={form.fieldLocks}
               patchApartment={patchApartment}
-              patchFieldLocks={(nextLocks) => updateForm("fieldLocks", nextLocks)}
             />
           )}
 

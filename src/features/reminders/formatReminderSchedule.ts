@@ -3,6 +3,12 @@ const TIME_FORMATTER = new Intl.DateTimeFormat("ka-GE", {
   minute: "2-digit",
 });
 
+const ROW_DATE_FORMATTER = new Intl.DateTimeFormat("ka-GE", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "2-digit",
+});
+
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ka-GE", {
   day: "numeric",
   month: "short",
@@ -18,6 +24,22 @@ function dayOffsetFromToday(value: Date, referenceNow: Date): number {
   const startOfValue = startOfLocalDay(value).getTime();
   const startOfToday = startOfLocalDay(referenceNow).getTime();
   return Math.round((startOfValue - startOfToday) / 86_400_000);
+}
+
+export function formatReminderRowDate(isoTimestamp: string): string {
+  const parsed = new Date(isoTimestamp);
+  if (Number.isNaN(parsed.getTime())) {
+    return isoTimestamp;
+  }
+  return ROW_DATE_FORMATTER.format(parsed);
+}
+
+export function formatReminderRowTime(isoTimestamp: string): string {
+  const parsed = new Date(isoTimestamp);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+  return TIME_FORMATTER.format(parsed);
 }
 
 export function formatReminderDateTime(isoTimestamp: string): string {

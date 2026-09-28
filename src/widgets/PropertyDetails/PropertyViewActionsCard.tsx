@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
 import { Archive, Bell, RefreshCw, Tags, Undo2, Trash2 } from "lucide-react";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { DELETE_COPY } from "@/features/lifecycle/deleteCopy";
@@ -95,13 +95,13 @@ export function PropertyViewActionsCard({
           </button>
         ) : null}
         {canEdit ? (
-          <Link
+          <ArchiveCarryLink
             href={`/properties/${property.id}/edit`}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-foreground transition hover:bg-muted"
           >
             <Tags className="h-3.5 w-3.5" aria-hidden="true" />
             ფერადი ლეიბლები
-          </Link>
+          </ArchiveCarryLink>
         ) : null}
         {canEdit ? (
           <button

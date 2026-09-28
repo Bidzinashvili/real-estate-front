@@ -22,16 +22,25 @@ import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSectio
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
 import { ClientRequirementsSection } from "@/widgets/ClientForm/ClientRequirementsSection";
 import { ClientRelatedPersonsSection } from "@/widgets/ClientForm/ClientRelatedPersonsSection";
-import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { ClientFormLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { collectClientFormTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
 import { clientMatchesHref } from "@/features/matching/matchingRoutes";
 import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
-import { useCurrentUser } from "@/shared/hooks";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
+import { viewerCanManageRecord } from "@/features/databaseList/viewerOwnership";
 import { ui } from "@/shared/i18n/ui";
 import { preventImplicitFormSubmitOnEnter } from "@/shared/lib/preventImplicitFormSubmitOnEnter";
 import { ClientFormRequiredFieldsSummary } from "@/widgets/ClientForm/ClientFormRequiredFieldsSummary";
 import { useClientFormValidationNotice } from "@/widgets/ClientForm/useClientFormValidationNotice";
+import { NoteRemindersSection } from "@/widgets/Reminders/NoteRemindersSection";
+import {
+  archiveRecordBackLabel,
+  carryArchiveNavigation,
+  isOpenedFromArchiveLocation,
+  recordListHref,
+} from "@/features/lifecycle/archiveNavigation";
+import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 
 type EditClientFormProps = {
   clientId: string;
@@ -45,9 +54,10 @@ function EditClientFormInner({
   clientId: string;
 }) {
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const accessViewer = useEffectiveAccessViewer();
   const { update, isLoading, error } = useUpdateClient();
-  const canRunMatches = canRunClientMatches(user, client.userId);
+  const canRunMatches = canRunClientMatches(accessViewer, client);
+  const canEditClient = viewerCanManageRecord(client, accessViewer);
 
   const {
     register,
@@ -65,6 +75,12 @@ function EditClientFormInner({
   useEffect(() => {
     reset(mapClientDetailToFormValues(client));
   }, [client, reset]);
+
+  useEffect(() => {
+    if (!canEditClient) {
+      router.replace(`/clients/${clientId}`);
+    }
+  }, [canEditClient, clientId, router]);
 
   const {
     fields: phoneFields,
@@ -88,18 +104,20 @@ function EditClientFormInner({
     clearValidationNotice,
   } = useClientFormValidationNotice();
 
+  const clientDetailHref = () => carryArchiveNavigation(`/clients/${clientId}`);
+
   const onSubmit = async (values: ClientFormValues) => {
     clearValidationNotice();
     const dto = buildUpdateClientDto(values);
     await update(clientId, dto);
-    router.push(`/clients/${clientId}`);
+    router.push(clientDetailHref());
   };
 
   return (
     <div className="mx-auto w-full max-w-3xl">
       <button
         type="button"
-        onClick={() => router.push(`/clients/${clientId}`)}
+        onClick={() => router.push(clientDetailHref())}
         className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -110,7 +128,7 @@ function EditClientFormInner({
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">კლიენტის რედაქტირება</h1>
           <p className="text-sm text-muted-foreground">განაახლეთ კლიენტის მონაცემები.</p>
-          <MatchingLockHint />
+          <ClientFormLockHint />
         </div>
         {canRunMatches ? (
           <MatchPercentActions
@@ -131,6 +149,12 @@ function EditClientFormInner({
         className="space-y-8"
         noValidate
       >
+        <NoteRemindersSection
+          targetType="CLIENT"
+          clientId={clientId}
+          canManage={canEditClient}
+        />
+
         <ClientCoreInfoSection
           control={control}
           register={register}
@@ -182,7 +206,7 @@ function EditClientFormInner({
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={() => router.push(`/clients/${clientId}`)}
+            onClick={() => router.push(clientDetailHref())}
             className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
             გაუქმება
@@ -202,6 +226,7 @@ function EditClientFormInner({
 
 export function EditClientForm({ clientId }: EditClientFormProps) {
   const router = useRouter();
+  const openedFromArchive = useOpenedFromArchive();
   const { client, isLoading, error } = useClientDetails(clientId);
 
   if (isLoading) {
@@ -213,11 +238,13 @@ export function EditClientForm({ clientId }: EditClientFormProps) {
       <div className="space-y-3">
         <button
           type="button"
-          onClick={() => router.push("/clients")}
+          onClick={() =>
+            router.push(recordListHref("client", isOpenedFromArchiveLocation()))
+          }
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          კლიენტებზე დაბრუნება
+          {archiveRecordBackLabel("client", openedFromArchive)}
         </button>
         <p className="text-sm text-destructive" role="alert">
           {error ?? "კლიენტი ვერ მოიძებნა."}

@@ -8,7 +8,12 @@ import type {
   AgentCreateResult,
   AgentUpdatePayload,
 } from "@/features/agents/types";
+import {
+  normalizeAgentDetailResponse,
+  normalizeAgentDetails,
+} from "@/features/agents/normalizers";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
+import { asBoolean, isJsonObject } from "@/shared/lib/jsonValue";
 
 export type GetAgentsListParams = {
   search?: string;
@@ -70,10 +75,14 @@ export async function getAgentById(id: string): Promise<AgentDetails> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.get<AgentDetails>(`${baseUrl}/admin/agents/${id}`, {
+    const res = await axios.get(`${baseUrl}/admin/agents/${id}`, {
       headers,
     });
-    return res.data;
+    const normalized = normalizeAgentDetailResponse(res.data);
+    if (!normalized) {
+      throw new Error("აგენტი ვერ მოიძებნა.");
+    }
+    return normalized;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "აგენტის ჩატვირთვა ვერ მოხერხდა.";
@@ -93,10 +102,37 @@ export async function createAgent(payload: AgentCreatePayload): Promise<AgentCre
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.post<AgentCreateResult>(`${baseUrl}/admin/agents`, payload, {
+    const res = await axios.post(`${baseUrl}/admin/agents`, payload, {
       headers,
     });
-    return res.data;
+    const normalized = normalizeAgentDetails(res.data);
+    if (!normalized) {
+      throw new Error("აგენტის შექმნა ვერ მოხერხდა.");
+    }
+    const passwordSet =
+      normalized.passwordSet !== undefined
+        ? normalized.passwordSet
+        : asBoolean(
+            isJsonObject(res.data) ? res.data.passwordSet : undefined,
+            false,
+          );
+
+    const emailDelivery =
+      isJsonObject(res.data) && isJsonObject(res.data.emailDelivery)
+        ? {
+            setupEmailSent: asBoolean(res.data.emailDelivery.setupEmailSent, false),
+            adminNotificationSent: asBoolean(
+              res.data.emailDelivery.adminNotificationSent,
+              false,
+            ),
+          }
+        : undefined;
+
+    return {
+      ...normalized,
+      passwordSet,
+      emailDelivery,
+    };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "აგენტის შექმნა ვერ მოხერხდა.";
@@ -119,14 +155,14 @@ export async function updateAgent(
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.patch<AgentDetails>(
-      `${baseUrl}/admin/agents/${id}`,
-      payload,
-      {
-        headers,
-      },
-    );
-    return res.data;
+    const res = await axios.patch(`${baseUrl}/admin/agents/${id}`, payload, {
+      headers,
+    });
+    const normalized = normalizeAgentDetails(res.data);
+    if (!normalized) {
+      throw new Error("აგენტი ვერ მოიძებნა.");
+    }
+    return normalized;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const fallback = "აგენტის ცვლილებების შენახვა ვერ მოხერხდა.";

@@ -6,6 +6,7 @@ import {
   PROPERTY_VERIFICATION_COPY,
   propertyVerifyActionLabel,
 } from "@/features/lifecycle/propertyVerification";
+import { PROPERTY_VERIFICATION_REQUEST_COPY } from "@/features/propertyVerificationRequest/propertyVerificationRequestCopy";
 import type { PropertyStatus } from "@/features/properties/propertyStatus";
 import {
   formatTbilisiCompactDate,
@@ -18,6 +19,7 @@ type PropertyVerificationStatusProps = {
   status: PropertyStatus;
   archivedAt?: string | null;
   lastVerifiedAt: string | null;
+  verificationOverdue?: boolean;
   canManage: boolean;
   isVerifying?: boolean;
   error?: string | null;
@@ -32,6 +34,7 @@ export function PropertyVerificationStatus({
   status,
   archivedAt,
   lastVerifiedAt,
+  verificationOverdue = false,
   canManage,
   isVerifying = false,
   error = null,
@@ -53,12 +56,24 @@ export function PropertyVerificationStatus({
     : null;
   const dateLabel = dateFormat === "detailed" ? detailedDate : compactDate;
   const showActiveDate = isActiveListing && Boolean(dateLabel);
+  const peerNeedsVerification =
+    !canManage &&
+    isActiveListing &&
+    (verificationOverdue || status === "NEEDS_VERIFICATION" || !lastVerifiedAt);
+  const showPeerFreshness = !canManage && isActiveListing && !peerNeedsVerification && Boolean(dateLabel);
   const verifyLabel =
     dateFormat === "detailed" && status !== "NEEDS_VERIFICATION"
       ? PROPERTY_VERIFICATION_COPY.verifyTodayCombined
       : propertyVerifyActionLabel(status);
 
-  if (!showActiveDate && !showVerify && !error && !successMessage) {
+  if (
+    !showActiveDate &&
+    !showPeerFreshness &&
+    !peerNeedsVerification &&
+    !showVerify &&
+    !error &&
+    !successMessage
+  ) {
     return null;
   }
 
@@ -80,6 +95,26 @@ export function PropertyVerificationStatus({
             {dateFormat === "detailed"
               ? `${PROPERTY_VERIFICATION_COPY.detailLabel}: ${dateLabel}`
               : `${PROPERTY_VERIFICATION_COPY.compactLabel} ${dateLabel}`}
+          </p>
+        ) : null}
+        {showPeerFreshness && dateLabel ? (
+          <p
+            className={cn(
+              "font-medium text-success",
+              dateFormat === "detailed" ? "text-sm" : "text-xs",
+            )}
+          >
+            {`${PROPERTY_VERIFICATION_REQUEST_COPY.peerLastVerified}: ${dateLabel}`}
+          </p>
+        ) : null}
+        {peerNeedsVerification ? (
+          <p
+            className={cn(
+              "font-medium text-amber-800",
+              dateFormat === "detailed" ? "text-sm" : "text-xs",
+            )}
+          >
+            {PROPERTY_VERIFICATION_REQUEST_COPY.peerVerificationNeeded}
           </p>
         ) : null}
         {showVerify && onVerify ? (

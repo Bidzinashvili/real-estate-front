@@ -78,3 +78,7 @@ export type PublicClientInviteGetResponse = {
   status: ClientInviteLinkStatus;
   formSchema: ClientInviteFormSchema;
 };
+
+export type PublicClientInviteSubmitResponse = {
+  message: string;
+};

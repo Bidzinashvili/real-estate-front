@@ -66,8 +66,10 @@ function mergeFormStateDraft(restoredDraft: FormState | null): FormState {
     listingLifecycleStatus: legacyListingLifecycleStatus,
     verificationReminderLocal: legacyVerificationReminderLocal,
     kitchenTypeDefaultVersion: legacyKitchenTypeDefaultVersion,
+    fieldLocks: legacyFieldLocks,
     ...restoredFields
-  } = restoredDraft as LegacyAddPropertyDraft;
+  } = restoredDraft as LegacyAddPropertyDraft & { fieldLocks?: unknown };
+  void legacyFieldLocks;
   void legacyListingLifecycleStatus;
   void legacyVerificationReminderLocal;
   void legacyKitchenTypeDefaultVersion;

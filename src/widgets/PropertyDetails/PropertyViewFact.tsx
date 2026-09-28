@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
-import type { LockState } from "@/features/matching/matchingEnums";
 import { formatListingParkingDisplay } from "@/features/properties/listingParking";
 import type { ListingParking, ListingParkingType } from "@/features/properties/types";
 import { LISTING_PARKING_FIELD_LABEL } from "@/shared/i18n/enumLabels";
-import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import { NEEDS_VERIFICATION_LABEL } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import {
   BALCONY_FIELD_LABEL,
@@ -18,16 +16,12 @@ type PropertyViewFactProps = {
   label: string;
   value: string;
   tone?: PropertyViewFactTone;
-  lock?: LockState;
-  onLockChange?: (next: LockState) => void;
 };
 
 export function PropertyViewFact({
   label,
   value,
   tone = "default",
-  lock,
-  onLockChange,
 }: PropertyViewFactProps) {
   const valueClassName =
     tone === "verify"
@@ -40,12 +34,7 @@ export function PropertyViewFact({
 
   return (
     <div className="min-w-0 rounded-xl bg-muted/70 px-3 py-2.5 ring-1 ring-border">
-      <div className="flex items-start justify-between gap-1.5">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        {lock !== undefined && onLockChange ? (
-          <PreferenceLockButton value={lock} onChange={onLockChange} />
-        ) : null}
-      </div>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`mt-0.5 break-words text-sm font-medium ${valueClassName}`}>{value}</p>
     </div>
   );
@@ -59,16 +48,12 @@ type VerifiableBooleanFactProps = {
   label: string;
   value: boolean | null | undefined;
   isToBeVerified: boolean;
-  lock?: LockState;
-  onLockChange?: (next: LockState) => void;
 };
 
 export function VerifiableBooleanFact({
   label,
   value,
   isToBeVerified,
-  lock,
-  onLockChange,
 }: VerifiableBooleanFactProps) {
   if (isToBeVerified) {
     return (
@@ -76,8 +61,6 @@ export function VerifiableBooleanFact({
         label={label}
         value={NEEDS_VERIFICATION_LABEL}
         tone="verify"
-        lock={lock}
-        onLockChange={onLockChange}
       />
     );
   }
@@ -87,8 +70,6 @@ export function VerifiableBooleanFact({
         label={label}
         value="კი"
         tone="yes"
-        lock={lock}
-        onLockChange={onLockChange}
       />
     );
   }
@@ -98,8 +79,6 @@ export function VerifiableBooleanFact({
         label={label}
         value="არა"
         tone="no"
-        lock={lock}
-        onLockChange={onLockChange}
       />
     );
   }
@@ -108,8 +87,6 @@ export function VerifiableBooleanFact({
       label={label}
       value="უცნობი"
       tone="no"
-      lock={lock}
-      onLockChange={onLockChange}
     />
   );
 }
@@ -121,8 +98,6 @@ type VerifiableNumberFactProps = {
   suffix?: string;
   emptyLabel?: string;
   requirePositive?: boolean;
-  lock?: LockState;
-  onLockChange?: (next: LockState) => void;
 };
 
 export function VerifiableNumberFact({
@@ -132,8 +107,6 @@ export function VerifiableNumberFact({
   suffix,
   emptyLabel = "—",
   requirePositive = false,
-  lock,
-  onLockChange,
 }: VerifiableNumberFactProps) {
   if (isToBeVerified) {
     return (
@@ -141,8 +114,6 @@ export function VerifiableNumberFact({
         label={label}
         value={NEEDS_VERIFICATION_LABEL}
         tone="verify"
-        lock={lock}
-        onLockChange={onLockChange}
       />
     );
   }
@@ -157,30 +128,24 @@ export function VerifiableNumberFact({
         label={label}
         value={emptyLabel}
         tone="no"
-        lock={lock}
-        onLockChange={onLockChange}
       />
     );
   }
   const formatted = suffix ? `${value.toLocaleString()} ${suffix}` : value.toLocaleString();
-  return <PropertyViewFact label={label} value={formatted} lock={lock} onLockChange={onLockChange} />;
+  return <PropertyViewFact label={label} value={formatted} />;
 }
 
 type OptionalTextFactProps = {
   label: string;
   value: string | null | undefined;
-  lock?: LockState;
-  onLockChange?: (next: LockState) => void;
 };
 
-export function OptionalTextFact({ label, value, lock, onLockChange }: OptionalTextFactProps) {
+export function OptionalTextFact({ label, value }: OptionalTextFactProps) {
   const text = value?.trim();
   return (
     <PropertyViewFact
       label={label}
       value={text ? text : "—"}
-      lock={lock}
-      onLockChange={onLockChange}
     />
   );
 }
@@ -208,8 +173,6 @@ type ListingBalconyFactsProps = {
   needsVerification?: string[] | null;
   balconyArea?: number | null;
   veranda?: boolean | null;
-  lock?: LockState;
-  onLockChange?: (next: LockState) => void;
 };
 
 export function ListingBalconyFacts({
@@ -217,8 +180,6 @@ export function ListingBalconyFacts({
   needsVerification,
   balconyArea,
   veranda,
-  lock,
-  onLockChange,
 }: ListingBalconyFactsProps) {
   const isToVerify = isBalconyUiToVerify(balconyCount, needsVerification);
   const formattedArea =
@@ -231,8 +192,6 @@ export function ListingBalconyFacts({
       label={BALCONY_FIELD_LABEL}
       value={formatBalconyCountDisplay({ balconyCount, needsVerification })}
       tone={isToVerify ? "verify" : balconyCount === 0 ? "no" : "default"}
-      lock={lock}
-      onLockChange={onLockChange}
     />,
     formattedArea ? (
       <PropertyViewFact key="area" label="აივნის ფართობი" value={formattedArea} />

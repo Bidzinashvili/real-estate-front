@@ -1,3 +1,4 @@
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import type { DealType } from "@/features/properties/dealType";
 import type {
   HotelScope,
@@ -118,6 +119,7 @@ export type PublicProperty = {
   district: string;
   address: string;
   pricePublic: number;
+  currency: SupportedListingCurrency;
   publicComment: string | null;
   images: PublicPropertyImage[];
   apartment: PublicApartment | null;

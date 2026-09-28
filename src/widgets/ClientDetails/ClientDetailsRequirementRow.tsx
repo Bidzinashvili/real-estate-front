@@ -7,6 +7,7 @@ type ClientDetailsRequirementRowProps = {
   label: string;
   value: string | number | boolean | ClientPreferenceValue | null | undefined;
   lock?: LockState;
+  persistedLock?: LockState;
   onLockChange?: (next: LockState) => void;
 };
 
@@ -14,6 +15,7 @@ export function ClientDetailsRequirementRow({
   label,
   value,
   lock,
+  persistedLock = "none",
   onLockChange,
 }: ClientDetailsRequirementRowProps) {
   const hasDisplayValue =
@@ -40,7 +42,11 @@ export function ClientDetailsRequirementRow({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-xs text-muted-foreground">{label}</span>
         {lock !== undefined ? (
-          <ClientDetailsLockBadge lock={lock} onChange={onLockChange} />
+          <ClientDetailsLockBadge
+            lock={lock}
+            persistedLock={persistedLock}
+            onChange={onLockChange}
+          />
         ) : null}
       </div>
       <span className="text-sm font-medium text-foreground">{displayValue}</span>

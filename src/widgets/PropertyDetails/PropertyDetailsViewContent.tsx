@@ -1,16 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { ArrowLeft, Pencil } from "lucide-react";
+import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
 import type { Property } from "@/features/properties/types";
-import { collectPropertyTemporaryLocks } from "@/features/matching/collectTemporaryLocks";
-import type { LockState, PropertyFieldLockKey, PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import { propertyMatchesHref } from "@/features/matching/matchingRoutes";
-import { applyPropertyFieldLock } from "@/features/matching/persistEntityLock";
 import { getApiBaseUrl } from "@/shared/lib/auth";
 import { ui } from "@/shared/i18n/ui";
-import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
 import { PropertyViewActionsCard } from "@/widgets/PropertyDetails/PropertyViewActionsCard";
 import { PropertyViewCharacteristics } from "@/widgets/PropertyDetails/PropertyViewCharacteristics";
@@ -39,6 +34,10 @@ import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersTog
 import { ReadyToUploadBadge } from "@/widgets/ReadyToUpload/ReadyToUploadBadge";
 import { ReadyToUploadToggle } from "@/widgets/ReadyToUpload/ReadyToUploadToggle";
 import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
+import { canRequestCollaborationOnProperty } from "@/features/collaboration/canRequestCollaboration";
+import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
+import { RequestPropertyVerificationButton } from "@/widgets/PropertyVerificationRequest/RequestPropertyVerificationButton";
+import { RecordManagingAgentLine } from "@/widgets/RecordManagingAgent/RecordManagingAgentLine";
 
 type PropertyDetailsViewContentProps = {
   property: Property;
@@ -51,6 +50,7 @@ type PropertyDetailsViewContentProps = {
   canShowRestore: boolean;
   canShowDelete: boolean;
   isDeletePending: boolean;
+  backLabel: string;
   onGoBack: () => void;
   onBeforeEditNavigation?: () => void;
   onOpenReminders: () => void;
@@ -74,6 +74,11 @@ type PropertyDetailsViewContentProps = {
   isSavingReadyToUpload: boolean;
   readyToUploadError: string | null;
   onToggleReadyToUpload: (nextReady: boolean) => void;
+  canRequestPeerVerification: boolean;
+  isVerificationRequestPending: boolean;
+  isVerificationRequestSubmitting: boolean;
+  verificationRequestError: string | null;
+  onRequestPeerVerification: () => void;
 };
 
 export function PropertyDetailsViewContent({
@@ -87,6 +92,7 @@ export function PropertyDetailsViewContent({
   canShowRestore,
   canShowDelete,
   isDeletePending,
+  backLabel,
   onGoBack,
   onBeforeEditNavigation,
   onOpenReminders,
@@ -110,27 +116,17 @@ export function PropertyDetailsViewContent({
   isSavingReadyToUpload,
   readyToUploadError,
   onToggleReadyToUpload,
+  canRequestPeerVerification,
+  isVerificationRequestPending,
+  isVerificationRequestSubmitting,
+  verificationRequestError,
+  onRequestPeerVerification,
 }: PropertyDetailsViewContentProps) {
   const apiBaseUrl = getApiBaseUrl();
   const headline = formatPropertyHeadline(property);
-  const canManageLocks = property.propertyType === "APARTMENT" && canEdit;
-  const [fieldLockOverlay, setFieldLockOverlay] = useState<PropertyFieldLocks>(
-    () => property.fieldLocks ?? {},
-  );
-
-  useEffect(() => {
-    setFieldLockOverlay(property.fieldLocks ?? {});
-  }, [property.id, property.updatedAt]);
-
-  function handleFieldLockChange(lockKey: PropertyFieldLockKey, nextLock: LockState) {
-    setFieldLockOverlay((previousLocks) =>
-      applyPropertyFieldLock(previousLocks, lockKey, nextLock),
-    );
-  }
-
-  const temporaryLockedFields = collectPropertyTemporaryLocks(fieldLockOverlay);
   const isArchivedListing = isPropertyArchived(property);
   const showVerifyAction = canEdit && canVerifyPropertyListing(property);
+  const canRequestCollaboration = canRequestCollaborationOnProperty(property);
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
@@ -142,7 +138,7 @@ export function PropertyDetailsViewContent({
             className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            <span>განცხადებები</span>
+            <span>{backLabel}</span>
           </button>
         ) : null}
 
@@ -151,6 +147,10 @@ export function PropertyDetailsViewContent({
             <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {headline}
             </h1>
+            <RecordManagingAgentLine
+              userId={property.userId}
+              managingAgent={property.managingAgent}
+            />
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
                 {formatDealTypeLabel(property.dealType)}
@@ -193,6 +193,19 @@ export function PropertyDetailsViewContent({
               />
             ) : null}
             <PropertyDetailWhatsAppButton property={property} />
+            <RequestCollaborationButton
+              propertyId={property.id}
+              dealType={property.dealType}
+              canRequest={canRequestCollaboration}
+              recordOwnedByViewer={property.ownedByViewer}
+            />
+            <RequestPropertyVerificationButton
+              canRequest={canRequestPeerVerification}
+              isPending={isVerificationRequestPending}
+              isSubmitting={isVerificationRequestSubmitting}
+              error={verificationRequestError}
+              onRequest={onRequestPeerVerification}
+            />
             {property.propertyType === "APARTMENT" ? (
               <MatchPercentActions
                 allHref={propertyMatchesHref(property.id, "GLOBAL")}
@@ -201,11 +214,10 @@ export function PropertyDetailsViewContent({
                 mineLabel={`${ui.matchMine}: ${ui.myClients}`}
                 sessionKind="property"
                 entityId={property.id}
-                temporaryLockedFields={temporaryLockedFields}
               />
             ) : null}
             {canEdit ? (
-              <Link
+              <ArchiveCarryLink
                 href={`/properties/${property.id}/edit`}
                 onClick={() => {
                   onBeforeEditNavigation?.();
@@ -214,7 +226,7 @@ export function PropertyDetailsViewContent({
               >
                 <Pencil className="h-4 w-4" aria-hidden="true" />
                 რედაქტირება
-              </Link>
+              </ArchiveCarryLink>
             ) : null}
           </div>
         </div>
@@ -243,8 +255,6 @@ export function PropertyDetailsViewContent({
         <div className="order-2 h-auto min-w-0 self-start overflow-visible lg:col-start-2 lg:row-start-1">
           <PropertyViewSummaryCard
             property={property}
-            fieldLocks={canManageLocks ? fieldLockOverlay : undefined}
-            onFieldLockChange={canManageLocks ? handleFieldLockChange : undefined}
             canVerify={showVerifyAction}
             isVerifying={isVerifying}
             verifyError={verifyError}
@@ -254,12 +264,7 @@ export function PropertyDetailsViewContent({
         </div>
 
         <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1">
-          {canManageLocks ? <MatchingLockHint /> : null}
-          <PropertyViewCharacteristics
-            property={property}
-            fieldLocks={canManageLocks ? fieldLockOverlay : undefined}
-            onFieldLockChange={canManageLocks ? handleFieldLockChange : undefined}
-          />
+          <PropertyViewCharacteristics property={property} />
           <PropertyViewPublicComment property={property} />
         </div>
 
@@ -295,13 +300,11 @@ export function PropertyDetailsViewContent({
               }
             />
           ) : null}
-          {canEdit ? (
-            <NoteRemindersSection
-              targetType="PROPERTY"
-              propertyId={property.id}
-              canCreate={canEdit}
-            />
-          ) : null}
+          <NoteRemindersSection
+            targetType="PROPERTY"
+            propertyId={property.id}
+            canManage={canEdit}
+          />
           <PropertyViewPrivateComments property={property} />
           <PropertyViewMetaCard property={property} />
           {layout === "page" ? (

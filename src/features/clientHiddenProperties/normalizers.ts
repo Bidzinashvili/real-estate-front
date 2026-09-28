@@ -4,6 +4,7 @@ import type {
   HiddenPropertyItem,
   UnhideClientPropertyResponse,
 } from "@/features/clientHiddenProperties/types";
+import { parseSupportedListingCurrency } from "@/features/currency/types";
 import { parseDealType } from "@/features/properties/dealType";
 import { parsePropertyType } from "@/features/properties/propertyModelTypes";
 import { parsePropertyStatus } from "@/features/properties/propertyStatus";
@@ -62,6 +63,7 @@ export function normalizeHiddenPropertyItem(value: unknown): HiddenPropertyItem 
     address: asTrimmedString(value.address),
     street: asNullableTrimmedString(value.street),
     pricePublic: asNumber(value.pricePublic, 0),
+    currency: parseSupportedListingCurrency(value.currency),
     status: parsePropertyStatus(value.status),
     archivedAt: asNullableTrimmedString(value.archivedAt),
     coverImage: normalizeCoverImage(value.coverImage),

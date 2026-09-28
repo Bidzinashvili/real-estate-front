@@ -1,3 +1,4 @@
+import { parseSupportedListingCurrency } from "@/features/currency/types";
 import { parseListingParkingSelection } from "@/features/properties/listingParking";
 import {
   parseBalconyCount,
@@ -262,6 +263,7 @@ export function normalizePublicProperty(value: unknown): PublicProperty | null {
     district: asString(value.district),
     address: asString(value.address),
     pricePublic: asNumber(value.pricePublic),
+    currency: parseSupportedListingCurrency(value.currency),
     publicComment: asNullableString(value.publicComment),
     images: normalizeImages(value.images),
     apartment: normalizeApartment(value.apartment),

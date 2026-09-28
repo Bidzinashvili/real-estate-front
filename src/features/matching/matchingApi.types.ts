@@ -146,8 +146,10 @@ export interface PropertyMatchSummary {
   district: string;
   address: string;
   pricePublic: number;
+  currency?: "GEL" | "USD";
   publicComment?: string | null;
   images: unknown[];
+  ownedByViewer?: boolean;
   apartment: {
     totalArea: number | null;
     rooms: number | null;
@@ -183,6 +185,7 @@ export interface ClientMatchSummary {
   budgetMin: number | null;
   budgetMax: number | null;
   pet: boolean;
+  ownedByViewer?: boolean;
   requirements: {
     minRooms: number | null;
     maxRooms: number | null;

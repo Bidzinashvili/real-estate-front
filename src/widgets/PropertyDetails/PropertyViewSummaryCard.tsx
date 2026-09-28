@@ -1,8 +1,5 @@
 import { MapPin } from "lucide-react";
 import type { Property } from "@/features/properties/types";
-import type { LockState, PropertyFieldLocks } from "@/features/matching/matchingEnums";
-import { readPropertyFieldLock } from "@/features/matching/persistEntityLock";
-import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
@@ -26,8 +23,6 @@ import { hasAuthorizedInternalPrice } from "@/features/properties/authorizedProp
 
 type PropertyViewSummaryCardProps = {
   property: Property;
-  fieldLocks?: PropertyFieldLocks;
-  onFieldLockChange?: (lockKey: "price" | "street", nextLock: LockState) => void;
   canVerify?: boolean;
   isVerifying?: boolean;
   verifyError?: string | null;
@@ -37,8 +32,6 @@ type PropertyViewSummaryCardProps = {
 
 export function PropertyViewSummaryCard({
   property,
-  fieldLocks,
-  onFieldLockChange,
   canVerify = false,
   isVerifying = false,
   verifyError = null,
@@ -64,15 +57,7 @@ export function PropertyViewSummaryCard({
       )}
     >
       <div className="space-y-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-xs text-muted-foreground">ფასი</p>
-          {fieldLocks && onFieldLockChange ? (
-            <PreferenceLockButton
-              value={readPropertyFieldLock(fieldLocks, "price")}
-              onChange={(nextLock) => onFieldLockChange("price", nextLock)}
-            />
-          ) : null}
-        </div>
+        <p className="text-xs text-muted-foreground">ფასი</p>
         <p className="text-3xl font-semibold tracking-tight text-foreground">
           {publicPrice ?? "—"}
         </p>
@@ -119,6 +104,7 @@ export function PropertyViewSummaryCard({
               status={property.status}
               archivedAt={property.archivedAt}
               lastVerifiedAt={property.lastVerifiedAt}
+              verificationOverdue={property.verificationOverdue}
               canManage={canVerify}
               isVerifying={isVerifying}
               error={verifyError}
@@ -130,15 +116,7 @@ export function PropertyViewSummaryCard({
       </dl>
 
       <div className="mt-4 border-t border-border pt-4">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-xs text-muted-foreground">მისამართი</p>
-          {fieldLocks && onFieldLockChange ? (
-            <PreferenceLockButton
-              value={readPropertyFieldLock(fieldLocks, "street")}
-              onChange={(nextLock) => onFieldLockChange("street", nextLock)}
-            />
-          ) : null}
-        </div>
+        <p className="text-xs text-muted-foreground">მისამართი</p>
         <p className="mt-1 flex items-start gap-1.5 text-sm font-medium text-foreground">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 break-words">{fullAddress || "—"}</span>

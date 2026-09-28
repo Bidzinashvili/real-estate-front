@@ -14,7 +14,6 @@ import type {
   ExternalIdPlatform,
   PropertyType,
 } from "@/features/properties/propertyModelTypes";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   EntityVerificationFields,
   OutcomeSource,
@@ -248,7 +247,6 @@ export type PropertyApi = EntityVerificationFields & {
   privateHouse: PrivateHouseApi | null;
   landPlot: LandPlotApi | null;
   commercial: CommercialApi | null;
-  fieldLocks?: PropertyFieldLocks;
   reminderSummary?: ReminderSummary;
 };
 
@@ -294,7 +292,6 @@ export type CreatePropertyBase = {
   internalText?: string;
   labels?: string[];
   images?: PropertyImageInputWire[];
-  fieldLocks?: PropertyFieldLocks;
 };
 
 export type CreateApartmentPayload = {
@@ -468,7 +465,6 @@ export type UpdatePropertyRequestBody = {
     bathrooms?: number | null;
     petsAllowed?: boolean | null;
   };
-  fieldLocks?: PropertyFieldLocks;
   privateHouse?: {
     houseArea?: number;
     yardArea?: number;
@@ -527,6 +523,7 @@ export type GeneratePublicTextDraft = {
   dealType: DealType;
   district?: string;
   pricePublic?: number;
+  currency?: SupportedListingCurrency;
   ourSiteId?: string;
   apartment?: GeneratePublicTextApartmentDraft;
 };

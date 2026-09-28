@@ -27,9 +27,6 @@ import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "@/features/properties/pricePerSquareMeter";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
-import { applyPropertyFieldLock, readPropertyFieldLock } from "@/features/matching/persistEntityLock";
-import { FieldWithLock } from "@/widgets/ClientForm/PreferenceLockButton";
 import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
@@ -78,8 +75,6 @@ type Props = {
   fieldErrors: FormErrors;
   images: File[];
   imageError: string | null;
-  fieldLocks: PropertyFieldLocks;
-  patchFieldLocks: (nextLocks: PropertyFieldLocks) => void;
   updateForm: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   updateAddress: (
     next: string,
@@ -97,8 +92,6 @@ export function AddPropertyCoreFields({
   fieldErrors,
   images,
   imageError,
-  fieldLocks,
-  patchFieldLocks,
   updateForm,
   updateAddress,
   onAddImages,
@@ -107,7 +100,6 @@ export function AddPropertyCoreFields({
   buildingNumber,
   onBuildingNumberChange,
 }: Props) {
-  const showMatchingLocks = form.propertyType === "APARTMENT";
   const hasManuallyEditedPublicPriceRef = useRef(false);
   const lastSuggestedPublicInputRef = useRef<string | null>(null);
   const pricePerSquareMeter = calculatePricePerSquareMeter(
@@ -223,34 +215,15 @@ export function AddPropertyCoreFields({
         />
       ) : null}
       <div className={buildingNumber !== undefined ? undefined : "sm:col-span-2"}>
-        {showMatchingLocks ? (
-          <FieldWithLock
-            lock={readPropertyFieldLock(fieldLocks, "street")}
-            onLockChange={(nextLock) =>
-              patchFieldLocks(applyPropertyFieldLock(fieldLocks, "street", nextLock))
-            }
-          >
-            <StreetAutocompleteField
-              id="address"
-              label="მისამართი"
-              value={form.address}
-              onChange={updateAddress}
-              required
-              error={fieldErrors.address}
-              inputClassName={addPropertyInputClassName()}
-            />
-          </FieldWithLock>
-        ) : (
-          <StreetAutocompleteField
-            id="address"
-            label="მისამართი"
-            value={form.address}
-            onChange={updateAddress}
-            required
-            error={fieldErrors.address}
-            inputClassName={addPropertyInputClassName()}
-          />
-        )}
+        <StreetAutocompleteField
+          id="address"
+          label="მისამართი"
+          value={form.address}
+          onChange={updateAddress}
+          required
+          error={fieldErrors.address}
+          inputClassName={addPropertyInputClassName()}
+        />
       </div>
       {buildingNumber !== undefined && onBuildingNumberChange !== undefined && (
         <TextField
@@ -301,36 +274,16 @@ export function AddPropertyCoreFields({
         />
       </div>
       <div className="space-y-1.5">
-        {showMatchingLocks ? (
-          <FieldWithLock
-            lock={readPropertyFieldLock(fieldLocks, "price")}
-            onLockChange={(nextLock) =>
-              patchFieldLocks(applyPropertyFieldLock(fieldLocks, "price", nextLock))
-            }
-          >
-            <TextField
-              id="pricePublic"
-              label="საჯარო ფასი"
-              value={form.pricePublic}
-              onChange={handlePublicPriceChange}
-              type="number"
-              required
-              error={fieldErrors.pricePublic}
-              leadingSymbol={currencySymbol}
-            />
-          </FieldWithLock>
-        ) : (
-          <TextField
-            id="pricePublic"
-            label="საჯარო ფასი"
-            value={form.pricePublic}
-            onChange={handlePublicPriceChange}
-            type="number"
-            required
-            error={fieldErrors.pricePublic}
-            leadingSymbol={currencySymbol}
-          />
-        )}
+        <TextField
+          id="pricePublic"
+          label="საჯარო ფასი"
+          value={form.pricePublic}
+          onChange={handlePublicPriceChange}
+          type="number"
+          required
+          error={fieldErrors.pricePublic}
+          leadingSymbol={currencySymbol}
+        />
         <ListingPriceEquivalentHint
           amount={publicPriceAmount}
           fromCurrency={form.currency}

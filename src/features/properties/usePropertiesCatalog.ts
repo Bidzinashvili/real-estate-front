@@ -39,6 +39,7 @@ import type {
 } from "@/features/properties/propertyModelTypes";
 import { useUserStore } from "@/shared/stores";
 import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
+import { hasActiveAdminPrivileges } from "@/features/adminMode/effectiveAccessViewer";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 import { parseDatabaseListScope } from "@/features/databaseList/databaseListScope";
 import type { RecordColor } from "@/features/recordColor/recordColor";
@@ -244,6 +245,18 @@ export function usePropertiesCatalog(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refetchTick, setRefetchTick] = useState(0);
+  const [trackedAdminMode, setTrackedAdminMode] = useState(isAdminMode);
+
+  if (trackedAdminMode !== isAdminMode) {
+    setTrackedAdminMode(isAdminMode);
+    if (archivedFilter === true) {
+      setProperties([]);
+      setTotal(0);
+      setActiveCount(0);
+      setError(null);
+      setIsLoading(true);
+    }
+  }
 
   const allowUrlReplace = useRef(false);
   const urlChangeFromReplaceRef = useRef(false);
@@ -395,13 +408,17 @@ export function usePropertiesCatalog(
     ? (currentUser?.id ?? false)
     : null;
 
+  const requestsArchiveAdminMode =
+    archivedFilter === true && hasActiveAdminPrivileges(currentUser, isAdminMode);
+
   const apiQuery = useMemo(
     () => ({
       ...catalogQuery,
       myProperties:
         catalogQuery.myProperties === true && currentUser ? true : undefined,
+      ...(requestsArchiveAdminMode ? { adminMode: true as const } : {}),
     }),
-    [catalogQuery, myPropertiesCatalogDependency],
+    [catalogQuery, myPropertiesCatalogDependency, requestsArchiveAdminMode],
   );
 
   const canFetchCatalog =

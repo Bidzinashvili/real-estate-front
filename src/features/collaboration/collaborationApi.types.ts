@@ -28,6 +28,7 @@ export type CollaborationProperty = {
   propertyType: string;
   status: string;
   pricePublic: number;
+  currency?: "GEL" | "USD";
   publicComment: string | null;
 };
 
@@ -77,7 +78,7 @@ export type CollaborationListResponse = {
 };
 
 export type CreateCollaborationPayload = {
-  propertyId: string;
+  propertyId?: string;
   clientId?: string;
   split: CollaborationSplit;
   additionalParticipantIds?: string[];

@@ -1,4 +1,4 @@
-import { isPrivacySafeSharedClient, viewerCanManageRecord } from "@/features/databaseList/viewerOwnership";
+import { isAgencySharedClientView, viewerCanManageRecord } from "@/features/databaseList/viewerOwnership";
 import { extractWhatsAppDigits } from "@/features/propertyShare/propertyWhatsAppShare";
 
 type ShareViewer = {
@@ -21,7 +21,7 @@ export function canSharePropertyToClient(
   if (!viewer) {
     return false;
   }
-  if (isPrivacySafeSharedClient(client)) {
+  if (isAgencySharedClientView(client)) {
     return false;
   }
   return viewerCanManageRecord(client, viewer);

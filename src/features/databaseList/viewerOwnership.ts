@@ -37,9 +37,31 @@ export function viewerCanManageRecord(
   return viewerOwnsRecord(record, viewer);
 }
 
+export function isAgencySharedClientView(record: {
+  ownedByViewer: boolean | null;
+}): boolean {
+  return record.ownedByViewer === false;
+}
+
+export function viewerCanViewClientDetail(
+  record: OwnershipRecord,
+  viewer: Viewer | null | undefined,
+): boolean {
+  if (!viewer) {
+    return false;
+  }
+  if (viewer.role === "ADMIN") {
+    return true;
+  }
+  if (isAgencySharedClientView(record)) {
+    return true;
+  }
+  return viewerOwnsRecord(record, viewer);
+}
+
 export function isPrivacySafeSharedClient(record: {
   ownedByViewer: boolean | null;
   name: string;
 }): boolean {
-  return record.ownedByViewer === false && record.name.trim() === "";
+  return isAgencySharedClientView(record);
 }

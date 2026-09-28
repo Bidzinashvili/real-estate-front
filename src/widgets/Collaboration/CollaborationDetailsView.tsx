@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useActiveAdminPrivileges } from "@/features/adminMode/useEffectiveAccessViewer";
 import { useCurrentUser } from "@/shared/hooks";
 import { useCollaborationDetails } from "@/features/collaboration/useCollaborationDetails";
 import {
@@ -20,10 +21,10 @@ type CollaborationDetailsViewProps = {
 export function CollaborationDetailsView({ collaborationId }: CollaborationDetailsViewProps) {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useCurrentUser();
-  const isAdmin = user?.role === "ADMIN";
+  const hasAdminPrivileges = useActiveAdminPrivileges();
   const { collaboration, isLoading, error, refetch } = useCollaborationDetails({
     collaborationId,
-    mode: isAdmin ? "admin" : "agent",
+    mode: hasAdminPrivileges ? "admin" : "agent",
     enabled: Boolean(user),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +70,7 @@ export function CollaborationDetailsView({ collaborationId }: CollaborationDetai
       {!isUserLoading && !isLoading && !error && collaboration ? (
         <CollaborationDetailBody
           collaboration={collaboration}
-          isAdmin={Boolean(isAdmin)}
+          isAdmin={hasAdminPrivileges}
           isSubmitting={isSubmitting}
           actionError={actionError}
           onAccept={() => void runAction(() => acceptCollaboration(collaborationId))}

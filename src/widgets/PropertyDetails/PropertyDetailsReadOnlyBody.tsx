@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
 import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { canManageProperty } from "@/features/properties/listingVisibility";
@@ -16,6 +17,12 @@ import { PropertyDetailsViewContent } from "@/widgets/PropertyDetails/PropertyDe
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { canRestoreArchivedProperty } from "@/features/lifecycle/canRestoreArchivedRecord";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
+import {
+  archiveRecordBackLabel,
+  isOpenedFromArchiveLocation,
+  recordListHref,
+} from "@/features/lifecycle/archiveNavigation";
+import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { useVerifyProperty } from "@/features/lifecycle/useVerifyProperty";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
 import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
@@ -25,6 +32,9 @@ import type { RecordColor } from "@/features/recordColor/recordColor";
 import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColor";
 import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
 import { useUpdateReadyToUpload } from "@/features/readyToUpload/useUpdateReadyToUpload";
+import { canRequestPeerPropertyVerification } from "@/features/propertyVerificationRequest/canRequestPeerPropertyVerification";
+import { useRequestPropertyVerification } from "@/features/propertyVerificationRequest/useRequestPropertyVerification";
+import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 
 type PropertyDetailsReadOnlyBodyProps = {
   propertyId: string;
@@ -40,7 +50,9 @@ export function PropertyDetailsReadOnlyBody({
   onDeleted,
 }: PropertyDetailsReadOnlyBodyProps) {
   const router = useRouter();
+  const openedFromArchive = useOpenedFromArchive();
   const { user } = useCurrentUser();
+  const accessViewer = useEffectiveAccessViewer();
   const { property, isLoading, error, refetch, applyNoteLastOpenedAt } =
     usePropertyDetails(propertyId);
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
@@ -69,15 +81,41 @@ export function PropertyDetailsReadOnlyBody({
   useMarkNoteOpened({
     kind: "property",
     recordId: property?.id ?? null,
-    canMark: canMarkNoteOpened(property, user),
+    canMark: canMarkNoteOpened(property, accessViewer),
     markOpened: markPropertyOpened,
     onOpened: applyNoteLastOpenedAt,
   });
 
   const canEdit = useMemo(() => {
-    if (!user || !property) return false;
-    return canManageProperty(user, property);
-  }, [property, user]);
+    if (!accessViewer || !property) return false;
+    return canManageProperty(accessViewer, property);
+  }, [property, accessViewer]);
+
+  const canRequestPeerVerification = useMemo(() => {
+    if (!accessViewer || !property) {
+      return false;
+    }
+    return canRequestPeerPropertyVerification(accessViewer, property);
+  }, [accessViewer, property]);
+
+  const refetchProperty = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  const {
+    isPending: isVerificationRequestPending,
+    isSubmitting: isVerificationRequestSubmitting,
+    error: verificationRequestError,
+    requestVerification,
+  } = useRequestPropertyVerification({
+    propertyId: property?.id ?? "",
+    serverPending: property?.viewerPendingVerificationRequest === true,
+    onAfterRequest: refetchProperty,
+  });
+
+  useRecordsChangedListener(() => {
+    void refetch();
+  });
 
   const archiveAction = useArchiveAction({
     canManage: canEdit,
@@ -129,12 +167,17 @@ export function PropertyDetailsReadOnlyBody({
     },
   });
 
+  const returnsToArchive =
+    openedFromArchive || (property ? isPropertyArchived(property) : false);
+  const backLabel = archiveRecordBackLabel("property", returnsToArchive);
+
   const handleGoBack = () => {
-    if (property && isPropertyArchived(property)) {
-      router.push("/archive");
-      return;
-    }
-    router.push("/properties");
+    router.push(
+      recordListHref(
+        "property",
+        isOpenedFromArchiveLocation() || (property ? isPropertyArchived(property) : false),
+      ),
+    );
   };
 
   const matchScore = useMemo(() => {
@@ -295,7 +338,7 @@ export function PropertyDetailsReadOnlyBody({
         >
           <span className="inline-flex items-center gap-1.5">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            <span>განცხადებები</span>
+            <span>{backLabel}</span>
           </span>
         </button>
         <p className="text-muted-foreground">{message}</p>
@@ -324,6 +367,7 @@ export function PropertyDetailsReadOnlyBody({
         canShowRestore={archiveAction.canShowRestore}
         canShowDelete={deleteAction.canShowDelete}
         isDeletePending={deleteAction.isPending}
+        backLabel={backLabel}
         onGoBack={handleGoBack}
         onBeforeEditNavigation={onBeforeEditNavigation}
         onOpenReminders={() => setIsRemindersOpen(true)}
@@ -352,6 +396,13 @@ export function PropertyDetailsReadOnlyBody({
         readyToUploadError={readyToUploadError}
         onToggleReadyToUpload={(nextReady) => {
           void handleToggleReadyToUpload(nextReady);
+        }}
+        canRequestPeerVerification={canRequestPeerVerification}
+        isVerificationRequestPending={isVerificationRequestPending}
+        isVerificationRequestSubmitting={isVerificationRequestSubmitting}
+        verificationRequestError={verificationRequestError}
+        onRequestPeerVerification={() => {
+          void requestVerification();
         }}
       />
       <PropertyListingRemindersModal

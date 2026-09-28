@@ -9,7 +9,9 @@ import { recordsChangedEventName } from "@/features/lifecycle/recordsChangedEven
 import { noteOpenedEventName } from "@/features/noteLastOpened/noteOpenedEvent";
 import { remindersChangedEventName } from "@/features/reminders/reminderEvents";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
+import { hasActiveAdminPrivileges } from "@/features/adminMode/effectiveAccessViewer";
 import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
+import { useUserStore } from "@/shared/stores/userStore";
 
 type UseClientsListResult = {
   clients: Client[];
@@ -41,7 +43,10 @@ function parseColorQueryKey(colorKey: string): RecordColor[] | undefined {
 }
 
 export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
+  const user = useUserStore((state) => state.user);
   const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
+  const requestsArchiveAdminMode =
+    query?.archived === true && hasActiveAdminPrivileges(user, isAdminMode);
   const [clients, setClients] = useState<Client[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -51,6 +56,18 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refetchTick, setRefetchTick] = useState(0);
+  const [trackedAdminMode, setTrackedAdminMode] = useState(isAdminMode);
+
+  if (trackedAdminMode !== isAdminMode) {
+    setTrackedAdminMode(isAdminMode);
+    if (query?.archived === true) {
+      setClients([]);
+      setTotal(0);
+      setActiveCount(0);
+      setError(null);
+      setIsLoading(true);
+    }
+  }
 
   const districtKey = lockedFieldKey(query?.district);
   const budgetMinKey = lockedFieldKey(query?.budgetMin);
@@ -130,6 +147,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
             archived,
             scope,
             color: parseColorQueryKey(colorKey),
+            ...(requestsArchiveAdminMode ? { adminMode: true as const } : {}),
           },
           { signal: controller.signal },
         );
@@ -182,6 +200,7 @@ export function useClientsList(query?: GetClientsQuery): UseClientsListResult {
     scope,
     colorKey,
     isAdminMode,
+    requestsArchiveAdminMode,
     refetchTick,
   ]);
 

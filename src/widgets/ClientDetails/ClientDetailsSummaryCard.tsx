@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
 import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientDetail } from "@/features/clients/types";
@@ -8,7 +9,8 @@ import { isClientArchived } from "@/features/lifecycle/isClientArchived";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadge";
 import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
-import { isPrivacySafeSharedClient } from "@/features/databaseList/viewerOwnership";
+import { isAgencySharedClientView } from "@/features/databaseList/viewerOwnership";
+import { formatSharedClientHeadline } from "@/features/clients/formatSharedClientCriteria";
 import { isCustomRecordColor } from "@/features/recordColor/recordColor";
 import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
@@ -18,19 +20,26 @@ import {
   inferClientCityFromDistricts,
   shouldShowTbilisiNeighborhoods,
 } from "@/features/clients/clientCities";
+import { RecordManagingAgentLine } from "@/widgets/RecordManagingAgent/RecordManagingAgentLine";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
   getLock: (fieldKey: string, persisted?: LockState) => LockState;
   onLockChange: (fieldKey: string, nextLock: LockState) => void;
+  canViewContactDetails?: boolean;
+  showLockControls?: boolean;
 };
 
 export function ClientDetailsSummaryCard({
   client,
   getLock,
   onLockChange,
+  canViewContactDetails = true,
+  showLockControls = true,
 }: ClientDetailsSummaryCardProps) {
-  const phones = client.phones ?? [];
+  const isSharedView = isAgencySharedClientView(client);
+  const phones = canViewContactDetails ? (client.phones ?? []) : [];
+  const whatsapp = canViewContactDetails ? client.whatsapp : null;
   const districts = client.districts ?? [];
   const inferredCity = inferClientCityFromDistricts(districts);
   const showTbilisiNeighborhoods = shouldShowTbilisiNeighborhoods(inferredCity);
@@ -44,15 +53,34 @@ export function ClientDetailsSummaryCard({
   const petLock = getLock("pet", client.petLock);
 
   const isRentDeal = client.dealType === "RENT" || client.dealType === "DAILY_RENT";
-  const showDistrictsBlock = true;
-  const showAddressesBlock = true;
-  const showPetBlock = isRentDeal || Boolean(client.pet) || petLock !== "none";
+  const showPetBlock =
+    isRentDeal || Boolean(client.pet) || (showLockControls && petLock !== "none");
+  const headline = isSharedView
+    ? formatSharedClientHeadline(client)
+    : client.name.trim() || formatSharedClientHeadline(client);
+
+  function renderLockBadge(
+    fieldKey: string,
+    lock: LockState,
+    persistedLock: LockState,
+  ): ReactNode {
+    if (!showLockControls) {
+      return null;
+    }
+    return (
+      <ClientDetailsLockBadge
+        lock={lock}
+        persistedLock={persistedLock}
+        onChange={(nextLock) => onLockChange(fieldKey, nextLock)}
+      />
+    );
+  }
 
   return (
     <div
       className={cn(
         "rounded-xl p-6 shadow-sm ring-1",
-        isCustomRecordColor(client.color)
+        !isSharedView && isCustomRecordColor(client.color)
           ? recordColorSurfaceClassName(client.color)
           : "bg-card ring-border",
       )}
@@ -60,25 +88,46 @@ export function ClientDetailsSummaryCard({
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1 space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {client.name}
+            {headline}
           </h1>
+          <RecordManagingAgentLine
+            userId={client.userId}
+            managingAgent={client.managingAgent}
+          />
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
+            {isSharedView ? (
+              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                საერთო მოთხოვნა
+              </span>
+            ) : null}
           </div>
-          <div className="mt-2">
-            <ClientProfileCompactIndicator
-              clientProfileId={client.clientProfileId}
-              clientProfile={client.clientProfile}
-            />
-          </div>
+          {!isSharedView ? (
+            <div className="mt-2">
+              <ClientProfileCompactIndicator
+                clientProfileId={client.clientProfileId}
+                clientProfile={client.clientProfile}
+              />
+            </div>
+          ) : (
+            <div className="mt-2">
+              <ClientProfileCompactIndicator
+                clientProfileId={null}
+                clientProfile={client.clientProfile}
+                allowProfileLink={false}
+              />
+            </div>
+          )}
         </div>
         <LifecycleStatusBadge
           kind="client"
           status={client.status}
-          outcomeSource={client.outcomeSource}
-          verificationReason={client.verificationReason}
+          outcomeSource={isSharedView ? null : client.outcomeSource}
+          verificationReason={isSharedView ? null : client.verificationReason}
         />
-        <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
+        {!isSharedView && client.hideFromOthers !== undefined ? (
+          <HideFromOthersBadge isHidden={client.hideFromOthers === true} />
+        ) : null}
         {isClientArchived(client) ? (
           <span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
             {ARCHIVE_COPY.archivedBadge}
@@ -86,7 +135,7 @@ export function ClientDetailsSummaryCard({
         ) : null}
       </div>
 
-      {formatLifecycleDate(client.lastVerifiedAt) ? (
+      {!isSharedView && formatLifecycleDate(client.lastVerifiedAt) ? (
         <p className="mt-3 text-xs text-muted-foreground">
           გადამოწმებულია: {formatLifecycleDate(client.lastVerifiedAt)}
         </p>
@@ -98,31 +147,30 @@ export function ClientDetailsSummaryCard({
       ) : null}
 
       <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs text-muted-foreground">ტელეფონები</p>
-          <div className="mt-1 space-y-0.5">
-            {phones.map((phone, phoneIndex) => (
-              <p key={phoneIndex} className="text-sm font-medium text-foreground">
-                {phone}
-              </p>
-            ))}
+        {canViewContactDetails && phones.length > 0 ? (
+          <div>
+            <p className="text-xs text-muted-foreground">ტელეფონები</p>
+            <div className="mt-1 space-y-0.5">
+              {phones.map((phone, phoneIndex) => (
+                <p key={phoneIndex} className="text-sm font-medium text-foreground">
+                  {phone}
+                </p>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
 
-        {client.whatsapp && (
+        {canViewContactDetails && whatsapp ? (
           <div>
             <p className="text-xs text-muted-foreground">WhatsApp</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{client.whatsapp}</p>
+            <p className="mt-1 text-sm font-medium text-foreground">{whatsapp}</p>
           </div>
-        )}
+        ) : null}
 
         <div>
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="text-xs text-muted-foreground">მინ. ბიუჯეტი</p>
-            <ClientDetailsLockBadge
-              lock={budgetMinLock}
-              onChange={(nextLock) => onLockChange("budgetMin", nextLock)}
-            />
+            {renderLockBadge("budgetMin", budgetMinLock, client.budgetMinLock ?? "none")}
           </div>
           <p className="mt-1 text-sm font-medium text-foreground">
             {client.budgetMin !== null ? client.budgetMin.toLocaleString() : "—"}
@@ -132,10 +180,7 @@ export function ClientDetailsSummaryCard({
         <div>
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="text-xs text-muted-foreground">მაქს. ბიუჯეტი</p>
-            <ClientDetailsLockBadge
-              lock={budgetMaxLock}
-              onChange={(nextLock) => onLockChange("budgetMax", nextLock)}
-            />
+            {renderLockBadge("budgetMax", budgetMaxLock, client.budgetMaxLock ?? "none")}
           </div>
           <p className="mt-1 text-sm font-medium text-foreground">
             {client.budgetMax !== null ? client.budgetMax.toLocaleString() : "—"}
@@ -146,10 +191,7 @@ export function ClientDetailsSummaryCard({
           <div>
             <div className="flex flex-wrap items-center gap-1.5">
               <p className="text-xs text-muted-foreground">შინაური ცხოველი</p>
-              <ClientDetailsLockBadge
-                lock={petLock}
-                onChange={(nextLock) => onLockChange("pet", nextLock)}
-              />
+              {renderLockBadge("pet", petLock, client.petLock ?? "none")}
             </div>
             <p className="mt-1 text-sm font-medium text-foreground">
               {client.pet ?? "—"}
@@ -162,14 +204,16 @@ export function ClientDetailsSummaryCard({
             createdAt={client.createdAt}
             updatedAt={client.updatedAt}
           />
-          <NoteLastOpenedLabel
-            className="mt-1.5"
-            noteLastOpenedAt={client.noteLastOpenedAt}
-          />
+          {!isSharedView && client.noteLastOpenedAt !== undefined ? (
+            <NoteLastOpenedLabel
+              className="mt-1.5"
+              noteLastOpenedAt={client.noteLastOpenedAt}
+            />
+          ) : null}
         </div>
       </div>
 
-      {!isPrivacySafeSharedClient(client) && client.description ? (
+      {!isSharedView && client.description ? (
         <div className="mt-4 border-t border-border pt-4">
           <p className="text-xs text-muted-foreground">აღწერა</p>
           <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
@@ -178,30 +222,23 @@ export function ClientDetailsSummaryCard({
         </div>
       ) : null}
 
-      {showAddressesBlock && (
+      {addresses.length > 0 ? (
         <div className="mt-4 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="text-xs text-muted-foreground">მისამართები</p>
-            <ClientDetailsLockBadge
-              lock={addressesLock}
-              onChange={(nextLock) => onLockChange("addresses", nextLock)}
-            />
+            {renderLockBadge("addresses", addressesLock, client.addressesLock ?? "none")}
           </div>
           <div className="mt-1 space-y-0.5">
-            {addresses.length > 0 ? (
-              addresses.map((address, addressIndex) => (
-                <p key={addressIndex} className="text-sm text-foreground">
-                  {address}
-                </p>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">—</p>
-            )}
+            {addresses.map((address, addressIndex) => (
+              <p key={addressIndex} className="text-sm text-foreground">
+                {address}
+              </p>
+            ))}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {labels.length > 0 && (
+      {!isSharedView && labels.length > 0 && (
         <div className="mt-4 border-t border-border pt-4">
           <p className="text-xs text-muted-foreground">ლეიბლები</p>
           <div className="mt-1 space-y-0.5">
@@ -214,16 +251,13 @@ export function ClientDetailsSummaryCard({
         </div>
       )}
 
-      {showDistrictsBlock && (
+      {(inferredCity || neighborhoodNames.length > 0) && (
         <div className="mt-4 border-t border-border pt-4">
           <p className="text-xs text-muted-foreground">ქალაქი</p>
           <p className="mt-1 text-sm text-foreground">{inferredCity}</p>
           <div className="mt-4 flex flex-wrap items-center gap-1.5">
             <p className="text-xs text-muted-foreground">უბნები</p>
-            <ClientDetailsLockBadge
-              lock={districtsLock}
-              onChange={(nextLock) => onLockChange("districts", nextLock)}
-            />
+            {renderLockBadge("districts", districtsLock, client.districtsLock ?? "none")}
           </div>
           <div className="mt-1 space-y-0.5">
             {showTbilisiNeighborhoods && neighborhoodNames.length > 0 ? (

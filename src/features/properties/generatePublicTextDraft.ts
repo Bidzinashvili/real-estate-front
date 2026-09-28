@@ -8,6 +8,7 @@ import {
   type BuildingAgeType,
   type KitchenType,
 } from "@/features/properties/types";
+import type { SupportedListingCurrency } from "@/features/currency/types";
 import type {
   GeneratePublicTextApartmentDraft,
   GeneratePublicTextDraft,
@@ -122,6 +123,7 @@ function buildBaseDraft(input: {
   dealType: GeneratePublicTextDraft["dealType"];
   district: string;
   pricePublic: string | number | null | undefined;
+  currency: SupportedListingCurrency;
   ourSiteId?: string | null;
 }): GeneratePublicTextDraft {
   const draft: GeneratePublicTextDraft = {
@@ -137,6 +139,7 @@ function buildBaseDraft(input: {
   const pricePublic = parseOptionalFiniteNumber(input.pricePublic);
   if (pricePublic !== undefined) {
     draft.pricePublic = pricePublic;
+    draft.currency = input.currency;
   }
 
   const ourSiteId = input.ourSiteId?.trim();
@@ -155,6 +158,7 @@ export function buildGeneratePublicTextDraftFromCreateForm(
     dealType: form.dealType,
     district: form.district,
     pricePublic: form.pricePublic,
+    currency: form.currency,
   });
 
   if (form.propertyType === "APARTMENT") {
@@ -176,6 +180,7 @@ export function buildGeneratePublicTextDraftFromEditForm(
     dealType: values.dealType,
     district: values.district,
     pricePublic: values.pricePublic,
+    currency: values.currency,
     ourSiteId,
   });
 

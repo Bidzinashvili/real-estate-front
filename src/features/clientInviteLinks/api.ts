@@ -1,15 +1,14 @@
 import axios from "axios";
 import { getBearerAuthContext, requireApiBaseUrl } from "@/shared/lib/auth";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
-import { normalizeClient } from "@/features/clients/normalizers";
-import type { Client, CreateClientPayload } from "@/features/clients/types";
-import type { ClientApi } from "@/features/clients/clientApi.types";
+import type { CreateClientPayload } from "@/features/clients/types";
 import { ClientInviteLinkRequestError } from "@/features/clientInviteLinks/clientInviteLinkRequestError";
 import type {
   ClientInviteCreatedResponse,
   ClientInviteLinksListResponse,
   CreateClientInviteLinkDto,
   PublicClientInviteGetResponse,
+  PublicClientInviteSubmitResponse,
 } from "@/features/clientInviteLinks/types";
 
 const PUBLIC_INVITE_NOT_FOUND = "მოწვევის ბმული ვერ მოიძებნა.";
@@ -132,18 +131,18 @@ export async function getPublicClientInvite(
 export async function submitPublicClientInvite(
   token: string,
   dto: CreateClientPayload,
-): Promise<Client> {
+): Promise<PublicClientInviteSubmitResponse> {
   const baseUrl = requireApiBaseUrl();
 
   try {
-    const res = await axios.post<ClientApi>(
+    const res = await axios.post<PublicClientInviteSubmitResponse>(
       `${baseUrl}/public/client-invite-links/${encodeURIComponent(token)}/submit`,
       dto,
       {
         headers: { "Content-Type": "application/json" },
       },
     );
-    return normalizeClient(res.data);
+    return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status ?? 500;

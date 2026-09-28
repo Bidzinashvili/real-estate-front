@@ -7,8 +7,8 @@ import { DEAL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
 import { CollaborationParticipantsList } from "@/widgets/Collaboration/CollaborationParticipantsList";
 import {
-  formatCollaborationPropertyAddress,
   formatCollaborationPropertyDistrict,
+  formatCollaborationRequestHeadline,
 } from "@/widgets/Collaboration/collaborationPropertyDisplay";
 
 type CollaborationRequestCardProps = {
@@ -39,12 +39,14 @@ export function CollaborationRequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            {formatCollaborationPropertyAddress(listing)}
+            {formatCollaborationRequestHeadline(collaboration, identitiesRevealed)}
           </p>
           <p className="text-xs text-muted-foreground">
             {listing
               ? `${formatCollaborationPropertyDistrict(listing) ?? "—"} · ${lookupEnumLabel(DEAL_TYPE_LABELS, listing.dealType) ?? listing.dealType}`
-              : "—"}
+              : collaboration.client
+                ? "კლიენტის მოთხოვნა"
+                : "—"}
           </p>
         </div>
         <CollaborationStatusBadge status={collaboration.status} />

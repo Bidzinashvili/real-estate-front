@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { submitPublicClientInvite } from "@/features/clientInviteLinks/api";
-import type { CreateClientPayload, Client } from "@/features/clients/types";
+import type { CreateClientPayload } from "@/features/clients/types";
+import type { PublicClientInviteSubmitResponse } from "@/features/clientInviteLinks/types";
 import { ClientInviteLinkRequestError } from "@/features/clientInviteLinks/clientInviteLinkRequestError";
 import { ApiError } from "@/shared/lib/apiError";
 
@@ -24,7 +25,10 @@ const INVITE_LINK_ERROR_KIND_BY_STATUS: Partial<
 };
 
 type UseSubmitPublicClientInviteResult = {
-  submit: (inviteToken: string, dto: CreateClientPayload) => Promise<Client | null>;
+  submit: (
+    inviteToken: string,
+    dto: CreateClientPayload,
+  ) => Promise<PublicClientInviteSubmitResponse | null>;
   isLoading: boolean;
   error: SubmitPublicInviteError | null;
 };
@@ -36,13 +40,13 @@ export function useSubmitPublicClientInvite(): UseSubmitPublicClientInviteResult
   const submit = async (
     inviteToken: string,
     dto: CreateClientPayload,
-  ): Promise<Client | null> => {
+  ): Promise<PublicClientInviteSubmitResponse | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const created = await submitPublicClientInvite(inviteToken, dto);
-      return created;
+      const response = await submitPublicClientInvite(inviteToken, dto);
+      return response;
     } catch (err) {
       if (err instanceof ClientInviteLinkRequestError) {
         const kind = INVITE_LINK_ERROR_KIND_BY_STATUS[err.statusCode];

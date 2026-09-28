@@ -16,6 +16,7 @@ import {
   KITCHEN_TYPE_LABELS,
 } from "@/features/clients/clientEnums";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
+import { ClientFeatureRequirementValueControl } from "@/widgets/ClientForm/ClientFeatureRequirementValueControl";
 import { ClientPreferenceValueControl } from "@/widgets/ClientForm/ClientPreferenceValueControl";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import { OptionChips } from "@/shared/ui/OptionChips";
@@ -42,14 +43,17 @@ const RANGE_FIELDS = [
 
 const BOOLEAN_FIELDS = [{ name: "excludeLastFloor" as const, label: "ბოლო სართულის გამოკლებით" }];
 
-const PREFERENCE_FIELDS = [
+const CLIENT_FEATURE_REQUIREMENT_FIELDS = [
+  { name: "parking" as const, label: "პარკინგი" },
+  { name: "airConditioner" as const, label: "კონდიციონერი" },
+  { name: "centralHeating" as const, label: "ცენტრალური გათბობა" },
+] as const;
+
+const OTHER_PREFERENCE_FIELDS = [
   { name: "hasBalcony" as const, label: "აივანი" },
   { name: "goodView" as const, label: "კარგი ხედი" },
   { name: "elevator" as const, label: "ლიფტი" },
-  { name: "centralHeating" as const, label: "ცენტრალური გათბობა" },
-  { name: "airConditioner" as const, label: "კონდიციონერი" },
   { name: "furnished" as const, label: "ავეჯით" },
-  { name: "parking" as const, label: "პარკინგი" },
 ] as const;
 
 type ClientRequirementsSectionProps = {
@@ -116,7 +120,7 @@ function RequirementRangeRow({
                 name={`${config.minName}.lock`}
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}
@@ -147,7 +151,7 @@ function RequirementRangeRow({
                 name={`${config.maxName}.lock`}
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}
@@ -244,7 +248,7 @@ export function ClientRequirementsSection({
                   name="minRentalPeriod.lock"
                   control={control}
                   render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                   )}
                 />
               ) : null}
@@ -284,7 +288,7 @@ export function ClientRequirementsSection({
                 name="renovations.lock"
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}
@@ -343,7 +347,7 @@ export function ClientRequirementsSection({
                   name="buildingCondition.lock"
                   control={control}
                   render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                   )}
                 />
               ) : null}
@@ -376,7 +380,7 @@ export function ClientRequirementsSection({
                   name="kitchenType.lock"
                   control={control}
                   render={({ field }) => (
-                    <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                    <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                   )}
                 />
               ) : null}
@@ -412,7 +416,7 @@ export function ClientRequirementsSection({
                 name="projectExclude.lock"
                 control={control}
                 render={({ field }) => (
-                  <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                  <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                 )}
               />
             ) : null}
@@ -458,7 +462,7 @@ export function ClientRequirementsSection({
                     name={`${name}.lock`}
                     control={control}
                     render={({ field }) => (
-                      <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                      <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                     )}
                   />
                 ) : null}
@@ -471,7 +475,7 @@ export function ClientRequirementsSection({
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {PREFERENCE_FIELDS.map(({ name, label }) => (
+          {CLIENT_FEATURE_REQUIREMENT_FIELDS.map(({ name, label }) => (
             <div key={name} className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <label className="block flex-1 text-sm font-medium text-foreground">{label}</label>
@@ -480,7 +484,36 @@ export function ClientRequirementsSection({
                     name={`${name}.lock`}
                     control={control}
                     render={({ field }) => (
-                      <PreferenceLockButton value={field.value} onChange={field.onChange} />
+                      <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                ) : null}
+              </div>
+              <Controller
+                name={`${name}.value`}
+                control={control}
+                render={({ field }) => (
+                  <ClientFeatureRequirementValueControl
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {fieldDescriptions?.[name] ? (
+                <p className="text-xs text-muted-foreground">{fieldDescriptions[name]}</p>
+              ) : null}
+            </div>
+          ))}
+          {OTHER_PREFERENCE_FIELDS.map(({ name, label }) => (
+            <div key={name} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <label className="block flex-1 text-sm font-medium text-foreground">{label}</label>
+                {showLockForPath(name) ? (
+                  <Controller
+                    name={`${name}.lock`}
+                    control={control}
+                    render={({ field }) => (
+                      <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
                     )}
                   />
                 ) : null}

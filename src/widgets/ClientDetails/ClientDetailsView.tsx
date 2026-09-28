@@ -6,7 +6,14 @@ import { useClientDetails } from "@/features/clients/useClientDetails";
 import { markClientOpened } from "@/features/clients/api";
 import { canMarkNoteOpened } from "@/features/noteLastOpened/canMarkNoteOpened";
 import { useMarkNoteOpened } from "@/features/noteLastOpened/useMarkNoteOpened";
-import { useCurrentUser } from "@/shared/hooks";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
+import { viewerCanViewClientDetail } from "@/features/databaseList/viewerOwnership";
+import {
+  archiveRecordBackLabel,
+  isOpenedFromArchiveLocation,
+  recordListHref,
+} from "@/features/lifecycle/archiveNavigation";
+import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { ClientDetailsContent } from "./ClientDetailsContent";
 
 type ClientDetailsViewProps = {
@@ -15,14 +22,20 @@ type ClientDetailsViewProps = {
 
 export function ClientDetailsView({ clientId }: ClientDetailsViewProps) {
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const openedFromArchive = useOpenedFromArchive();
+  const accessViewer = useEffectiveAccessViewer();
   const { client, isLoading, error, refetch, applyNoteLastOpenedAt } =
     useClientDetails(clientId);
+
+  const canViewClientDetail =
+    client && accessViewer
+      ? viewerCanViewClientDetail(client, accessViewer)
+      : false;
 
   useMarkNoteOpened({
     kind: "client",
     recordId: client?.id ?? null,
-    canMark: canMarkNoteOpened(client, user),
+    canMark: canMarkNoteOpened(client, accessViewer),
     markOpened: markClientOpened,
     onOpened: applyNoteLastOpenedAt,
   });
@@ -36,17 +49,23 @@ export function ClientDetailsView({ clientId }: ClientDetailsViewProps) {
       <div className="space-y-3">
         <button
           type="button"
-          onClick={() => router.push("/clients")}
+          onClick={() =>
+            router.push(recordListHref("client", isOpenedFromArchiveLocation()))
+          }
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          ყველა კლიენტი
+          {archiveRecordBackLabel("client", openedFromArchive)}
         </button>
         <p className="text-sm text-destructive" role="alert">
           {error ?? "კლიენტი ვერ მოიძებნა."}
         </p>
       </div>
     );
+  }
+
+  if (!canViewClientDetail) {
+    return null;
   }
 
   return <ClientDetailsContent client={client} onClientChanged={() => void refetch()} />;

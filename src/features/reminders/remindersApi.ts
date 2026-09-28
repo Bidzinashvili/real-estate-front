@@ -6,6 +6,10 @@ import {
   type NormalizedRemindersList,
 } from "@/features/reminders/dashboardReminderNormalizer";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
+import {
+  isReminderLimitApiError,
+  REMINDER_LIMIT_GEORGIAN_MESSAGE,
+} from "@/features/reminders/reminderErrorMessages";
 import type {
   GetRemindersQuery,
   GetRemindersResponse,
@@ -23,9 +27,8 @@ export type CreateRentalEndingReminderPayload = {
   rentalPeriodEndsAt: ISODateString;
 };
 
-export type CreateCustomPropertyReminderPayload = {
+export type CreateScheduledPropertyReminderPayload = {
   propertyId: UUID;
-  kind: "CUSTOM";
   notifyAt: ISODateString;
   note?: string | null;
 };
@@ -38,7 +41,7 @@ export type CreateClientReminderPayload = {
 
 export type CreateReminderPayload =
   | CreateRentalEndingReminderPayload
-  | CreateCustomPropertyReminderPayload
+  | CreateScheduledPropertyReminderPayload
   | CreateClientReminderPayload;
 
 export type { GetRemindersQuery } from "@/features/reminders/remindersApiTypes";
@@ -106,7 +109,11 @@ async function throwReminderApiError(error: unknown, fallback: string): Promise<
       error.response?.status ?? 500,
       fallback,
     );
-    throw new ApiError(parsed, fallback);
+    const apiError = new ApiError(parsed, fallback);
+    if (isReminderLimitApiError(apiError)) {
+      throw new ApiError(parsed, REMINDER_LIMIT_GEORGIAN_MESSAGE);
+    }
+    throw apiError;
   }
 
   throw error;
@@ -142,7 +149,7 @@ export async function createReminder(
     });
     emitRemindersChangedEvent();
   } catch (error) {
-    return throwReminderApiError(error, "შეხსენების დაყენება ვერ მოხერხდა.");
+    return throwReminderApiError(error, "შეხსენების დამატება ვერ მოხერხდა.");
   }
 }
 

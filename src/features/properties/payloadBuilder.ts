@@ -1,9 +1,7 @@
 import { isTbilisiCity } from "@/features/properties/addPropertyFormOptions";
 import type { DealType } from "@/features/properties/dealType";
 import type { LabelSelection } from "@/features/labels/labelTypes";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type { SupportedListingCurrency } from "@/features/currency/types";
-import { persistPropertyFieldLocks, buildPropertyFieldLocksUpdate } from "@/features/matching/persistEntityLock";
 import { buildPatchNeedsVerification } from "@/features/properties/apartmentVerification";
 import { omitBalconyCountIfToVerify } from "@/features/properties/listingBalcony";
 import { sanitizeListingParkingPatch } from "@/features/properties/listingParking";
@@ -49,7 +47,6 @@ export type PropertyFormValues = {
   privateHouse: PropertyPrivateHouseUpdate | null;
   landPlot: PropertyFormLandPlot | null;
   commercial: PropertyCommercialUpdate | null;
-  fieldLocks: PropertyFieldLocks;
 };
 
 function arePrimitiveArraysEqual(left: unknown, right: unknown): boolean {
@@ -360,14 +357,6 @@ export function buildPropertyUpdatePayload(
     current.commercial?.parking ?? initial.commercial?.parking,
   );
   if (commercialPatch) payload.commercial = commercialPatch;
-
-  const currentLocks = buildPropertyFieldLocksUpdate(initial.fieldLocks, current.fieldLocks);
-  const initialLocks = persistPropertyFieldLocks(initial.fieldLocks);
-  const initialLockJson = JSON.stringify(initialLocks ?? {});
-  const currentLockJson = JSON.stringify(currentLocks ?? {});
-  if (initialLockJson !== currentLockJson) {
-    payload.fieldLocks = currentLocks ?? {};
-  }
 
   return payload;
 }

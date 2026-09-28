@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientsList } from "@/features/clients/useClientsList";
 import { useClientsListFilters } from "@/features/clients/useClientsListFilters";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
 import { useCurrentUser } from "@/shared/hooks";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
+import { appendArchiveNavigationSource } from "@/features/lifecycle/archiveNavigation";
 import type { Client } from "@/features/clients/types";
 import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
 import { OptionChips } from "@/shared/ui/OptionChips";
@@ -26,7 +28,7 @@ import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
 import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
 import {
   viewerCanManageRecord,
-  viewerOwnsRecord,
+  viewerCanViewClientDetail,
 } from "@/features/databaseList/viewerOwnership";
 import { OnlyMineToggle } from "@/widgets/DatabaseList/OnlyMineToggle";
 import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
@@ -81,6 +83,7 @@ type ClientsViewProps = {
 export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const router = useRouter();
   const { user } = useCurrentUser();
+  const accessViewer = useEffectiveAccessViewer();
   const isArchiveScope = listingScope === "archived";
   const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
   const [reminderClientId, setReminderClientId] = useState<string | null>(null);
@@ -165,17 +168,11 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   };
 
   function canManageClient(client: Client): boolean {
-    return viewerCanManageRecord(client, user);
+    return viewerCanManageRecord(client, accessViewer);
   }
 
   function canOpenClientDetail(client: Client): boolean {
-    if (!user) {
-      return false;
-    }
-    if (user.role === "ADMIN") {
-      return true;
-    }
-    return viewerOwnsRecord(client, user);
+    return viewerCanViewClientDetail(client, accessViewer);
   }
 
   return (
@@ -395,8 +392,15 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
                   isArchiveScope={isArchiveScope}
                   canManage={canManageClient(client)}
                   canOpenDetail={canOpenClientDetail(client)}
-                  currentUser={user}
-                  onOpenDetail={(clientId) => router.push(`/clients/${clientId}`)}
+                  currentUser={accessViewer}
+                  onOpenDetail={(clientId) => {
+                    const detailHref = `/clients/${clientId}`;
+                    router.push(
+                      isArchiveScope
+                        ? appendArchiveNavigationSource(detailHref)
+                        : detailHref,
+                    );
+                  }}
                   onOpenReminder={setReminderClientId}
                   onChanged={refetch}
                 />

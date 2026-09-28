@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { UNDO_COPY } from "@/features/recordUndo/undoCopy";
 import {
   showFeedbackSnackbar,
@@ -89,6 +90,10 @@ export function useArchiveAction({
         await onRestore();
         setConfirmKind(null);
         onSuccess();
+        showFeedbackSnackbar({
+          kind: "success",
+          message: ARCHIVE_COPY.unarchiveSuccess,
+        });
       }
     } catch (actionError) {
       const message =

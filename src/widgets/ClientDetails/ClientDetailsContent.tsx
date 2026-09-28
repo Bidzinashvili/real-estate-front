@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
-import { useCurrentUser } from "@/shared/hooks";
+import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAccessViewer";
 import { useRouter } from "next/navigation";
 import { deleteClientComment, updateClient, verifyClient, archiveClient, unarchiveClient, deleteClient, restoreClient } from "@/features/clients/api";
 import { useAddClientComment } from "@/features/clients/useAddClientComment";
@@ -16,7 +16,12 @@ import {
   isClientPersistableLockKey,
   type ClientPersistableLockKey,
 } from "@/features/matching/matchingEnums";
-import { MatchingLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import { ClientSearchLockHint } from "@/widgets/ClientForm/PreferenceLockButton";
+import {
+  peekClientSearchLockOverlay,
+  writeClientSearchLockOverlay,
+  writeTemporaryLockSession,
+} from "@/features/matching/temporaryLockSession";
 import { ClientCommentThread } from "./ClientCommentThread";
 import { ClientDetailsRelatedPersonsSection } from "./ClientDetailsRelatedPersonsSection";
 import { ClientDetailsRequirementsSection } from "./ClientDetailsRequirementsSection";
@@ -24,13 +29,23 @@ import { ClientDetailsSummaryCard } from "./ClientDetailsSummaryCard";
 import { ClientDetailsTopBar } from "./ClientDetailsTopBar";
 import { ClientProfileLinkSection } from "@/widgets/ClientDetails/ClientProfileLinkSection";
 import { ClientHiddenPropertiesSection } from "@/widgets/ClientHiddenProperties/ClientHiddenPropertiesSection";
-import { viewerCanManageRecord } from "@/features/databaseList/viewerOwnership";
+import {
+  isAgencySharedClientView,
+  viewerCanManageRecord,
+} from "@/features/databaseList/viewerOwnership";
 import { ClientChangeStatusModal } from "@/widgets/Clients/ClientChangeStatusModal";
 import { VerificationReminderPanel } from "@/widgets/Lifecycle/VerificationReminderPanel";
 import { NoteRemindersSection } from "@/widgets/Reminders/NoteRemindersSection";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import { canRestoreArchivedClient } from "@/features/lifecycle/canRestoreArchivedRecord";
 import { isClientArchived } from "@/features/lifecycle/isClientArchived";
+import {
+  archiveRecordBackLabel,
+  carryArchiveNavigation,
+  isOpenedFromArchiveLocation,
+  recordListHref,
+} from "@/features/lifecycle/archiveNavigation";
+import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
 import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
 import { ArchiveConfirmDialog } from "@/widgets/Lifecycle/ArchiveConfirmDialog";
@@ -38,6 +53,7 @@ import { DeleteConfirmDialog } from "@/widgets/Lifecycle/DeleteConfirmDialog";
 import type { RecordColor } from "@/features/recordColor/recordColor";
 import { useUpdateRecordColor } from "@/features/recordColor/useUpdateRecordColor";
 import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHideFromOthers";
+import { canRequestCollaborationOnClient } from "@/features/collaboration/canRequestCollaboration";
 
 type ClientDetailsContentProps = {
   client: ClientDetail;
@@ -46,6 +62,7 @@ type ClientDetailsContentProps = {
 
 export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsContentProps) {
   const router = useRouter();
+  const openedFromArchive = useOpenedFromArchive();
   const {
     addComment,
     addInternalComment,
@@ -60,11 +77,13 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
     string | null
   >(null);
 
-  const { user } = useCurrentUser();
-  const canRunMatches = canRunClientMatches(user, client.userId);
-  const canEditStatus =
-    user !== null && (user.role === "ADMIN" || user.id === client.userId);
-  const canManageHidden = viewerCanManageRecord(client, user);
+  const accessViewer = useEffectiveAccessViewer();
+  const isSharedView = isAgencySharedClientView(client);
+  const canRunMatches = canRunClientMatches(accessViewer, client);
+  const canEditStatus = viewerCanManageRecord(client, accessViewer);
+  const canManageHidden = viewerCanManageRecord(client, accessViewer);
+  const canRequestCollaboration = canRequestCollaborationOnClient(client);
+  const canViewInternalNotes = canEditStatus;
   const archiveAction = useArchiveAction({
     canManage: canEditStatus,
     isArchived: isClientArchived(client),
@@ -85,7 +104,7 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
   const relatedPersons = client.relatedPersons ?? [];
   const [lockOverlay, setLockOverlay] = useState<
     Partial<Record<ClientPersistableLockKey, LockState>>
-  >({});
+  >(() => peekClientSearchLockOverlay(client.id));
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
   const [isSavingReminder, setIsSavingReminder] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -99,8 +118,8 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
   } = useUpdateHideFromOthers();
 
   useEffect(() => {
-    setLockOverlay({});
-  }, [client.id, client.updatedAt]);
+    setLockOverlay(peekClientSearchLockOverlay(client.id));
+  }, [client.id]);
 
   const [publicComments, setPublicComments] = useState<Comment[]>(
     client.comments ?? [],
@@ -152,6 +171,12 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
   }
 
   const temporaryLockedFields = collectClientDetailTemporaryLocks(lockOverlay, client);
+  const temporaryLockKey = temporaryLockedFields.join(",");
+
+  useEffect(() => {
+    writeClientSearchLockOverlay(client.id, lockOverlay);
+    writeTemporaryLockSession("client", client.id, temporaryLockedFields);
+  }, [client.id, lockOverlay, temporaryLockKey, temporaryLockedFields]);
 
   async function handleSelectColor(nextColor: RecordColor) {
     if (!canEditStatus || client.color === undefined) {
@@ -230,10 +255,21 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
         hideFromOthers={client.hideFromOthers}
         isSavingHideFromOthers={isSavingHideFromOthers}
         hideFromOthersError={hideFromOthersError}
+        backLabel={archiveRecordBackLabel(
+          "client",
+          openedFromArchive || isClientArchived(client),
+        )}
         onNavigateToList={() =>
-          router.push(isClientArchived(client) ? "/archive?tab=clients" : "/clients")
+          router.push(
+            recordListHref(
+              "client",
+              isOpenedFromArchiveLocation() || isClientArchived(client),
+            ),
+          )
         }
-        onNavigateToEdit={() => router.push(`/clients/${client.id}/edit`)}
+        onNavigateToEdit={() =>
+          router.push(carryArchiveNavigation(`/clients/${client.id}/edit`))
+        }
         onRequestDelete={deleteAction.requestDelete}
         onOpenChangeStatus={() => setIsChangeStatusOpen(true)}
         onRequestArchive={archiveAction.requestArchive}
@@ -244,65 +280,83 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
         onToggleHideFromOthers={(nextHidden) => {
           void handleToggleHideFromOthers(nextHidden);
         }}
+        canRequestCollaboration={canRequestCollaboration}
+        collaborationClientId={client.id}
+        recordOwnedByViewer={client.ownedByViewer}
       />
 
-      <MatchingLockHint />
+      {!isSharedView ? <ClientSearchLockHint /> : null}
 
       <ClientDetailsSummaryCard
         client={client}
         getLock={getLock}
         onLockChange={handleLockChange}
+        canViewContactDetails={canEditStatus}
+        showLockControls={canEditStatus}
       />
 
-      <ClientProfileLinkSection client={client} onLinked={onClientChanged} />
+      {!isSharedView ? (
+        <ClientProfileLinkSection client={client} onLinked={onClientChanged} />
+      ) : null}
 
-      <VerificationReminderPanel
-        fields={client}
-        presetSet="verification"
-        canEdit={canEditStatus}
-        isSaving={isSavingReminder}
-        isVerifying={isVerifying}
-        error={reminderError}
-        onSaveReminder={handleSaveReminder}
-        onVerifyNow={handleVerifyNow}
-      />
+      {!isSharedView ? (
+        <VerificationReminderPanel
+          fields={client}
+          presetSet="verification"
+          canEdit={canEditStatus}
+          isSaving={isSavingReminder}
+          isVerifying={isVerifying}
+          error={reminderError}
+          onSaveReminder={handleSaveReminder}
+          onVerifyNow={handleVerifyNow}
+        />
+      ) : null}
 
-      <NoteRemindersSection
-        targetType="CLIENT"
-        clientId={client.id}
-        canCreate={canEditStatus}
-      />
+      {!isSharedView ? (
+        <NoteRemindersSection
+          targetType="CLIENT"
+          clientId={client.id}
+          canManage={canEditStatus}
+        />
+      ) : null}
 
       {client.requirements && (
         <ClientDetailsRequirementsSection
           requirements={client.requirements}
           getLock={getLock}
           onLockChange={handleLockChange}
+          showLockControls={canEditStatus}
         />
       )}
 
-      <ClientDetailsRelatedPersonsSection relatedPersons={relatedPersons} />
+      {!isSharedView ? (
+        <ClientDetailsRelatedPersonsSection relatedPersons={relatedPersons} />
+      ) : null}
 
       <ClientHiddenPropertiesSection client={client} canManage={canManageHidden} />
 
-      <ClientCommentThread
-        title="კომენტარები"
-        comments={publicComments}
-        isSubmitting={isPostingComment}
-        submitError={commentError}
-        onSubmit={handleAddComment}
-        onDeleteComment={handleDeletePublicComment}
-        deletingCommentId={deletingPublicCommentId}
-        deleteError={publicCommentDeleteError}
-      />
+      {!isSharedView ? (
+        <ClientCommentThread
+          title="კომენტარები"
+          comments={publicComments}
+          isSubmitting={isPostingComment}
+          submitError={commentError}
+          onSubmit={handleAddComment}
+          onDeleteComment={handleDeletePublicComment}
+          deletingCommentId={deletingPublicCommentId}
+          deleteError={publicCommentDeleteError}
+        />
+      ) : null}
 
-      <ClientCommentThread
-        title="შიდა შენიშვნები"
-        comments={internalComments}
-        isSubmitting={isPostingComment}
-        submitError={commentError}
-        onSubmit={handleAddInternalComment}
-      />
+      {!isSharedView && canViewInternalNotes ? (
+        <ClientCommentThread
+          title="შიდა შენიშვნები"
+          comments={internalComments}
+          isSubmitting={isPostingComment}
+          submitError={commentError}
+          onSubmit={handleAddInternalComment}
+        />
+      ) : null}
 
       {deleteAction.error ? (
         <p className="text-sm text-destructive" role="alert">

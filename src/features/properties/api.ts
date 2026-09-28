@@ -25,10 +25,18 @@ import {
   emitRecordMutationEvents,
   emitRecordsChangedEvent,
 } from "@/features/lifecycle/recordsChangedEvent";
+import {
+  UNARCHIVE_ERROR_BY_HTTP_STATUS,
+  UNARCHIVE_GENERIC_ERROR,
+} from "@/features/lifecycle/unarchiveErrorMessages";
 import { emitNoteOpenedEvent } from "@/features/noteLastOpened/noteOpenedEvent";
+import { emitNotificationsChangedEvent } from "@/features/notifications/notificationEvents";
 import { emitRemindersChangedEvent } from "@/features/reminders/reminderEvents";
 import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
-import { requestedAdminModeQuery } from "@/features/adminMode/requestedAdminModeQuery";
+import {
+  adminModeSearchParams,
+  withRequestedAdminMode,
+} from "@/features/adminMode/requestedAdminModeQuery";
 
 function getAuthHeaders() {
   const baseUrl = getApiBaseUrl();
@@ -61,10 +69,7 @@ export async function getProperties(
   requestOptions?: GetPropertiesRequestOptions,
 ): Promise<PropertiesListResult> {
   const { baseUrl, headers } = getAuthHeaders();
-  const params = toGetPropertiesSearchParams({
-    ...query,
-    ...requestedAdminModeQuery(),
-  });
+  const params = toGetPropertiesSearchParams(withRequestedAdminMode(query));
 
   try {
     const res = await axios.get<PropertyListResponse>(`${baseUrl}/properties`, {
@@ -92,13 +97,16 @@ export async function getProperties(
   }
 }
 
-export async function getPropertyById(id: string): Promise<Property | null> {
+export async function getPropertyById(
+  propertyId: string,
+  requestOptions?: { adminMode?: boolean },
+): Promise<Property | null> {
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.get(`${baseUrl}/properties/${id}`, {
+    const res = await axios.get(`${baseUrl}/properties/${propertyId}`, {
       headers,
-      params: requestedAdminModeQuery(),
+      params: adminModeSearchParams(requestOptions?.adminMode),
     });
     return normalizeProperty(res.data);
   } catch (error) {
@@ -123,9 +131,9 @@ export async function getPropertyById(id: string): Promise<Property | null> {
 }
 
 export async function getPropertyFromListById(
-  id: string,
+  propertyId: string,
 ): Promise<Property | null> {
-  return getPropertyById(id);
+  return getPropertyById(propertyId);
 }
 
 export async function getPropertiesBulk(options?: {
@@ -234,6 +242,7 @@ export async function verifyProperty(id: string): Promise<Property | null> {
     });
     emitRemindersChangedEvent();
     emitRecordsChangedEvent();
+    emitNotificationsChangedEvent();
     return normalizeProperty(res.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -260,12 +269,12 @@ async function postPropertyArchiveAction(
 ): Promise<Property | null> {
   const { baseUrl, headers } = getAuthHeaders();
   const isRestore = action === "unarchive";
-  const fallbackByStatus: Record<number, string> = {
-    403: isRestore
-      ? "ამ განცხადების არქივიდან დაბრუნების უფლება არ გაქვთ"
-      : "ამ განცხადების დაარქივების უფლება არ გაქვთ",
-    404: "განცხადება ვერ მოიძებნა.",
-  };
+  const fallbackByStatus: Record<number, string> = isRestore
+    ? { ...UNARCHIVE_ERROR_BY_HTTP_STATUS }
+    : {
+        403: "ამ განცხადების დაარქივების უფლება არ გაქვთ",
+        404: "განცხადება ვერ მოიძებნა.",
+      };
 
   try {
     const res = await axios.post(
@@ -286,7 +295,7 @@ async function postPropertyArchiveAction(
       const fallback =
         fallbackByStatus[status] ??
         (isRestore
-          ? "განცხადების არქივიდან დაბრუნება ვერ მოხერხდა."
+          ? UNARCHIVE_GENERIC_ERROR
           : "განცხადების დაარქივება ვერ მოხერხდა.");
       const parsed = parseStandardApiError(
         error.response?.data,

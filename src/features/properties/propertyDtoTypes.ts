@@ -5,7 +5,6 @@ import type { UpdatePropertyRequestBody } from "@/features/properties/propertyAp
 import type { RecordColor } from "@/features/recordColor/recordColor";
 import type { ReminderConfigPayload } from "@/features/lifecycle/lifecycleEnums";
 import type { LabelDto } from "@/features/labels/labelTypes";
-import type { PropertyFieldLocks } from "@/features/matching/matchingEnums";
 import type {
   BuildingAgeType,
   BuildingCondition,
@@ -172,7 +171,6 @@ export type CreatePropertyDto = {
   internalText?: string;
   labels?: string[];
   images?: PropertyImageInput[];
-  fieldLocks?: PropertyFieldLocks;
   apartment?: PropertyApartmentCreate;
   privateHouse?: PropertyPrivateHouseCreate;
   landPlot?: PropertyLandPlotCreate;
