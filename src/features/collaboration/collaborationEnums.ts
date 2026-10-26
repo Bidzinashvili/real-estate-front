@@ -1,8 +1,10 @@
 export const COLLABORATION_STATUSES = [
   "PENDING_RECIPIENT",
+  "PENDING_REQUESTER",
   "PENDING_ADMIN",
   "APPROVED",
   "REJECTED_BY_RECIPIENT",
+  "REJECTED_BY_REQUESTER",
   "REJECTED_BY_ADMIN",
 ] as const;
 
@@ -39,6 +41,11 @@ export const COLLABORATION_VIEWER_ROLES = [
 
 export type CollaborationViewerRole = (typeof COLLABORATION_VIEWER_ROLES)[number];
 
+export const COLLABORATION_NEGOTIATION_ROLES = ["REQUESTER", "RECIPIENT"] as const;
+
+export type CollaborationNegotiationRole =
+  (typeof COLLABORATION_NEGOTIATION_ROLES)[number];
+
 export const MONITORING_STATES = ["WATCHING", "CLOSED"] as const;
 
 export type MonitoringState = (typeof MONITORING_STATES)[number];
@@ -67,11 +74,17 @@ export function additionalParticipantsNeeded(split: CollaborationSplit): number 
   return 2;
 }
 
-export function canRecipientDecide(
+export function canViewerNegotiate(
   viewerRole: CollaborationViewerRole | null,
-  status: CollaborationStatus,
+  awaitingRole: CollaborationNegotiationRole | null,
 ): boolean {
-  return viewerRole === "RECIPIENT" && status === "PENDING_RECIPIENT";
+  if (awaitingRole === null) {
+    return false;
+  }
+  if (viewerRole !== "REQUESTER" && viewerRole !== "RECIPIENT") {
+    return false;
+  }
+  return viewerRole === awaitingRole;
 }
 
 export function canAdminDecide(status: CollaborationStatus): boolean {

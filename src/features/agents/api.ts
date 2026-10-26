@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
+import { requestedAdminModeHeader } from "@/features/adminMode/requestedAdminModeQuery";
 import type {
   Agent,
   AgentDetails,
@@ -37,6 +38,7 @@ function getAuthHeaders() {
     baseUrl,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...requestedAdminModeHeader(),
     },
   };
 }

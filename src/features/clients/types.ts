@@ -18,6 +18,12 @@ import type { DatabaseListScope } from "@/features/databaseList/databaseListScop
 import type { ManagingAgentSummary } from "@/features/agents/managingAgentSummary";
 import type { RecordColor } from "@/features/recordColor/recordColor";
 import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
+import type { ClientBudgetCurrency } from "@/features/clients/clientBudgetCurrency";
+import type {
+  ClientBuildingConditionRequirement,
+  ClientKitchenTypeRequirement,
+  ClientRenovationsRequirement,
+} from "@/features/clients/clientRequirementValues";
 
 export type RelatedPerson = {
   id: UUID;
@@ -51,8 +57,8 @@ export type ClientRequirements = {
   minFloor: number | null;
   maxFloor: number | null;
   excludeLastFloor: boolean;
-  renovations: Renovation[];
-  buildingCondition: BuildingCondition | null;
+  renovations: ClientRenovationsRequirement;
+  buildingCondition: ClientBuildingConditionRequirement;
   projectExclude: string[];
   minArea: number | null;
   maxArea: number | null;
@@ -63,7 +69,7 @@ export type ClientRequirements = {
   elevator: ClientPreferenceValue;
   centralHeating: ClientPreferenceValue;
   airConditioner: ClientPreferenceValue;
-  kitchenType: KitchenType | null;
+  kitchenType: ClientKitchenTypeRequirement;
   furnished: ClientPreferenceValue;
   minBathrooms: number | null;
   maxBathrooms: number | null;
@@ -118,13 +124,16 @@ export type Client = EntityVerificationFields & {
   whatsapp: string | null;
   budgetMin: number | null;
   budgetMax: number | null;
+  budgetCurrency: ClientBudgetCurrency;
   dealType: DealType;
-  description: string;
-  pet: string | null;
+  description?: string;
+  publicComment?: string | null;
+  pet: ClientPreferenceValue | null;
   districts: string[];
   addresses: string[];
   labels: string[];
   status: ClientStatus;
+  propertyId: string | null;
   archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
@@ -146,6 +155,27 @@ export type ClientDetail = Client & {
   comments: Comment[];
   internalComments: Comment[];
 };
+
+export type OwnedClientRecord = Client & {
+  ownedByViewer: true;
+  description: string;
+  publicComment?: string | null;
+};
+
+export type AgencySharedClientRecord = Client & {
+  ownedByViewer: false;
+  publicComment?: string | null;
+};
+
+export type OwnedClientDetail = ClientDetail & OwnedClientRecord;
+
+export type AgencySharedClientDetail = ClientDetail &
+  AgencySharedClientRecord & {
+    comments: [];
+    internalComments: [];
+  };
+
+export type { CollaborationClient } from "@/features/collaboration/collaborationApi.types";
 
 export type ClientsListResponse = {
   total: number;

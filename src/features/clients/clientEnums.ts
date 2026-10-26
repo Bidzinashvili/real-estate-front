@@ -32,9 +32,6 @@ export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
   ARCHIVED: CLIENT_STATUS_DISPLAY_LABELS.ARCHIVED,
 };
 
-export const CLIENT_CREATE_STATUSES = ["ACTIVE", "IN_PROGRESS", "ARCHIVED"] as const;
-export const CLIENT_EDIT_STATUSES = ["ACTIVE", "INACTIVE", "IN_PROGRESS", "ARCHIVED"] as const;
-
 export const RENOVATION_VALUES = [
   "NEW_RENOVATED",
   "RENOVATED",
@@ -87,6 +84,9 @@ export function isClientStatus(value: string): value is ClientStatus {
 
 export function parseClientStatus(value: string | null | undefined): ClientStatus {
   const candidate = typeof value === "string" ? value.trim() : "";
+  if (candidate === "IN_PROGRESS") {
+    return "NEEDS_VERIFICATION";
+  }
   return isClientStatus(candidate) ? candidate : "ACTIVE";
 }
 

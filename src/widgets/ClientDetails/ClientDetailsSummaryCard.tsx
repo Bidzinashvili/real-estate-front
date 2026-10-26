@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
+import { formatClientDealIntentLabel } from "@/features/clients/clientDealTypeDisplay";
 import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientDetail } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
@@ -11,16 +11,20 @@ import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadg
 import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
 import { isAgencySharedClientView } from "@/features/databaseList/viewerOwnership";
 import { formatSharedClientHeadline } from "@/features/clients/formatSharedClientCriteria";
+import { formatClientPetDisplay } from "@/features/clients/clientRequirementValues";
+import { formatClientBudgetAmount } from "@/features/clients/clientBudgetCurrency";
 import { isCustomRecordColor } from "@/features/recordColor/recordColor";
 import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorSurface";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
 import { NoteLastOpenedLabel } from "@/widgets/NoteLastOpened/NoteLastOpenedLabel";
 import { cn } from "@/shared/lib/utils";
+import { surfaceCardClassName } from "@/shared/ui/surfaceStyles";
 import {
   inferClientCityFromDistricts,
   shouldShowTbilisiNeighborhoods,
 } from "@/features/clients/clientCities";
 import { RecordManagingAgentLine } from "@/widgets/RecordManagingAgent/RecordManagingAgentLine";
+import { ClientLinkedPropertyLine } from "@/widgets/ClientDetails/ClientLinkedPropertyLine";
 
 type ClientDetailsSummaryCardProps = {
   client: ClientDetail;
@@ -53,8 +57,11 @@ export function ClientDetailsSummaryCard({
   const petLock = getLock("pet", client.petLock);
 
   const isRentDeal = client.dealType === "RENT" || client.dealType === "DAILY_RENT";
+  const petDisplayLabel = formatClientPetDisplay(client.pet);
   const showPetBlock =
-    isRentDeal || Boolean(client.pet) || (showLockControls && petLock !== "none");
+    isRentDeal ||
+    petDisplayLabel !== null ||
+    (showLockControls && petLock !== "none");
   const headline = isSharedView
     ? formatSharedClientHeadline(client)
     : client.name.trim() || formatSharedClientHeadline(client);
@@ -79,10 +86,11 @@ export function ClientDetailsSummaryCard({
   return (
     <div
       className={cn(
-        "rounded-xl p-6 shadow-sm ring-1",
+        "p-6",
+        surfaceCardClassName,
         !isSharedView && isCustomRecordColor(client.color)
           ? recordColorSurfaceClassName(client.color)
-          : "bg-card ring-border",
+          : "",
       )}
     >
       <div className="flex flex-wrap items-start gap-3">
@@ -95,7 +103,7 @@ export function ClientDetailsSummaryCard({
             managingAgent={client.managingAgent}
           />
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{DEAL_TYPE_LABELS[client.dealType]}</span>
+            <span>{formatClientDealIntentLabel(client.dealType)}</span>
             {isSharedView ? (
               <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 საერთო მოთხოვნა
@@ -173,7 +181,9 @@ export function ClientDetailsSummaryCard({
             {renderLockBadge("budgetMin", budgetMinLock, client.budgetMinLock ?? "none")}
           </div>
           <p className="mt-1 text-sm font-medium text-foreground">
-            {client.budgetMin !== null ? client.budgetMin.toLocaleString() : "—"}
+            {client.budgetMin !== null
+              ? formatClientBudgetAmount(client.budgetMin, client.budgetCurrency)
+              : "—"}
           </p>
         </div>
 
@@ -183,7 +193,9 @@ export function ClientDetailsSummaryCard({
             {renderLockBadge("budgetMax", budgetMaxLock, client.budgetMaxLock ?? "none")}
           </div>
           <p className="mt-1 text-sm font-medium text-foreground">
-            {client.budgetMax !== null ? client.budgetMax.toLocaleString() : "—"}
+            {client.budgetMax !== null
+              ? formatClientBudgetAmount(client.budgetMax, client.budgetCurrency)
+              : "—"}
           </p>
         </div>
 
@@ -194,10 +206,14 @@ export function ClientDetailsSummaryCard({
               {renderLockBadge("pet", petLock, client.petLock ?? "none")}
             </div>
             <p className="mt-1 text-sm font-medium text-foreground">
-              {client.pet ?? "—"}
+              {petDisplayLabel ?? "—"}
             </p>
           </div>
         )}
+
+        {!isSharedView && client.status === "INACTIVE" && client.propertyId ? (
+          <ClientLinkedPropertyLine propertyId={client.propertyId} />
+        ) : null}
 
         <div className="sm:col-span-2">
           <RecordTimestamp
@@ -213,12 +229,33 @@ export function ClientDetailsSummaryCard({
         </div>
       </div>
 
-      {!isSharedView && client.description ? (
+      {!isSharedView && client.description?.trim() ? (
         <div className="mt-4 border-t border-border pt-4">
-          <p className="text-xs text-muted-foreground">აღწერა</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
-            {client.description}
-          </p>
+          <div className="rounded-xl border border-warning/30 bg-warning-muted/40 p-4 shadow-sm ring-1 ring-border">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              შიდა ინფორმაცია
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">კომენტარი შენთვის</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+              {client.description}
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {client.publicComment?.trim() ? (
+        <div className="mt-4 border-t border-border pt-4">
+          <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+            <p className="text-sm font-semibold text-foreground">საჯარო კომენტარი</p>
+            {!isSharedView ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                ეს შენიშვნა შეიძლება გამოჩნდეს სხვა აგენტებისთვის.
+              </p>
+            ) : null}
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+              {client.publicComment}
+            </p>
+          </div>
         </div>
       ) : null}
 

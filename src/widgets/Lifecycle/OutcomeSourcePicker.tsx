@@ -11,6 +11,7 @@ type OutcomeSourcePickerProps = {
   onChange: (nextValue: OutcomeSource) => void;
   variant?: "property" | "client";
   disabled?: boolean;
+  groupAriaLabel?: string;
 };
 
 export function OutcomeSourcePicker({
@@ -18,11 +19,14 @@ export function OutcomeSourcePicker({
   onChange,
   variant = "property",
   disabled = false,
+  groupAriaLabel,
 }: OutcomeSourcePickerProps) {
   const labels = variant === "client" ? CLIENT_OUTCOME_SOURCE_LABELS : OUTCOME_SOURCE_LABELS;
+  const resolvedAriaLabel =
+    groupAriaLabel ?? (variant === "client" ? "ვინ დააბინავა" : "ვინ დაასრულა");
 
   return (
-    <div className="grid grid-cols-2 gap-2" role="group" aria-label="ვინ დაასრულა">
+    <div className="grid grid-cols-2 gap-2" role="group" aria-label={resolvedAriaLabel}>
       <button
         type="button"
         disabled={disabled}

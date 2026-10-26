@@ -7,6 +7,8 @@ import type {
   RemindersTimingFilter,
 } from "@/features/reminders/remindersApiTypes";
 import { ReminderFeedCard } from "@/widgets/Reminders/ReminderFeedCard";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { Bell } from "lucide-react";
 
 type TimingTab = RemindersTimingFilter;
 type TargetFilter = "ALL" | RemindersTargetTypeFilter;
@@ -65,13 +67,11 @@ export function RemindersView() {
 
   return (
     <div className="space-y-5">
-      <div className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">შეხსენებები</h1>
-        <p className="max-w-xl text-sm text-muted-foreground">
-          მოსული და მომლოდინე შეხსენებები განცხადებებსა და კლიენტებზე. დაარქივებული ჩანაწერებიც
-          აქ ჩანს.
-        </p>
-      </div>
+      <PageHeader
+        title="შეხსენებები"
+        description="მოსული და მომლოდინე შეხსენებები განცხადებებსა და კლიენტებზე. დაარქივებული ჩანაწერებიც აქ ჩანს."
+        icon={Bell}
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <div

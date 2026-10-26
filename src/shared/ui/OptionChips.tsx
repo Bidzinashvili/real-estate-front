@@ -2,14 +2,19 @@
 
 import { useId } from "react";
 import { cn } from "@/shared/lib/utils";
+import { optionChipClassName } from "@/shared/ui/chipStyles";
+import { typography } from "@/shared/ui/typography";
 
 export type OptionChipItem<T extends string = string> = {
   value: T;
   label: string;
 };
 
-export const OPTION_CHIPS_FORM_LABEL_CLASS_NAME =
-  "mb-1.5 block text-sm font-medium text-foreground";
+export const OPTION_CHIPS_FORM_LABEL_CLASS_NAME = cn(
+  "mb-2 block",
+  typography.fieldLabel,
+  "text-foreground",
+);
 
 type OptionChipsProps<T extends string> = {
   id?: string;
@@ -28,24 +33,7 @@ type OptionChipsProps<T extends string> = {
   className?: string;
 };
 
-const DEFAULT_LABEL_CLASS_NAME =
-  "mb-1.5 block text-xs font-medium text-muted-foreground";
-
-function optionChipButtonClassName(args: {
-  isSelected: boolean;
-  isCompact: boolean;
-  hasError: boolean;
-}): string {
-  return cn(
-    "inline-flex max-w-full items-center justify-center border text-left font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
-    args.isCompact ? "rounded-lg px-3 py-1.5 text-xs" : "rounded-lg px-3 py-2 text-sm",
-    args.isSelected
-      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-      : args.hasError
-        ? "border-destructive bg-card text-foreground hover:bg-accent"
-        : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-accent",
-  );
-}
+const DEFAULT_LABEL_CLASS_NAME = cn("mb-2 block", typography.fieldLabel);
 
 export function OptionChips<T extends string>({
   id,
@@ -104,10 +92,11 @@ export function OptionChips<T extends string>({
                 }
                 onChange(option.value);
               }}
-              className={optionChipButtonClassName({
+              className={optionChipClassName({
                 isSelected,
                 isCompact,
                 hasError: Boolean(error),
+                isDisabled: disabled,
               })}
             >
               {option.label}
@@ -191,10 +180,11 @@ export function MultiOptionChips<T extends string>({
                 }
                 onChange([...value, option.value]);
               }}
-              className={optionChipButtonClassName({
+              className={optionChipClassName({
                 isSelected,
                 isCompact,
                 hasError: Boolean(error),
+                isDisabled: disabled,
               })}
             >
               {option.label}

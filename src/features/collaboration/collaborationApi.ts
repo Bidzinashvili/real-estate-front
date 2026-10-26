@@ -10,6 +10,7 @@ import type {
   CollaborationMonitorListQuery,
   CollaborationMonitorListResponse,
   CollaborationRequestDto,
+  CounterCollaborationPayload,
   CreateCollaborationPayload,
 } from "@/features/collaboration/collaborationApi.types";
 
@@ -28,7 +29,7 @@ function collaborationFallback(status: number, defaultMessage: string): string {
     return "თანამშრომლობის ჩანაწერი ვერ მოიძებნა.";
   }
   if (status === 409) {
-    return "ამ ჩანაწერზე აქტიური თანამშრომლობის მოთხოვნა უკვე არსებობს.";
+    return "მოთხოვნის სტატუსი შეიცვალა. გვერდი განახლდა.";
   }
   return defaultMessage;
 }
@@ -160,6 +161,27 @@ export async function acceptCollaboration(
     return response.data;
   } catch (error) {
     throwCollaborationError(error, "თანამშრომლობის მიღება ვერ მოხერხდა.");
+  }
+}
+
+export async function counterCollaboration(
+  collaborationId: string,
+  payload: CounterCollaborationPayload,
+  requestOptions?: RequestOptions,
+): Promise<CollaborationRequestDto> {
+  const { baseUrl, headers } = getBearerAuthContext();
+  try {
+    const response = await axios.post<CollaborationRequestDto>(
+      `${baseUrl}/collaborations/${collaborationId}/counter`,
+      payload,
+      {
+        headers: { ...headers, "Content-Type": "application/json" },
+        signal: requestOptions?.signal,
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throwCollaborationError(error, "შეთავაზების გაგზავნა ვერ მოხერხდა.");
   }
 }
 

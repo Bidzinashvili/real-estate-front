@@ -5,14 +5,12 @@ import type {
   LockedOptional,
   UpdateClientPayload,
 } from "@/features/clients/clientApi.types";
-import {
-  BUILDING_CONDITIONS,
-  KITCHEN_TYPES,
-} from "@/features/clients/clientEnums";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 import { districtsPayloadValueForCity } from "@/features/clients/clientCities";
+import { normalizeClientStatusForApi } from "@/features/clients/clientStatusDisplay";
+import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 
 function phonesForIdentitySubmit(phones: string[]): string[] {
   return phones
@@ -26,6 +24,14 @@ function toSubmittedWhatsapp(rawWhatsapp: string | undefined): string | undefine
     return undefined;
   }
   return normalizeGeorgianPhone(trimmedWhatsapp);
+}
+
+function toSubmittedPublicComment(rawComment: string | undefined): string | null {
+  const trimmedComment = rawComment?.trim() ?? "";
+  if (trimmedComment === "") {
+    return null;
+  }
+  return trimmedComment;
 }
 
 function parseReminderDateToIso(raw: string): string | undefined {
@@ -115,65 +121,34 @@ function appendLockedPreference(
   };
 }
 
-function appendLockedPartialBuildingCondition(
+function appendLockedBuildingConditionRequirement(
   dto: CreateClientPayload | UpdateClientPayload,
   field: ClientFormValues["buildingCondition"],
 ): void {
-  const raw = field.value;
-  const persistedLock = persistEntityLock(field.lock);
-  const hasEnumValue =
-    raw !== undefined &&
-    raw !== "" &&
-    (BUILDING_CONDITIONS as readonly string[]).includes(raw);
-  if (!shouldEmitLockedPartial(persistedLock, hasEnumValue)) {
-    return;
-  }
-  const payload: LockedOptional<(typeof BUILDING_CONDITIONS)[number]> = {
-    lock: persistedLock,
+  dto.buildingCondition = {
+    value: field.value,
+    lock: persistEntityLock(field.lock),
   };
-  if (hasEnumValue) {
-    payload.value = raw;
-  }
-  dto.buildingCondition = payload;
 }
 
-function appendLockedPartialKitchenTypeField(
+function appendLockedKitchenTypeRequirement(
   dto: CreateClientPayload | UpdateClientPayload,
   field: ClientFormValues["kitchenType"],
 ): void {
-  const raw = field.value;
-  const persistedLock = persistEntityLock(field.lock);
-  const hasEnumValue =
-    raw !== undefined &&
-    raw !== "" &&
-    (KITCHEN_TYPES as readonly string[]).includes(raw);
-  if (!shouldEmitLockedPartial(persistedLock, hasEnumValue)) {
-    return;
-  }
-  const payload: LockedOptional<(typeof KITCHEN_TYPES)[number]> = {
-    lock: persistedLock,
+  dto.kitchenType = {
+    value: field.value,
+    lock: persistEntityLock(field.lock),
   };
-  if (hasEnumValue) {
-    payload.value = raw;
-  }
-  dto.kitchenType = payload;
 }
 
-function appendPet(
+function appendPetPreference(
   dto: CreateClientPayload | UpdateClientPayload,
   pet: ClientFormValues["pet"],
 ): void {
-  const trimmed = pet.value?.trim();
-  const persistedLock = persistEntityLock(pet.lock);
-  const hasValue = Boolean(trimmed);
-  if (!shouldEmitLockedPartial(persistedLock, hasValue)) {
-    return;
-  }
-  const payload: LockedOptional<string> = { lock: persistedLock };
-  if (hasValue && trimmed) {
-    payload.value = trimmed;
-  }
-  dto.pet = payload;
+  dto.pet = {
+    value: pet.value,
+    lock: persistEntityLock(pet.lock),
+  };
 }
 
 function appendProjectExclude(
@@ -202,7 +177,8 @@ function appendMatchingFields(
 ): void {
   appendLockedPartialNumber(dto, "budgetMin", values.budgetMin);
   appendLockedPartialNumber(dto, "budgetMax", values.budgetMax);
-  appendPet(dto, values.pet);
+  dto.budgetCurrency = values.budgetCurrency;
+  appendPetPreference(dto, values.pet);
 
   appendLockedNumber(dto, "minRooms", values.minRooms);
   appendLockedNumber(dto, "maxRooms", values.maxRooms);
@@ -217,8 +193,8 @@ function appendMatchingFields(
     lock: persistEntityLock(values.renovations.lock),
   };
 
-  appendLockedPartialBuildingCondition(dto, values.buildingCondition);
-  appendLockedPartialKitchenTypeField(dto, values.kitchenType);
+  appendLockedBuildingConditionRequirement(dto, values.buildingCondition);
+  appendLockedKitchenTypeRequirement(dto, values.kitchenType);
   appendProjectExclude(dto, values.projectExclude);
 
   appendLockedNumber(dto, "minArea", values.minArea);
@@ -243,6 +219,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
     phones: phonesForIdentitySubmit(values.phones),
     dealType: values.dealType,
     description: values.description,
+    publicComment: toSubmittedPublicComment(values.publicComment),
     districts: {
       value: districtsPayloadValueForCity(values.city, values.districts.value),
       lock: persistEntityLock(values.districts.lock),
@@ -262,8 +239,8 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
     dto.whatsapp = submittedWhatsapp;
   }
 
-  if (values.status) {
-    dto.status = values.status;
+  if (values.status && values.status !== "ARCHIVED") {
+    dto.status = normalizeClientStatusForApi(values.status);
   }
 
   const validPersons = (values.relatedPersons ?? []).filter(
@@ -287,12 +264,46 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
   return dto;
 }
 
-export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayload {
+export type BuildUpdateClientDtoContext = {
+  priorPropertyId?: string | null;
+};
+
+function appendInactiveOutcomeFields(
+  dto: UpdateClientPayload,
+  values: ClientFormValues,
+  priorPropertyId?: string | null,
+): void {
+  if (values.status !== "INACTIVE") {
+    return;
+  }
+  const resolvedOutcome = values.outcomeSource ?? "";
+  if (!isOutcomeSource(resolvedOutcome)) {
+    return;
+  }
+  dto.outcomeSource = resolvedOutcome;
+  if (values.outcomeSource === "BY_OTHER") {
+    return;
+  }
+  const trimmedPropertyId = values.outcomePropertyId?.trim() ?? "";
+  if (trimmedPropertyId !== "") {
+    dto.propertyId = trimmedPropertyId;
+    return;
+  }
+  if (priorPropertyId) {
+    dto.propertyId = null;
+  }
+}
+
+export function buildUpdateClientDto(
+  values: ClientFormValues,
+  context: BuildUpdateClientDtoContext = {},
+): UpdateClientPayload {
   const dto: UpdateClientPayload = {
     name: values.name,
     phones: phonesForIdentitySubmit(values.phones),
     dealType: values.dealType,
     description: values.description,
+    publicComment: toSubmittedPublicComment(values.publicComment),
     districts: {
       value: districtsPayloadValueForCity(values.city, values.districts.value),
       lock: persistEntityLock(values.districts.lock),
@@ -305,10 +316,9 @@ export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayl
       value: filterStringList(values.labels.value),
       lock: persistEntityLock(values.labels.lock),
     },
-    status: values.status ? values.status : undefined,
-    outcomeSource:
-      values.status === "INACTIVE" && values.outcomeSource
-        ? values.outcomeSource
+    status:
+      values.status && values.status !== "ARCHIVED"
+        ? normalizeClientStatusForApi(values.status)
         : undefined,
   };
 
@@ -325,6 +335,7 @@ export function buildUpdateClientDto(values: ClientFormValues): UpdateClientPayl
   }
 
   appendMatchingFields(dto, values);
+  appendInactiveOutcomeFields(dto, values, context.priorPropertyId);
 
   return dto;
 }

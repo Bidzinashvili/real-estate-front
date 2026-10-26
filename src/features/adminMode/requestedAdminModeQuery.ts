@@ -14,6 +14,15 @@ export function requestedAdminModeQuery(): AdminModeQuery {
   return {};
 }
 
+export function requestedAdminModeHeader(): Record<string, string> {
+  const user = useUserStore.getState().user;
+  const isAdminMode = useAdminModeStore.getState().isAdminMode;
+  if (user?.role === "ADMIN" && isAdminMode) {
+    return { "X-Admin-Mode": "1" };
+  }
+  return {};
+}
+
 export function adminModeSearchParams(explicitAdminMode?: boolean): AdminModeQuery {
   if (explicitAdminMode === true) {
     return { adminMode: true };

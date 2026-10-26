@@ -12,11 +12,12 @@ import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import type { ClientDetail } from "@/features/clients/types";
 import { buildUpdateClientDto } from "@/features/clients/buildCreateClientDto";
 import { mapClientDetailToFormValues } from "@/features/clients/mapClientToFormValues";
+import type { ClientStatus } from "@/features/clients/clientEnums";
 import {
   CLIENT_EDIT_STATUSES,
-  CLIENT_STATUS_LABELS,
-  type ClientStatus,
-} from "@/features/clients/clientEnums";
+  formatClientStatusLabel,
+  normalizeClientStatusFromApi,
+} from "@/features/clients/clientStatusDisplay";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
 import { ClientLocationSection } from "@/widgets/ClientForm/ClientLocationSection";
 import { ClientBudgetSection } from "@/widgets/ClientForm/ClientBudgetSection";
@@ -38,8 +39,8 @@ import {
   archiveRecordBackLabel,
   carryArchiveNavigation,
   isOpenedFromArchiveLocation,
-  recordListHref,
 } from "@/features/lifecycle/archiveNavigation";
+import { navigateBackToRecordList } from "@/features/lifecycle/recordListNavigation";
 import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 
 type EditClientFormProps = {
@@ -108,7 +109,7 @@ function EditClientFormInner({
 
   const onSubmit = async (values: ClientFormValues) => {
     clearValidationNotice();
-    const dto = buildUpdateClientDto(values);
+    const dto = buildUpdateClientDto(values, { priorPropertyId: client.propertyId });
     await update(clientId, dto);
     router.push(clientDetailHref());
   };
@@ -167,13 +168,16 @@ function EditClientFormInner({
           showReminderHint
           showReminderDateField={false}
           clientStatusSelectOptions={(CLIENT_EDIT_STATUSES.includes(
-            client.status as (typeof CLIENT_EDIT_STATUSES)[number],
+            normalizeClientStatusFromApi(client.status) as (typeof CLIENT_EDIT_STATUSES)[number],
           )
             ? [...CLIENT_EDIT_STATUSES]
-            : [client.status, ...CLIENT_EDIT_STATUSES]
+            : [
+                normalizeClientStatusFromApi(client.status),
+                ...CLIENT_EDIT_STATUSES,
+              ]
           ).map((clientStatus: ClientStatus) => ({
             value: clientStatus,
-            label: CLIENT_STATUS_LABELS[clientStatus],
+            label: formatClientStatusLabel(clientStatus),
           }))}
         />
 
@@ -239,7 +243,11 @@ export function EditClientForm({ clientId }: EditClientFormProps) {
         <button
           type="button"
           onClick={() =>
-            router.push(recordListHref("client", isOpenedFromArchiveLocation()))
+            navigateBackToRecordList(
+              router,
+              "client",
+              isOpenedFromArchiveLocation(),
+            )
           }
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >

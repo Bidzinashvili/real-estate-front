@@ -8,23 +8,14 @@ import {
   peekCachedGelToUsd,
 } from "@/features/currency/gelToUsdConvertCache";
 import { getCachedUsdRate, peekCachedUsdRate } from "@/features/currency/usdRateCache";
+import {
+  formatGelListingLine,
+  formatUsdListingLine,
+} from "@/features/currency/formatDisplayAmount";
 import type { SupportedListingCurrency } from "@/features/currency/types";
-import { listingCurrencySymbol } from "@/features/currency/types";
 import { ApiError } from "@/shared/lib/apiError";
 
 const MAX_CONVERT_AMOUNT = 1e15;
-
-const usdCurrencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const gelAmountFormatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
 
 export type CatalogListingPriceLineState =
   | { status: "ready"; primaryLine: string }
@@ -36,9 +27,9 @@ function formatNativeListingAmount(
   listingCurrency: SupportedListingCurrency,
 ): string {
   if (listingCurrency === "USD") {
-    return usdCurrencyFormatter.format(amount);
+    return formatUsdListingLine(amount);
   }
-  return `${gelAmountFormatter.format(amount)} ${listingCurrencySymbol("GEL")}`;
+  return formatGelListingLine(amount);
 }
 
 function isConvertibleAmount(amount: number): boolean {
@@ -66,7 +57,7 @@ export function useCatalogListingPriceLine(
       if (cached) {
         return {
           status: "ready",
-          primaryLine: usdCurrencyFormatter.format(cached.result),
+          primaryLine: formatUsdListingLine(cached.result),
         };
       }
       return {
@@ -81,7 +72,7 @@ export function useCatalogListingPriceLine(
         if (converted !== null) {
           return {
             status: "ready",
-            primaryLine: `${gelAmountFormatter.format(converted)} ${listingCurrencySymbol("GEL")}`,
+            primaryLine: formatGelListingLine(converted),
           };
         }
       }
@@ -119,7 +110,7 @@ export function useCatalogListingPriceLine(
       if (cached) {
         setState({
           status: "ready",
-          primaryLine: usdCurrencyFormatter.format(cached.result),
+          primaryLine: formatUsdListingLine(cached.result),
         });
         return;
       }
@@ -135,7 +126,7 @@ export function useCatalogListingPriceLine(
           if (!isActive) return;
           setState({
             status: "ready",
-            primaryLine: usdCurrencyFormatter.format(response.result),
+            primaryLine: formatUsdListingLine(response.result),
           });
         })
         .catch((unknownError) => {
@@ -166,7 +157,7 @@ export function useCatalogListingPriceLine(
         if (converted !== null) {
           setState({
             status: "ready",
-            primaryLine: `${gelAmountFormatter.format(converted)} ${listingCurrencySymbol("GEL")}`,
+            primaryLine: formatGelListingLine(converted),
           });
           return;
         }
@@ -192,7 +183,7 @@ export function useCatalogListingPriceLine(
           }
           setState({
             status: "ready",
-            primaryLine: `${gelAmountFormatter.format(converted)} ${listingCurrencySymbol("GEL")}`,
+            primaryLine: formatGelListingLine(converted),
           });
         })
         .catch((unknownError) => {

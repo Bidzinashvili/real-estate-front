@@ -12,7 +12,7 @@ import { ClientRowArchiveActions } from "@/widgets/Clients/ClientRowArchiveActio
 import type { Client } from "@/features/clients/types";
 import { ClientProfileCompactIndicator } from "@/widgets/ClientProfiles/ClientProfileCompactIndicator";
 import { NoteReminderIndicator } from "@/widgets/Reminders/NoteReminderIndicator";
-import { DEAL_TYPE_LABELS } from "@/features/clients/clientEnums";
+import { formatClientDealIntentLabel } from "@/features/clients/clientDealTypeDisplay";
 import { isAgencySharedClientView } from "@/features/databaseList/viewerOwnership";
 import {
   clientCompactStats,
@@ -34,6 +34,10 @@ import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHide
 import { ClosedRecordStatChips } from "@/widgets/DatabaseList/ClosedRecordStatChips";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/Button";
+import { DealTypeBadge } from "@/shared/ui/DealTypeBadge";
+import { surfaceCardInteractiveClassName } from "@/shared/ui/surfaceStyles";
+import { typography } from "@/shared/ui/typography";
 
 type ClientListCardProps = {
   client: Client;
@@ -58,7 +62,11 @@ export function ClientListCard({
 }: ClientListCardProps) {
   const isSharedRow = isAgencySharedClientView(client);
   const generatedTitle = formatSharedClientHeadline(client);
-  const budgetLabel = formatBudgetRange(client.budgetMin, client.budgetMax);
+  const budgetLabel = formatBudgetRange(
+    client.budgetMin,
+    client.budgetMax,
+    client.budgetCurrency,
+  );
   const locationLine = formatClientLocationLine(client);
   const compactStats = clientCompactStats(client);
   const phoneLine =
@@ -105,18 +113,15 @@ export function ClientListCard({
     <article
       onClick={canOpenDetail ? () => onOpenDetail(client.id) : undefined}
       className={cn(
-        "flex min-w-0 w-full flex-col overflow-hidden rounded-3xl p-3 shadow-sm ring-1 transition-shadow hover:shadow-md",
+        "flex min-w-0 w-full flex-col overflow-hidden p-3",
+        surfaceCardInteractiveClassName,
         canOpenDetail ? "cursor-pointer" : "",
-        hasCustomColor
-          ? recordColorSurfaceClassName(client.color)
-          : "bg-card ring-border",
+        hasCustomColor ? recordColorSurfaceClassName(client.color) : "",
       )}
     >
       <div className="space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
-            {DEAL_TYPE_LABELS[client.dealType]}
-          </span>
+          <DealTypeBadge label={formatClientDealIntentLabel(client.dealType)} />
           <LifecycleStatusBadge
             kind="client"
             status={client.status}
@@ -134,11 +139,11 @@ export function ClientListCard({
           ) : null}
         </div>
 
-        <p className="text-2xl font-semibold tracking-tight text-foreground">
+        <p className={typography.pricePrimary}>
           {budgetLabel ?? "ბიუჯეტი არ არის"}
         </p>
 
-        <p className="line-clamp-2 text-lg font-semibold leading-snug text-foreground">
+        <p className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
           {generatedTitle}
         </p>
 
@@ -152,6 +157,13 @@ export function ClientListCard({
           <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="min-w-0">{locationLine}</span>
+          </p>
+        ) : null}
+
+        {isSharedRow && client.publicComment?.trim() ? (
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">საჯარო კომენტარი: </span>
+            {client.publicComment.trim()}
           </p>
         ) : null}
 
@@ -180,28 +192,34 @@ export function ClientListCard({
         />
 
         {canOpenDetail || canManage ? (
-          <div className="space-y-2 pt-1" onClick={stopCardOpen} onKeyDown={(event) => event.stopPropagation()}>
+          <div
+            className="space-y-2 border-t border-border/70 pt-3"
+            onClick={stopCardOpen}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
             <div className="flex flex-wrap items-center gap-2">
               {canOpenDetail ? (
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  className="min-w-[7rem] text-xs"
                   onClick={() => onOpenDetail(client.id)}
-                  className="inline-flex h-9 min-w-[7rem] items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
                 >
                   <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   ნახვა
-                </button>
+                </Button>
               ) : null}
               {canManage ? (
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="icon"
                   onClick={() => onOpenReminder(client.id)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition hover:bg-muted"
                   aria-label="შეხსენების დაყენება"
                   title="შეხსენების დაყენება"
                 >
                   <Bell className="h-4 w-4" aria-hidden />
-                </button>
+                </Button>
               ) : null}
               {canEditColor && client.color !== undefined ? (
                 <RecordColorPicker

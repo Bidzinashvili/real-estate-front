@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { UserBootstrap } from "@/widgets/userBootstrap/UserBootstrap";
-import { ReminderAlertCenter } from "@/widgets/ReminderAlertCenter/ReminderAlertCenter";
 import { AppSidebar } from "@/widgets/AppSidebar/AppSidebar";
 import { useDesktopSidebarCollapsed } from "@/widgets/AppSidebar/useDesktopSidebarCollapsed";
 import { UndoSnackbarHost } from "@/widgets/UndoSnackbar/UndoSnackbarHost";
@@ -18,10 +17,22 @@ export function AppShell({ children }: AppShellProps) {
   const { isCollapsed: isDesktopSidebarCollapsed, toggleCollapsed: toggleDesktopSidebarCollapsed } =
     useDesktopSidebarCollapsed();
 
+  // Disable mouse-wheel changes on number inputs
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      const target = event.target as HTMLElement;
+      if (target instanceof HTMLInputElement && target.type === "number") {
+        target.blur();
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: true });
+    return () => window.removeEventListener("wheel", handleWheel);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <UserBootstrap />
-      <ReminderAlertCenter />
       <UndoSnackbarHost />
       <AppSidebar
         isOpen={isMobileNavOpen}

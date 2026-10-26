@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { CollaborationRequestDto } from "@/features/collaboration/collaborationApi.types";
+import { canViewerNegotiate } from "@/features/collaboration/collaborationEnums";
+import { COLLABORATION_SPLIT_SHORT_LABELS } from "@/features/collaboration/collaborationLabels";
 import {
   COLLABORATION_SPLIT_LABELS,
 } from "@/features/collaboration/collaborationLabels";
@@ -49,23 +51,41 @@ export function CollaborationRequestCard({
                 : "—"}
           </p>
         </div>
-        <CollaborationStatusBadge status={collaboration.status} />
+        <CollaborationStatusBadge
+          status={collaboration.status}
+          viewerRole={collaboration.viewerRole}
+          awaitingRole={collaboration.awaitingRole ?? null}
+        />
       </div>
       <p className="text-sm font-medium text-foreground">
-        თანამშრომლობის წილი: {COLLABORATION_SPLIT_LABELS[collaboration.split]}
+        შეთავაზებული განაწილება: {COLLABORATION_SPLIT_SHORT_LABELS[collaboration.split]}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {COLLABORATION_SPLIT_LABELS[collaboration.split]}
       </p>
       <p className="text-xs text-muted-foreground">
         მოთხოვნა: {formatDateTime(collaboration.createdAt)}
       </p>
-      {collaboration.client ? (
-        <p className="text-xs text-muted-foreground">
-          კლიენტი: {collaboration.client.name ?? "დეტალები დამალულია დამტკიცებამდე"}
-        </p>
+      {collaboration.client && !collaboration.property ? (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">
+            {lookupEnumLabel(DEAL_TYPE_LABELS, collaboration.client.dealType) ??
+              "კლიენტის მოთხოვნა"}
+          </p>
+          {collaboration.client.publicComment?.trim() ? (
+            <p className="line-clamp-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">საჯარო კომენტარი: </span>
+              {collaboration.client.publicComment.trim()}
+            </p>
+          ) : null}
+        </div>
       ) : null}
-      <CollaborationParticipantsList
-        participants={collaboration.participants}
-        identitiesRevealed={identitiesRevealed}
-      />
+      {!canViewerNegotiate(collaboration.viewerRole, collaboration.awaitingRole ?? null) ? (
+        <CollaborationParticipantsList
+          participants={collaboration.participants}
+          identitiesRevealed={identitiesRevealed}
+        />
+      ) : null}
       <Link
         href={href}
         className="inline-flex text-sm font-medium text-foreground underline-offset-2 hover:underline"

@@ -1,11 +1,11 @@
 import { z } from "zod";
 import {
   DEAL_TYPES,
-  CLIENT_STATUSES,
   RENOVATION_VALUES,
   BUILDING_CONDITIONS,
   KITCHEN_TYPES,
 } from "@/features/clients/clientEnums";
+import { CLIENT_BUSINESS_STATUSES } from "@/features/clients/clientStatusDisplay";
 import type { LockState } from "@/features/clients/clientApi.types";
 import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
 import { OUTCOME_SOURCES } from "@/features/lifecycle/lifecycleEnums";
@@ -14,6 +14,11 @@ import {
   GEORGIAN_PHONE_PREFIX,
   normalizeGeorgianPhone,
 } from "@/shared/lib/normalizeGeorgianPhone";
+import {
+  DEFAULT_CLIENT_BUDGET_CURRENCY,
+  type ClientBudgetCurrency,
+} from "@/features/clients/clientBudgetCurrency";
+import { CLIENT_REQUIREMENT_PREFERENCE_VALUES } from "@/features/clients/clientRequirementValues";
 
 function isIncompleteClientPhone(rawPhone: string): boolean {
   const trimmedPhone = rawPhone.trim();
@@ -103,18 +108,38 @@ const lockedPreferenceFieldSchema = z.object({
   lock: lockStateFieldSchema,
 });
 
+const renovationRequirementValueSchema = z.union([
+  z.enum(CLIENT_REQUIREMENT_PREFERENCE_VALUES),
+  z.array(z.enum(RENOVATION_VALUES)).max(20),
+]);
+
 const lockedRenovationsFieldSchema = z.object({
-  value: z.array(z.enum(RENOVATION_VALUES)).max(20).default([]),
+  value: renovationRequirementValueSchema,
   lock: lockStateFieldSchema,
 });
+
+const buildingConditionRequirementValueSchema = z.union([
+  z.enum(BUILDING_CONDITIONS),
+  z.enum(CLIENT_REQUIREMENT_PREFERENCE_VALUES),
+]);
 
 const lockedPartialBuildingConditionFieldSchema = z.object({
-  value: z.union([z.enum(BUILDING_CONDITIONS), z.literal("")]).optional(),
+  value: buildingConditionRequirementValueSchema,
   lock: lockStateFieldSchema,
 });
 
+const kitchenTypeRequirementValueSchema = z.union([
+  z.enum(KITCHEN_TYPES),
+  z.enum(CLIENT_REQUIREMENT_PREFERENCE_VALUES),
+]);
+
 const lockedPartialKitchenTypeFieldSchema = z.object({
-  value: z.union([z.enum(KITCHEN_TYPES), z.literal("")]).optional(),
+  value: kitchenTypeRequirementValueSchema,
+  lock: lockStateFieldSchema,
+});
+
+const lockedPetPreferenceFieldSchema = z.object({
+  value: z.enum(CLIENT_PREFERENCE_VALUES),
   lock: lockStateFieldSchema,
 });
 
@@ -133,15 +158,20 @@ export const clientFormSchema = z
     whatsapp: z.string().max(64).optional().or(z.literal("")),
     budgetMin: lockedPartialNumberFieldSchema,
     budgetMax: lockedPartialNumberFieldSchema,
+    budgetCurrency: z.enum(["GEL", "USD"] satisfies [ClientBudgetCurrency, ClientBudgetCurrency]),
     dealType: z.enum(DEAL_TYPES),
-    description: z.string().min(1, "აღწერა სავალდებულოა").max(20000),
-    pet: lockedPartialStringFieldSchema,
+    description: z.string().max(20000),
+    publicComment: z.string().max(20000).optional().or(z.literal("")),
+    pet: lockedPetPreferenceFieldSchema,
     city: z.enum(CLIENT_CITY_VALUES),
     districts: lockedStringArrayFieldSchema,
     addresses: lockedStringArrayFieldSchema,
     labels: lockedStringArrayFieldSchema,
-    status: z.union([z.enum(CLIENT_STATUSES), z.literal("")]).optional(),
+    status: z
+      .union([z.enum(CLIENT_BUSINESS_STATUSES), z.literal(""), z.literal("ARCHIVED")])
+      .optional(),
     outcomeSource: z.union([z.enum(OUTCOME_SOURCES), z.literal("")]).optional(),
+    outcomePropertyId: z.string().optional().or(z.literal("")),
     reminderDate: z.string().optional().or(z.literal("")),
     relatedPersons: z.array(relatedPersonSchema).max(100).optional().default([]),
     minRooms: lockedIntNonNegFieldSchema,
@@ -300,12 +330,15 @@ export const emptyClientFormDefaults: ClientFormValues = {
   whatsapp: "+995",
   status: "",
   outcomeSource: "",
+  outcomePropertyId: "",
   reminderDate: "",
   budgetMin: { value: undefined, lock: "none" },
   budgetMax: { value: undefined, lock: "none" },
+  budgetCurrency: DEFAULT_CLIENT_BUDGET_CURRENCY,
   dealType: "SALE",
   description: "",
-  pet: { value: "", lock: "none" },
+  publicComment: "",
+  pet: { value: "TO_VERIFY", lock: "none" },
   city: CLIENT_CITY_TBILISI,
   districts: { value: [], lock: "none" },
   addresses: { value: [], lock: "none" },
@@ -318,22 +351,22 @@ export const emptyClientFormDefaults: ClientFormValues = {
   minFloor: { value: undefined, lock: "none" },
   maxFloor: { value: undefined, lock: "none" },
   excludeLastFloor: { value: false, lock: "none" },
-  renovations: { value: [], lock: "none" },
-  buildingCondition: { value: "", lock: "none" },
+  renovations: { value: "TO_VERIFY", lock: "none" },
+  buildingCondition: { value: "TO_VERIFY", lock: "none" },
   projectExclude: { value: [], lock: "none" },
   minArea: { value: undefined, lock: "none" },
   maxArea: { value: undefined, lock: "none" },
-  hasBalcony: { value: "NOT_SET", lock: "none" },
+  hasBalcony: { value: "DOES_NOT_MATTER", lock: "none" },
   balconyAreaMin: { value: undefined, lock: "none" },
   balconyAreaMax: { value: undefined, lock: "none" },
   goodView: { value: "NOT_SET", lock: "none" },
-  elevator: { value: "NOT_SET", lock: "none" },
-  centralHeating: { value: "NOT_SET", lock: "none" },
-  airConditioner: { value: "NOT_SET", lock: "none" },
-  kitchenType: { value: "", lock: "none" },
-  furnished: { value: "NOT_SET", lock: "none" },
-  minBathrooms: { value: undefined, lock: "none" },
+  elevator: { value: "TO_VERIFY", lock: "none" },
+  centralHeating: { value: "TO_VERIFY", lock: "none" },
+  airConditioner: { value: "TO_VERIFY", lock: "none" },
+  kitchenType: { value: "TO_VERIFY", lock: "none" },
+  furnished: { value: "TO_VERIFY", lock: "none" },
+  minBathrooms: { value: 1, lock: "none" },
   maxBathrooms: { value: undefined, lock: "none" },
-  parking: { value: "NOT_SET", lock: "none" },
+  parking: { value: "TO_VERIFY", lock: "none" },
   minRentalPeriod: { value: undefined, lock: "none" },
 };

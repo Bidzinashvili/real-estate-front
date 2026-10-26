@@ -9,13 +9,16 @@ import {
   toggleDatabaseListScope,
   type DatabaseListScope,
 } from "@/features/databaseList/databaseListScope";
+import { listRouteQueryString } from "@/features/databaseList/listRouteSearchParams";
 import {
   areClientListDebouncedEqual,
   clientListUrlStateToSearchParams,
   CLIENT_LIST_SEARCH_DEBOUNCE_MS,
   countClientAdvancedFilters,
+  countClientPanelFilters,
   DEFAULT_CLIENT_LIST_URL_STATE,
   hasClearableClientFilters,
+  hasClearableClientPanelFilters,
   parseClientListUrl,
   pickClientListDebouncedState,
   type ClientListDebouncedState,
@@ -117,7 +120,11 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
 
   useEffect(() => {
     if (!syncUrl || !allowUrlReplace.current) return;
-    const nextQuery = urlStateSignature(state);
+    const nextQuery = listRouteQueryString(
+      pathname,
+      searchParams,
+      clientListUrlStateToSearchParams(state),
+    );
     if (nextQuery === searchParams.toString()) return;
     urlChangeFromReplaceRef.current = true;
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
@@ -211,6 +218,25 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     });
   }, [bumpPage]);
 
+  const resetPanelFilters = useCallback(() => {
+    const nextState: ClientListUrlState = {
+      ...state,
+      district: "",
+      budgetMinInput: "",
+      budgetMaxInput: "",
+      dealType: "",
+      createdFrom: "",
+      createdTo: "",
+      status: "",
+      lastOpenedFrom: "",
+      lastOpenedTo: "",
+      neverOpened: false,
+      page: 1,
+    };
+    setState(nextState);
+    setDebouncedState(pickClientListDebouncedState(nextState));
+  }, [state]);
+
   const resetFilters = useCallback(() => {
     setState((previousState) => ({
       ...DEFAULT_CLIENT_LIST_URL_STATE,
@@ -232,8 +258,16 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     () => countClientAdvancedFilters(state),
     [state],
   );
+  const panelFilterCount = useMemo(
+    () => countClientPanelFilters(state),
+    [state],
+  );
   const hasClearableFilters = useMemo(
     () => hasClearableClientFilters(state),
+    [state],
+  );
+  const hasClearablePanelFilters = useMemo(
+    () => hasClearableClientPanelFilters(state),
     [state],
   );
 
@@ -256,8 +290,11 @@ export function useClientsListFilters(options?: UseClientsListFiltersOptions) {
     setListScope,
     toggleOnlyMine,
     resetAdvancedFilters,
+    resetPanelFilters,
     resetFilters,
     advancedFilterCount,
+    panelFilterCount,
     hasClearableFilters,
+    hasClearablePanelFilters,
   };
 }

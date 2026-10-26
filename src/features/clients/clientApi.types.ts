@@ -15,6 +15,8 @@ import type {
 import type { ReminderSummary } from "@/features/reminders/remindersApiTypes";
 import type { DatabaseListScope } from "@/features/databaseList/databaseListScope";
 import type { RecordColor } from "@/features/recordColor/recordColor";
+import type { ClientBudgetCurrency } from "@/features/clients/clientBudgetCurrency";
+import type { ClientRequirementPreference } from "@/features/clients/clientRequirementValues";
 
 export type { LockState } from "@/features/matching/matchingEnums";
 
@@ -65,6 +67,7 @@ export interface CreateClientPayload {
   whatsapp?: string;
   dealType: DealType;
   description: string;
+  publicComment?: string | null;
   status?: ClientStatus;
   reminder?: ReminderConfigPayload;
   color?: RecordColor;
@@ -72,10 +75,11 @@ export interface CreateClientPayload {
   relatedPersons?: CreateClientRelatedPersonPayload[];
   budgetMin?: LockedOptional<number>;
   budgetMax?: LockedOptional<number>;
+  budgetCurrency?: ClientBudgetCurrency;
   districts: Locked<string[]>;
   addresses: Locked<string[]>;
   labels?: Locked<string[]>;
-  pet?: LockedOptional<string>;
+  pet?: Locked<ClientPreferenceValue>;
   minRooms?: Locked<number>;
   maxRooms?: Locked<number>;
   minBedrooms?: Locked<number>;
@@ -83,8 +87,8 @@ export interface CreateClientPayload {
   minFloor?: Locked<number>;
   maxFloor?: Locked<number>;
   excludeLastFloor?: Locked<boolean>;
-  renovations?: Locked<Renovation[]>;
-  buildingCondition?: LockedOptional<BuildingCondition>;
+  renovations?: Locked<Renovation[] | ClientRequirementPreference>;
+  buildingCondition?: Locked<BuildingCondition | ClientRequirementPreference>;
   projectExclude?: LockedOptional<string[]>;
   minArea?: Locked<number>;
   maxArea?: Locked<number>;
@@ -95,7 +99,7 @@ export interface CreateClientPayload {
   elevator?: Locked<ClientPreferenceValue>;
   centralHeating?: Locked<ClientPreferenceValue>;
   airConditioner?: Locked<ClientPreferenceValue>;
-  kitchenType?: LockedOptional<KitchenType>;
+  kitchenType?: Locked<KitchenType | ClientRequirementPreference>;
   furnished?: Locked<ClientPreferenceValue>;
   minBathrooms?: Locked<number>;
   maxBathrooms?: Locked<number>;
@@ -110,18 +114,21 @@ export type UpdateClientPayload = {
   whatsapp?: string;
   dealType?: DealType;
   description?: string;
+  publicComment?: string | null;
   status?: ClientStatus;
   outcomeSource?: OutcomeSource;
+  propertyId?: string | null;
   reminder?: ReminderConfigPayload;
   color?: RecordColor;
   hideFromOthers?: boolean;
   relatedPersons?: CreateClientRelatedPersonPayload[];
   budgetMin?: LockedOptional<number>;
   budgetMax?: LockedOptional<number>;
+  budgetCurrency?: ClientBudgetCurrency;
   districts?: Locked<string[]>;
   addresses?: Locked<string[]>;
   labels?: Locked<string[]>;
-  pet?: LockedOptional<string>;
+  pet?: Locked<ClientPreferenceValue>;
   minRooms?: Locked<number>;
   maxRooms?: Locked<number>;
   minBedrooms?: Locked<number>;
@@ -129,8 +136,8 @@ export type UpdateClientPayload = {
   minFloor?: Locked<number>;
   maxFloor?: Locked<number>;
   excludeLastFloor?: Locked<boolean>;
-  renovations?: Locked<Renovation[]>;
-  buildingCondition?: LockedOptional<BuildingCondition>;
+  renovations?: Locked<Renovation[] | ClientRequirementPreference>;
+  buildingCondition?: Locked<BuildingCondition | ClientRequirementPreference>;
   projectExclude?: LockedOptional<string[]>;
   minArea?: Locked<number>;
   maxArea?: Locked<number>;
@@ -141,7 +148,7 @@ export type UpdateClientPayload = {
   elevator?: Locked<ClientPreferenceValue>;
   centralHeating?: Locked<ClientPreferenceValue>;
   airConditioner?: Locked<ClientPreferenceValue>;
-  kitchenType?: LockedOptional<KitchenType>;
+  kitchenType?: Locked<KitchenType | ClientRequirementPreference>;
   furnished?: Locked<ClientPreferenceValue>;
   minBathrooms?: Locked<number>;
   maxBathrooms?: Locked<number>;
@@ -187,8 +194,8 @@ export type ClientRequirementsApi = {
   minFloor: Locked<number | null>;
   maxFloor: Locked<number | null>;
   excludeLastFloor: Locked<boolean>;
-  renovations: Locked<Renovation[]>;
-  buildingCondition: Locked<BuildingCondition | null>;
+  renovations: Locked<Renovation[] | ClientRequirementPreference>;
+  buildingCondition: Locked<BuildingCondition | ClientRequirementPreference>;
   projectExclude: Locked<string[]>;
   minArea: Locked<number | null>;
   maxArea: Locked<number | null>;
@@ -199,7 +206,7 @@ export type ClientRequirementsApi = {
   elevator: Locked<ClientPreferenceValue>;
   centralHeating: Locked<ClientPreferenceValue>;
   airConditioner: Locked<ClientPreferenceValue>;
-  kitchenType: Locked<KitchenType | null>;
+  kitchenType: Locked<KitchenType | ClientRequirementPreference>;
   furnished: Locked<ClientPreferenceValue>;
   minBathrooms: Locked<number | null>;
   maxBathrooms: Locked<number | null>;
@@ -244,13 +251,16 @@ export type ClientApi = EntityVerificationFields & {
   whatsapp?: string | null;
   budgetMin?: Locked<number | null> | number | null;
   budgetMax?: Locked<number | null> | number | null;
+  budgetCurrency?: ClientBudgetCurrency;
   dealType: DealType;
   description?: string;
-  pet?: Locked<string | null> | string | null;
+  publicComment?: string | null;
+  pet?: Locked<ClientPreferenceValue> | ClientPreferenceValue | boolean | null;
   districts?: Locked<string[]> | string[];
   addresses?: Locked<string[]> | string[];
   labels?: Locked<string[]> | string[];
   status: ClientStatus;
+  propertyId?: string | null;
   archivedAt: ISODateString | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;

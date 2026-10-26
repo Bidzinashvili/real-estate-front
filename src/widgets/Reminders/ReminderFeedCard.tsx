@@ -12,11 +12,9 @@ import { getApiBaseUrl } from "@/shared/lib/auth";
 import { formatDealTypeLabel, isDealType } from "@/features/properties/dealType";
 import { formatPropertyStatusLabel, isPropertyStatus } from "@/features/properties/propertyStatus";
 import { PROPERTY_TYPE_LABELS } from "@/shared/i18n/enumLabels";
-import {
-  CLIENT_STATUS_LABELS,
-  DEAL_TYPE_LABELS,
-  isClientStatus,
-} from "@/features/clients/clientEnums";
+import { formatClientDealIntentLabel } from "@/features/clients/clientDealTypeDisplay";
+import { isClientStatus } from "@/features/clients/clientEnums";
+import { formatClientStatusLabel } from "@/features/clients/clientStatusDisplay";
 import { PropertyCardImageCarousel } from "@/widgets/Properties/PropertyCardImageCarousel";
 import { ReminderCardActions } from "@/widgets/Reminders/ReminderCardActions";
 import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
@@ -48,7 +46,8 @@ function formatPreviewDealType(dealType: string | null): string | null {
 
 function formatClientDealType(dealType: string | null): string | null {
   if (!dealType) return null;
-  return DEAL_TYPE_LABELS[dealType as keyof typeof DEAL_TYPE_LABELS] ?? null;
+  if (!isDealType(dealType)) return null;
+  return formatClientDealIntentLabel(dealType);
 }
 
 export function ReminderFeedCard({ reminder, onChanged }: ReminderFeedCardProps) {
@@ -102,7 +101,7 @@ export function ReminderFeedCard({ reminder, onChanged }: ReminderFeedCardProps)
       : propertyPreview?.status ?? null;
   const clientStatusLabel =
     clientPreview?.status && isClientStatus(clientPreview.status)
-      ? CLIENT_STATUS_LABELS[clientPreview.status]
+      ? formatClientStatusLabel(clientPreview.status)
       : clientPreview?.status ?? null;
 
   return (

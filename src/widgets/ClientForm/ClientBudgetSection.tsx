@@ -3,6 +3,8 @@
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
+import { PriceCurrencyToggle } from "@/features/currency/PriceCurrencyToggle";
+import type { ClientBudgetCurrency } from "@/features/clients/clientBudgetCurrency";
 
 type ClientBudgetSectionProps = {
   control: Control<ClientFormValues>;
@@ -19,7 +21,20 @@ export function ClientBudgetSection({
 }: ClientBudgetSectionProps) {
   return (
     <section className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-border">
-      <h2 className="mb-4 text-base font-semibold text-foreground">ბიუჯეტი</h2>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-foreground">ბიუჯეტი</h2>
+        <Controller
+          name="budgetCurrency"
+          control={control}
+          render={({ field }) => (
+            <PriceCurrencyToggle
+              value={field.value as ClientBudgetCurrency}
+              onChange={field.onChange}
+              ariaLabel="ბიუჯეტის ვალუტა"
+            />
+          )}
+        />
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
@@ -94,6 +109,9 @@ export function ClientBudgetSection({
           />
           {fieldDescriptions?.budgetMax ? (
             <p className="text-xs text-muted-foreground">{fieldDescriptions.budgetMax}</p>
+          ) : null}
+          {fieldDescriptions?.budgetCurrency ? (
+            <p className="text-xs text-muted-foreground">{fieldDescriptions.budgetCurrency}</p>
           ) : null}
         </div>
       </div>

@@ -242,10 +242,8 @@ async function fillMinimalApartmentCore(page, options = {}) {
     await currencyGroup.getByRole("button", { name: "₾" }).click();
   }
 
-  await page.waitForSelector("#districtGroup", { timeout: 20000 });
-  await clickFirstNonEmptyChip(page, "districtGroup", "აირჩიეთ");
-  await page.waitForTimeout(200);
-  await clickFirstNonEmptyChip(page, "districtNeighborhood", "აირჩიეთ");
+  await page.waitForSelector("text=მთავარი უბნები", { timeout: 20000 });
+  await page.getByRole("radio", { name: "ვაკე" }).click();
 
   const addressInput = page.locator("#address");
   await addressInput.fill("ვაჟა");

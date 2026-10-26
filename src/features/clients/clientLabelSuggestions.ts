@@ -1,7 +1,7 @@
 export const CLIENT_LABELS_FIELD_TITLE = "დამატებითი მოთხოვნები";
 
 export const CLIENT_LABELS_HELPER_TEXT =
-  "აირჩიეთ თქვენთვის მნიშვნელოვანი დამატებითი პირობები ან დაამატეთ საკუთარი.";
+  "აირჩიეთ თქვენთვის მნიშვნელოვანი დამატებითი პირობები ან დაამატეთ.";
 
 export const CLIENT_LABEL_SUGGESTIONS = [
   "მეტროსთან ახლოს",

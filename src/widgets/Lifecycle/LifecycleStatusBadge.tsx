@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Bell, CalendarClock, Check, CircleHelp, X } from "lucide-react";
 import type { ClientStatus } from "@/features/clients/clientEnums";
-import { CLIENT_STATUS_LABELS } from "@/features/clients/clientEnums";
+import { formatClientStatusLabel } from "@/features/clients/clientStatusDisplay";
 import type {
   OutcomeSource,
   VerificationReason,
@@ -68,13 +68,13 @@ function propertyVisual(
     if (verificationReason === "RENTAL_EXPIRY_RECHECK") {
       return {
         icon: <CalendarClock className="h-3.5 w-3.5 text-amber-700" aria-hidden />,
-        className: "bg-amber-100 text-amber-800",
+        className: "bg-warning-muted text-warning-foreground",
       };
     }
     if (verificationReason === "MANUAL_REMINDER_DUE") {
       return {
         icon: <Bell className="h-3.5 w-3.5 text-orange-700" aria-hidden />,
-        className: "bg-orange-100 text-orange-800",
+        className: "bg-warning-muted text-warning-foreground",
       };
     }
     return {
@@ -123,17 +123,17 @@ function clientVisual(
       className: "bg-muted text-muted-foreground",
     };
   }
-  if (status === "NEEDS_VERIFICATION") {
+  if (status === "NEEDS_VERIFICATION" || status === "IN_PROGRESS") {
     if (verificationReason === "RENTAL_EXPIRY_RECHECK") {
       return {
         icon: <CalendarClock className="h-3.5 w-3.5 text-amber-700" aria-hidden />,
-        className: "bg-amber-100 text-amber-800",
+        className: "bg-warning-muted text-warning-foreground",
       };
     }
     if (verificationReason === "MANUAL_REMINDER_DUE") {
       return {
         icon: <Bell className="h-3.5 w-3.5 text-orange-700" aria-hidden />,
-        className: "bg-orange-100 text-orange-800",
+        className: "bg-warning-muted text-warning-foreground",
       };
     }
     return {
@@ -141,10 +141,10 @@ function clientVisual(
       className: "bg-warning-muted text-warning-foreground",
     };
   }
-  if (status === "IN_PROGRESS") {
+  if (status === "ARCHIVED") {
     return {
-      icon: <StatusDot className="bg-primary" />,
-      className: "bg-primary/15 text-primary",
+      icon: <StatusDot className="bg-muted-foreground" />,
+      className: "bg-muted text-muted-foreground",
     };
   }
   return {
@@ -173,7 +173,7 @@ export function LifecycleStatusBadge({
   const label =
     kind === "property"
       ? formatPropertyStatusLabel(status as PropertyStatus)
-      : CLIENT_STATUS_LABELS[status as ClientStatus];
+      : formatClientStatusLabel(status as ClientStatus);
   const padding = size === "sm" ? "px-2 py-0.5" : "px-2.5 py-0.5";
 
   return (

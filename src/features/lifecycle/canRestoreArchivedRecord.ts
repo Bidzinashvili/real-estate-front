@@ -12,7 +12,6 @@ const RESTORABLE_PROPERTY_STATUSES: ReadonlyArray<PropertyStatus> = [
 
 const RESTORABLE_CLIENT_STATUSES: ReadonlyArray<ClientStatus> = [
   "ACTIVE",
-  "IN_PROGRESS",
   "NEEDS_VERIFICATION",
 ];
 

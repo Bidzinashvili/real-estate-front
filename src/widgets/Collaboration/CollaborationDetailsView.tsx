@@ -9,9 +9,13 @@ import { useCollaborationDetails } from "@/features/collaboration/useCollaborati
 import {
   acceptCollaboration,
   approveAdminCollaboration,
+  counterCollaboration,
   rejectAdminCollaboration,
   rejectCollaboration,
 } from "@/features/collaboration/collaborationApi";
+import { emitCollaborationsChangedEvent } from "@/features/collaboration/collaborationEvents";
+import { emitNotificationsChangedEvent } from "@/features/notifications/notificationEvents";
+import { ApiError } from "@/shared/lib/apiError";
 import { CollaborationDetailBody } from "@/widgets/Collaboration/CollaborationDetailBody";
 
 type CollaborationDetailsViewProps = {
@@ -36,6 +40,8 @@ export function CollaborationDetailsView({ collaborationId }: CollaborationDetai
     try {
       await action();
       await refetch();
+      emitCollaborationsChangedEvent();
+      emitNotificationsChangedEvent();
     } catch (actionFailure) {
       const message =
         actionFailure instanceof Error
@@ -43,6 +49,10 @@ export function CollaborationDetailsView({ collaborationId }: CollaborationDetai
           : "მოქმედება ვერ შესრულდა.";
       setActionError(message);
       await refetch();
+      if (actionFailure instanceof ApiError && actionFailure.statusCode === 409) {
+        emitCollaborationsChangedEvent();
+        emitNotificationsChangedEvent();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -75,6 +85,14 @@ export function CollaborationDetailsView({ collaborationId }: CollaborationDetai
           actionError={actionError}
           onAccept={() => void runAction(() => acceptCollaboration(collaborationId))}
           onReject={() => void runAction(() => rejectCollaboration(collaborationId))}
+          onCounter={(split, additionalParticipantIds) =>
+            void runAction(() =>
+              counterCollaboration(collaborationId, {
+                split,
+                additionalParticipantIds,
+              }),
+            )
+          }
           onAdminApprove={() => void runAction(() => approveAdminCollaboration(collaborationId))}
           onAdminReject={() => void runAction(() => rejectAdminCollaboration(collaborationId))}
         />

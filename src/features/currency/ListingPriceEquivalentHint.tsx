@@ -4,8 +4,11 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { convertWithUsdRate } from "@/features/currency/convertWithUsdRate";
 import { getCachedUsdRate, peekCachedUsdRate } from "@/features/currency/usdRateCache";
+import {
+  formatGelListingLine,
+  formatUsdListingLine,
+} from "@/features/currency/formatDisplayAmount";
 import type { SupportedListingCurrency, UsdRateResponse } from "@/features/currency/types";
-import { listingCurrencySymbol } from "@/features/currency/types";
 import { ApiError } from "@/shared/lib/apiError";
 
 const MAX_CONVERT_AMOUNT = 1e15;
@@ -15,18 +18,6 @@ type HintState =
   | { status: "loading" }
   | { status: "success"; result: number; usdRate: UsdRateResponse }
   | { status: "error"; message: string };
-
-const usdFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const gelFormatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 const rateFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 4,
@@ -57,9 +48,9 @@ function formatConvertedAmount(
   fromCurrency: SupportedListingCurrency,
 ): string {
   if (fromCurrency === "GEL") {
-    return usdFormatter.format(result);
+    return formatUsdListingLine(result);
   }
-  return `${gelFormatter.format(result)} ${listingCurrencySymbol("GEL")}`;
+  return formatGelListingLine(result);
 }
 
 function hintFromRate(

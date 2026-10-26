@@ -5,6 +5,8 @@ import {
   fetchAdminCollaborations,
   fetchCollaborations,
 } from "@/features/collaboration/collaborationApi";
+import { collaborationsChangedEventName } from "@/features/collaboration/collaborationEvents";
+import { canViewerNegotiate } from "@/features/collaboration/collaborationEnums";
 
 const INBOX_POLL_INTERVAL_MS = 45_000;
 
@@ -44,8 +46,8 @@ export function useCollaborationInboxCount({
         page: 1,
         limit: 100,
       });
-      const incomingCount = result.collaborations.filter(
-        (item) => item.viewerRole === "RECIPIENT",
+      const incomingCount = result.collaborations.filter((item) =>
+        canViewerNegotiate(item.viewerRole, item.awaitingRole ?? null),
       ).length;
       setCount(incomingCount);
     } catch {
@@ -61,7 +63,14 @@ export function useCollaborationInboxCount({
     const intervalId = window.setInterval(() => {
       void loadCount();
     }, INBOX_POLL_INTERVAL_MS);
-    return () => window.clearInterval(intervalId);
+    const handleCollaborationsChanged = () => {
+      void loadCount();
+    };
+    window.addEventListener(collaborationsChangedEventName, handleCollaborationsChanged);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener(collaborationsChangedEventName, handleCollaborationsChanged);
+    };
   }, [enabled, loadCount]);
 
   return { count, refetch: loadCount };

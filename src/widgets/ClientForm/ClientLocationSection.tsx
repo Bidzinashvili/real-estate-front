@@ -12,15 +12,12 @@ import { ClientLabelsField } from "@/widgets/ClientForm/ClientLabelsField";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
 import {
   CLIENT_CITY_OPTIONS,
-  CLIENT_CITY_TBILISI_SUBURBS,
   isClientCity,
   shouldShowTbilisiNeighborhoods,
 } from "@/features/clients/clientCities";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import { NeighborhoodChecklist } from "@/widgets/Districts/NeighborhoodChecklist";
 import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
-
-const TBILISI_NEIGHBORHOOD_EXCLUDED_GROUPS = [CLIENT_CITY_TBILISI_SUBURBS];
 
 type ClientLocationSectionProps = {
   control: Control<ClientFormValues>;
@@ -102,7 +99,6 @@ export function ClientLocationSection({
                 <NeighborhoodChecklist
                   selectedNeighborhoods={field.value ?? []}
                   onChange={field.onChange}
-                  excludeGroupNames={TBILISI_NEIGHBORHOOD_EXCLUDED_GROUPS}
                 />
               )}
             />

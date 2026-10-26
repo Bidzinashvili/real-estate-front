@@ -6,8 +6,8 @@ import {
   archiveRecordBackLabel,
   carryArchiveNavigation,
   isOpenedFromArchiveLocation,
-  recordListHref,
 } from "@/features/lifecycle/archiveNavigation";
+import { navigateBackToRecordList } from "@/features/lifecycle/recordListNavigation";
 import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { ArrowLeft, Eye } from "lucide-react";
@@ -65,12 +65,11 @@ export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewP
   );
 
   const handleGoBack = () => {
-    router.push(
-      recordListHref(
-        "property",
-        isOpenedFromArchiveLocation() ||
-          (activeProperty ? isPropertyArchived(activeProperty) : false),
-      ),
+    navigateBackToRecordList(
+      router,
+      "property",
+      isOpenedFromArchiveLocation() ||
+        (activeProperty ? isPropertyArchived(activeProperty) : false),
     );
   };
 

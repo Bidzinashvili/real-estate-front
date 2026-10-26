@@ -1,4 +1,6 @@
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import type {
+  CollaborationNegotiationRole,
   CollaborationParticipantRole,
   CollaborationSplit,
   CollaborationStatus,
@@ -32,13 +34,49 @@ export type CollaborationProperty = {
   publicComment: string | null;
 };
 
+export type CollaborationClientRequirements = {
+  minRooms?: number | null;
+  maxRooms?: number | null;
+  minBedrooms?: number | null;
+  maxBedrooms?: number | null;
+  minFloor?: number | null;
+  maxFloor?: number | null;
+  excludeLastFloor?: boolean;
+  renovations?: string[];
+  buildingCondition?: string | null;
+  projectExclude?: string[];
+  minArea?: number | null;
+  maxArea?: number | null;
+  hasBalcony?: string;
+  balconyAreaMin?: number | null;
+  balconyAreaMax?: number | null;
+  goodView?: string;
+  elevator?: string;
+  centralHeating?: string;
+  airConditioner?: string;
+  kitchenType?: string | null;
+  furnished?: string;
+  minBathrooms?: number | null;
+  maxBathrooms?: number | null;
+  parking?: string;
+  minRentalPeriod?: number | null;
+};
+
 export type CollaborationClient = {
   id: string;
+  dealType: string | null;
+  status: string | null;
+  districts?: string[];
+  addresses?: string[];
+  budgetMin?: number | null;
+  budgetMax?: number | null;
+  budgetCurrency?: "GEL" | "USD";
+  pet?: ClientPreferenceValue | null;
+  publicComment?: string | null;
+  requirements?: CollaborationClientRequirements | null;
   name: string | null;
   phones: string[] | null;
   whatsapp: string | null;
-  dealType: string | null;
-  status: string | null;
 };
 
 export type CollaborationMonitorSummary = {
@@ -56,6 +94,9 @@ export type CollaborationRequestDto = {
   status: CollaborationStatus;
   statusGroup: CollaborationStatusGroup;
   split: CollaborationSplit;
+  proposedByRole: CollaborationNegotiationRole | null;
+  proposedAt: string | null;
+  awaitingRole: CollaborationNegotiationRole | null;
   viewerRole: CollaborationViewerRole | null;
   property: CollaborationProperty | null;
   clientId: string | null;
@@ -82,6 +123,11 @@ export type CreateCollaborationPayload = {
   clientId?: string;
   split: CollaborationSplit;
   additionalParticipantIds?: string[];
+};
+
+export type CounterCollaborationPayload = {
+  split: CollaborationSplit;
+  additionalParticipantIds: string[];
 };
 
 export type CollaborationListQuery = {

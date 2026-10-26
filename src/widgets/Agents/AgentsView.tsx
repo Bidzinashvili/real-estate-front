@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { useAgentsList } from "@/features/agents/useAgentsList";
 import { OptionChips } from "@/shared/ui/OptionChips";
 import { PasswordSetBadge } from "@/widgets/Agents/PasswordSetBadge";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { FilterPanel } from "@/shared/ui/FilterPanel";
+import { Button } from "@/shared/ui/Button";
+import { Plus, Users } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -66,26 +70,21 @@ export function AgentsView() {
 
   return (
     <>
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            თქვენი აგენტები
-          </h1>
-          <p className="max-w-md text-sm text-muted-foreground">
-            მოძებნეთ და გაფილტრეთ აგენტები და სწრაფად გადადით დეტალებზე.
-          </p>
-        </div>
+      <PageHeader
+        title="თქვენი აგენტები"
+        description="მოძებნეთ და გაფილტრეთ აგენტები და სწრაფად გადადით დეტალებზე."
+        icon={Users}
+        actions={
+          <Button type="button" size="sm" onClick={() => router.push("/agents/new")}>
+            <Plus className="h-4 w-4" aria-hidden />
+            ახალი აგენტი
+          </Button>
+        }
+      />
 
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-          <button
-            type="button"
-            onClick={() => router.push("/agents/new")}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
-          >
-            აგენტის დამატება
-          </button>
-
-          <div className="flex w-full items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 shadow-sm sm:w-72">
+      <FilterPanel>
+        <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+          <div className="flex w-full items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 shadow-sm sm:max-w-md">
             <input
               type="search"
               value={search}
@@ -132,9 +131,9 @@ export function AgentsView() {
             />
           </div>
         </div>
-      </div>
+      </FilterPanel>
 
-      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
+      <div className="surface-card p-4">
         {isLoading && (
           <p className="text-sm text-muted-foreground">აგენტები იტვირთება…</p>
         )}

@@ -111,7 +111,11 @@ export function parseClientListUrl(
   if (dealType && isDealType(dealType)) next.dealType = dealType;
 
   const status = searchParams.get("status");
-  if (status && isClientStatus(status)) next.status = status;
+  if (status === "IN_PROGRESS") {
+    next.status = "NEEDS_VERIFICATION";
+  } else if (status && isClientStatus(status)) {
+    next.status = status;
+  }
 
   const createdFrom = searchParams.get("createdFrom");
   if (createdFrom) next.createdFrom = createdFrom;
@@ -198,9 +202,21 @@ export function countClientAdvancedFilters(state: ClientListUrlState): number {
   return advancedFilterCount;
 }
 
-export function hasClearableClientFilters(state: ClientListUrlState): boolean {
-  if (state.searchInput.trim()) return true;
-  if (state.selectedColors.length > 0) return true;
+export function countClientPanelFilters(state: ClientListUrlState): number {
+  let panelFilterCount = 0;
+  if (state.dealType) panelFilterCount += 1;
+  if (state.district.trim()) panelFilterCount += 1;
+  if (state.budgetMinInput.trim() || state.budgetMaxInput.trim()) {
+    panelFilterCount += 1;
+  }
+  if (state.createdFrom.trim() || state.createdTo.trim()) {
+    panelFilterCount += 1;
+  }
+  panelFilterCount += countClientAdvancedFilters(state);
+  return panelFilterCount;
+}
+
+export function hasClearableClientPanelFilters(state: ClientListUrlState): boolean {
   if (state.district.trim()) return true;
   if (state.budgetMinInput.trim() || state.budgetMaxInput.trim()) return true;
   if (state.dealType) return true;
@@ -208,4 +224,10 @@ export function hasClearableClientFilters(state: ClientListUrlState): boolean {
   if (state.lastOpenedFrom.trim() || state.lastOpenedTo.trim()) return true;
   if (state.neverOpened) return true;
   return countClientAdvancedFilters(state) > 0;
+}
+
+export function hasClearableClientFilters(state: ClientListUrlState): boolean {
+  if (state.searchInput.trim()) return true;
+  if (state.selectedColors.length > 0) return true;
+  return hasClearableClientPanelFilters(state);
 }

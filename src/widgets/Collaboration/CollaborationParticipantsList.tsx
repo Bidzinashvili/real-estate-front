@@ -26,7 +26,7 @@ export function CollaborationParticipantsList({
             <p className="text-xs font-medium text-muted-foreground">
               {COLLABORATION_PARTICIPANT_ROLE_LABELS[participant.role]}
             </p>
-            {participant.user ? (
+            {participant.user && identitiesRevealed ? (
               <div className="mt-1 space-y-0.5">
                 <p className="text-sm font-medium text-foreground">{participant.user.fullName}</p>
                 <p className="text-xs text-muted-foreground">{participant.user.email}</p>
@@ -34,11 +34,15 @@ export function CollaborationParticipantsList({
                   <p className="text-xs text-muted-foreground">{participant.user.phone}</p>
                 ) : null}
               </div>
-            ) : (
+            ) : !participant.user ? (
               <p className="mt-1 text-sm text-muted-foreground">
                 {identitiesRevealed
                   ? "ვინაობა ხელმისაწვდომი არ არის."
                   : "ვინაობა გამოჩნდება ადმინის დამტკიცების შემდეგ."}
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">
+                ვინაობა გამოჩნდება ადმინის დამტკიცების შემდეგ.
               </p>
             )}
           </li>

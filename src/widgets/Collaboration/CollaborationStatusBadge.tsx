@@ -1,8 +1,14 @@
-import type { CollaborationStatus } from "@/features/collaboration/collaborationEnums";
-import { COLLABORATION_STATUS_LABELS } from "@/features/collaboration/collaborationLabels";
+import type {
+  CollaborationNegotiationRole,
+  CollaborationStatus,
+  CollaborationViewerRole,
+} from "@/features/collaboration/collaborationEnums";
+import { formatCollaborationStatusLabel } from "@/features/collaboration/collaborationLabels";
 
 type CollaborationStatusBadgeProps = {
   status: CollaborationStatus;
+  viewerRole?: CollaborationViewerRole | null;
+  awaitingRole?: CollaborationNegotiationRole | null;
 };
 
 function badgeClassName(status: CollaborationStatus): string {
@@ -12,18 +18,23 @@ function badgeClassName(status: CollaborationStatus): string {
   if (status === "PENDING_ADMIN") {
     return "bg-warning-muted text-warning-foreground";
   }
-  if (status === "PENDING_RECIPIENT") {
+  if (status === "PENDING_RECIPIENT" || status === "PENDING_REQUESTER") {
     return "bg-primary/15 text-primary";
   }
   return "bg-destructive/10 text-destructive";
 }
 
-export function CollaborationStatusBadge({ status }: CollaborationStatusBadgeProps) {
+export function CollaborationStatusBadge({
+  status,
+  viewerRole = null,
+  awaitingRole = null,
+}: CollaborationStatusBadgeProps) {
+  const label = formatCollaborationStatusLabel(status, viewerRole, awaitingRole);
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClassName(status)}`}
     >
-      {COLLABORATION_STATUS_LABELS[status]}
+      {label}
     </span>
   );
 }

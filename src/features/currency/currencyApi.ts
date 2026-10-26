@@ -29,12 +29,18 @@ function normalizeUsdRateResponse(data: JsonValue): UsdRateResponse | null {
   if (!isJsonObject(data)) return null;
   const code = asString(data.code);
   if (code !== "USD") return null;
+  const staleRaw = data.stale;
+  const sourceRaw = data.source;
   return {
     code: "USD",
     quantity: asNumber(data.quantity, Number.NaN),
     rate: asNumber(data.rate, Number.NaN),
     unitRate: asNumber(data.unitRate, Number.NaN),
     date: asString(data.date),
+    ...(typeof staleRaw === "boolean" ? { stale: staleRaw } : {}),
+    ...(typeof sourceRaw === "string" && sourceRaw.trim() !== ""
+      ? { source: sourceRaw.trim() }
+      : {}),
   };
 }
 

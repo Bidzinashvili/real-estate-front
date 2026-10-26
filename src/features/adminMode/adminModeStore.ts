@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type AdminModeState = {
   isAdminMode: boolean;
@@ -6,8 +7,15 @@ type AdminModeState = {
   resetAdminMode: () => void;
 };
 
-export const useAdminModeStore = create<AdminModeState>((set) => ({
-  isAdminMode: false,
-  setAdminMode: (nextValue) => set({ isAdminMode: nextValue }),
-  resetAdminMode: () => set({ isAdminMode: false }),
-}));
+export const useAdminModeStore = create<AdminModeState>()(
+  persist(
+    (set) => ({
+      isAdminMode: false,
+      setAdminMode: (nextValue) => set({ isAdminMode: nextValue }),
+      resetAdminMode: () => set({ isAdminMode: false }),
+    }),
+    {
+      name: "home-agency-admin-mode",
+    },
+  ),
+);

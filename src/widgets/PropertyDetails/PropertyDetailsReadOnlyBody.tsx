@@ -20,8 +20,8 @@ import { isPropertyArchived } from "@/features/lifecycle/isPropertyArchived";
 import {
   archiveRecordBackLabel,
   isOpenedFromArchiveLocation,
-  recordListHref,
 } from "@/features/lifecycle/archiveNavigation";
+import { navigateBackToRecordList } from "@/features/lifecycle/recordListNavigation";
 import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { useVerifyProperty } from "@/features/lifecycle/useVerifyProperty";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
@@ -172,11 +172,10 @@ export function PropertyDetailsReadOnlyBody({
   const backLabel = archiveRecordBackLabel("property", returnsToArchive);
 
   const handleGoBack = () => {
-    router.push(
-      recordListHref(
-        "property",
-        isOpenedFromArchiveLocation() || (property ? isPropertyArchived(property) : false),
-      ),
+    navigateBackToRecordList(
+      router,
+      "property",
+      isOpenedFromArchiveLocation() || (property ? isPropertyArchived(property) : false),
     );
   };
 

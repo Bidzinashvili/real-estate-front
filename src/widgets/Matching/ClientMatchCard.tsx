@@ -13,6 +13,10 @@ import {
 } from "@/shared/i18n/enumLabels";
 import { LifecycleStatusBadge } from "@/widgets/Lifecycle/LifecycleStatusBadge";
 import { isClientStatus } from "@/features/clients/clientEnums";
+import {
+  formatClientBudgetRange,
+  parseClientBudgetCurrency,
+} from "@/features/clients/clientBudgetCurrency";
 
 type ClientMatchCardProps = {
   match: ScoredClientMatch;
@@ -54,7 +58,12 @@ export function ClientMatchCard({
         />
       </div>
       <p className="text-sm text-foreground">
-        ბიუჯეტი: {client.budgetMin ?? "—"} – {client.budgetMax ?? "—"}
+        ბიუჯეტი:{" "}
+        {formatClientBudgetRange(
+          client.budgetMin,
+          client.budgetMax,
+          parseClientBudgetCurrency(client.budgetCurrency),
+        ) ?? "—"}
       </p>
       <p className="text-xs text-muted-foreground">
         ოთახები {requirements.minRooms ?? "—"}–{requirements.maxRooms ?? "—"} · ფართობი{" "}
@@ -64,6 +73,11 @@ export function ClientMatchCard({
       <p className="text-xs text-muted-foreground">
         შინაური ცხოველები: {client.pet ? "კი" : "არა"}
       </p>
+      {client.publicComment?.trim() ? (
+        <p className="line-clamp-3 text-xs text-muted-foreground">
+          {client.publicComment.trim()}
+        </p>
+      ) : null}
       <MatchingCriteriaList criteria={match.criteria} />
       <div className="flex flex-wrap items-center gap-2">
         <Link

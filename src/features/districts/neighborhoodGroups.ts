@@ -1,102 +1,22 @@
-import type { DistrictGroup } from "@/features/districts/districtTypes";
-
-export const MAIN_NEIGHBORHOOD_NAMES = [
-  "ვაკე",
-  "საბურთალო",
-  "ვერა",
-  "ბაგები",
-  "მთაწმინდა",
-  "სოლოლაკი",
-  "ავლაბარი",
-  "დიდუბე",
-  "ჩუღურეთი",
-  "ისანი",
-  "გლდანი",
-  "ნაძალადევი",
-  "ვარკეთილი",
-  "სამგორი",
-  "დიდი დიღომი",
-  "თემქა",
-  "ლისი",
-  "კრწანისი",
-] as const;
-
-const MAIN_NEIGHBORHOOD_NAME_SET = new Set<string>(MAIN_NEIGHBORHOOD_NAMES);
+import type { TbilisiNeighborhoodSection } from "@/features/districts/districtTypes";
 
 export type NeighborhoodSelectionMode = "multiple" | "single";
 
-export type NeighborhoodOptionGroups = {
-  mainNeighborhoods: string[];
-  otherNeighborhoods: string[];
-  unknownSelectedNeighborhoods: string[];
-};
-
-export function excludeDistrictGroups(
-  districtGroups: DistrictGroup[],
-  excludedGroupNames: ReadonlySet<string>,
-): DistrictGroup[] {
-  if (excludedGroupNames.size === 0) {
-    return districtGroups;
-  }
-  return districtGroups.filter(
-    (districtGroup) => !excludedGroupNames.has(districtGroup.name),
-  );
-}
-
-export function collectNeighborhoodNames(districtGroups: DistrictGroup[]): string[] {
-  const seenNames = new Set<string>();
-  const neighborhoodNames: string[] = [];
-
-  for (const districtGroup of districtGroups) {
-    for (const neighborhoodName of districtGroup.neighborhoods) {
-      const trimmedName = neighborhoodName.trim();
-      if (trimmedName === "" || seenNames.has(trimmedName)) {
-        continue;
-      }
-      seenNames.add(trimmedName);
-      neighborhoodNames.push(trimmedName);
-    }
-  }
-
-  return neighborhoodNames;
-}
-
-export function groupNeighborhoodsForSelection(
-  districtGroups: DistrictGroup[],
+/** Selected values that are not in the current catalog (legacy records). */
+export function findUnknownSelectedNeighborhoods(
+  sections: readonly TbilisiNeighborhoodSection[],
   selectedNeighborhoods: readonly string[],
-): NeighborhoodOptionGroups {
-  const catalogNames = collectNeighborhoodNames(districtGroups);
-  const catalogNameSet = new Set(catalogNames);
-
-  const mainNeighborhoods = MAIN_NEIGHBORHOOD_NAMES.filter((neighborhoodName) =>
-    catalogNameSet.has(neighborhoodName),
-  );
-  const otherNeighborhoods = catalogNames.filter(
-    (neighborhoodName) => !MAIN_NEIGHBORHOOD_NAME_SET.has(neighborhoodName),
-  );
-
-  const knownNameSet = new Set([...mainNeighborhoods, ...otherNeighborhoods]);
-  const unknownSelectedNeighborhoods: string[] = [];
-  const seenUnknownNames = new Set<string>();
-
+): string[] {
+  const knownNames = new Set(sections.flatMap((section) => section.neighborhoods));
+  const unknownNames: string[] = [];
   for (const selectedName of selectedNeighborhoods) {
     const trimmedName = selectedName.trim();
-    if (
-      trimmedName === "" ||
-      knownNameSet.has(trimmedName) ||
-      seenUnknownNames.has(trimmedName)
-    ) {
+    if (trimmedName === "" || knownNames.has(trimmedName) || unknownNames.includes(trimmedName)) {
       continue;
     }
-    seenUnknownNames.add(trimmedName);
-    unknownSelectedNeighborhoods.push(trimmedName);
+    unknownNames.push(trimmedName);
   }
-
-  return {
-    mainNeighborhoods,
-    otherNeighborhoods,
-    unknownSelectedNeighborhoods,
-  };
+  return unknownNames;
 }
 
 export function toggleSelectedNeighborhood(

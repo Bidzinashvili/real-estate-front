@@ -11,8 +11,8 @@ import { viewerCanViewClientDetail } from "@/features/databaseList/viewerOwnersh
 import {
   archiveRecordBackLabel,
   isOpenedFromArchiveLocation,
-  recordListHref,
 } from "@/features/lifecycle/archiveNavigation";
+import { navigateBackToRecordList } from "@/features/lifecycle/recordListNavigation";
 import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { ClientDetailsContent } from "./ClientDetailsContent";
 
@@ -50,7 +50,11 @@ export function ClientDetailsView({ clientId }: ClientDetailsViewProps) {
         <button
           type="button"
           onClick={() =>
-            router.push(recordListHref("client", isOpenedFromArchiveLocation()))
+            navigateBackToRecordList(
+              router,
+              "client",
+              isOpenedFromArchiveLocation(),
+            )
           }
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >

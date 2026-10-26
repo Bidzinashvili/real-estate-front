@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { UserPlus, Users } from "lucide-react";
 import type { Agent } from "@/features/agents/types";
 import { PasswordSetBadge } from "@/widgets/Agents/PasswordSetBadge";
+import { Button, buttonVariants } from "@/shared/ui/Button";
+import { cn } from "@/shared/lib/utils";
+import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/PageState";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
+import { surfaceCardClassName } from "@/shared/ui/surfaceStyles";
 
 type AdminAgentsSectionProps = {
   agents: Agent[];
@@ -16,34 +22,42 @@ export function AdminAgentsSection({
   onAddAgent,
 }: AdminAgentsSectionProps) {
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">აგენტები იტვირთება…</p>;
+    return (
+      <section>
+        <SectionHeader title="ჩემი აგენტები" icon={<Users className="h-4 w-4" aria-hidden />} />
+        <LoadingState title="აგენტები იტვირთება…" />
+      </section>
+    );
   }
 
   if (error) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <section>
+        <SectionHeader title="ჩემი აგენტები" icon={<Users className="h-4 w-4" aria-hidden />} />
+        <ErrorState title="აგენტების ჩატვირთვა ვერ მოხერხდა" description={error} />
+      </section>
+    );
   }
 
   return (
-    <section className="mt-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-foreground">ჩემი აგენტები</h2>
-        {onAddAgent && (
-          <button
-            type="button"
-            onClick={onAddAgent}
-            className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
-          >
-            აგენტის დამატება
-          </button>
-        )}
-      </div>
+    <section>
+      <SectionHeader
+        title="ჩემი აგენტები"
+        icon={<Users className="h-4 w-4" aria-hidden />}
+        action={
+          onAddAgent ? (
+            <Button type="button" size="sm" onClick={onAddAgent}>
+              <UserPlus className="h-3.5 w-3.5" aria-hidden />
+              აგენტის დამატება
+            </Button>
+          ) : null
+        }
+      />
 
       {agents.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          აგენტები ჯერ არ გაქვთ.
-        </p>
+        <EmptyState title="აგენტები ჯერ არ გაქვთ." icon={Users} />
       ) : (
-        <div className="overflow-hidden rounded-xl bg-card text-sm shadow-sm ring-1 ring-border">
+        <div className={`overflow-x-auto overflow-hidden text-sm ${surfaceCardClassName}`}>
           <table className="min-w-full border-collapse">
             <thead className="bg-muted text-left text-xs font-medium text-muted-foreground">
               <tr>
@@ -75,7 +89,7 @@ export function AdminAgentsSection({
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/agents/${agent.id}`}
-                      className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white transition hover:bg-primary/90"
+                      className={cn(buttonVariants({ variant: "primary", size: "sm" }))}
                     >
                       ნახვა
                     </Link>
@@ -89,4 +103,3 @@ export function AdminAgentsSection({
     </section>
   );
 }
-

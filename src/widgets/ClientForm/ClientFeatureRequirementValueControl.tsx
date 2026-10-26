@@ -1,35 +1,18 @@
 "use client";
 
-import {
-  CLIENT_PREFERENCE_LABELS,
-  type ClientPreferenceValue,
-} from "@/features/matching/matchingEnums";
+import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { OptionChips } from "@/shared/ui/OptionChips";
-
-const CLIENT_FEATURE_REQUIREMENT_OPTIONS = [
-  { value: "YES" as const, label: CLIENT_PREFERENCE_LABELS.YES },
-  { value: "DOES_NOT_MATTER" as const, label: CLIENT_PREFERENCE_LABELS.DOES_NOT_MATTER },
-];
-
-const CLIENT_LEGACY_REQUIREMENT_NO_OPTION = {
-  value: "NO" as const,
-  label: CLIENT_PREFERENCE_LABELS.NO,
-};
-
-function optionsForClientFeatureRequirement(
-  value: ClientPreferenceValue,
-): ReadonlyArray<{ value: ClientPreferenceValue; label: string }> {
-  if (value === "NO") {
-    return [...CLIENT_FEATURE_REQUIREMENT_OPTIONS, CLIENT_LEGACY_REQUIREMENT_NO_OPTION];
-  }
-  return CLIENT_FEATURE_REQUIREMENT_OPTIONS;
-}
+import {
+  CLIENT_YES_DOES_NOT_MATTER_OPTIONS,
+  CLIENT_YES_DOES_NOT_MATTER_TO_VERIFY_OPTIONS,
+} from "@/widgets/ClientForm/clientRequirementChipOptions";
 
 type ClientFeatureRequirementValueControlProps = {
   id?: string;
   value: ClientPreferenceValue;
   onChange: (next: ClientPreferenceValue) => void;
   disabled?: boolean;
+  includeToVerify?: boolean;
 };
 
 export function ClientFeatureRequirementValueControl({
@@ -37,14 +20,19 @@ export function ClientFeatureRequirementValueControl({
   value,
   onChange,
   disabled = false,
+  includeToVerify = false,
 }: ClientFeatureRequirementValueControlProps) {
+  const options = includeToVerify
+    ? CLIENT_YES_DOES_NOT_MATTER_TO_VERIFY_OPTIONS
+    : CLIENT_YES_DOES_NOT_MATTER_OPTIONS;
+
   return (
     <OptionChips
       id={id}
       aria-label="მოთხოვნა"
       value={value}
       onChange={onChange}
-      options={optionsForClientFeatureRequirement(value)}
+      options={options}
       allowDeselect
       emptyValue="NOT_SET"
       disabled={disabled}

@@ -16,6 +16,7 @@ export const CLIENT_PREFERENCE_LABELS = {
   YES: "კი",
   NO: "არა",
   DOES_NOT_MATTER: "არ აქვს მნიშვნელობა",
+  TO_VERIFY: "გადასამოწმებელია",
   NOT_SET: "არ არის მითითებული",
 } as const;
 

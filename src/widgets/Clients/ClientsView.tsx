@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientsList } from "@/features/clients/useClientsList";
@@ -9,22 +9,23 @@ import { useEffectiveAccessViewer } from "@/features/adminMode/useEffectiveAcces
 import { useCurrentUser } from "@/shared/hooks";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { appendArchiveNavigationSource } from "@/features/lifecycle/archiveNavigation";
+import { rememberRecordListReturn } from "@/features/lifecycle/recordListNavigation";
 import type { Client } from "@/features/clients/types";
 import { ReminderPickerModal } from "@/widgets/Reminders/ReminderPickerModal";
-import { OptionChips } from "@/shared/ui/OptionChips";
-import {
-  DEAL_TYPES,
-  CLIENT_STATUSES,
-  DEAL_TYPE_LABELS,
-  CLIENT_STATUS_LABELS,
-} from "@/features/clients/clientEnums";
+import { EmptyState, ErrorState } from "@/shared/ui/PageState";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { FilterPanel } from "@/shared/ui/FilterPanel";
+import { ListResultsBar } from "@/shared/ui/ListResultsBar";
+import { ListingGridSkeleton } from "@/shared/ui/Skeleton";
+import { Button, buttonVariants } from "@/shared/ui/Button";
+import { cn } from "@/shared/lib/utils";
+import { ChevronDown, ListFilter, Plus, Users } from "lucide-react";
 import type { ClientSortBy, ClientSortOrder } from "@/features/clients/getClientsQuery";
 import {
   buildBudgetFilterParam,
   buildDistrictFilterParam,
   buildStatusFilterParam,
 } from "@/features/clients/getClientsQuery";
-import type { DealType, ClientStatus } from "@/features/clients/clientEnums";
 import { resolveCreatedDateQuery, resolveLastOpenedDateQuery } from "@/features/databaseList/createdDateRange";
 import {
   viewerCanManageRecord,
@@ -34,12 +35,13 @@ import { OnlyMineToggle } from "@/widgets/DatabaseList/OnlyMineToggle";
 import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { ClientListCard } from "@/widgets/Clients/ClientListCard";
-import { NeighborhoodChecklist } from "@/widgets/Districts/NeighborhoodChecklist";
 import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
-import { CreatedAtDateRangeFilter } from "@/widgets/DatabaseList/CreatedAtDateRangeFilter";
-import { AdvancedSearchButton } from "@/widgets/DatabaseList/AdvancedSearchButton";
 import { AdvancedSearchSheet } from "@/widgets/DatabaseList/AdvancedSearchSheet";
-import { NeverOpenedFilter } from "@/widgets/DatabaseList/NeverOpenedFilter";
+import { ClientsListActiveFilterChips } from "@/widgets/Clients/ClientsListActiveFilterChips";
+import {
+  ClientsListFilterFields,
+  ClientsListSortFields,
+} from "@/widgets/Clients/ClientsListFilterFields";
 import { CLIENT_LIST_DEFAULT_LIMIT } from "@/features/clients/clientListUrlParams";
 import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 
@@ -60,22 +62,6 @@ const LAST_OPENED_ORDER_OPTIONS: { value: ClientSortOrder; label: string }[] = [
   { value: "asc", label: NOTE_LAST_OPENED_COPY.sortAsc },
 ];
 
-const DEAL_TYPE_OPTIONS = [
-  { value: "", label: "ყველა გარიგება" },
-  ...DEAL_TYPES.map((dealType) => ({
-    value: dealType,
-    label: DEAL_TYPE_LABELS[dealType],
-  })),
-];
-
-const STATUS_OPTIONS = [
-  { value: "", label: "ყველა სტატუსი" },
-  ...CLIENT_STATUSES.map((clientStatus) => ({
-    value: clientStatus,
-    label: CLIENT_STATUS_LABELS[clientStatus],
-  })),
-];
-
 type ClientsViewProps = {
   listingScope?: "current" | "archived";
 };
@@ -85,11 +71,13 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const { user } = useCurrentUser();
   const accessViewer = useEffectiveAccessViewer();
   const isArchiveScope = listingScope === "archived";
-  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
+  const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [reminderClientId, setReminderClientId] = useState<string | null>(null);
+  const filtersDropdownRef = useRef<HTMLDivElement>(null);
 
   const filters = useClientsListFilters({
-    syncUrl: !isArchiveScope,
+    syncUrl: true,
   });
   const {
     state,
@@ -108,11 +96,38 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
     setOrder,
     setPage,
     toggleOnlyMine,
-    resetAdvancedFilters,
+    resetPanelFilters,
     resetFilters,
-    advancedFilterCount,
+    panelFilterCount,
     hasClearableFilters,
+    hasClearablePanelFilters,
   } = filters;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const syncLayout = () => setIsDesktopLayout(mediaQuery.matches);
+    syncLayout();
+    mediaQuery.addEventListener("change", syncLayout);
+    return () => mediaQuery.removeEventListener("change", syncLayout);
+  }, []);
+
+  useEffect(() => {
+    if (!filtersPanelOpen || !isDesktopLayout) {
+      return;
+    }
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+      if (filtersDropdownRef.current?.contains(target)) {
+        return;
+      }
+      setFiltersPanelOpen(false);
+    }
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => window.removeEventListener("mousedown", handlePointerDown);
+  }, [filtersPanelOpen, isDesktopLayout]);
 
   const createdDates = resolveCreatedDateQuery(state.createdFrom, state.createdTo);
   const lastOpenedDates = resolveLastOpenedDateQuery(
@@ -151,14 +166,6 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const showResults = !error && clients.length > 0;
   const showEmpty = !isLoading && !error && clients.length === 0;
 
-  const handleDealTypeChange = (value: string) => {
-    setDealType(value as DealType | "");
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatus(value as ClientStatus | "");
-  };
-
   const handleSortChange = (value: string) => {
     setSortBy(value as ClientSortBy);
   };
@@ -166,6 +173,44 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
   const handleOrderChange = (value: string) => {
     setOrder(value as ClientSortOrder);
   };
+
+  const filterFieldsProps = {
+    dealType: state.dealType,
+    district: state.district,
+    budgetMinInput: state.budgetMinInput,
+    budgetMaxInput: state.budgetMaxInput,
+    createdFrom: state.createdFrom,
+    createdTo: state.createdTo,
+    status: state.status,
+    lastOpenedFrom: state.lastOpenedFrom,
+    lastOpenedTo: state.lastOpenedTo,
+    neverOpened: state.neverOpened,
+    onDealTypeChange: setDealType,
+    onDistrictChange: setDistrict,
+    onBudgetMinChange: setBudgetMinInput,
+    onBudgetMaxChange: setBudgetMaxInput,
+    onCreatedDateRangeChange: setCreatedDateRange,
+    onStatusChange: setStatus,
+    onLastOpenedDateRangeChange: setLastOpenedDateRange,
+    onNeverOpenedChange: setNeverOpened,
+  };
+
+  const activeFilterChipsProps = {
+    state,
+    onDealTypeChange: setDealType,
+    onDistrictChange: setDistrict,
+    onBudgetMinChange: setBudgetMinInput,
+    onBudgetMaxChange: setBudgetMaxInput,
+    onCreatedDateRangeChange: setCreatedDateRange,
+    onStatusChange: setStatus,
+    onLastOpenedDateRangeChange: setLastOpenedDateRange,
+    onNeverOpenedChange: setNeverOpened,
+    onClearAll: resetPanelFilters,
+    hasClearablePanelFilters,
+  };
+
+  const filtersToggleLabel =
+    panelFilterCount > 0 ? `ფილტრები (${panelFilterCount})` : "ფილტრები";
 
   function canManageClient(client: Client): boolean {
     return viewerCanManageRecord(client, accessViewer);
@@ -177,237 +222,229 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
 
   return (
     <>
-      {isArchiveScope ? null : (
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            კლიენტები და ლიდები
-          </h1>
-          <p className="max-w-md text-sm text-muted-foreground">
-            მართეთ კლიენტები, თვალი ადევნეთ გარიგებებს და განაგრძეთ კომუნიკაცია.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          <Link
-            href="/clients/invite-links"
-            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
-          >
-            მოწვევის ბმულები
-          </Link>
-          <button
-            type="button"
-            onClick={() => router.push("/clients/new")}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
-          >
-            კლიენტის დამატება
-          </button>
-        </div>
-      </div>
+      {isArchiveScope ? (
+        <PageHeader
+          title="არქივი — კლიენტები"
+          description="დაარქივებული კლიენტები და ლიდები."
+          icon={Users}
+          meta={
+            <ActiveNotesCount
+              label={activeNotesLabel}
+              count={activeCount}
+              isMine={isMineScope}
+            />
+          }
+        />
+      ) : (
+        <PageHeader
+          title="კლიენტები და ლიდები"
+          description="მართეთ კლიენტები, თვალი ადევნეთ გარიგებებს და განაგრძეთ კომუნიკაცია."
+          icon={Users}
+          meta={
+            <ActiveNotesCount
+              label={activeNotesLabel}
+              count={activeCount}
+              isMine={isMineScope}
+            />
+          }
+          actions={
+            <>
+              <Link
+                href="/clients/invite-links"
+                className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
+              >
+                მოწვევის ბმულები
+              </Link>
+              <Button type="button" size="sm" onClick={() => router.push("/clients/new")}>
+                <Plus className="h-4 w-4" aria-hidden />
+                ახალი კლიენტი
+              </Button>
+            </>
+          }
+        />
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <ActiveNotesCount
-          label={activeNotesLabel}
-          count={activeCount}
-          isMine={isMineScope}
-        />
-        <OnlyMineToggle isActive={isMineScope} onToggle={toggleOnlyMine} />
-        <AdminModeToggle />
-        <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto">
-          <OptionChips
-            label="სორტირება"
-            aria-label="კლიენტების სორტირება"
-            value={state.sortBy}
-            onChange={handleSortChange}
-            options={SORT_OPTIONS}
-            size="compact"
-          />
-          <OptionChips
-            label="მიმართულება"
-            aria-label="სორტირების მიმართულება"
-            value={state.order}
-            onChange={handleOrderChange}
-            options={
+      <FilterPanel className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          {!isArchiveScope ? (
+            <ActiveNotesCount
+              label={activeNotesLabel}
+              count={activeCount}
+              isMine={isMineScope}
+            />
+          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            <OnlyMineToggle isActive={isMineScope} onToggle={toggleOnlyMine} />
+            <AdminModeToggle />
+          </div>
+          <ClientsListSortFields
+            sortBy={state.sortBy}
+            order={state.order}
+            onSortByChange={handleSortChange}
+            onOrderChange={handleOrderChange}
+            sortOptions={SORT_OPTIONS}
+            orderOptions={
               state.sortBy === "noteLastOpenedAt"
                 ? LAST_OPENED_ORDER_OPTIONS
                 : ORDER_OPTIONS
             }
-            size="compact"
           />
         </div>
-      </div>
 
-      <DatabaseListSearchRow
-        searchValue={state.searchInput}
-        onSearchChange={setSearchInput}
-        searchPlaceholder="მოძებნე სახელით, ID-ით, ნომრით ან სხვა მონაცემით..."
-        searchClearAriaLabel="ძიების გასუფთავება"
-        selectedColors={state.selectedColors}
-        onSelectedColorsChange={setSelectedColors}
-      />
-
-      <div className="flex flex-col gap-3 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
-        <OptionChips
-          label="გარიგების ტიპი"
-          aria-label="გარიგების ტიპით გაფილტვრა"
-          value={state.dealType}
-          onChange={handleDealTypeChange}
-          options={DEAL_TYPE_OPTIONS}
-          size="compact"
-        />
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-muted-foreground">უბანი</p>
-          <NeighborhoodChecklist
-            selectedNeighborhoods={state.district.trim() === "" ? [] : [state.district]}
-            onChange={(nextNeighborhoods) => setDistrict(nextNeighborhoods[0] ?? "")}
-            selectionMode="single"
-            compact
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="number"
-            value={state.budgetMinInput}
-            onChange={(event) => setBudgetMinInput(event.target.value)}
-            placeholder="მინ. ბიუჯეტი"
-            className="h-8 w-32 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
-          <input
-            type="number"
-            value={state.budgetMaxInput}
-            onChange={(event) => setBudgetMaxInput(event.target.value)}
-            placeholder="მაქს. ბიუჯეტი"
-            className="h-8 w-32 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
-          <AdvancedSearchButton
-            appliedCount={advancedFilterCount}
-            onOpen={() => setAdvancedSearchOpen(true)}
-          />
-          {hasClearableFilters ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
+            <DatabaseListSearchRow
+              searchValue={state.searchInput}
+              onSearchChange={setSearchInput}
+              searchPlaceholder="მოძებნე კლიენტები..."
+              searchClearAriaLabel="ძიების გასუფთავება"
+              selectedColors={state.selectedColors}
+              onSelectedColorsChange={setSelectedColors}
+            />
+          </div>
+          <div ref={filtersDropdownRef} className="relative shrink-0">
             <button
               type="button"
-              onClick={() => resetFilters()}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              aria-expanded={filtersPanelOpen}
+              aria-haspopup="dialog"
+              onClick={() => setFiltersPanelOpen((previous) => !previous)}
+              className={cn(
+                "inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted sm:w-auto",
+                filtersPanelOpen && isDesktopLayout ? "border-primary/40 bg-muted/60" : "",
+              )}
             >
-              ყველაფრის გასუფთავება
+              <ListFilter className="h-4 w-4 text-muted-foreground" aria-hidden />
+              {filtersToggleLabel}
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 text-muted-foreground transition",
+                  filtersPanelOpen ? "rotate-180" : "",
+                )}
+                aria-hidden
+              />
             </button>
-          ) : null}
+            {filtersPanelOpen && isDesktopLayout ? (
+              <div
+                className="absolute right-0 z-20 mt-2 w-[min(100vw-2rem,28rem)] rounded-xl border border-border bg-card p-4 shadow-lg ring-1 ring-border"
+                role="dialog"
+                aria-label="კლიენტების ფილტრები"
+              >
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-foreground">ფილტრები</p>
+                  {hasClearablePanelFilters ? (
+                    <button
+                      type="button"
+                      onClick={() => resetPanelFilters()}
+                      className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      გასუფთავება
+                    </button>
+                  ) : null}
+                </div>
+                <ClientsListFilterFields {...filterFieldsProps} />
+              </div>
+            ) : null}
+          </div>
         </div>
-        <CreatedAtDateRangeFilter
-          createdFrom={state.createdFrom}
-          createdTo={state.createdTo}
-          onChange={setCreatedDateRange}
-          compact
-        />
-      </div>
+
+        <ClientsListActiveFilterChips {...activeFilterChipsProps} />
+      </FilterPanel>
 
       <AdvancedSearchSheet
-        open={advancedSearchOpen}
-        title="გაფართოებული ძებნა"
-        appliedCount={advancedFilterCount}
-        onClose={() => setAdvancedSearchOpen(false)}
-        onClear={resetAdvancedFilters}
+        open={filtersPanelOpen && !isDesktopLayout}
+        title="ფილტრები"
+        appliedCount={panelFilterCount}
+        onClose={() => setFiltersPanelOpen(false)}
+        onClear={resetPanelFilters}
         footer={
           <button
             type="button"
-            onClick={() => setAdvancedSearchOpen(false)}
+            onClick={() => setFiltersPanelOpen(false)}
             className="w-full rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
           >
             შედეგების ჩვენება
           </button>
         }
       >
-        <div className="space-y-3">
-          <OptionChips
-            label="სტატუსი"
-            aria-label="სტატუსით გაფილტვრა"
-            value={state.status}
-            onChange={handleStatusChange}
-            options={STATUS_OPTIONS}
-          />
-          <CreatedAtDateRangeFilter
-            createdFrom={state.lastOpenedFrom}
-            createdTo={state.lastOpenedTo}
-            disabled={state.neverOpened}
-            label={NOTE_LAST_OPENED_COPY.filterLabel}
-            fromAriaLabel={NOTE_LAST_OPENED_COPY.filterFromAria}
-            toAriaLabel={NOTE_LAST_OPENED_COPY.filterToAria}
-            onChange={({ createdFrom, createdTo }) =>
-              setLastOpenedDateRange({
-                lastOpenedFrom: createdFrom,
-                lastOpenedTo: createdTo,
-              })
-            }
-          />
-          <NeverOpenedFilter
-            checked={state.neverOpened}
-            onChange={setNeverOpened}
-          />
-        </div>
+        <ClientsListFilterFields {...filterFieldsProps} />
       </AdvancedSearchSheet>
 
-      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
-        {showInitialLoading && (
-          <p className="text-sm text-muted-foreground">კლიენტები იტვირთება…</p>
-        )}
+      <div className="space-y-3">
+        {(showResults || showInitialLoading) && !error ? (
+          <ListResultsBar
+            prefix={isArchiveScope ? "არქივში ნაპოვნია:" : "ნაპოვნია:"}
+            total={total}
+            isLoading={isLoading && clients.length > 0}
+          />
+        ) : null}
 
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
+        {error ? (
+          <ErrorState title="ჩატვირთვა ვერ მოხერხდა" description={error} />
+        ) : null}
 
-        {showEmpty && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              {isArchiveScope ? ARCHIVE_COPY.emptyClients : "შედეგები ვერ მოიძებნა"}
-            </p>
+        {showInitialLoading ? <ListingGridSkeleton count={6} /> : null}
+
+        {showEmpty ? (
+          <EmptyState
+            title={
+              isArchiveScope ? ARCHIVE_COPY.emptyClients : "შედეგები ვერ მოიძებნა"
+            }
+            description={
+              hasClearableFilters
+                ? "სცადეთ ფილტრების შეცვლა ან გასუფთავება."
+                : undefined
+            }
+            icon={Users}
+          >
             {hasClearableFilters ? (
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
+                className="mt-2"
                 onClick={() => resetFilters()}
-                className="text-sm font-medium text-primary hover:underline"
               >
                 ფილტრების გასუფთავება
-              </button>
+              </Button>
+            ) : !isArchiveScope ? (
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3"
+                onClick={() => router.push("/clients/new")}
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                ახალი კლიენტი
+              </Button>
             ) : null}
-          </div>
-        )}
+          </EmptyState>
+        ) : null}
 
-        {showResults && (
-          <>
-            <p className="mb-3 text-xs text-muted-foreground">
-              {isArchiveScope ? "არქივში ნაპოვნია: " : "ნაპოვნია: "}
-              <span className="font-medium text-foreground">{total}</span>
-              {isLoading ? (
-                <span className="ml-2 text-muted-foreground">ახლდება…</span>
-              ) : null}
-            </p>
-            <div className="mt-2 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-5 xl:grid-cols-3 xl:gap-6">
-              {clients.map((client) => (
-                <ClientListCard
-                  key={client.id}
-                  client={client}
-                  isArchiveScope={isArchiveScope}
-                  canManage={canManageClient(client)}
-                  canOpenDetail={canOpenClientDetail(client)}
-                  currentUser={accessViewer}
-                  onOpenDetail={(clientId) => {
-                    const detailHref = `/clients/${clientId}`;
-                    router.push(
-                      isArchiveScope
-                        ? appendArchiveNavigationSource(detailHref)
-                        : detailHref,
-                    );
-                  }}
-                  onOpenReminder={setReminderClientId}
-                  onChanged={refetch}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        {showResults ? (
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-5 xl:grid-cols-3 xl:gap-6">
+            {clients.map((client) => (
+              <ClientListCard
+                key={client.id}
+                client={client}
+                isArchiveScope={isArchiveScope}
+                canManage={canManageClient(client)}
+                canOpenDetail={canOpenClientDetail(client)}
+                currentUser={accessViewer}
+                onOpenDetail={(clientId) => {
+                  rememberRecordListReturn();
+                  const detailHref = `/clients/${clientId}`;
+                  router.push(
+                    isArchiveScope
+                      ? appendArchiveNavigationSource(detailHref)
+                      : detailHref,
+                  );
+                }}
+                onOpenReminder={setReminderClientId}
+                onChanged={refetch}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {!error && total > 0 && (

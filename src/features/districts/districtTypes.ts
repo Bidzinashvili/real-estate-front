@@ -1,6 +1,11 @@
-export interface DistrictGroup {
-  name: string;
+export type TbilisiNeighborhoodSectionKey = "main" | "other" | "surroundings";
+
+export interface TbilisiNeighborhoodSection {
+  key: TbilisiNeighborhoodSectionKey;
+  title: string;
   neighborhoods: string[];
 }
 
-export type DistrictsResponse = DistrictGroup[];
+export interface DistrictsResponse {
+  sections: TbilisiNeighborhoodSection[];
+}

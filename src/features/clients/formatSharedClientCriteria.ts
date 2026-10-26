@@ -1,8 +1,11 @@
-import {
-  DEAL_TYPE_LABELS,
-  type DealType,
-} from "@/features/clients/clientEnums";
+import { formatClientDealIntentLabel } from "@/features/clients/clientDealTypeDisplay";
+import type { DealType } from "@/features/clients/clientEnums";
 import type { Client, ClientRequirements } from "@/features/clients/types";
+import {
+  formatClientBudgetRange,
+  parseClientBudgetCurrency,
+  type ClientBudgetCurrency,
+} from "@/features/clients/clientBudgetCurrency";
 import { formatGeorgianLocative } from "@/shared/i18n/formatGeorgianLocative";
 
 export type CompactStatChip = {
@@ -41,28 +44,20 @@ export function formatRoomsRange(
 export function formatBudgetRange(
   budgetMin: number | null,
   budgetMax: number | null,
+  budgetCurrency?: ClientBudgetCurrency,
 ): string | null {
-  if (budgetMin === null && budgetMax === null) {
-    return null;
-  }
-  const minimumLabel =
-    budgetMin !== null ? budgetMin.toLocaleString() : null;
-  const maximumLabel =
-    budgetMax !== null ? budgetMax.toLocaleString() : null;
-  if (minimumLabel && maximumLabel) {
-    return `${minimumLabel} – ${maximumLabel} ₾`;
-  }
-  if (minimumLabel) {
-    return `${minimumLabel}+ ₾`;
-  }
-  return maximumLabel ? `მდე ${maximumLabel} ₾` : null;
+  return formatClientBudgetRange(
+    budgetMin,
+    budgetMax,
+    parseClientBudgetCurrency(budgetCurrency),
+  );
 }
 
 export function formatSharedClientHeadline(client: {
   dealType: DealType;
   districts: string[];
 }): string {
-  const dealLabel = DEAL_TYPE_LABELS[client.dealType];
+  const dealLabel = formatClientDealIntentLabel(client.dealType);
   const district = client.districts.find((districtName) => districtName.trim() !== "") ?? "";
   const locative = formatGeorgianLocative(district);
   if (locative) {
@@ -119,7 +114,11 @@ export function clientCompactStats(client: Client): CompactStatChip[] {
 
 export function sharedClientCriteriaLines(client: Client): string[] {
   const lines: string[] = [];
-  const budgetLabel = formatBudgetRange(client.budgetMin, client.budgetMax);
+  const budgetLabel = formatBudgetRange(
+    client.budgetMin,
+    client.budgetMax,
+    client.budgetCurrency,
+  );
   if (budgetLabel) {
     lines.push(budgetLabel);
   }

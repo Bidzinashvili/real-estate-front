@@ -126,11 +126,11 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 ];
 
 function itemClassName(isActive: boolean, isDesktopCollapsed: boolean): string {
-  return `flex items-center gap-3 rounded-xl py-2.5 text-sm font-medium transition ${
+  return `flex items-center gap-3 rounded-xl py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
     isDesktopCollapsed ? "lg:justify-center lg:gap-0 lg:px-2" : "px-3"
   } ${
     isActive
-      ? "bg-primary text-primary-foreground shadow-sm"
+      ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/15"
       : "text-muted-foreground hover:bg-muted hover:text-foreground"
   }`;
 }

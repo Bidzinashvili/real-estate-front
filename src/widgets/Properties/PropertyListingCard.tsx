@@ -40,6 +40,9 @@ import { useUpdateHideFromOthers } from "@/features/hideFromOthers/useUpdateHide
 import { ClosedRecordStatChips } from "@/widgets/DatabaseList/ClosedRecordStatChips";
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/Button";
+import { DealTypeBadge } from "@/shared/ui/DealTypeBadge";
+import { surfaceCardInteractiveClassName } from "@/shared/ui/surfaceStyles";
 import { propertyAreaSquareMeters } from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 function formatOwnerLine(property: Property) {
@@ -150,10 +153,9 @@ export function PropertyListingCard({
     <article
       onClick={() => onView(property.id)}
       className={cn(
-        "flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-3xl shadow-sm ring-1 transition-shadow hover:shadow-md",
-        hasCustomColor
-          ? recordColorSurfaceClassName(property.color)
-          : "bg-card ring-border",
+        "flex min-w-0 w-full cursor-pointer flex-col overflow-hidden",
+        surfaceCardInteractiveClassName,
+        hasCustomColor ? recordColorSurfaceClassName(property.color) : "",
       )}
     >
       <div className="relative">
@@ -165,9 +167,7 @@ export function PropertyListingCard({
             alt={generatedTitle}
           />
           <div className="absolute left-3 top-3 z-[15] flex max-w-[calc(100%-3.25rem)] flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
-              {formatDealTypeLabel(property.dealType)}
-            </span>
+            <DealTypeBadge label={formatDealTypeLabel(property.dealType)} />
             <LifecycleStatusBadge
               kind="property"
               status={property.status}
@@ -229,7 +229,7 @@ export function PropertyListingCard({
           </span>
         </div>
 
-        <p className="line-clamp-2 text-lg font-semibold leading-snug text-foreground">
+        <p className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
           {generatedTitle}
         </p>
 
@@ -281,34 +281,36 @@ export function PropertyListingCard({
         />
 
         <div
-          className="space-y-2 pt-1"
+          className="space-y-2 border-t border-border/70 pt-3"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <Button
               type="button"
+              size="sm"
+              className="min-w-[7rem] text-xs"
               onClick={(event) => {
                 event.stopPropagation();
                 onView(property.id);
               }}
-              className="inline-flex h-9 min-w-[7rem] items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
             >
               <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
               ნახვა
-            </button>
+            </Button>
             {canSetReminders && onListingChanged ? (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="icon"
                 onClick={(event) => {
                   event.stopPropagation();
                   setIsReminderPickerOpen(true);
                 }}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition hover:bg-muted"
                 aria-label="შეხსენების დაყენება"
                 title="შეხსენების დაყენება"
               >
                 <Bell className="h-4 w-4" aria-hidden />
-              </button>
+              </Button>
             ) : null}
             {canEditColor && property.color !== undefined ? (
               <RecordColorPicker

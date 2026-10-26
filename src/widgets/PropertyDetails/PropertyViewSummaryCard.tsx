@@ -19,6 +19,8 @@ import { recordColorSurfaceClassName } from "@/features/recordColor/recordColorS
 import { RecordTimestamp } from "@/widgets/RecordTimestamp/RecordTimestamp";
 import { NoteLastOpenedLabel } from "@/widgets/NoteLastOpened/NoteLastOpenedLabel";
 import { cn } from "@/shared/lib/utils";
+import { surfaceCardClassName } from "@/shared/ui/surfaceStyles";
+import { typography } from "@/shared/ui/typography";
 import { hasAuthorizedInternalPrice } from "@/features/properties/authorizedPropertyFields";
 
 type PropertyViewSummaryCardProps = {
@@ -50,17 +52,16 @@ export function PropertyViewSummaryCard({
   return (
     <section
       className={cn(
-        "h-auto overflow-visible rounded-2xl p-5 shadow-sm ring-1 sm:p-6",
+        "h-auto overflow-visible p-5 sm:p-6",
+        surfaceCardClassName,
         isCustomRecordColor(property.color)
           ? recordColorSurfaceClassName(property.color)
-          : "bg-card ring-border",
+          : "",
       )}
     >
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">ფასი</p>
-        <p className="text-3xl font-semibold tracking-tight text-foreground">
-          {publicPrice ?? "—"}
-        </p>
+        <p className={typography.fieldLabel}>ფასი</p>
+        <p className={typography.pricePrimary}>{publicPrice ?? "—"}</p>
         {pricePerSquareMeter !== null ? (
           <p className="text-xs font-medium text-muted-foreground">
             {formatPricePerSquareMeter(pricePerSquareMeter, property.currency)}

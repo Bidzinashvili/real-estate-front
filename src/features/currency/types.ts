@@ -23,6 +23,8 @@ export type UsdRateResponse = {
   rate: number;
   unitRate: number;
   date: string;
+  stale?: boolean;
+  source?: string;
 };
 
 export type ConvertCurrencyResponse = {

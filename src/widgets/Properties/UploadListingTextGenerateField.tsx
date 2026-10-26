@@ -7,7 +7,7 @@ import type { GeneratePublicTextDraft } from "@/features/properties/propertyApiT
 import { useGeneratePublicText } from "@/features/properties/useGeneratePublicText";
 import { ConfirmDialog } from "@/widgets/ConfirmDialog/ConfirmDialog";
 
-type PublicCommentGenerateFieldProps = {
+type UploadListingTextGenerateFieldProps = {
   id: string;
   value: string;
   onChange: (nextValue: string) => void;
@@ -17,7 +17,7 @@ type PublicCommentGenerateFieldProps = {
   rows?: number;
 };
 
-export function PublicCommentGenerateField({
+export function UploadListingTextGenerateField({
   id,
   value,
   onChange,
@@ -25,7 +25,7 @@ export function PublicCommentGenerateField({
   textareaClassName,
   disabled = false,
   rows = 8,
-}: PublicCommentGenerateFieldProps) {
+}: UploadListingTextGenerateFieldProps) {
   const { generateFromDraft, isGenerating, error } = useGeneratePublicText();
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
 
@@ -63,7 +63,7 @@ export function PublicCommentGenerateField({
     <div className="space-y-1.5 sm:col-span-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label htmlFor={id} className="block text-sm font-medium text-foreground">
-          კომენტარი
+          ასატვირთი ტექსტი
         </label>
         <button
           type="button"

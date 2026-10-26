@@ -124,7 +124,7 @@ export function ClientLabelsField({
 
       <div className="space-y-1.5">
         <label htmlFor={customInputId} className="block text-xs font-medium text-muted-foreground">
-          საკუთარი მოთხოვნა
+          მოთხოვნა
         </label>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input

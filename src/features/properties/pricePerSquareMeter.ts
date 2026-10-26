@@ -1,3 +1,4 @@
+import { formatGelDisplayNumber } from "@/features/currency/formatDisplayAmount";
 import { listingCurrencySymbol } from "@/features/currency/types";
 import type { SupportedListingCurrency } from "@/features/currency/types";
 
@@ -24,5 +25,12 @@ export function formatPricePerSquareMeter(
   pricePerSquareMeter: number,
   currency: SupportedListingCurrency = "GEL",
 ): string {
-  return `${pricePerSquareMeter.toLocaleString()} ${listingCurrencySymbol(currency)} / m²`;
+  const formattedAmount =
+    currency === "GEL"
+      ? formatGelDisplayNumber(pricePerSquareMeter)
+      : pricePerSquareMeter.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+  return `${formattedAmount} ${listingCurrencySymbol(currency)} / m²`;
 }

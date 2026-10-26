@@ -36,6 +36,7 @@ import type { SoftDeleteResponse } from "@/features/lifecycle/softDeleteTypes";
 import {
   adminModeSearchParams,
   withRequestedAdminMode,
+  requestedAdminModeHeader,
 } from "@/features/adminMode/requestedAdminModeQuery";
 
 function getAuthHeaders() {
@@ -54,6 +55,7 @@ function getAuthHeaders() {
     baseUrl,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...requestedAdminModeHeader(),
     },
   };
 }

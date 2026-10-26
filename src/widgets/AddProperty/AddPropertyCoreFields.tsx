@@ -27,11 +27,8 @@ import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "@/features/properties/pricePerSquareMeter";
-import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 import { PropertyOwnerPickerSection } from "@/widgets/PropertyOwners/PropertyOwnerPickerSection";
 import type { PropertyOwnerAssignment } from "@/features/propertyOwners/types";
-import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
-import { buildGeneratePublicTextDraftFromCreateForm } from "@/features/properties/generatePublicTextDraft";
 import {
   ListingPriceEquivalentHint,
   parseListingAmountForHint,
@@ -199,18 +196,8 @@ export function AddPropertyCoreFields({
       />
       {isTbilisiCity(form.city) ? (
         <DistrictNeighborhoodPicker
-          value={
-            form.districtGroup || form.district
-              ? {
-                  group: form.districtGroup,
-                  neighborhood: form.district,
-                }
-              : null
-          }
-          onChange={(next) => {
-            updateForm("districtGroup", next?.group ?? "");
-            updateForm("district", next?.neighborhood ?? "");
-          }}
+          value={form.district}
+          onChange={(nextDistrict) => updateForm("district", nextDistrict)}
           error={fieldErrors.district}
         />
       ) : null}
@@ -309,35 +296,6 @@ export function AddPropertyCoreFields({
         ids={form.externalIds}
         onChange={(nextIds) => updateForm("externalIds", nextIds)}
       />
-      <PublicCommentGenerateField
-        id="publicComment"
-        value={form.publicComment}
-        onChange={(nextValue) => updateForm("publicComment", nextValue)}
-        buildDraft={() => buildGeneratePublicTextDraftFromCreateForm(form)}
-        textareaClassName={addPropertyInputClassName()}
-      />
-      <div className="space-y-1.5 sm:col-span-2">
-        <label htmlFor="internalText" className="block text-sm font-medium text-foreground">
-          ატვირთვის ტექსტი
-        </label>
-        <textarea
-          id="internalText"
-          rows={3}
-          value={form.internalText}
-          onChange={(event) => updateForm("internalText", event.target.value)}
-          className={addPropertyInputClassName()}
-        />
-      </div>
-      <div className="sm:col-span-2">
-        <HistoryNoteField
-          id="privateComment"
-          label="კომენტარი ჩემთვის"
-          value={form.privateComment}
-          onChange={(nextValue) => updateForm("privateComment", nextValue)}
-          textareaClassName={addPropertyInputClassName()}
-        />
-      </div>
-
       <div className="sm:col-span-2">
         <ImageUploadField
           images={images}

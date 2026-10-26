@@ -1,19 +1,35 @@
-export function parseIntegerInput(raw: string): number | undefined {
+export function parseIntegerInput(raw: string, allowNegative = false): number | undefined {
   const trimmed = raw.trim();
   if (trimmed === "" || trimmed === "-" || trimmed === "+") {
     return undefined;
   }
 
   const parsed = Number.parseInt(trimmed, 10);
-  return Number.isFinite(parsed) ? parsed : undefined;
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  if (!allowNegative && parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
 }
 
-export function parseDecimalInput(raw: string): number | undefined {
+export function parseDecimalInput(raw: string, allowNegative = false): number | undefined {
   const trimmed = raw.trim();
   if (trimmed === "" || trimmed === "-" || trimmed === "+") {
     return undefined;
   }
 
   const parsed = Number.parseFloat(trimmed);
-  return Number.isFinite(parsed) ? parsed : undefined;
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  if (!allowNegative && parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
 }

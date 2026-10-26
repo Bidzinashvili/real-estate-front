@@ -51,6 +51,7 @@ export type ClientInviteFormSchemaField = {
 export type ClientInviteFormSchemaEnums = {
   DealType?: string[];
   ClientStatus?: string[];
+  ClientPreferenceValue?: string[];
   Renovation?: string[];
   BuildingCondition?: string[];
   KitchenType?: string[];

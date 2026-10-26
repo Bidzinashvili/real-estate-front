@@ -21,10 +21,14 @@ import {
   parseLockedPreference,
   parseLockedRenovations,
   parseLockedStringArray,
-  parseLockedStringNullable,
+  parseLockedPetPreference,
   parseLockState,
   readParallelLock,
 } from "@/features/clients/parseClientApiLocks";
+import {
+  applyAgencySharedClientDetailPrivacy,
+  applyAgencySharedClientPrivacy,
+} from "@/features/clients/agencySharedClientPrivacy";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
 import { parseEntityVerificationFields } from "@/features/lifecycle/parseVerificationFields";
 import { isDealType, parseClientStatus } from "@/features/clients/clientEnums";
@@ -33,6 +37,7 @@ import { parseReminderSummary } from "@/features/reminders/reminderSummary";
 import { parseRecordColor } from "@/features/recordColor/recordColor";
 import { isDatabaseListScope } from "@/features/databaseList/databaseListScope";
 import { readManagingAgentFromRecord } from "@/features/agents/managingAgentSummary";
+import { parseClientBudgetCurrency } from "@/features/clients/clientBudgetCurrency";
 
 function mergeRequirementLock(
   parsedLock: LockState,
@@ -301,32 +306,14 @@ function normalizeRequirements(
   };
 }
 
-function formatPetDisplayValue(raw: JsonValue | undefined): string | null {
-  if (typeof raw === "boolean") {
-    return raw ? "კი" : "არა";
-  }
-  if (typeof raw === "string" && raw.trim() !== "") {
-    return raw;
-  }
-  return null;
-}
-
 function parseClientPetField(raw: JsonValue | undefined): {
-  value: string | null;
+  value: Client["pet"];
   lock: LockState;
 } {
-  if (typeof raw === "boolean") {
-    return { value: formatPetDisplayValue(raw), lock: "none" };
-  }
-  if (isJsonObject(raw) && "value" in raw && "lock" in raw) {
-    const lock = parseLockState(raw.lock) ?? "none";
-    const displayValue = formatPetDisplayValue(raw.value);
-    if (displayValue !== null) {
-      return { value: displayValue, lock };
-    }
-    return parseLockedStringNullable(raw);
-  }
-  return parseLockedStringNullable(raw);
+  const parsedPet = parseLockedPetPreference(raw);
+  const normalizedValue =
+    parsedPet.value === "NOT_SET" ? null : parsedPet.value;
+  return { value: normalizedValue, lock: parsedPet.lock };
 }
 
 function parseClientDealType(value: JsonValue | undefined): Client["dealType"] {
@@ -372,7 +359,7 @@ export function normalizeClient(client: ClientApi): Client {
     ? client.phones.filter((phone): phone is string => typeof phone === "string")
     : [];
 
-  return {
+  const normalizedClient: Client = {
     ...client,
     userId: asString(record.userId),
     ...optionalClientField(
@@ -387,7 +374,16 @@ export function normalizeClient(client: ClientApi): Client {
     ...optionalClientField("hideFromOthers", readOptionalBoolean(record, "hideFromOthers")),
     ...optionalClientField("color", parseRecordColor(record.color)),
     name: asString(record.name),
-    description: asString(record.description),
+    ...optionalClientField(
+      "description",
+      hasOwnJsonField(record, "description") ? asString(record.description) : undefined,
+    ),
+    ...optionalClientField(
+      "publicComment",
+      hasOwnJsonField(record, "publicComment")
+        ? asNullableString(record.publicComment)
+        : undefined,
+    ),
     whatsapp: asNullableString(record.whatsapp),
     dealType: parseClientDealType(record.dealType),
     clientProfileId:
@@ -419,11 +415,13 @@ export function normalizeClient(client: ClientApi): Client {
     budgetMaxLock: persistEntityLock(
       coalesceLock(budgetMax.lock, readParallelLock(record, "budgetMax")),
     ),
+    budgetCurrency: parseClientBudgetCurrency(record.budgetCurrency),
     pet: pet.value,
     petLock: persistEntityLock(coalesceLock(pet.lock, readParallelLock(record, "pet"))),
     relatedPersons: Array.isArray(client.relatedPersons) ? client.relatedPersons : [],
     requirements: normalizeRequirements(record.requirements, record),
     status: parseClientStatus(client.status),
+    propertyId: asNullableString(record.propertyId),
     archivedAt: asNullableString(record.archivedAt),
     createdAt: asString(record.createdAt),
     updatedAt: asString(record.updatedAt),
@@ -433,17 +431,19 @@ export function normalizeClient(client: ClientApi): Client {
     reminderSummary: parseReminderSummary(record.reminderSummary),
     ...parseEntityVerificationFields(record),
   };
+
+  return applyAgencySharedClientPrivacy(normalizedClient);
 }
 
 export function normalizeClientDetail(detail: ClientDetailApi): ClientDetail {
   const base = normalizeClient(detail);
-  return {
+  return applyAgencySharedClientDetailPrivacy({
     ...base,
     comments: Array.isArray(detail.comments) ? detail.comments : [],
     internalComments: Array.isArray(detail.internalComments)
       ? detail.internalComments
       : [],
-  };
+  });
 }
 
 export function normalizeClientsListResponse(

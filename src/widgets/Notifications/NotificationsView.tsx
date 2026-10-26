@@ -1,79 +1,79 @@
 "use client";
 
 import Link from "next/link";
+import { Inbox as InboxIcon } from "lucide-react";
 import { useNotificationsList } from "@/features/notifications/useNotificationsList";
 import { useUserStore } from "@/shared/stores";
 import { formatTbilisiDateTime } from "@/shared/lib/formatDate";
-
+import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/PageState";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { surfaceCardClassName } from "@/shared/ui/surfaceStyles";
 export function NotificationsView() {
   const user = useUserStore((state) => state.user);
   const enabled = user !== null;
   const { notifications, isLoading, error } = useNotificationsList({ enabled });
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          შეტყობინებები
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          სისტემური შეტყობინებები და გადამოწმების მოთხოვნები
-        </p>
-      </div>
+    <div className="flex w-full flex-col gap-6">
+      <PageHeader
+        title="შეტყობინებები"
+        description="სისტემური შეტყობინებები და გადამოწმების მოთხოვნები"
+        icon={InboxIcon}
+      />
 
       {isLoading && notifications.length === 0 ? (
-        <p className="text-sm text-muted-foreground">იტვირთება…</p>
+        <LoadingState title="შეტყობინებები იტვირთება…" />
       ) : null}
 
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+        <ErrorState title="ჩატვირთვა ვერ მოხერხდა" description={error} />
       ) : null}
 
       {!isLoading && !error && notifications.length === 0 ? (
-        <p className="rounded-2xl bg-card px-4 py-8 text-center text-sm text-muted-foreground ring-1 ring-border">
-          ახალი შეტყობინებები არ არის.
-        </p>
+        <EmptyState
+          title="ახალი შეტყობინებები არ არის."
+          icon={InboxIcon}
+        />
       ) : null}
 
-      <ul className="flex flex-col gap-2">
-        {notifications.map((notification) => {
-          const hasPropertyLink = Boolean(notification.propertyId);
-          const content = (
-            <>
-              <p className="text-sm font-medium text-foreground">{notification.message}</p>
-              {notification.createdAt ? (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatTbilisiDateTime(notification.createdAt)}
-                </p>
-              ) : null}
-            </>
-          );
+      {!isLoading && !error && notifications.length > 0 ? (
+        <section>
+          <SectionHeader title="ბოლო შეტყობინებები" />
+          <ul className="flex flex-col gap-2">
+            {notifications.map((notification) => {
+              const hasPropertyLink = Boolean(notification.propertyId);
+              const content = (
+                <>
+                  <p className="text-sm font-medium text-foreground">
+                    {notification.message}
+                  </p>
+                  {notification.createdAt ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatTbilisiDateTime(notification.createdAt)}
+                    </p>
+                  ) : null}
+                </>
+              );
 
-          if (hasPropertyLink && notification.propertyId) {
-            return (
-              <li key={notification.id}>
-                <Link
-                  href={`/properties/${notification.propertyId}`}
-                  className="block rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border transition hover:bg-muted/40"
-                >
-                  {content}
-                </Link>
-              </li>
-            );
-          }
-
-          return (
-            <li
-              key={notification.id}
-              className="rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border"
-            >
-              {content}
-            </li>
-          );
-        })}
-      </ul>
+              return (
+                <li key={notification.id}>
+                  {hasPropertyLink ? (
+                    <Link
+                      href={`/properties/${notification.propertyId}`}
+                      className={`block p-4 transition-colors hover:bg-muted/40 ${surfaceCardClassName}`}
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <div className={`p-4 ${surfaceCardClassName}`}>{content}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

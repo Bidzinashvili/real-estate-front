@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { Bell, Pencil, Trash2 } from "lucide-react";
+import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/PageState";
+import { SectionHeader } from "@/shared/ui/SectionHeader";
+import { surfaceCardClassName } from "@/shared/ui/surfaceStyles";
 import type { DashboardReminderRow } from "@/features/reminders/dashboardReminderNormalizer";
 import { deleteReminder } from "@/features/reminders/remindersApi";
 import { formatReminderDueRelative } from "@/shared/lib/formatReminderDueRelative";
@@ -82,24 +85,37 @@ export function DashboardRemindersSection({
   };
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">შეხსენებები იტვირთება…</p>;
+    return (
+      <section>
+        <SectionHeader title="შეხსენებები" icon={<Bell className="h-4 w-4" aria-hidden />} />
+        <LoadingState title="შეხსენებები იტვირთება…" />
+      </section>
+    );
   }
 
   if (error) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <section>
+        <SectionHeader title="შეხსენებები" icon={<Bell className="h-4 w-4" aria-hidden />} />
+        <ErrorState title="შეხსენებების ჩატვირთვა ვერ მოხერხდა" description={error} />
+      </section>
+    );
   }
 
   return (
-    <section className="mt-8">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-foreground">შეხსენებები</h2>
-        <Link
-          href="/reminders"
-          className="text-xs font-medium text-teal-800 underline-offset-2 hover:underline"
-        >
-          შეხსენებების ცენტრი
-        </Link>
-      </div>
+    <section>
+      <SectionHeader
+        title="შეხსენებები"
+        icon={<Bell className="h-4 w-4" aria-hidden />}
+        action={
+          <Link
+            href="/reminders"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            შეხსენებების ცენტრი
+          </Link>
+        }
+      />
 
       {deleteError ? (
         <p className="mb-2 text-sm text-destructive" role="alert">
@@ -108,9 +124,9 @@ export function DashboardRemindersSection({
       ) : null}
 
       {reminders.length === 0 ? (
-        <p className="text-sm text-muted-foreground">შეხსენებები ჯერ არ არის.</p>
+        <EmptyState title="შეხსენებები ჯერ არ არის." icon={Bell} />
       ) : (
-        <div className="overflow-x-auto overflow-hidden rounded-xl bg-card text-sm shadow-sm ring-1 ring-border">
+        <div className={`overflow-x-auto overflow-hidden text-sm ${surfaceCardClassName}`}>
           <table className="min-w-full border-collapse">
             <thead className="bg-muted text-left text-xs font-medium text-muted-foreground">
               <tr>
@@ -150,14 +166,14 @@ export function DashboardRemindersSection({
                       {row.subjectType === "PROPERTY" ? (
                         <Link
                           href={`/properties/${row.subjectId}`}
-                          className="font-medium text-teal-800 underline-offset-2 hover:underline"
+                          className="font-medium text-primary underline-offset-2 hover:underline"
                         >
                           {row.subjectTitle}
                         </Link>
                       ) : (
                         <Link
                           href={`/clients/${row.subjectId}`}
-                          className="font-medium text-teal-800 underline-offset-2 hover:underline"
+                          className="font-medium text-primary underline-offset-2 hover:underline"
                         >
                           {row.subjectTitle}
                         </Link>

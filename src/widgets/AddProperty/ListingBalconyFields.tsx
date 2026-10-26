@@ -2,6 +2,7 @@
 
 import {
   applyBalconyToVerify,
+  BALCONY_FIELD_LABEL,
   BALCONY_TO_VERIFY_LABEL,
   BALCONY_TOTAL_AREA_PREFIX,
   BALCONY_TOTAL_AREA_SUFFIX,
@@ -15,7 +16,7 @@ import {
   type ListingBalconySelection,
 } from "@/features/properties/listingBalcony";
 import { addPropertyInputClassName } from "@/widgets/AddProperty/addPropertyFormFields";
-import { OptionChips } from "@/shared/ui/OptionChips";
+import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
 import { cn } from "@/shared/lib/utils";
 
 const COUNTER_BUTTON_CLASS_NAME =
@@ -60,8 +61,17 @@ export function ListingBalconyFields({
     });
   }
 
+  const sectionLabelId = `${idPrefix}-balcony-section-label`;
+
   return (
-    <div className="space-y-2 sm:col-span-2">
+    <div
+      className="space-y-2 sm:col-span-2"
+      role="group"
+      aria-labelledby={sectionLabelId}
+    >
+      <p id={sectionLabelId} className={OPTION_CHIPS_FORM_LABEL_CLASS_NAME}>
+        {BALCONY_FIELD_LABEL}
+      </p>
       <OptionChips
         id={`${idPrefix}BalconyToVerify`}
         aria-label={BALCONY_TO_VERIFY_LABEL}

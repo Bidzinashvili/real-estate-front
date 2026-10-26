@@ -9,6 +9,7 @@ import {
   districtsFormValueForCity,
   inferClientCityFromDistricts,
 } from "@/features/clients/clientCities";
+import { clientStatusToFormValue } from "@/features/clients/clientStatusDisplay";
 
 function isoToDatetimeLocal(iso: string | null): string {
   if (!iso) {
@@ -57,9 +58,11 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     whatsapp: client.whatsapp ? normalizeGeorgianPhone(client.whatsapp) : "",
     budgetMin: { value: client.budgetMin ?? undefined, lock: persistEntityLock(client.budgetMinLock ?? "none") },
     budgetMax: { value: client.budgetMax ?? undefined, lock: persistEntityLock(client.budgetMaxLock ?? "none") },
+    budgetCurrency: client.budgetCurrency,
     dealType: client.dealType,
-    description: client.description,
-    pet: { value: client.pet ?? "", lock: persistEntityLock(client.petLock ?? "none") },
+    description: client.description ?? "",
+    publicComment: client.publicComment ?? "",
+    pet: wrapLockedPreference(client.pet ?? undefined, client.petLock),
     city: inferredCity,
     districts: {
       value: districtsFormValueForCity(inferredCity, client.districts),
@@ -67,8 +70,9 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     },
     addresses: { value: client.addresses, lock: persistEntityLock(client.addressesLock ?? "none") },
     labels: { value: client.labels, lock: persistEntityLock(client.labelsLock ?? "none") },
-    status: client.status,
+    status: clientStatusToFormValue(client.status),
     outcomeSource: client.outcomeSource ?? "",
+    outcomePropertyId: client.propertyId ?? "",
     reminderDate: isoToDatetimeLocal(client.reminderDate),
     relatedPersons: client.relatedPersons.map((person) => ({
       name: person.name,
@@ -87,11 +91,11 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
       ? { value: req.excludeLastFloor, lock: persistEntityLock(req.excludeLastFloorLock ?? "none") }
       : { value: false, lock: "none" },
     renovations: {
-      value: req?.renovations ?? [],
+      value: req?.renovations ?? "NOT_SET",
       lock: persistEntityLock(req?.renovationsLock ?? "none"),
     },
     buildingCondition: {
-      value: req?.buildingCondition ?? "",
+      value: req?.buildingCondition ?? "NOT_SET",
       lock: persistEntityLock(req?.buildingConditionLock ?? "none"),
     },
     projectExclude: {
@@ -108,7 +112,7 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     centralHeating: wrapLockedPreference(req?.centralHeating, req?.centralHeatingLock),
     airConditioner: wrapLockedPreference(req?.airConditioner, req?.airConditionerLock),
     kitchenType: {
-      value: req?.kitchenType ?? "",
+      value: req?.kitchenType ?? "NOT_SET",
       lock: persistEntityLock(req?.kitchenTypeLock ?? "none"),
     },
     furnished: wrapLockedPreference(req?.furnished, req?.furnishedLock),

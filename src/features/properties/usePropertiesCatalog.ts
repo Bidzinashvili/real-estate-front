@@ -14,6 +14,7 @@ import type {
   PropertyListSortOrder,
   PropertySortBy,
 } from "@/features/properties/getPropertiesQuery";
+import { listRouteQueryString } from "@/features/databaseList/listRouteSearchParams";
 import {
   countAdvancedCatalogFilters,
   countActiveCatalogFilters,
@@ -362,7 +363,11 @@ export function usePropertiesCatalog(
 
   useEffect(() => {
     if (!syncUrl || !allowUrlReplace.current) return;
-    const nextQs = urlStateSignature(state);
+    const nextQs = listRouteQueryString(
+      pathname,
+      searchParams,
+      propertyCatalogUrlStateToSearchParams(state),
+    );
     if (nextQs === searchParams.toString()) return;
     urlChangeFromReplaceRef.current = true;
     router.replace(nextQs ? `${pathname}?${nextQs}` : pathname, {

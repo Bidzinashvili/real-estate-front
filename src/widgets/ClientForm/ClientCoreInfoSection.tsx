@@ -11,16 +11,17 @@ import {
 } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import type { ClientFormValues } from "@/features/clients/clientFormSchema";
+import { buildClientFormDealTypeOptions } from "@/features/clients/clientDealTypeDisplay";
 import {
-  DEAL_TYPES,
   CLIENT_EDIT_STATUSES,
-  DEAL_TYPE_LABELS,
-  CLIENT_STATUS_LABELS,
-} from "@/features/clients/clientEnums";
+  formatClientStatusLabel,
+} from "@/features/clients/clientStatusDisplay";
+import { ClientOutcomePropertyPicker } from "@/widgets/Clients/ClientOutcomePropertyPicker";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
 import { GeorgianPhoneInput } from "@/shared/components/GeorgianPhoneInput";
 import { GEORGIAN_PHONE_PREFIX } from "@/shared/lib/normalizeGeorgianPhone";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
+import { ClientFeatureRequirementValueControl } from "@/widgets/ClientForm/ClientFeatureRequirementValueControl";
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 import { ClientProfileLookupSignals } from "@/widgets/ClientProfiles/ClientProfileLookupSignals";
@@ -49,6 +50,7 @@ type ClientCoreInfoSectionProps = {
   dealTypeSelectOptions?: EnumSelectOption[];
   clientStatusSelectOptions?: EnumSelectOption[];
   showLockForPath?: (path: string) => boolean;
+  isFieldRequired?: (path: string) => boolean;
 };
 
 export function ClientCoreInfoSection({
@@ -70,21 +72,21 @@ export function ClientCoreInfoSection({
   dealTypeSelectOptions,
   clientStatusSelectOptions,
   showLockForPath = () => true,
+  isFieldRequired = () => false,
 }: ClientCoreInfoSectionProps) {
   const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(false);
   const selectedStatus = useWatch({ control, name: "status" });
+  const watchedOutcomeSource = useWatch({ control, name: "outcomeSource" });
+  const watchedDealType = useWatch({ control, name: "dealType" });
   const watchedPhones = useWatch({ control, name: "phones" }) ?? [];
   const dealOptions =
     dealTypeSelectOptions ??
-    DEAL_TYPES.map((dealType) => ({
-      value: dealType,
-      label: DEAL_TYPE_LABELS[dealType],
-    }));
+    buildClientFormDealTypeOptions(watchedDealType);
   const statusSelectOptions =
     clientStatusSelectOptions ??
     CLIENT_EDIT_STATUSES.map((clientStatus) => ({
       value: clientStatus,
-      label: CLIENT_STATUS_LABELS[clientStatus],
+      label: formatClientStatusLabel(clientStatus),
     }));
 
   return (
@@ -256,12 +258,10 @@ export function ClientCoreInfoSection({
                 name="pet.value"
                 control={control}
                 render={({ field }) => (
-                  <input
-                    type="text"
-                    placeholder="მაგ. ძაღლი, კატა"
-                    value={field.value ?? ""}
-                    onChange={(event) => field.onChange(event.target.value)}
-                    className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                  <ClientFeatureRequirementValueControl
+                    value={field.value}
+                    onChange={field.onChange}
+                    includeToVerify
                   />
                 )}
               />
@@ -325,26 +325,49 @@ export function ClientCoreInfoSection({
         </div>
 
         {showClientStatusField && selectedStatus === "INACTIVE" ? (
-          <div className="space-y-1.5">
-            <p className="text-sm font-medium text-foreground">ვინ დაასრულა</p>
-            <Controller
-              name="outcomeSource"
-              control={control}
-              render={({ field }) => {
-                const selectedOutcome = field.value ?? "";
-                return (
-                  <OutcomeSourcePicker
-                    variant="client"
-                    value={isOutcomeSource(selectedOutcome) ? selectedOutcome : ""}
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium text-foreground">ვინ დააბინავა?</p>
+              <Controller
+                name="outcomeSource"
+                control={control}
+                render={({ field }) => {
+                  const selectedOutcome = field.value ?? "";
+                  return (
+                    <OutcomeSourcePicker
+                      variant="client"
+                      value={isOutcomeSource(selectedOutcome) ? selectedOutcome : ""}
+                      onChange={(nextOutcome) => {
+                        field.onChange(nextOutcome);
+                        if (nextOutcome === "BY_OTHER") {
+                          setValue("outcomePropertyId", "", {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          });
+                        }
+                      }}
+                    />
+                  );
+                }}
+              />
+              {errors.outcomeSource ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.outcomeSource.message}
+                </p>
+              ) : null}
+            </div>
+            {watchedOutcomeSource === "BY_ME" ? (
+              <Controller
+                name="outcomePropertyId"
+                control={control}
+                render={({ field }) => (
+                  <ClientOutcomePropertyPicker
+                    dealType={watchedDealType}
+                    value={field.value ?? ""}
                     onChange={field.onChange}
                   />
-                );
-              }}
-            />
-            {errors.outcomeSource ? (
-              <p className="text-xs text-destructive" role="alert">
-                {errors.outcomeSource.message}
-              </p>
+                )}
+              />
             ) : null}
           </div>
         ) : null}
@@ -355,14 +378,50 @@ export function ClientCoreInfoSection({
           render={({ field }) => (
             <HistoryNoteField
               id="description"
-              label="აღწერა"
-              required
+              label="კომენტარი შენთვის"
+              required={isFieldRequired("description")}
               value={field.value ?? ""}
               onChange={field.onChange}
               error={errors.description?.message}
               hint={fieldDescriptions?.description}
               textareaClassName="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
             />
+          )}
+        />
+
+        <Controller
+          name="publicComment"
+          control={control}
+          render={({ field }) => (
+            <div className="space-y-1.5">
+              <label
+                htmlFor="publicComment"
+                className="block text-sm font-medium text-foreground"
+              >
+                საჯარო კომენტარი
+              </label>
+              <textarea
+                id="publicComment"
+                rows={4}
+                value={field.value ?? ""}
+                onChange={(event) => field.onChange(event.target.value)}
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              />
+              {fieldDescriptions?.publicComment ? (
+                <p className="text-xs text-muted-foreground">
+                  {fieldDescriptions.publicComment}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  ეს შენიშვნა შეიძლება გამოჩნდეს სხვა აგენტებისთვის საერთო კლიენტის ხედში.
+                </p>
+              )}
+              {errors.publicComment?.message ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.publicComment.message}
+                </p>
+              ) : null}
+            </div>
           )}
         />
 

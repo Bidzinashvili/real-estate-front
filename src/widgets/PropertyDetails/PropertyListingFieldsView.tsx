@@ -109,7 +109,7 @@ export function PropertyListingFieldsView({
               label="კომენტარი ჩემთვის"
               value={values.privateComment}
             />
-            <DetailMultiline label="ატვირთვის ტექსტი" value={values.internalText} />
+            <DetailMultiline label="ასატვირთი ტექსტი" value={values.internalText} />
           </>
         ) : null}
       </section>

@@ -25,6 +25,7 @@ export function EditableNumericTextInput({
   inputMode = "decimal",
   placeholder,
   leadingSymbol,
+  allowNegative = false,
 }: {
   label: string;
   value: number | undefined;
@@ -34,6 +35,7 @@ export function EditableNumericTextInput({
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   placeholder?: string;
   leadingSymbol?: string;
+  allowNegative?: boolean;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -61,6 +63,12 @@ export function EditableNumericTextInput({
           autoComplete="off"
           placeholder={placeholder}
           value={display}
+          onWheel={(e) => e.currentTarget.blur()}
+          onKeyDown={(e) => {
+            if (!allowNegative && (e.key === '-' || e.key === 'e' || e.key === 'E')) {
+              e.preventDefault();
+            }
+          }}
           onChange={(event) => {
             const raw = event.target.value;
             setDraft(raw);

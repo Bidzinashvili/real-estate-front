@@ -541,9 +541,3 @@ export function isLifecycleVerificationReminder(
   return isLifecycleReminderId(reminder.id);
 }
 
-export function isAlarmOverlayReminder(reminder: DashboardReminderRow): boolean {
-  if (isLifecycleVerificationReminder(reminder)) {
-    return false;
-  }
-  return isKeepStyleReminder(reminder.reminderVariant) || reminder.actions.canSnooze;
-}

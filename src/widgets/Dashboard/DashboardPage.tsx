@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentUser, useSignOut } from "@/shared/hooks";
 import { useAgentsList } from "@/features/agents/useAgentsList";
@@ -11,6 +12,11 @@ import { useRemindersList } from "@/features/reminders/useRemindersList";
 import { AdminAgentsSection } from "@/widgets/Dashboard/AdminAgentsSection";
 import { AdminPropertiesSection } from "@/widgets/Dashboard/AdminPropertiesSection";
 import { DashboardRemindersSection } from "@/widgets/Dashboard/DashboardRemindersSection";
+import { DashboardAdminAnnouncement } from "@/widgets/Dashboard/DashboardAdminAnnouncement";
+import { DashboardSummaryStrip } from "@/widgets/Dashboard/DashboardSummaryStrip";
+import { DashboardUsdRateCard } from "@/widgets/Dashboard/DashboardUsdRateCard";
+import { DashboardNotificationsPreview } from "@/widgets/Dashboard/DashboardNotificationsPreview";
+import { LoadingState } from "@/shared/ui/PageState";
 
 const DASHBOARD_REMINDERS_QUERY: GetRemindersQuery = {
   timing: "ALL",
@@ -43,25 +49,40 @@ export function DashboardPage() {
     pollIntervalMs: DASHBOARD_REMINDERS_POLL_INTERVAL_MS,
   });
 
+  const dueRemindersCount = useMemo(() => {
+    return reminders.filter((row) => !row.sentAtIso).length;
+  }, [reminders]);
+
   if (!user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">მთავარი იტვირთება…</p>
+        <LoadingState title="მთავარი იტვირთება…" className="w-full max-w-sm" />
       </div>
     );
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-8">
       <DashboardHeader email={user.email} role={user.role} onSignOut={signOut} />
-      <DashboardActions isAdmin={isAdmin} />
+
+      <DashboardAdminAnnouncement isAdmin={isAdmin} />
+
+      <DashboardSummaryStrip role={user.role} dueRemindersCount={dueRemindersCount} />
+
+      <DashboardUsdRateCard />
+
+      <DashboardNotificationsPreview />
+
       <DashboardRemindersSection
         reminders={reminders}
         isLoading={isLoadingReminders}
         error={remindersError}
         onRemindersChanged={() => void refetchReminders()}
       />
-      {isAdmin && (
+
+      <DashboardActions isAdmin={isAdmin} />
+
+      {isAdmin ? (
         <>
           <AdminAgentsSection
             agents={agents}
@@ -75,7 +96,7 @@ export function DashboardPage() {
             error={propertiesError}
           />
         </>
-      )}
-    </>
+      ) : null}
+    </div>
   );
 }

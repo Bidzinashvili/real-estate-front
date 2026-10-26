@@ -1,5 +1,8 @@
+import {
+  formatGelListingLine,
+  formatListingDisplayAmount,
+} from "@/features/currency/formatDisplayAmount";
 import type { SupportedListingCurrency } from "@/features/currency/types";
-import { listingCurrencySymbol } from "@/features/currency/types";
 import { canonicalPropertyArea } from "@/features/properties/propertyArea";
 import {
   formatBuildingAgeTypeLabel,
@@ -49,7 +52,7 @@ export function formatGelAmount(amount: number | null | undefined): string | nul
   if (amount === null || amount === undefined || Number.isNaN(amount)) {
     return null;
   }
-  return `${amount.toLocaleString()} ₾`;
+  return formatGelListingLine(amount);
 }
 
 export function formatListingAmount(
@@ -59,7 +62,7 @@ export function formatListingAmount(
   if (amount === null || amount === undefined || Number.isNaN(amount)) {
     return null;
   }
-  return `${listingCurrencySymbol(currency)} ${amount.toLocaleString()}`;
+  return formatListingDisplayAmount(amount, currency);
 }
 
 export function formatPropertyDateTime(isoTimestamp: string | null | undefined): string | null {

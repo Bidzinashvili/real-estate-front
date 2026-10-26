@@ -5,6 +5,8 @@ import { AddPropertyCommercialSection } from "@/widgets/AddProperty/AddPropertyC
 import { AddPropertyCoreFields } from "@/widgets/AddProperty/AddPropertyCoreFields";
 import { AddPropertyLandPlotSection } from "@/widgets/AddProperty/AddPropertyLandPlotSection";
 import { AddPropertyPrivateHouseSection } from "@/widgets/AddProperty/AddPropertyPrivateHouseSection";
+import { AddPropertyAdditionalInfoSection } from "@/widgets/AddProperty/AddPropertyAdditionalInfoSection";
+import { buildGeneratePublicTextDraftFromCreateForm } from "@/features/properties/generatePublicTextDraft";
 import { useAddPropertyForm } from "@/features/properties/useAddPropertyForm";
 
 export function AddPropertyForm() {
@@ -96,6 +98,16 @@ export function AddPropertyForm() {
               patchCommercial={patchCommercial}
             />
           )}
+
+          <AddPropertyAdditionalInfoSection
+            publicComment={form.publicComment}
+            privateComment={form.privateComment}
+            internalText={form.internalText}
+            onPublicCommentChange={(nextValue) => updateForm("publicComment", nextValue)}
+            onPrivateCommentChange={(nextValue) => updateForm("privateComment", nextValue)}
+            onInternalTextChange={(nextValue) => updateForm("internalText", nextValue)}
+            buildGenerateDraft={() => buildGeneratePublicTextDraftFromCreateForm(form)}
+          />
 
           {(submitError || error) && (
             <p className="whitespace-pre-line text-sm text-destructive" role="alert">

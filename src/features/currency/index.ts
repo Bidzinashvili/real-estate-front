@@ -4,6 +4,12 @@ export {
   getUsdRate,
   type CurrencyRequestOptions,
 } from "@/features/currency/currencyApi";
+export {
+  formatGelDisplayNumber,
+  formatGelListingLine,
+  formatListingDisplayAmount,
+  formatUsdListingLine,
+} from "@/features/currency/formatDisplayAmount";
 export { PriceCurrencyToggle } from "@/features/currency/PriceCurrencyToggle";
 export {
   ListingPriceEquivalentHint,

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fetchCollaborations, fetchAdminCollaborations } from "@/features/collaboration/collaborationApi";
+import { collaborationsChangedEventName } from "@/features/collaboration/collaborationEvents";
 import type {
   CollaborationListQuery,
   CollaborationListResponse,
@@ -95,6 +96,19 @@ export function useCollaborationsList({
     }, pollIntervalMs);
     return () => window.clearInterval(intervalId);
   }, [enabled, pollIntervalMs, loadRows]);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+    const handleCollaborationsChanged = () => {
+      void loadRows(false);
+    };
+    window.addEventListener(collaborationsChangedEventName, handleCollaborationsChanged);
+    return () => {
+      window.removeEventListener(collaborationsChangedEventName, handleCollaborationsChanged);
+    };
+  }, [enabled, loadRows]);
 
   return { data, isLoading, error, refetch };
 }

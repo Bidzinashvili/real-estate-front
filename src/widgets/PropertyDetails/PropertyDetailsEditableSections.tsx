@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import { LabelAutocompleteChipsInput } from "@/features/labels/LabelAutocompleteChipsInput";
-import { useDistricts } from "@/features/districts/useDistricts";
 import type { LabelSelection } from "@/features/labels/labelTypes";
 import type {
   PropertyApartmentUpdate,
@@ -40,13 +38,12 @@ import {
 import { PropertyListingFieldsView } from "@/widgets/PropertyDetails/PropertyListingFieldsView";
 import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
-import { HistoryNoteField } from "@/widgets/HistoryNoteField/HistoryNoteField";
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "@/features/properties/pricePerSquareMeter";
-import { PublicCommentGenerateField } from "@/widgets/Properties/PublicCommentGenerateField";
 import { buildGeneratePublicTextDraftFromEditForm } from "@/features/properties/generatePublicTextDraft";
+import { PropertyFormAdditionalInfoSection } from "@/widgets/PropertyDetails/PropertyFormAdditionalInfoSection";
 import { ListingPriceEquivalentHint } from "@/features/currency/ListingPriceEquivalentHint";
 import { PriceCurrencyToggle } from "@/features/currency/PriceCurrencyToggle";
 import { listingCurrencySymbol } from "@/features/currency/types";
@@ -119,9 +116,6 @@ export function PropertyDetailsEditableSections({
   setCommercial,
   ourSiteId = null,
 }: PropertyDetailsEditableSectionsProps) {
-  const { districts } = useDistricts();
-  const manualDistrictGroupRef = useRef(false);
-  const [selectedDistrictGroup, setSelectedDistrictGroup] = useState("");
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     values.pricePublic,
     getEditableAreaSquareMeters(values),
@@ -135,34 +129,6 @@ export function PropertyDetailsEditableSections({
     hasKnownCity || values.city.trim() === ""
       ? GEORGIAN_CITY_OPTIONS
       : [{ value: values.city, label: values.city }, ...GEORGIAN_CITY_OPTIONS];
-
-  const derivedDistrictGroup = useMemo(() => {
-    if (!showDistrictFields) {
-      return "";
-    }
-
-    for (const districtGroup of districts ?? []) {
-      if (districtGroup.neighborhoods.includes(values.district)) {
-        return districtGroup.name;
-      }
-    }
-
-    return "";
-  }, [districts, showDistrictFields, values.district]);
-
-  useEffect(() => {
-    if (!showDistrictFields) {
-      manualDistrictGroupRef.current = false;
-      setSelectedDistrictGroup("");
-      return;
-    }
-
-    if (manualDistrictGroupRef.current) {
-      return;
-    }
-
-    setSelectedDistrictGroup(derivedDistrictGroup);
-  }, [derivedDistrictGroup, showDistrictFields]);
 
   if (!canEdit) {
     return (
@@ -207,19 +173,8 @@ export function PropertyDetailsEditableSections({
         />
         {showDistrictFields ? (
           <DistrictNeighborhoodPicker
-            value={
-              selectedDistrictGroup || values.district
-                ? {
-                    group: selectedDistrictGroup,
-                    neighborhood: values.district,
-                  }
-                : null
-            }
-            onChange={(next) => {
-              manualDistrictGroupRef.current = true;
-              setSelectedDistrictGroup(next?.group ?? "");
-              onFieldChange("district", next?.neighborhood ?? "");
-            }}
+            value={values.district}
+            onChange={(nextDistrict) => onFieldChange("district", nextDistrict)}
           />
         ) : null}
       </div>
@@ -300,41 +255,6 @@ export function PropertyDetailsEditableSections({
         onChange={onHideFromOthersChange}
       />
 
-      <PublicCommentGenerateField
-        id="publicComment"
-        value={values.publicComment}
-        onChange={(nextValue) => onCommentChange("publicComment", nextValue)}
-        buildDraft={() =>
-          buildGeneratePublicTextDraftFromEditForm(values, ourSiteId)
-        }
-        textareaClassName="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
-        disabled={!canEdit}
-      />
-      {showPrivateNotes ? (
-        <>
-          <HistoryNoteField
-            id="privateComment"
-            label="კომენტარი ჩემთვის"
-            value={values.privateComment}
-            onChange={(nextValue) => onCommentChange("privateComment", nextValue)}
-            textareaClassName="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
-          />
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-foreground">
-              ატვირთვის ტექსტი
-            </label>
-            <textarea
-              value={values.internalText}
-              onChange={(event) =>
-                onCommentChange("internalText", event.target.value)
-              }
-              className="block w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
-              rows={4}
-            />
-          </div>
-        </>
-      ) : null}
-
       {values.apartment && (
         <ApartmentEditSection
           dealType={values.dealType}
@@ -366,6 +286,23 @@ export function PropertyDetailsEditableSections({
           setCommercial={setCommercial}
         />
       )}
+
+      <PropertyFormAdditionalInfoSection
+        publicComment={values.publicComment}
+        privateComment={values.privateComment}
+        internalText={values.internalText}
+        showPrivateNotes={showPrivateNotes}
+        canEdit={canEdit}
+        onPublicCommentChange={(nextValue) => onCommentChange("publicComment", nextValue)}
+        onPrivateCommentChange={(nextValue) =>
+          onCommentChange("privateComment", nextValue)
+        }
+        onInternalTextChange={(nextValue) => onCommentChange("internalText", nextValue)}
+        buildGenerateDraft={() =>
+          buildGeneratePublicTextDraftFromEditForm(values, ourSiteId)
+        }
+        textareaClassName="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground"
+      />
     </>
   );
 }

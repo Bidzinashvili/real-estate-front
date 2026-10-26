@@ -154,6 +154,7 @@ export function PublicClientInviteView({ inviteToken }: PublicClientInviteViewPr
           fieldDescriptions={formSchemaDerived.fieldDescriptions}
           dealTypeSelectOptions={formSchemaDerived.dealTypeSelectOptions}
           showLockForPath={formSchemaDerived.showLockForPath}
+          isFieldRequired={formSchemaDerived.isFieldRequired}
         />
 
         <ClientLocationSection

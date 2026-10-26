@@ -15,10 +15,18 @@ import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { appendArchiveNavigationSource } from "@/features/lifecycle/archiveNavigation";
+import { rememberRecordListReturn } from "@/features/lifecycle/recordListNavigation";
 import { canManageProperty } from "@/features/properties/listingVisibility";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
 import { OptionChips } from "@/shared/ui/OptionChips";
+import { EmptyState, ErrorState } from "@/shared/ui/PageState";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { FilterPanel } from "@/shared/ui/FilterPanel";
+import { ListResultsBar } from "@/shared/ui/ListResultsBar";
+import { ListingGridSkeleton } from "@/shared/ui/Skeleton";
+import { Button } from "@/shared/ui/Button";
+import { LayoutGrid, Plus } from "lucide-react";
 import { NOTE_LAST_OPENED_COPY } from "@/features/noteLastOpened/noteLastOpenedCopy";
 import {
   isPropertyListSortOrder,
@@ -52,7 +60,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
   const accessViewer = useEffectiveAccessViewer();
   const isArchiveScope = listingScope === "archived";
   const catalog = usePropertiesCatalog({
-    syncUrl: !isArchiveScope,
+    syncUrl: true,
     archivedFilter: isArchiveScope,
   });
   const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
@@ -85,6 +93,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
 
   const handleViewProperty = useCallback(
     (propertyId: string) => {
+      rememberRecordListReturn();
       const detailHref = `/properties/${propertyId}`;
       router.push(
         isArchiveScope ? appendArchiveNavigationSource(detailHref) : detailHref,
@@ -113,30 +122,43 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
   }, [catalogPrefetchKey, error, isLoading, properties]);
 
   return (
-    <div className="relative flex flex-col gap-4">
-      <div className="space-y-3">
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-          {isArchiveScope ? null : (
-            <button
-              type="button"
-              onClick={() => router.push("/properties/new")}
-              className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary/90"
-            >
-              განცხადების დამატება
-            </button>
-          )}
+    <div className="relative flex flex-col gap-5">
+      <PageHeader
+        title={isArchiveScope ? "არქივი — განცხადებები" : "განცხადებები"}
+        description={
+          isArchiveScope
+            ? "დაარქივებული განცხადებები. სტატუსი და დეტალები უცვლელი რჩება."
+            : "განცხადებების კატალოგი, ფილტრები და სტატუსების მართვა."
+        }
+        icon={LayoutGrid}
+        meta={
           <ActiveNotesCount
             label={activeNotesLabel}
             count={activeCount}
             isMine={isMineScope}
           />
-          <PropertyCatalogScopeToggle
-            catalog={catalog}
-            isLoggedIn={isLoggedIn}
-            isAuthLoading={isAuthLoading}
-          />
-          <AdminModeToggle />
-          <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto">
+        }
+        actions={
+          isArchiveScope ? null : (
+            <Button type="button" onClick={() => router.push("/properties/new")}>
+              <Plus className="h-4 w-4" aria-hidden />
+              ახალი განცხადება
+            </Button>
+          )
+        }
+      />
+
+      <FilterPanel>
+        <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <PropertyCatalogScopeToggle
+              catalog={catalog}
+              isLoggedIn={isLoggedIn}
+              isAuthLoading={isAuthLoading}
+            />
+            <AdminModeToggle />
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:gap-4 lg:w-auto">
             <OptionChips
               label="სორტირება"
               aria-label="სორტირება"
@@ -177,7 +199,7 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
           catalog={catalog}
           onOpenAdvanced={() => setAdvancedSearchOpen(true)}
         />
-      </div>
+      </FilterPanel>
 
       <PropertyCatalogAdvancedSearch
         catalog={catalog}
@@ -185,60 +207,74 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
         onClose={() => setAdvancedSearchOpen(false)}
       />
 
-      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
-        {showInitialLoading && (
-          <p className="text-sm text-muted-foreground">განცხადებები იტვირთება…</p>
-        )}
+      <div className="space-y-3">
+        {(showResults || showInitialLoading) && !error ? (
+          <ListResultsBar
+            prefix={isArchiveScope ? "არქივში ნაპოვნია:" : "ნაპოვნია:"}
+            total={total}
+            isLoading={isLoading && properties.length > 0}
+          />
+        ) : null}
 
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
+        {error ? (
+          <ErrorState title="ჩატვირთვა ვერ მოხერხდა" description={error} />
+        ) : null}
 
-        {showEmpty && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              {isArchiveScope
+        {showInitialLoading ? <ListingGridSkeleton count={6} /> : null}
+
+        {showEmpty ? (
+          <EmptyState
+            title={
+              isArchiveScope
                 ? ARCHIVE_COPY.emptyProperties
-                : "შედეგები ვერ მოიძებნა"}
-            </p>
+                : "შედეგები ვერ მოიძებნა"
+            }
+            description={
+              hasClearableFilters
+                ? "სცადეთ ფილტრების შეცვლა ან გასუფთავება."
+                : undefined
+            }
+            icon={LayoutGrid}
+          >
             {hasClearableFilters ? (
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
+                className="mt-2"
                 onClick={() => resetFilters()}
-                className="text-sm font-medium text-primary hover:underline"
               >
                 ფილტრების გასუფთავება
-              </button>
+              </Button>
+            ) : !isArchiveScope ? (
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3"
+                onClick={() => router.push("/properties/new")}
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                ახალი განცხადება
+              </Button>
             ) : null}
-          </div>
-        )}
+          </EmptyState>
+        ) : null}
 
-        {showResults && (
-          <>
-            <p className="mb-3 text-xs text-muted-foreground">
-              {isArchiveScope ? "არქივში ნაპოვნია: " : "ნაპოვნია: "}
-              <span className="font-medium text-foreground">{total}</span>
-              {isLoading ? (
-                <span className="ml-2 text-muted-foreground">ახლდება…</span>
-              ) : null}
-            </p>
-            <div className="mt-2 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-5 xl:grid-cols-3 xl:gap-6">
-              {properties.map((property) => (
-                <PropertyListingCard
-                  key={property.id}
-                  property={property}
-                  apiBaseUrl={apiBaseUrl}
-                  onView={handleViewProperty}
-                  canChangeStatus={canChangeListingStatus(property)}
-                  canSetReminders={canChangeListingStatus(property)}
-                  onListingChanged={() => void refetch()}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        {showResults ? (
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-5 xl:grid-cols-3 xl:gap-6">
+            {properties.map((property) => (
+              <PropertyListingCard
+                key={property.id}
+                property={property}
+                apiBaseUrl={apiBaseUrl}
+                onView={handleViewProperty}
+                canChangeStatus={canChangeListingStatus(property)}
+                canSetReminders={canChangeListingStatus(property)}
+                onListingChanged={() => void refetch()}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {!error && total > 0 && (

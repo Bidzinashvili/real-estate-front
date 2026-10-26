@@ -17,9 +17,13 @@ import {
 } from "@/features/clients/clientEnums";
 import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHints";
 import { ClientFeatureRequirementValueControl } from "@/widgets/ClientForm/ClientFeatureRequirementValueControl";
-import { ClientPreferenceValueControl } from "@/widgets/ClientForm/ClientPreferenceValueControl";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
 import { OptionChips } from "@/shared/ui/OptionChips";
+import { CLIENT_REQUIREMENT_PREFERENCE_CHIP_OPTIONS } from "@/widgets/ClientForm/clientRequirementChipOptions";
+import {
+  isRenovationsListValue,
+  type ClientRequirementPreference,
+} from "@/features/clients/clientRequirementValues";
 
 const splitLines = (value: string) =>
   value
@@ -44,16 +48,13 @@ const RANGE_FIELDS = [
 const BOOLEAN_FIELDS = [{ name: "excludeLastFloor" as const, label: "ბოლო სართულის გამოკლებით" }];
 
 const CLIENT_FEATURE_REQUIREMENT_FIELDS = [
-  { name: "parking" as const, label: "პარკინგი" },
-  { name: "airConditioner" as const, label: "კონდიციონერი" },
-  { name: "centralHeating" as const, label: "ცენტრალური გათბობა" },
-] as const;
-
-const OTHER_PREFERENCE_FIELDS = [
-  { name: "hasBalcony" as const, label: "აივანი" },
-  { name: "goodView" as const, label: "კარგი ხედი" },
-  { name: "elevator" as const, label: "ლიფტი" },
-  { name: "furnished" as const, label: "ავეჯით" },
+  { name: "hasBalcony" as const, label: "აივანი", includeToVerify: false },
+  { name: "goodView" as const, label: "ხედი", includeToVerify: false },
+  { name: "elevator" as const, label: "ლიფტი", includeToVerify: true },
+  { name: "parking" as const, label: "პარკინგი", includeToVerify: true },
+  { name: "airConditioner" as const, label: "კონდიციონერი", includeToVerify: true },
+  { name: "centralHeating" as const, label: "ცენტრალური გათბობა", includeToVerify: true },
+  { name: "furnished" as const, label: "ავეჯით", includeToVerify: true },
 ] as const;
 
 type ClientRequirementsSectionProps = {
@@ -296,38 +297,71 @@ export function ClientRequirementsSection({
           <Controller
             name="renovations.value"
             control={control}
-            render={({ field }) => (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {renovationOptions.map((option) => {
-                  const isChecked = field.value.includes(
-                    option.value as (typeof RENOVATION_VALUES)[number],
-                  );
-                  return (
-                    <label
-                      key={option.value}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+            render={({ field }) => {
+              const renovationListValue = isRenovationsListValue(field.value)
+                ? field.value
+                : [];
+              const renovationPreferenceValue: ClientRequirementPreference =
+                isRenovationsListValue(field.value) ? "NOT_SET" : field.value;
+              const showRenovationCheckboxes = isRenovationsListValue(field.value);
+
+              return (
+                <div className="space-y-3">
+                  <OptionChips
+                    aria-label="რემონტის სტატუსი"
+                    value={renovationPreferenceValue}
+                    onChange={(nextPreference) => field.onChange(nextPreference)}
+                    options={CLIENT_REQUIREMENT_PREFERENCE_CHIP_OPTIONS}
+                    allowDeselect
+                    emptyValue="NOT_SET"
+                  />
+                  {showRenovationCheckboxes ? (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {renovationOptions.map((option) => {
+                        const isChecked = renovationListValue.includes(
+                          option.value as (typeof RENOVATION_VALUES)[number],
+                        );
+                        return (
+                          <label
+                            key={option.value}
+                            className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(event) => {
+                                const optionValue =
+                                  option.value as (typeof RENOVATION_VALUES)[number];
+                                if (event.target.checked) {
+                                  field.onChange([...renovationListValue, optionValue]);
+                                  return;
+                                }
+                                const nextList = renovationListValue.filter(
+                                  (currentValue) => currentValue !== optionValue,
+                                );
+                                field.onChange(nextList.length > 0 ? nextList : "NOT_SET");
+                              }}
+                              className="h-4 w-4 rounded border-border text-foreground"
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {!showRenovationCheckboxes &&
+                  renovationPreferenceValue === "NOT_SET" ? (
+                    <button
+                      type="button"
+                      onClick={() => field.onChange([])}
+                      className="text-xs font-medium text-primary hover:underline"
                     >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(event) => {
-                          const optionValue = option.value as (typeof RENOVATION_VALUES)[number];
-                          if (event.target.checked) {
-                            field.onChange([...field.value, optionValue]);
-                            return;
-                          }
-                          field.onChange(
-                            field.value.filter((currentValue) => currentValue !== optionValue),
-                          );
-                        }}
-                        className="h-4 w-4 rounded border-border text-foreground"
-                      />
-                      <span>{option.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
+                      კონკრეტული რემონტის არჩევა
+                    </button>
+                  ) : null}
+                </div>
+              );
+            }}
           />
           {fieldDescriptions?.renovations || fieldDescriptions?.renovation ? (
             <p className="text-xs text-muted-foreground">
@@ -358,12 +392,14 @@ export function ClientRequirementsSection({
               render={({ field }) => (
                 <OptionChips
                   aria-label="კორპუსი"
-                  value={field.value ?? ""}
+                  value={field.value}
                   onChange={field.onChange}
                   options={[
-                    { value: "", label: "ნებისმიერი" },
+                    ...CLIENT_REQUIREMENT_PREFERENCE_CHIP_OPTIONS,
                     ...buildingOptions,
                   ]}
+                  allowDeselect
+                  emptyValue="NOT_SET"
                 />
               )}
             />
@@ -391,12 +427,14 @@ export function ClientRequirementsSection({
               render={({ field }) => (
                 <OptionChips
                   aria-label="სამზარეულოს ტიპი"
-                  value={field.value ?? ""}
+                  value={field.value}
                   onChange={field.onChange}
                   options={[
-                    { value: "", label: "ნებისმიერი" },
+                    ...CLIENT_REQUIREMENT_PREFERENCE_CHIP_OPTIONS,
                     ...kitchenOptions,
                   ]}
+                  allowDeselect
+                  emptyValue="NOT_SET"
                 />
               )}
             />
@@ -475,7 +513,7 @@ export function ClientRequirementsSection({
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {CLIENT_FEATURE_REQUIREMENT_FIELDS.map(({ name, label }) => (
+          {CLIENT_FEATURE_REQUIREMENT_FIELDS.map(({ name, label, includeToVerify }) => (
             <div key={name} className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <label className="block flex-1 text-sm font-medium text-foreground">{label}</label>
@@ -496,35 +534,7 @@ export function ClientRequirementsSection({
                   <ClientFeatureRequirementValueControl
                     value={field.value}
                     onChange={field.onChange}
-                  />
-                )}
-              />
-              {fieldDescriptions?.[name] ? (
-                <p className="text-xs text-muted-foreground">{fieldDescriptions[name]}</p>
-              ) : null}
-            </div>
-          ))}
-          {OTHER_PREFERENCE_FIELDS.map(({ name, label }) => (
-            <div key={name} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <label className="block flex-1 text-sm font-medium text-foreground">{label}</label>
-                {showLockForPath(name) ? (
-                  <Controller
-                    name={`${name}.lock`}
-                    control={control}
-                    render={({ field }) => (
-                      <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
-                    )}
-                  />
-                ) : null}
-              </div>
-              <Controller
-                name={`${name}.value`}
-                control={control}
-                render={({ field }) => (
-                  <ClientPreferenceValueControl
-                    value={field.value}
-                    onChange={field.onChange}
+                    includeToVerify={includeToVerify}
                   />
                 )}
               />

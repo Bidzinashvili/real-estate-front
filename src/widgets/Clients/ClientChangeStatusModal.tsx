@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { updateClient } from "@/features/clients/api";
+import type { UpdateClientPayload } from "@/features/clients/clientApi.types";
+import { isClientStatus, type ClientStatus } from "@/features/clients/clientEnums";
 import {
   CLIENT_EDIT_STATUSES,
-  CLIENT_STATUS_LABELS,
-  isClientStatus,
-  type ClientStatus,
-} from "@/features/clients/clientEnums";
+  formatClientStatusLabel,
+  normalizeClientStatusForApi,
+} from "@/features/clients/clientStatusDisplay";
 import type { Client } from "@/features/clients/types";
 import type { OutcomeSource } from "@/features/lifecycle/lifecycleEnums";
+import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 import { OptionChips } from "@/shared/ui/OptionChips";
+import { ClientOutcomePropertyPicker } from "@/widgets/Clients/ClientOutcomePropertyPicker";
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 
 type ClientChangeStatusModalProps = {
@@ -21,6 +24,36 @@ type ClientChangeStatusModalProps = {
   onSaved: () => void;
 };
 
+function buildStatusChangePayload(args: {
+  client: Client;
+  selectedStatus: ClientStatus;
+  outcomeSource: OutcomeSource | "";
+  outcomePropertyId: string;
+}): UpdateClientPayload {
+  const patch: UpdateClientPayload = {
+    status: normalizeClientStatusForApi(args.selectedStatus),
+  };
+
+  if (args.selectedStatus !== "INACTIVE" || !isOutcomeSource(args.outcomeSource)) {
+    return patch;
+  }
+
+  patch.outcomeSource = args.outcomeSource;
+
+  if (args.outcomeSource === "BY_OTHER") {
+    return patch;
+  }
+
+  const trimmedPropertyId = args.outcomePropertyId.trim();
+  if (trimmedPropertyId !== "") {
+    patch.propertyId = trimmedPropertyId;
+  } else if (args.client.propertyId) {
+    patch.propertyId = null;
+  }
+
+  return patch;
+}
+
 export function ClientChangeStatusModal({
   open,
   client,
@@ -29,22 +62,27 @@ export function ClientChangeStatusModal({
 }: ClientChangeStatusModalProps) {
   const statusOptions = useMemo(() => {
     const selectable: ClientStatus[] = [...CLIENT_EDIT_STATUSES];
-    if (!selectable.includes(client.status)) {
-      return [client.status, ...selectable];
+    const normalizedCurrent = normalizeClientStatusForApi(client.status);
+    if (!selectable.includes(normalizedCurrent as (typeof CLIENT_EDIT_STATUSES)[number])) {
+      return [normalizedCurrent, ...selectable];
     }
     return selectable;
   }, [client.status]);
-  const [selectedStatus, setSelectedStatus] = useState<ClientStatus>(client.status);
+  const [selectedStatus, setSelectedStatus] = useState<ClientStatus>(
+    normalizeClientStatusForApi(client.status),
+  );
   const [outcomeSource, setOutcomeSource] = useState<OutcomeSource | "">(
     client.outcomeSource ?? "",
   );
+  const [outcomePropertyId, setOutcomePropertyId] = useState(client.propertyId ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    setSelectedStatus(client.status);
+    setSelectedStatus(normalizeClientStatusForApi(client.status));
     setOutcomeSource(client.outcomeSource ?? "");
+    setOutcomePropertyId(client.propertyId ?? "");
     setFormError(null);
   }, [client, open]);
 
@@ -72,19 +110,28 @@ export function ClientChangeStatusModal({
       return;
     }
 
-    if (selectedStatus === client.status && selectedStatus !== "INACTIVE") {
+    const normalizedCurrent = normalizeClientStatusForApi(client.status);
+    const outcomeUnchanged =
+      selectedStatus !== "INACTIVE" ||
+      (outcomeSource === (client.outcomeSource ?? "") &&
+        outcomePropertyId === (client.propertyId ?? ""));
+
+    if (selectedStatus === normalizedCurrent && outcomeUnchanged) {
       setFormError("შესანახი ცვლილება არ არის.");
       return;
     }
 
     setIsSaving(true);
     try {
-      await updateClient(client.id, {
-        status: selectedStatus,
-        ...(selectedStatus === "INACTIVE"
-          ? { outcomeSource: outcomeSource as OutcomeSource }
-          : {}),
-      });
+      await updateClient(
+        client.id,
+        buildStatusChangePayload({
+          client,
+          selectedStatus,
+          outcomeSource,
+          outcomePropertyId,
+        }),
+      );
       onSaved();
       onClose();
     } catch (error) {
@@ -117,23 +164,38 @@ export function ClientChangeStatusModal({
             value={selectedStatus}
             onChange={(rawStatus) => {
               if (isClientStatus(rawStatus)) {
-                setSelectedStatus(rawStatus);
+                setSelectedStatus(normalizeClientStatusForApi(rawStatus));
               }
             }}
             options={statusOptions.map((status) => ({
               value: status,
-              label: CLIENT_STATUS_LABELS[status],
+              label: formatClientStatusLabel(status),
             }))}
           />
           {selectedStatus === "INACTIVE" ? (
-            <div>
-              <p className="mb-1 text-xs font-medium text-muted-foreground">ვინ დაასრულა</p>
-              <OutcomeSourcePicker
-                value={outcomeSource}
-                onChange={setOutcomeSource}
-                variant="client"
-                disabled={isSaving}
-              />
+            <div className="space-y-4">
+              <div>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">ვინ დააბინავა?</p>
+                <OutcomeSourcePicker
+                  value={outcomeSource}
+                  onChange={(nextOutcome) => {
+                    setOutcomeSource(nextOutcome);
+                    if (nextOutcome === "BY_OTHER") {
+                      setOutcomePropertyId("");
+                    }
+                  }}
+                  variant="client"
+                  disabled={isSaving}
+                />
+              </div>
+              {outcomeSource === "BY_ME" ? (
+                <ClientOutcomePropertyPicker
+                  dealType={client.dealType}
+                  value={outcomePropertyId}
+                  onChange={setOutcomePropertyId}
+                  disabled={isSaving}
+                />
+              ) : null}
             </div>
           ) : null}
         </div>

@@ -13,6 +13,12 @@ import {
   KITCHEN_TYPES,
   RENOVATION_VALUES,
 } from "@/features/clients/clientEnums";
+import type {
+  ClientBuildingConditionRequirement,
+  ClientKitchenTypeRequirement,
+  ClientRenovationsRequirement,
+} from "@/features/clients/clientRequirementValues";
+import { isClientRequirementPreference } from "@/features/clients/clientRequirementValues";
 
 export function parseLockState(value: JsonValue | undefined): LockState | undefined {
   if (typeof value !== "string") {
@@ -176,45 +182,42 @@ export function parseLockedBoolean(raw: JsonValue | undefined, fallback: boolean
   return { value: fallback, lock: "none" };
 }
 
+function parseRenovationsInnerValue(inner: JsonValue | undefined): ClientRenovationsRequirement {
+  if (Array.isArray(inner)) {
+    return inner.filter(
+      (item): item is Renovation =>
+        typeof item === "string" && (RENOVATION_VALUES as readonly string[]).includes(item),
+    );
+  }
+  if (typeof inner === "string") {
+    if (isClientRequirementPreference(inner)) {
+      return inner;
+    }
+    if ((RENOVATION_VALUES as readonly string[]).includes(inner)) {
+      return [inner as Renovation];
+    }
+  }
+  return "NOT_SET";
+}
+
 export function parseLockedRenovations(raw: JsonValue | undefined): {
-  value: Renovation[];
+  value: ClientRenovationsRequirement;
   lock: LockState;
 } {
   if (Array.isArray(raw)) {
     return {
-      value: raw.filter(
-        (item): item is Renovation =>
-          typeof item === "string" &&
-          (RENOVATION_VALUES as readonly string[]).includes(item),
-      ),
+      value: parseRenovationsInnerValue(raw),
       lock: "none",
     };
   }
   if (isLockedObject(raw)) {
     const lock = persistEntityLock(parseLockState(raw.lock) ?? "none");
-    const inner = raw.value;
-    if (Array.isArray(inner)) {
-      return {
-        value: inner.filter(
-          (item): item is Renovation =>
-            typeof item === "string" &&
-            (RENOVATION_VALUES as readonly string[]).includes(item),
-        ),
-        lock,
-      };
-    }
-    if (
-      typeof inner === "string" &&
-      (RENOVATION_VALUES as readonly string[]).includes(inner)
-    ) {
-      return { value: [inner as Renovation], lock };
-    }
-    return { value: [], lock };
+    return { value: parseRenovationsInnerValue(raw.value), lock };
   }
-  if (typeof raw === "string" && (RENOVATION_VALUES as readonly string[]).includes(raw)) {
-    return { value: [raw as Renovation], lock: "none" };
+  if (typeof raw === "string") {
+    return { value: parseRenovationsInnerValue(raw), lock: "none" };
   }
-  return { value: [], lock: "none" };
+  return { value: "NOT_SET", lock: "none" };
 }
 
 export function parseLockedPreference(raw: JsonValue | undefined): {
@@ -235,55 +238,82 @@ export function parseLockedPreference(raw: JsonValue | undefined): {
   return { value: "NOT_SET", lock: "none" };
 }
 
+function parseBuildingConditionInnerValue(
+  inner: JsonValue | undefined,
+): ClientBuildingConditionRequirement {
+  if (inner === null || inner === undefined) {
+    return "NOT_SET";
+  }
+  if (typeof inner !== "string") {
+    return "NOT_SET";
+  }
+  if (isClientRequirementPreference(inner)) {
+    return inner;
+  }
+  if ((BUILDING_CONDITIONS as readonly string[]).includes(inner)) {
+    return inner as BuildingCondition;
+  }
+  return "NOT_SET";
+}
+
 export function parseLockedBuildingCondition(raw: JsonValue | undefined): {
-  value: BuildingCondition | null;
+  value: ClientBuildingConditionRequirement;
   lock: LockState;
 } {
   if (raw === null || raw === undefined) {
-    return { value: null, lock: "none" };
+    return { value: "NOT_SET", lock: "none" };
   }
-  if (typeof raw === "string" && (BUILDING_CONDITIONS as readonly string[]).includes(raw)) {
-    return { value: raw as BuildingCondition, lock: "none" };
+  if (typeof raw === "string") {
+    return { value: parseBuildingConditionInnerValue(raw), lock: "none" };
   }
   if (isLockedObject(raw)) {
     const lock = parseLockState(raw.lock) ?? "none";
-    const inner = raw.value;
-    if (inner === null || inner === undefined) {
-      return { value: null, lock };
-    }
-    if (
-      typeof inner === "string" &&
-      (BUILDING_CONDITIONS as readonly string[]).includes(inner)
-    ) {
-      return { value: inner as BuildingCondition, lock };
-    }
-    return { value: null, lock };
+    return { value: parseBuildingConditionInnerValue(raw.value), lock };
   }
-  return { value: null, lock: "none" };
+  return { value: "NOT_SET", lock: "none" };
+}
+
+function parseKitchenTypeInnerValue(inner: JsonValue | undefined): ClientKitchenTypeRequirement {
+  if (inner === null || inner === undefined) {
+    return "NOT_SET";
+  }
+  if (typeof inner !== "string") {
+    return "NOT_SET";
+  }
+  if (isClientRequirementPreference(inner)) {
+    return inner;
+  }
+  if ((KITCHEN_TYPES as readonly string[]).includes(inner)) {
+    return inner as KitchenType;
+  }
+  return "NOT_SET";
 }
 
 export function parseLockedKitchenType(raw: JsonValue | undefined): {
-  value: KitchenType | null;
+  value: ClientKitchenTypeRequirement;
   lock: LockState;
 } {
   if (raw === null || raw === undefined) {
-    return { value: null, lock: "none" };
+    return { value: "NOT_SET", lock: "none" };
   }
-  if (typeof raw === "string" && (KITCHEN_TYPES as readonly string[]).includes(raw)) {
-    return { value: raw as KitchenType, lock: "none" };
+  if (typeof raw === "string") {
+    return { value: parseKitchenTypeInnerValue(raw), lock: "none" };
   }
   if (isLockedObject(raw)) {
     const lock = parseLockState(raw.lock) ?? "none";
-    const inner = raw.value;
-    if (inner === null || inner === undefined) {
-      return { value: null, lock };
-    }
-    if (typeof inner === "string" && (KITCHEN_TYPES as readonly string[]).includes(inner)) {
-      return { value: inner as KitchenType, lock };
-    }
-    return { value: null, lock };
+    return { value: parseKitchenTypeInnerValue(raw.value), lock };
   }
-  return { value: null, lock: "none" };
+  return { value: "NOT_SET", lock: "none" };
+}
+
+export function parseLockedPetPreference(raw: JsonValue | undefined): {
+  value: ClientPreferenceValue;
+  lock: LockState;
+} {
+  if (typeof raw === "boolean") {
+    return { value: raw ? "YES" : "NO", lock: "none" };
+  }
+  return parseLockedPreference(raw);
 }
 
 export function parseLockedStringArrayList(raw: JsonValue | undefined): {

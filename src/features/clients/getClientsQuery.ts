@@ -140,8 +140,13 @@ export function buildStatusFilterParam(
   if (status === "" || !isClientStatus(status)) {
     return undefined;
   }
+  const normalizedStatus =
+    status === "IN_PROGRESS" ? ("NEEDS_VERIFICATION" as ClientStatus) : status;
+  if (normalizedStatus === "ARCHIVED") {
+    return undefined;
+  }
   return {
-    value: status,
+    value: normalizedStatus,
     lock: DEFAULT_CLIENT_LIST_FILTER_LOCK,
   };
 }

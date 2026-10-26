@@ -10,9 +10,13 @@ export async function fetchDistricts(
 
   try {
     const response = await axios.get<DistrictsResponse>(`${baseUrl}/districts`, {
+      params: { format: "sections" },
       signal,
     });
 
+    if (!Array.isArray(response.data?.sections)) {
+      throw new Error("უბნების ჩატვირთვა ვერ მოხერხდა: სერვერის ძველი ვერსია.");
+    }
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {

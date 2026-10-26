@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
+import { requestedAdminModeHeader } from "@/features/adminMode/requestedAdminModeQuery";
 
 const AUTH_TOKEN_KEY = "authToken";
 const AUTH_COOKIE_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
@@ -99,7 +100,7 @@ export function requireApiBaseUrl(): string {
 
 export function getBearerAuthContext(): {
   baseUrl: string;
-  headers: { Authorization: string };
+  headers: { Authorization: string; [key: string]: string };
 } {
   const baseUrl = requireApiBaseUrl();
   const token = getStoredAuthToken();
@@ -110,6 +111,7 @@ export function getBearerAuthContext(): {
     baseUrl,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...requestedAdminModeHeader(),
     },
   };
 }

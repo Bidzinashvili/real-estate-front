@@ -3,6 +3,11 @@ import {
   BUILDING_CONDITION_LABELS,
   KITCHEN_TYPE_LABELS,
 } from "@/features/clients/clientEnums";
+import {
+  formatBuildingConditionRequirementDisplay,
+  formatKitchenTypeRequirementDisplay,
+  formatRenovationsRequirementDisplay,
+} from "@/features/clients/clientRequirementValues";
 import type { LockState } from "@/features/clients/clientApi.types";
 import type { ClientRequirements } from "@/features/clients/types";
 import { ClientDetailsLockBadge } from "@/widgets/ClientDetails/ClientDetailsLockBadge";
@@ -95,23 +100,20 @@ export function ClientDetailsRequirementsSection({
         />
         <ClientDetailsRequirementRow
           label="რემონტი"
-          value={
-            (req.renovations ?? []).length > 0
-              ? (req.renovations ?? []).map((renovation) => RENOVATION_LABELS[renovation]).join(", ")
-              : null
-          }
+          value={formatRenovationsRequirementDisplay(req.renovations, RENOVATION_LABELS)}
           {...rowLockProps("renovations", req.renovationsLock)}
         />
         <ClientDetailsRequirementRow
           label="კორპუსი"
-          value={
-            req.buildingCondition ? BUILDING_CONDITION_LABELS[req.buildingCondition] : null
-          }
+          value={formatBuildingConditionRequirementDisplay(
+            req.buildingCondition,
+            BUILDING_CONDITION_LABELS,
+          )}
           {...rowLockProps("buildingCondition", req.buildingConditionLock)}
         />
         <ClientDetailsRequirementRow
           label="სამზარეულოს ტიპი"
-          value={req.kitchenType ? KITCHEN_TYPE_LABELS[req.kitchenType] : null}
+          value={formatKitchenTypeRequirementDisplay(req.kitchenType, KITCHEN_TYPE_LABELS)}
           {...rowLockProps("kitchenType", req.kitchenTypeLock)}
         />
         <ClientDetailsRequirementRow

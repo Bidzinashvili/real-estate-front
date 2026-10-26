@@ -184,7 +184,9 @@ export interface ClientMatchSummary {
   addresses: string[];
   budgetMin: number | null;
   budgetMax: number | null;
+  budgetCurrency?: "GEL" | "USD";
   pet: boolean;
+  publicComment?: string | null;
   ownedByViewer?: boolean;
   requirements: {
     minRooms: number | null;

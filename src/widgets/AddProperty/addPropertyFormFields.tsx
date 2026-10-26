@@ -22,6 +22,7 @@ type FieldProps = {
   placeholder?: string;
   name?: string;
   leadingSymbol?: string;
+  allowNegative?: boolean;
 };
 
 export function TextField({
@@ -37,7 +38,10 @@ export function TextField({
   placeholder,
   name,
   leadingSymbol,
+  allowNegative = false,
 }: FieldProps) {
+  const isNumberInput = type === "number";
+
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
@@ -57,6 +61,13 @@ export function TextField({
           required={required}
           readOnly={readOnly}
           placeholder={placeholder}
+          min={isNumberInput && !allowNegative ? "0" : undefined}
+          onWheel={isNumberInput ? (e) => e.currentTarget.blur() : undefined}
+          onKeyDown={isNumberInput && !allowNegative ? (e) => {
+            if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+              e.preventDefault();
+            }
+          } : undefined}
           onChange={readOnly ? undefined : (event) => onChange(event.target.value)}
           onBlur={readOnly ? undefined : onBlur}
           className={`${addPropertyInputClassName(leadingSymbol ? "pl-8 pr-3" : "px-3")} ${error ? "border-destructive focus:border-destructive" : ""} ${readOnly ? "cursor-default bg-muted text-foreground" : ""}`}

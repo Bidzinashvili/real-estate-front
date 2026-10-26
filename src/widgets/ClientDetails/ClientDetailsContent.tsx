@@ -43,8 +43,8 @@ import {
   archiveRecordBackLabel,
   carryArchiveNavigation,
   isOpenedFromArchiveLocation,
-  recordListHref,
 } from "@/features/lifecycle/archiveNavigation";
+import { navigateBackToRecordList } from "@/features/lifecycle/recordListNavigation";
 import { useOpenedFromArchive } from "@/features/lifecycle/useOpenedFromArchive";
 import { useArchiveAction } from "@/features/lifecycle/useArchiveAction";
 import { useSoftDeleteAction } from "@/features/lifecycle/useSoftDeleteAction";
@@ -127,6 +127,11 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
   const [internalComments, setInternalComments] = useState<Comment[]>(
     client.internalComments ?? [],
   );
+
+  useEffect(() => {
+    setPublicComments(client.comments ?? []);
+    setInternalComments(client.internalComments ?? []);
+  }, [client.id, client.comments, client.internalComments]);
 
   const handleAddComment = async (text: string) => {
     setPublicCommentDeleteError(null);
@@ -260,11 +265,10 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
           openedFromArchive || isClientArchived(client),
         )}
         onNavigateToList={() =>
-          router.push(
-            recordListHref(
-              "client",
-              isOpenedFromArchiveLocation() || isClientArchived(client),
-            ),
+          navigateBackToRecordList(
+            router,
+            "client",
+            isOpenedFromArchiveLocation() || isClientArchived(client),
           )
         }
         onNavigateToEdit={() =>

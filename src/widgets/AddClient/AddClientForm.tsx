@@ -11,8 +11,8 @@ import type { Client } from "@/features/clients/types";
 import { buildCreateClientDto } from "@/features/clients/buildCreateClientDto";
 import {
   CLIENT_CREATE_STATUSES,
-  CLIENT_STATUS_LABELS,
-} from "@/features/clients/clientEnums";
+  formatClientStatusLabel,
+} from "@/features/clients/clientStatusDisplay";
 import { useLocalStorageDraft } from "@/shared/hooks/useLocalStorageDraft";
 import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 import { ClientCoreInfoSection } from "@/widgets/ClientForm/ClientCoreInfoSection";
@@ -178,7 +178,7 @@ export function AddClientForm({
           showDefaultStatusOption
           clientStatusSelectOptions={CLIENT_CREATE_STATUSES.map((clientStatus) => ({
             value: clientStatus,
-            label: CLIENT_STATUS_LABELS[clientStatus],
+            label: formatClientStatusLabel(clientStatus),
           }))}
         />
 

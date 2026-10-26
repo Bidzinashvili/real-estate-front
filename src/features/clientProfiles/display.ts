@@ -1,13 +1,18 @@
+import { formatClientDealIntentLabel } from "@/features/clients/clientDealTypeDisplay";
 import {
-  CLIENT_STATUS_LABELS,
-  DEAL_TYPE_LABELS,
   isClientStatus,
   isDealType,
   type ClientStatus,
   type DealType,
 } from "@/features/clients/clientEnums";
+import { formatClientStatusLabel } from "@/features/clients/clientStatusDisplay";
 import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import type { ClientProfileHistoryNote } from "@/features/clientProfiles/types";
+import {
+  formatClientBudgetRange,
+  parseClientBudgetCurrency,
+  type ClientBudgetCurrency,
+} from "@/features/clients/clientBudgetCurrency";
 
 export const CLIENT_PROFILE_AUDIT_LABELS: Record<string, string> = {
   BLACKLIST: "შავ სიაში დამატება",
@@ -24,7 +29,7 @@ export function formatClientProfileDealType(dealType: string | null): string | n
     return null;
   }
   if (isDealType(dealType)) {
-    return DEAL_TYPE_LABELS[dealType];
+    return formatClientDealIntentLabel(dealType);
   }
   return null;
 }
@@ -41,7 +46,7 @@ export function formatClientNoteStatus(status: ClientStatus | null): string | nu
     return null;
   }
   if (isClientStatus(status)) {
-    return CLIENT_STATUS_LABELS[status];
+    return formatClientStatusLabel(status);
   }
   return null;
 }
@@ -49,17 +54,13 @@ export function formatClientNoteStatus(status: ClientStatus | null): string | nu
 export function formatBudgetRange(
   budgetMin: number | null,
   budgetMax: number | null,
+  budgetCurrency?: ClientBudgetCurrency,
 ): string | null {
-  if (budgetMin === null && budgetMax === null) {
-    return null;
-  }
-  if (budgetMin !== null && budgetMax !== null) {
-    return `${budgetMin.toLocaleString()}–${budgetMax.toLocaleString()}`;
-  }
-  if (budgetMin !== null) {
-    return `${budgetMin.toLocaleString()}–`;
-  }
-  return `–${(budgetMax as number).toLocaleString()}`;
+  return formatClientBudgetRange(
+    budgetMin,
+    budgetMax,
+    parseClientBudgetCurrency(budgetCurrency),
+  );
 }
 
 export function formatOccurrenceCount(count: number): string {
