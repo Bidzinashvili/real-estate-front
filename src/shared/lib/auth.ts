@@ -65,9 +65,11 @@ async function authenticateWithGoogleIdToken(idToken: string) {
   }
 
   try {
-    const res = await axios.post<AuthResponse>(`${baseUrl}/auth/google`, {
-      idToken,
-    });
+    const res = await axios.post<AuthResponse>(
+      `${baseUrl}/auth/google`,
+      { idToken },
+      { timeout: 60_000 },
+    );
 
     const data: AuthResponse = res.data ?? null;
     persistAuthResponse(data);

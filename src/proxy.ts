@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
 ];
 const ADMIN_ONLY_PATHS = ["/agents", "/collaborations/monitors", "/admin/trash"];
 const AUTH_COOKIE_KEY = "authToken";
+const AUTH_CHECK_TIMEOUT_MS = 10_000;
 
 function isInvitePublicPath(pathname: string): boolean {
   return pathname === "/invite" || pathname.startsWith("/invite/");
@@ -37,6 +38,8 @@ async function fetchAuthUser(token: string, baseUrl: string): Promise<AuthUser |
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      // Do not hang every page load when the API is down; null → sign-in, as on other failures.
+      signal: AbortSignal.timeout(AUTH_CHECK_TIMEOUT_MS),
     });
 
     if (!res.ok) {

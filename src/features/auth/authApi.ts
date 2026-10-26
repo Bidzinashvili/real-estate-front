@@ -6,12 +6,29 @@ import {
   type AuthResponse,
 } from "@/shared/lib/auth";
 import { ApiError, parseStandardApiError } from "@/shared/lib/apiError";
+import { AUTH_COPY } from "@/features/auth/authCopy";
+import { SERVER_UNAVAILABLE_CODE } from "@/features/auth/authRequestErrors";
+
+/** Long enough for a Render free-plan cold start. */
+const AUTH_REQUEST_TIMEOUT_MS = 60_000;
 
 type MessageResponse = {
   message?: string;
 };
 
 function throwAsApiError(error: unknown, fallback: string): never {
+  if (axios.isAxiosError(error) && !error.response) {
+    // Network error or timeout: the server never answered, so this is not a credentials problem.
+    throw new ApiError(
+      {
+        statusCode: 0,
+        error: "ServerUnavailable",
+        code: SERVER_UNAVAILABLE_CODE,
+        message: AUTH_COPY.serverUnavailable,
+      },
+      AUTH_COPY.serverUnavailable,
+    );
+  }
   if (axios.isAxiosError(error)) {
     const parsed = parseStandardApiError(
       error.response?.data,
@@ -30,10 +47,11 @@ export async function loginWithEmailPassword(
   const baseUrl = requireApiBaseUrl();
 
   try {
-    const response = await axios.post<AuthResponse>(`${baseUrl}/auth/login`, {
-      email,
-      password,
-    });
+    const response = await axios.post<AuthResponse>(
+      `${baseUrl}/auth/login`,
+      { email, password },
+      { timeout: AUTH_REQUEST_TIMEOUT_MS },
+    );
     const stored = persistAuthResponse(response.data ?? null);
     if (!stored) {
       throw new Error("ავტორიზაცია ვერ მოხერხდა");

@@ -4,6 +4,16 @@ import { AUTH_COPY } from "@/features/auth/authCopy";
 
 export type PasswordTokenKind = "reset" | "setup";
 
+export const SERVER_UNAVAILABLE_CODE = "SERVER_UNAVAILABLE";
+
+/** True when the request got no response at all (backend down, network error or timeout). */
+export function isServerUnavailableError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return error.code === SERVER_UNAVAILABLE_CODE;
+  }
+  return axios.isAxiosError(error) && !error.response;
+}
+
 function asJoinedMessage(value: string | string[]): string {
   return Array.isArray(value) ? value.join(" ") : value;
 }
@@ -49,6 +59,9 @@ export function isRateLimitError(error: unknown): boolean {
 }
 
 export function mapRateLimitOrGenericError(error: unknown, fallback: string): string {
+  if (isServerUnavailableError(error)) {
+    return AUTH_COPY.serverUnavailable;
+  }
   if (isRateLimitError(error)) {
     return AUTH_COPY.rateLimited;
   }
@@ -56,6 +69,9 @@ export function mapRateLimitOrGenericError(error: unknown, fallback: string): st
 }
 
 export function mapLoginError(error: unknown): string {
+  if (isServerUnavailableError(error)) {
+    return AUTH_COPY.serverUnavailable;
+  }
   if (isRateLimitError(error)) {
     return AUTH_COPY.rateLimited;
   }
@@ -75,6 +91,9 @@ export function mapPasswordTokenError(
   error: unknown,
   kind: PasswordTokenKind,
 ): string {
+  if (isServerUnavailableError(error)) {
+    return AUTH_COPY.serverUnavailable;
+  }
   if (isRateLimitError(error)) {
     return AUTH_COPY.rateLimited;
   }
