@@ -35,6 +35,7 @@ export type PublicApartment = {
   airConditioner: boolean | null;
   kitchenType: string | null;
   furnished: boolean | null;
+  dishwasher?: boolean | null;
   parking: ListingParking;
   parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
@@ -59,6 +60,7 @@ export type PublicPrivateHouse = {
   centralHeating: boolean | null;
   airConditioner: boolean | null;
   furnished: boolean | null;
+  dishwasher?: boolean | null;
   parking: ListingParking;
   parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;

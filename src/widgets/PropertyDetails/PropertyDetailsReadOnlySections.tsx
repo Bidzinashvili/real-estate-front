@@ -1,4 +1,5 @@
 "use client";
+import { NEEDS_VERIFICATION_LABEL } from "@/widgets/PropertyDetails/propertyViewFormatters";
 
 import { formatPropertyStatusLabel, type Property } from "@/features/properties/types";
 import {
@@ -212,7 +213,7 @@ export function PropertyDetailsReadOnlySections({
             />
             <DetailText
               label="რემონტი"
-              value={formatRenovationLabel(property.apartment.renovation)}
+              value={formatRenovationLabel(property.apartment.renovation) ?? NEEDS_VERIFICATION_LABEL}
             />
           </div>
 
@@ -285,10 +286,16 @@ export function PropertyDetailsReadOnlySections({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailVerification
-              label="ავეჯით"
+              label="ავეჯი და ტექნიკა"
               value={property.apartment.furnished}
               isToBeVerified={property.apartment.needsVerification.includes("furnished")}
             />
+            {property.apartment.furnished === true ? (
+              <DetailYesNo
+                label="ჭურჭლის სარეცხი მანქანა"
+                value={property.apartment.dishwasher ?? false}
+              />
+            ) : null}
             <DetailText
               label={LISTING_PARKING_FIELD_LABEL}
               value={formatListingParkingDisplay(

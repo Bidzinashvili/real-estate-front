@@ -4,6 +4,7 @@ import { useId } from "react";
 import { cn } from "@/shared/lib/utils";
 import { optionChipClassName } from "@/shared/ui/chipStyles";
 import { typography } from "@/shared/ui/typography";
+import { FieldVisibilityIcon, type FieldVisibility } from "@/shared/ui/VisibilityHint";
 
 export type OptionChipItem<T extends string = string> = {
   value: T;
@@ -31,6 +32,8 @@ type OptionChipsProps<T extends string> = {
   emptyValue?: T;
   error?: string;
   className?: string;
+  /** Eye icon next to the label (see FieldVisibilityProvider). */
+  visibility?: FieldVisibility;
 };
 
 const DEFAULT_LABEL_CLASS_NAME = cn("mb-2 block", typography.fieldLabel);
@@ -50,6 +53,7 @@ export function OptionChips<T extends string>({
   emptyValue,
   error,
   className,
+  visibility,
 }: OptionChipsProps<T>) {
   const generatedId = useId();
   const groupId = id ?? generatedId;
@@ -63,6 +67,7 @@ export function OptionChips<T extends string>({
         <span id={labelElementId} className={cn(DEFAULT_LABEL_CLASS_NAME, labelClassName)}>
           {label}
           {required ? <span className="text-red-500"> *</span> : null}
+          <FieldVisibilityIcon visibility={visibility} />
         </span>
       ) : null}
       <div
@@ -125,6 +130,8 @@ type MultiOptionChipsProps<T extends string> = {
   disabled?: boolean;
   error?: string;
   className?: string;
+  /** Eye icon next to the label (see FieldVisibilityProvider). */
+  visibility?: FieldVisibility;
 };
 
 export function MultiOptionChips<T extends string>({
@@ -139,6 +146,7 @@ export function MultiOptionChips<T extends string>({
   disabled = false,
   error,
   className,
+  visibility,
 }: MultiOptionChipsProps<T>) {
   const generatedId = useId();
   const groupId = id ?? generatedId;
@@ -152,6 +160,7 @@ export function MultiOptionChips<T extends string>({
       {label ? (
         <span id={labelElementId} className={cn(DEFAULT_LABEL_CLASS_NAME, labelClassName)}>
           {label}
+          <FieldVisibilityIcon visibility={visibility} />
         </span>
       ) : null}
       <div

@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityIcon } from "@/shared/ui/VisibilityHint";
 import type { GeneratePublicTextDraft } from "@/features/properties/propertyApiTypes";
 import { SectionCard } from "@/shared/ui/SectionCard";
 import { addPropertyInputClassName } from "@/widgets/AddProperty/addPropertyFormFields";
@@ -33,6 +34,7 @@ export function AddPropertyAdditionalInfoSection({
         <div className="space-y-1.5 sm:col-span-2">
           <label htmlFor="publicComment" className="block text-sm font-medium text-foreground">
             კომენტარი
+            <FieldVisibilityIcon visibility="public" />
           </label>
           <textarea
             id="publicComment"
@@ -55,6 +57,7 @@ export function AddPropertyAdditionalInfoSection({
           <HistoryNoteField
             id="privateComment"
             label="კომენტარი ჩემთვის"
+            visibility="private"
             value={privateComment}
             onChange={onPrivateCommentChange}
             textareaClassName={textareaClassName}

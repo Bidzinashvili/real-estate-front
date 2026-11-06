@@ -86,6 +86,7 @@ export type FormState = {
     airConditioner: boolean | null;
     kitchenType: KitchenType;
     furnished: boolean | null;
+    dishwasher: boolean;
     parking: ListingParking;
     parkingTypes: ListingParkingType[];
     parkingSpaces: string;
@@ -111,6 +112,7 @@ export type FormState = {
     centralHeating: boolean;
     airConditioner: boolean;
     furnished: boolean;
+    dishwasher: boolean;
     parking: ListingParking;
     parkingTypes: ListingParkingType[];
     parkingSpaces: string;
@@ -203,6 +205,7 @@ export function initialFormState(): FormState {
       airConditioner: null,
       kitchenType: DEFAULT_NEW_APARTMENT_KITCHEN_TYPE,
       furnished: null,
+      dishwasher: false,
       parking: DEFAULT_LISTING_PARKING,
       parkingTypes: [],
       parkingSpaces: "",
@@ -228,6 +231,7 @@ export function initialFormState(): FormState {
       centralHeating: false,
       airConditioner: false,
       furnished: false,
+      dishwasher: false,
       parking: DEFAULT_LISTING_PARKING,
       parkingTypes: [],
       parkingSpaces: "",

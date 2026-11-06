@@ -120,6 +120,7 @@ export type ApartmentApi = {
   airConditioner: boolean | null;
   kitchenType: KitchenType;
   furnished: boolean | null;
+  dishwasher?: boolean | null;
   parking: ListingParking;
   parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
@@ -146,6 +147,7 @@ export type PrivateHouseApi = {
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  dishwasher?: boolean | null;
   parking: ListingParking;
   parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
@@ -315,6 +317,7 @@ export type CreateApartmentPayload = {
   airConditioner?: boolean | null;
   kitchenType: KitchenType;
   furnished?: boolean | null;
+  dishwasher?: boolean | null;
   parking?: ListingParking;
   parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
@@ -339,6 +342,7 @@ export type CreatePrivateHousePayload = {
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  dishwasher?: boolean | null;
   parking?: ListingParking;
   parkingTypes?: ListingParkingType[];
   parkingSpaces?: number;
@@ -453,6 +457,7 @@ export type UpdatePropertyRequestBody = {
     buildingCondition?: BuildingCondition;
     buildingAgeType?: BuildingAgeType | null;
     furnished?: boolean | null;
+    dishwasher?: boolean | null;
     parking?: ListingParking;
     parkingTypes?: ListingParkingType[];
     parkingSpaces?: number | null;
@@ -480,6 +485,7 @@ export type UpdatePropertyRequestBody = {
     fruitTrees?: boolean;
     renovation?: string;
     furnished?: boolean;
+    dishwasher?: boolean | null;
     buildingCondition?: BuildingCondition;
     minRentalPeriod?: number | null;
   };
@@ -515,6 +521,7 @@ export type GeneratePublicTextApartmentDraft = {
   veranda?: boolean;
   goodView?: boolean;
   furnished?: boolean;
+  dishwasher?: boolean | null;
   airConditioner?: boolean;
 };
 

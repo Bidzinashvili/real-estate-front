@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { InputHTMLAttributes } from "react";
 import { sanitizeTwoDigitNumericInput } from "@/shared/lib/twoDigitNumericInput";
+import { FieldVisibilityIcon, type FieldVisibility } from "@/shared/ui/VisibilityHint";
 
 const propertyDetailsEditableControlClassName = (
   widthClassName: string,
@@ -26,7 +27,9 @@ export function EditableNumericTextInput({
   placeholder,
   leadingSymbol,
   allowNegative = false,
+  visibility,
 }: {
+  visibility?: FieldVisibility;
   label: string;
   value: number | undefined;
   onValueChange: (next: number | undefined) => void;
@@ -50,7 +53,10 @@ export function EditableNumericTextInput({
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label className="block text-sm font-medium text-foreground">
+        {label}
+        <FieldVisibilityIcon visibility={visibility} />
+      </label>
       <div className="relative">
         {leadingSymbol ? (
           <span className="pointer-events-none absolute inset-y-0 left-0 flex w-8 items-center justify-center text-sm font-semibold text-foreground">
@@ -170,15 +176,20 @@ export function EditableCheckbox({
   checked,
   onChange,
   disabled = false,
+  visibility,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
+  visibility?: FieldVisibility;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2">
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label className="block text-sm font-medium text-foreground">
+        {label}
+        <FieldVisibilityIcon visibility={visibility} />
+      </label>
       <input
         type="checkbox"
         checked={checked}

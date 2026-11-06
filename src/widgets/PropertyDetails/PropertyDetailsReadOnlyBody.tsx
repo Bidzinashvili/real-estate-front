@@ -198,7 +198,7 @@ export function PropertyDetailsReadOnlyBody({
             label: "კონდიციონერი",
             value: property.apartment.airConditioner,
           },
-          { key: "furnished", label: "ავეჯით", value: property.apartment.furnished },
+          { key: "furnished", label: "ავეჯი და ტექნიკა", value: property.apartment.furnished },
         ],
         property.apartment.needsVerification,
       );
@@ -219,7 +219,7 @@ export function PropertyDetailsReadOnlyBody({
           },
           {
             key: "furnished",
-            label: "ავეჯით",
+            label: "ავეჯი და ტექნიკა",
             value: property.privateHouse.furnished,
           },
         ],

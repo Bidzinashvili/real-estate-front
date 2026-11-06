@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityIcon } from "@/shared/ui/VisibilityHint";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { GENERATE_PUBLIC_TEXT_COPY } from "@/features/properties/generatePublicTextCopy";
@@ -64,6 +65,7 @@ export function UploadListingTextGenerateField({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label htmlFor={id} className="block text-sm font-medium text-foreground">
           ასატვირთი ტექსტი
+          <FieldVisibilityIcon visibility="private" />
         </label>
         <button
           type="button"

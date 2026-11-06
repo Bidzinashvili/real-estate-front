@@ -204,7 +204,7 @@ export const RENOVATION_SELECT_OPTIONS: ReadonlyArray<{
   value: Renovation | "";
   label: string;
 }> = [
-  { value: "", label: "არ არის არჩეული" },
+  { value: "", label: "გადასამოწმებელი" },
   ...RENOVATION_OPTIONS,
 ];
 

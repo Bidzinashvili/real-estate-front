@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { FieldVisibilityIcon } from "@/shared/ui/VisibilityHint";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { deletePropertyImage } from "@/features/properties/api";
+import { ChevronLeft, ChevronRight, ImagePlus, Loader2, X } from "lucide-react";
+import { addPropertyImages, deletePropertyImage } from "@/features/properties/api";
+import { validateAddPropertyImages } from "@/features/properties/addPropertyFormValidation";
 import { resolveApiMediaUrl } from "@/features/properties/resolveApiMediaUrl";
 
 type PreparedItem = {
@@ -32,17 +34,26 @@ type PropertyDetailsImageGalleryProps = {
   images: PropertyImageRow[];
   apiBaseUrl: string | null;
   canDelete: boolean;
-  onDeleted: () => Promise<void>;
+  /** Owner / admin in edit mode may add photos. Defaults to `canDelete`. */
+  canUpload?: boolean;
+  /** Called after a photo was added or deleted (refetch the property). */
+  onChanged: () => Promise<void>;
 };
+
+const MAX_PROPERTY_IMAGES = 50;
+const ACCEPTED_IMAGE_TYPES = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
 
 export function PropertyDetailsImageGallery({
   propertyId,
   images,
   apiBaseUrl,
   canDelete,
-  onDeleted,
+  canUpload = canDelete,
+  onChanged,
 }: PropertyDetailsImageGalleryProps) {
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -118,7 +129,7 @@ export function PropertyDetailsImageGallery({
     setDeletingImageId(imageIdForDelete);
     try {
       await deletePropertyImage(propertyId, imageIdForDelete);
-      await onDeleted();
+      await onChanged();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "ფოტოს წაშლა ვერ მოხერხდა.";
@@ -128,15 +139,84 @@ export function PropertyDetailsImageGallery({
     }
   };
 
+  const handleFilesSelected = async (fileList: FileList | null) => {
+    const files = fileList ? Array.from(fileList) : [];
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (files.length === 0) return;
+    setError(null);
+
+    if (images.length + files.length > MAX_PROPERTY_IMAGES) {
+      setError(
+        `შეგიძლიათ ატვირთოთ მაქსიმუმ ${MAX_PROPERTY_IMAGES} ფოტო (ახლა არის ${images.length}).`,
+      );
+      return;
+    }
+    const validationError = validateAddPropertyImages(files);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      await addPropertyImages(propertyId, files);
+      await onChanged();
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "ფოტოს დამატება ვერ მოხერხდა.",
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const uploadControl = canUpload ? (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept={ACCEPTED_IMAGE_TYPES}
+        className="hidden"
+        onChange={(changeEvent) => void handleFilesSelected(changeEvent.target.files)}
+      />
+      <button
+        type="button"
+        disabled={uploading || images.length >= MAX_PROPERTY_IMAGES}
+        onClick={() => fileInputRef.current?.click()}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {uploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        ) : (
+          <ImagePlus className="h-4 w-4" aria-hidden />
+        )}
+        ფოტოს დამატება
+      </button>
+    </>
+  ) : null;
+
+  const header = (
+    <div className="flex items-center justify-between gap-3">
+      <h2 id="gallery-heading" className="text-sm font-semibold text-foreground">
+        ფოტოები
+        <FieldVisibilityIcon visibility="public" />
+      </h2>
+      {uploadControl}
+    </div>
+  );
+
   if (images.length === 0) {
     return (
       <section className="space-y-2" aria-labelledby="gallery-heading">
-        <h2
-          id="gallery-heading"
-          className="text-sm font-semibold text-foreground"
-        >
-          ფოტოები
-        </h2>
+        {header}
+        {error && (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        )}
         <p className="text-sm text-muted-foreground">
           ამ განცხადებას ფოტოები არ აქვს.
         </p>
@@ -150,9 +230,7 @@ export function PropertyDetailsImageGallery({
 
   return (
     <section className="space-y-3" aria-labelledby="gallery-heading">
-      <h2 id="gallery-heading" className="text-sm font-semibold text-foreground">
-        ფოტოები
-      </h2>
+      {header}
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}

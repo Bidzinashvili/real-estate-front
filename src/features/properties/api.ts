@@ -473,6 +473,37 @@ export async function deletePropertyImage(
   }
 }
 
+/** Append photos to an existing property (owner / admin). */
+export async function addPropertyImages(
+  propertyId: string,
+  images: File[],
+): Promise<void> {
+  const { baseUrl, headers } = getAuthHeaders();
+  const formData = new FormData();
+  for (const image of images) {
+    formData.append("images", image);
+  }
+
+  try {
+    await axios.post(`${baseUrl}/properties/${propertyId}/images`, formData, {
+      headers,
+    });
+    emitRecordsChangedEvent();
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      const fallback =
+        status === 403
+          ? "ფოტოს დამატების უფლება არ გაქვთ."
+          : "ფოტოს დამატება ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(error.response?.data, status, fallback);
+      throw new ApiError(parsed, fallback);
+    }
+
+    throw error;
+  }
+}
+
 function buildCreatePropertyFormData(
   payload: CreatePropertyDto,
   images: File[],

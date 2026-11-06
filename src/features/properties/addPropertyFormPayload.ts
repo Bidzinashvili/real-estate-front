@@ -261,6 +261,8 @@ export function buildCreatePropertyPayload(
     }
     const furnishedValue = omitUnspecifiedBoolean(apartment.furnished);
     if (furnishedValue !== undefined) payload.apartment.furnished = furnishedValue;
+    // Dishwasher only applies to "ავეჯი და ტექნიკა = კი".
+    if (furnishedValue === true) payload.apartment.dishwasher = apartment.dishwasher === true;
     const goodViewValue = omitUnspecifiedBoolean(apartment.goodView);
     if (goodViewValue !== undefined) payload.apartment.goodView = goodViewValue;
     const bathroomsValue = parseOptionalNumber(
@@ -311,6 +313,7 @@ export function buildCreatePropertyPayload(
       centralHeating: privateHouse.centralHeating,
       airConditioner: privateHouse.airConditioner,
       furnished: privateHouse.furnished,
+      dishwasher: privateHouse.furnished ? privateHouse.dishwasher === true : null,
       parkingSpaces: parseOptionalNumber(
         privateHouse.parkingSpaces,
         "კერძო სახლის პარკინგის ადგილები",

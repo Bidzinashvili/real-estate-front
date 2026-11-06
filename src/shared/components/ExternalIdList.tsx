@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityIcon } from "@/shared/ui/VisibilityHint";
 import { ChevronDown, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type {
@@ -80,7 +81,10 @@ export function ExternalIdList({ ids, onChange }: ExternalIdListProps) {
     <div className="space-y-3 rounded-xl border border-border bg-muted p-3 sm:col-span-2">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">გარე ID-ები</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            გარე ID-ები
+            <FieldVisibilityIcon visibility="private" onlyInForm />
+          </h3>
           <p className="text-xs text-muted-foreground">MyHome-ისა და SS.ge-ის ID-ები ატვირთვის თარიღებით.</p>
         </div>
         <div className="flex gap-2">

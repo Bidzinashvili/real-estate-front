@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityIcon } from "@/shared/ui/VisibilityHint";
 import { useEffect, useRef } from "react";
 import { OwnerContactsEditor } from "@/widgets/PropertyOwners/OwnerContactsEditor";
 import { useLookupPropertyOwner } from "@/features/propertyOwners/useLookupPropertyOwner";
@@ -81,7 +82,10 @@ export function PropertyOwnerPickerSection({
   return (
     <section className="space-y-3 sm:col-span-2">
       <div>
-        <h2 className="text-sm font-semibold text-foreground">მეპატრონე</h2>
+        <h2 className="text-sm font-semibold text-foreground">
+          მეპატრონე
+          <FieldVisibilityIcon visibility="private" onlyInForm />
+        </h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
           შეიყვანეთ ტელეფონი არსებული პროფილის მოსაძებნად. თუ არ მოიძებნა, შექმენით ახალი.
         </p>

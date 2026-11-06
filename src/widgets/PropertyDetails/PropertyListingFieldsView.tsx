@@ -171,9 +171,15 @@ export function PropertyListingFieldsView({
               value={values.apartment.parkingSpaces}
             />
             <DetailYesNo
-              label="ავეჯით"
+              label="ავეჯი და ტექნიკა"
               value={values.apartment.furnished}
             />
+            {values.apartment.furnished === true ? (
+              <DetailYesNo
+                label="ჭურჭლის სარეცხი მანქანა"
+                value={values.apartment.dishwasher ?? false}
+              />
+            ) : null}
             {values.dealType === "RENT" || values.dealType === "DAILY_RENT" ? (
               <DetailNumber
                 label="მინიმალური ქირის ვადა (თვე)"
@@ -240,9 +246,15 @@ export function PropertyListingFieldsView({
               value={values.privateHouse.parkingSpaces}
             />
             <DetailYesNo
-              label="ავეჯით"
+              label="ავეჯი და ტექნიკა"
               value={Boolean(values.privateHouse.furnished)}
             />
+            {values.privateHouse.furnished ? (
+              <DetailYesNo
+                label="ჭურჭლის სარეცხი მანქანა"
+                value={values.privateHouse.dishwasher ?? false}
+              />
+            ) : null}
             <DetailYesNo label="აუზი" value={Boolean(values.privateHouse.pool)} />
             <DetailYesNo
               label="ხეხილი"

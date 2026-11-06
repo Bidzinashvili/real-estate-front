@@ -53,6 +53,7 @@ type ApartmentDraftSource = {
   needsVerification?: string[] | null;
   goodView?: boolean | null;
   furnished?: boolean | null;
+  dishwasher?: boolean | null;
   airConditioner?: boolean | null;
 };
 
@@ -108,6 +109,9 @@ function buildApartmentDraft(
   const furnished = omitUnspecifiedBoolean(source.furnished);
   if (furnished !== undefined) {
     apartment.furnished = furnished;
+  }
+  if (furnished === true && source.dishwasher === true) {
+    apartment.dishwasher = true;
   }
 
   const airConditioner = omitUnspecifiedBoolean(source.airConditioner);

@@ -134,6 +134,7 @@ function normalizeApartment(value: unknown): PublicApartment | null {
     airConditioner: asNullableBoolean(value.airConditioner),
     kitchenType: asNullableString(value.kitchenType),
     furnished: asNullableBoolean(value.furnished),
+    dishwasher: asNullableBoolean(value.dishwasher),
     ...parseListingParkingSelection({
       parking: value.parking,
       parkingTypes: value.parkingTypes,
@@ -168,6 +169,7 @@ function normalizePrivateHouse(value: unknown): PublicPrivateHouse | null {
     centralHeating: asNullableBoolean(value.centralHeating),
     airConditioner: asNullableBoolean(value.airConditioner),
     furnished: asNullableBoolean(value.furnished),
+    dishwasher: asNullableBoolean(value.dishwasher),
     ...parseListingParkingSelection({
       parking: value.parking,
       parkingTypes: value.parkingTypes,

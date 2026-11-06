@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityIcon } from "@/shared/ui/VisibilityHint";
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { Plus } from "lucide-react";
 import { ImageThumbnailCard } from "@/widgets/AddProperty/ImageThumbnailCard";
@@ -151,6 +152,7 @@ export function ImageUploadField({
       <div className="space-y-1.5">
         <p className="block text-sm font-medium text-foreground">
           ფოტოები (არასავალდებულო, მაქს. {maxImages})
+          <FieldVisibilityIcon visibility="public" onlyInForm />
         </p>
         <div
           onClick={handleBrowseClick}

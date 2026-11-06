@@ -17,6 +17,7 @@ import {
   formatLandUsageLabel,
   formatRenovationLabel,
   isRentalDeal,
+  NEEDS_VERIFICATION_LABEL,
 } from "@/widgets/PropertyDetails/propertyViewFormatters";
 import { CANONICAL_AREA_MISSING_LABEL } from "@/features/properties/propertyArea";
 
@@ -78,7 +79,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
             />
             <OptionalTextFact
               label="რემონტი"
-              value={formatRenovationLabel(property.apartment.renovation)}
+              value={formatRenovationLabel(property.apartment.renovation) ?? NEEDS_VERIFICATION_LABEL}
             />
             <OptionalTextFact
               label={BUILDING_STRUCTURE_FIELD_LABEL}
@@ -164,13 +165,20 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
               )}
             />
             <VerifiableBooleanFact
-              label="ავეჯი"
+              label="ავეჯი და ტექნიკა"
               value={property.apartment.furnished}
               isToBeVerified={needsVerificationIncludes(
                 property.apartment.needsVerification,
                 "furnished",
               )}
             />
+            {property.apartment.furnished === true ? (
+              <VerifiableBooleanFact
+                label="ჭურჭლის სარეცხი მანქანა"
+                value={property.apartment.dishwasher ?? false}
+                isToBeVerified={false}
+              />
+            ) : null}
             <VerifiableBooleanFact
               label="შინაური ცხოველები"
               value={property.apartment.petsAllowed}
@@ -225,7 +233,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
             />
             <OptionalTextFact
               label="რემონტი"
-              value={formatRenovationLabel(property.privateHouse.renovation)}
+              value={formatRenovationLabel(property.privateHouse.renovation) ?? NEEDS_VERIFICATION_LABEL}
             />
             <OptionalTextFact
               label={BUILDING_STRUCTURE_FIELD_LABEL}
@@ -271,13 +279,20 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
               )}
             />
             <VerifiableBooleanFact
-              label="ავეჯი"
+              label="ავეჯი და ტექნიკა"
               value={property.privateHouse.furnished}
               isToBeVerified={needsVerificationIncludes(
                 property.privateHouse.needsVerification,
                 "furnished",
               )}
             />
+            {property.privateHouse.furnished === true ? (
+              <VerifiableBooleanFact
+                label="ჭურჭლის სარეცხი მანქანა"
+                value={property.privateHouse.dishwasher ?? false}
+                isToBeVerified={false}
+              />
+            ) : null}
             <VerifiableBooleanFact
               label="აუზი"
               value={property.privateHouse.pool}
@@ -429,7 +444,7 @@ export function PropertyViewCharacteristics({ property }: PropertyViewCharacteri
             />
             <OptionalTextFact
               label="რემონტი"
-              value={formatRenovationLabel(property.commercial.renovation)}
+              value={formatRenovationLabel(property.commercial.renovation) ?? NEEDS_VERIFICATION_LABEL}
             />
             {showRentPeriod ? (
               <VerifiableNumberFact

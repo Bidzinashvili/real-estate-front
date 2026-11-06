@@ -1,13 +1,14 @@
 import type { DealType } from "@/features/properties/dealType";
 
+/** Public (საჯარო) price = internal (შიდა) price × this ratio for SALE. */
 export const PROPERTY_PRICE_MARKUP_RATIO = 1.03;
 
 export function roundPropertyPrice(value: number): number {
   return Math.round(value);
 }
 
-export function calculatePublicPriceFromInternal(internalPrice: number): number {
-  return roundPropertyPrice(internalPrice * PROPERTY_PRICE_MARKUP_RATIO);
+export function calculateInternalPriceFromPublic(publicPrice: number): number {
+  return roundPropertyPrice(publicPrice / PROPERTY_PRICE_MARKUP_RATIO);
 }
 
 export function formatPropertyPriceForInput(value: number): string {
@@ -26,54 +27,59 @@ export function parsePropertyPriceInput(rawValue: string): number | null {
   return parsedPrice;
 }
 
-export function suggestInitialPublicPrice(
-  internalPrice: number,
+/** SALE: public ÷ 1.03. RENT / DAILY_RENT: same as public. */
+export function suggestInitialInternalPrice(
+  publicPrice: number,
   dealType: DealType,
 ): number {
   if (dealType === "SALE") {
-    return calculatePublicPriceFromInternal(internalPrice);
+    return calculateInternalPriceFromPublic(publicPrice);
   }
 
-  return roundPropertyPrice(internalPrice);
+  return roundPropertyPrice(publicPrice);
 }
 
-export type CreatePublicPriceSuggestion =
-  | { kind: "apply"; publicInput: string }
+export type CreateInternalPriceSuggestion =
+  | { kind: "apply"; internalInput: string }
   | { kind: "keepManual" }
   | { kind: "unchanged" };
 
-export function resolveCreatePublicPriceSuggestion(options: {
+/**
+ * Create form: the public price is entered first and the internal price is
+ * suggested from it until the agent edits the internal price by hand.
+ */
+export function resolveCreateInternalPriceSuggestion(options: {
   dealType: DealType;
-  nextInternalInput: string;
-  currentPublicInput: string;
-  hasManuallyEditedPublicPrice: boolean;
-  lastSuggestedPublicInput: string | null;
-}): CreatePublicPriceSuggestion {
-  if (options.hasManuallyEditedPublicPrice) {
+  nextPublicInput: string;
+  currentInternalInput: string;
+  hasManuallyEditedInternalPrice: boolean;
+  lastSuggestedInternalInput: string | null;
+}): CreateInternalPriceSuggestion {
+  if (options.hasManuallyEditedInternalPrice) {
     return { kind: "unchanged" };
   }
 
-  const publicIsEmpty = options.currentPublicInput.trim() === "";
-  const publicMatchesLastSuggestion =
-    options.lastSuggestedPublicInput !== null &&
-    options.currentPublicInput === options.lastSuggestedPublicInput;
+  const internalIsEmpty = options.currentInternalInput.trim() === "";
+  const internalMatchesLastSuggestion =
+    options.lastSuggestedInternalInput !== null &&
+    options.currentInternalInput === options.lastSuggestedInternalInput;
 
-  if (!publicIsEmpty && !publicMatchesLastSuggestion) {
+  if (!internalIsEmpty && !internalMatchesLastSuggestion) {
     return { kind: "keepManual" };
   }
 
-  const parsedInternalPrice = parsePropertyPriceInput(options.nextInternalInput);
-  if (parsedInternalPrice === null) {
-    if (publicIsEmpty) {
+  const parsedPublicPrice = parsePropertyPriceInput(options.nextPublicInput);
+  if (parsedPublicPrice === null) {
+    if (internalIsEmpty) {
       return { kind: "unchanged" };
     }
-    return { kind: "apply", publicInput: "" };
+    return { kind: "apply", internalInput: "" };
   }
 
   return {
     kind: "apply",
-    publicInput: formatPropertyPriceForInput(
-      suggestInitialPublicPrice(parsedInternalPrice, options.dealType),
+    internalInput: formatPropertyPriceForInput(
+      suggestInitialInternalPrice(parsedPublicPrice, options.dealType),
     ),
   };
 }

@@ -19,6 +19,7 @@ import {
 } from "@/widgets/AddProperty/roomsBedroomsSyncHelpers";
 import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
 import { ListingParkingFields } from "@/widgets/AddProperty/ListingParkingFields";
+import { CountChipField } from "@/widgets/AddProperty/CountChipField";
 import { ListingBalconyFields } from "@/widgets/AddProperty/ListingBalconyFields";
 
 function parseAreaNumber(rawInput: string): number {
@@ -150,19 +151,18 @@ export function AddPropertyPrivateHouseSection({
           required
           error={fieldErrors["privateHouse.totalArea"]}
         />
-        <TextField
+        <CountChipField
           id="phRooms"
           label="ოთახები"
-          type="number"
           value={privateHouse.rooms}
           onChange={handleRoomsChange}
           required
           error={fieldErrors["privateHouse.rooms"]}
         />
-        <TextField
+        <CountChipField
           id="phBedrooms"
           label="საძინებლები"
-          type="number"
+          min={0}
           value={privateHouse.bedrooms}
           onChange={handleBedroomsChange}
           required
@@ -211,7 +211,7 @@ export function AddPropertyPrivateHouseSection({
           },
           {
             id: "phFurnished",
-            label: "ავეჯით",
+            label: "ავეჯი და ტექნიკა",
             key: "furnished",
             checked: privateHouse.furnished,
             onChange: (checked: boolean) => patchPrivateHouse({ furnished: checked }),
@@ -235,20 +235,36 @@ export function AddPropertyPrivateHouseSection({
             />
           </div>
         ))}
+        {privateHouse.furnished ? (
+          <CheckboxField
+            id="phDishwasher"
+            label="ჭურჭლის სარეცხი მანქანა"
+            checked={privateHouse.dishwasher === true}
+            onChange={(checked) => patchPrivateHouse({ dishwasher: checked })}
+          />
+        ) : null}
         <ListingParkingFields
           idPrefix="ph"
           parking={privateHouse.parking}
           parkingTypes={privateHouse.parkingTypes}
-          onChange={(nextParking) => patchPrivateHouse(nextParking)}
+          onChange={(nextParking) =>
+            patchPrivateHouse(
+              nextParking.parking === "YES"
+                ? nextParking
+                : { ...nextParking, parkingSpaces: "" },
+            )
+          }
         />
-        <TextField
-          id="phParking"
-          label="პარკინგის ადგილები"
-          type="number"
-          value={privateHouse.parkingSpaces}
-          onChange={(value) => patchPrivateHouse({ parkingSpaces: value })}
-          error={fieldErrors["privateHouse.parkingSpaces"]}
-        />
+        {privateHouse.parking === "YES" ? (
+          <TextField
+            id="phParking"
+            label="პარკინგის ადგილები"
+            type="number"
+            value={privateHouse.parkingSpaces}
+            onChange={(value) => patchPrivateHouse({ parkingSpaces: value })}
+            error={fieldErrors["privateHouse.parkingSpaces"]}
+          />
+        ) : null}
         <CheckboxField
           id="phPool"
           label="აუზი"

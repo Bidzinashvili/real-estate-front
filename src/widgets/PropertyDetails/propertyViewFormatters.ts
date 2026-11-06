@@ -23,7 +23,7 @@ import {
 } from "@/features/properties/types";
 import { COMMERCIAL_STATUS_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 
-export const NEEDS_VERIFICATION_LABEL = "გადასამოწმებელია";
+export const NEEDS_VERIFICATION_LABEL = "გადასამოწმებელი";
 
 export function formatPropertyHeadline(property: Property): string {
   const district = property.district.trim();

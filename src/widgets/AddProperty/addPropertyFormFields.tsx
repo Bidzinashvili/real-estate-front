@@ -1,6 +1,7 @@
 "use client";
 
 import { OptionChips, OPTION_CHIPS_FORM_LABEL_CLASS_NAME } from "@/shared/ui/OptionChips";
+import { FieldVisibilityIcon, type FieldVisibility } from "@/shared/ui/VisibilityHint";
 
 const addPropertyControlShellClassName = (horizontalPadClassName: string) =>
   `block w-full rounded-lg border border-border bg-card ${horizontalPadClassName} py-2 text-sm text-foreground shadow-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary`;
@@ -23,6 +24,7 @@ type FieldProps = {
   name?: string;
   leadingSymbol?: string;
   allowNegative?: boolean;
+  visibility?: FieldVisibility;
 };
 
 export function TextField({
@@ -39,6 +41,7 @@ export function TextField({
   name,
   leadingSymbol,
   allowNegative = false,
+  visibility,
 }: FieldProps) {
   const isNumberInput = type === "number";
 
@@ -46,6 +49,7 @@ export function TextField({
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
+        <FieldVisibilityIcon visibility={visibility} />
       </label>
       <div className="relative">
         {leadingSymbol ? (
@@ -91,6 +95,7 @@ type SelectProps<T extends string> = {
   error?: string;
   disabled?: boolean;
   required?: boolean;
+  visibility?: FieldVisibility;
 };
 
 export function SelectField<T extends string>({
@@ -102,6 +107,7 @@ export function SelectField<T extends string>({
   error,
   disabled = false,
   required = false,
+  visibility,
 }: SelectProps<T>) {
   return (
     <OptionChips
@@ -114,6 +120,7 @@ export function SelectField<T extends string>({
       disabled={disabled}
       required={required}
       error={error}
+      visibility={visibility}
     />
   );
 }
@@ -123,15 +130,19 @@ type CheckboxProps = {
   label: string;
   checked: boolean;
   onChange: (next: boolean) => void;
+  visibility?: FieldVisibility;
 };
 
-export function CheckboxField({ id, label, checked, onChange }: CheckboxProps) {
+export function CheckboxField({ id, label, checked, onChange, visibility }: CheckboxProps) {
   return (
     <label
       htmlFor={id}
       className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
     >
-      <span>{label}</span>
+      <span>
+        {label}
+        <FieldVisibilityIcon visibility={visibility} />
+      </span>
       <input
         id={id}
         type="checkbox"

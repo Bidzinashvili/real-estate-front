@@ -203,6 +203,7 @@ export type PropertyApartment = {
   airConditioner: boolean | null;
   kitchenType: KitchenType;
   furnished: boolean | null;
+  dishwasher?: boolean | null;
   parking: ListingParking;
   parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;
@@ -229,6 +230,7 @@ export type PropertyPrivateHouse = {
   centralHeating: boolean;
   airConditioner: boolean;
   furnished: boolean;
+  dishwasher?: boolean | null;
   parking: ListingParking;
   parkingTypes: ListingParkingType[];
   parkingSpaces: number | null;

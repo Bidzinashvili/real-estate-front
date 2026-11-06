@@ -166,7 +166,16 @@ export function PublicPropertyCharacteristics({
         label="კონდიციონერი"
         value={apartment.airConditioner}
       />,
-      <PublicBooleanFact key="furnished" label="ავეჯი" value={apartment.furnished} />,
+      <PublicBooleanFact key="furnished" label="ავეჯი და ტექნიკა" value={apartment.furnished} />,
+      ...(apartment.furnished === true
+        ? [
+            <PublicBooleanFact
+              key="dishwasher"
+              label="ჭურჭლის სარეცხი მანქანა"
+              value={apartment.dishwasher ?? false}
+            />,
+          ]
+        : []),
       <PublicBooleanFact
         key="pets"
         label="შინაური ცხოველები"
@@ -237,7 +246,16 @@ export function PublicPropertyCharacteristics({
     const comfort = [
       <PublicBooleanFact key="heating" label="ცენტრალური გათბობა" value={house.centralHeating} />,
       <PublicBooleanFact key="ac" label="კონდიციონერი" value={house.airConditioner} />,
-      <PublicBooleanFact key="furnished" label="ავეჯი" value={house.furnished} />,
+      <PublicBooleanFact key="furnished" label="ავეჯი და ტექნიკა" value={house.furnished} />,
+      ...(house.furnished === true
+        ? [
+            <PublicBooleanFact
+              key="dishwasher"
+              label="ჭურჭლის სარეცხი მანქანა"
+              value={house.dishwasher ?? false}
+            />,
+          ]
+        : []),
       <PublicBooleanFact key="pool" label="აუზი" value={house.pool} />,
       <PublicBooleanFact key="trees" label="ხეხილი" value={house.fruitTrees} />,
       <PublicBooleanFact key="electricity" label="ელექტროენერგია" value={house.electricity} />,

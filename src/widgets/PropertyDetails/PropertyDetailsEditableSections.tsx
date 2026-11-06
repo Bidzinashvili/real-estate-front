@@ -38,10 +38,8 @@ import {
 import { PropertyListingFieldsView } from "@/widgets/PropertyDetails/PropertyListingFieldsView";
 import { parseIntegerInput } from "@/shared/lib/parseNumericInput";
 import { DistrictNeighborhoodPicker } from "@/widgets/AddProperty/DistrictNeighborhoodPicker";
-import {
-  calculatePricePerSquareMeter,
-  formatPricePerSquareMeter,
-} from "@/features/properties/pricePerSquareMeter";
+import { calculatePricePerSquareMeter } from "@/features/properties/pricePerSquareMeter";
+import { calculateTotalFromPricePerSquareMeter } from "@/features/properties/usePricePerSquareMeterInput";
 import { buildGeneratePublicTextDraftFromEditForm } from "@/features/properties/generatePublicTextDraft";
 import { PropertyFormAdditionalInfoSection } from "@/widgets/PropertyDetails/PropertyFormAdditionalInfoSection";
 import { ListingPriceEquivalentHint } from "@/features/currency/ListingPriceEquivalentHint";
@@ -116,9 +114,10 @@ export function PropertyDetailsEditableSections({
   setCommercial,
   ourSiteId = null,
 }: PropertyDetailsEditableSectionsProps) {
+  const areaSquareMeters = getEditableAreaSquareMeters(values) ?? null;
   const pricePerSquareMeter = calculatePricePerSquareMeter(
     values.pricePublic,
-    getEditableAreaSquareMeters(values),
+    areaSquareMeters,
   );
 
   const showDistrictFields = isTbilisiCity(values.city);
@@ -198,7 +197,7 @@ export function PropertyDetailsEditableSections({
           />
         </div>
         <div
-          className={`grid gap-4 sm:grid-cols-2 ${showInternalPrice ? "" : "max-w-md"}`}
+          className="grid gap-4 sm:grid-cols-2"
         >
           <div className="space-y-1.5">
             <EditableNumericTextInput
@@ -213,16 +212,30 @@ export function PropertyDetailsEditableSections({
               amount={values.pricePublic}
               fromCurrency={values.currency}
             />
-            {pricePerSquareMeter !== null ? (
-              <p className="text-xs font-medium text-muted-foreground">
-                {formatPricePerSquareMeter(pricePerSquareMeter, values.currency)}
-              </p>
-            ) : null}
+          </div>
+          <div className="space-y-1.5">
+            <EditableNumericTextInput
+              label="1 მ² ფასი"
+              value={pricePerSquareMeter ?? undefined}
+              onValueChange={(next) => {
+                const total = calculateTotalFromPricePerSquareMeter(
+                  next ?? null,
+                  areaSquareMeters,
+                );
+                onPriceChange("pricePublic", total ?? undefined);
+              }}
+              parse={parseIntegerInput}
+              inputMode="numeric"
+              disabled={areaSquareMeters === null}
+              placeholder={areaSquareMeters === null ? "მიუთითეთ ფართობი" : undefined}
+              leadingSymbol={listingCurrencySymbol(values.currency)}
+            />
           </div>
           {showInternalPrice && (
             <div className="space-y-1.5">
               <EditableNumericTextInput
                 label="შიდა ფასი"
+                visibility="private"
                 value={values.priceInternal}
                 onValueChange={(next) => onPriceChange("priceInternal", next)}
                 parse={parseIntegerInput}
@@ -251,6 +264,7 @@ export function PropertyDetailsEditableSections({
 
       <EditableCheckbox
         label={HIDE_FROM_OTHERS_COPY.actionLabel}
+        visibility="private"
         checked={values.hideFromOthers}
         onChange={onHideFromOthersChange}
       />

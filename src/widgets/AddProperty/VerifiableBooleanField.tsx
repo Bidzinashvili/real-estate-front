@@ -7,8 +7,7 @@ const VERIFIABLE_BOOLEAN_OPTIONS: Array<{
   value: VerifiableBooleanUiState;
   label: string;
 }> = [
-  { value: "unknown", label: "არ არის მითითებული" },
-  { value: "toBeVerified", label: "გადასამოწმებელია" },
+  { value: "toBeVerified", label: "გადასამოწმებელი" },
   { value: "yes", label: "კი" },
   { value: "no", label: "არა" },
 ];

@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityIcon, type FieldVisibility } from "@/shared/ui/VisibilityHint";
 import { useLayoutEffect, useRef } from "react";
 import { applyHistoryNoteTextChange } from "@/shared/lib/historyDatePrefix";
 import { cn } from "@/shared/lib/utils";
@@ -14,6 +15,7 @@ type HistoryNoteFieldProps = {
   required?: boolean;
   error?: string;
   hint?: string;
+  visibility?: FieldVisibility;
 };
 
 export function HistoryNoteField({
@@ -26,6 +28,7 @@ export function HistoryNoteField({
   required = false,
   error,
   hint,
+  visibility,
 }: HistoryNoteFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const caretStartRef = useRef(0);
@@ -86,6 +89,7 @@ export function HistoryNoteField({
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
         {label}
         {required ? <span className="text-red-500"> *</span> : null}
+        <FieldVisibilityIcon visibility={visibility} />
       </label>
       <textarea
         ref={textareaRef}

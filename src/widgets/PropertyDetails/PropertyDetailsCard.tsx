@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityProvider } from "@/shared/ui/VisibilityHint";
 import { useEffect, useMemo, useState } from "react";
 import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
 import {
@@ -174,6 +175,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
                 ? property.apartment.buildingAgeType
                 : null,
             furnished: property.apartment.furnished,
+            dishwasher: property.apartment.dishwasher ?? null,
             parking: property.apartment.parking,
             parkingTypes: property.apartment.parkingTypes,
             parkingSpaces: property.apartment.parkingSpaces,
@@ -203,6 +205,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
             fruitTrees: property.privateHouse.fruitTrees,
             renovation: parseRenovationForForm(property.privateHouse.renovation),
             furnished: property.privateHouse.furnished,
+            dishwasher: property.privateHouse.dishwasher ?? null,
             buildingCondition: property.privateHouse.buildingCondition,
             minRentalPeriod: property.privateHouse.minRentalPeriod ?? undefined,
           }
@@ -520,7 +523,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
           images={property.images}
           apiBaseUrl={apiBaseUrl}
           canDelete={presentation === "edit" && canEdit}
-          onDeleted={onImagesChanged ?? (() => Promise.resolve())}
+          onChanged={onImagesChanged ?? (() => Promise.resolve())}
         />
       </div>
 
@@ -557,6 +560,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          <FieldVisibilityProvider value="public">
           <PropertyDetailsLifecycleSection
             property={property}
             showRecordTimestamp
@@ -629,6 +633,7 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
               {isSaving ? "ინახება…" : "ცვლილებების შენახვა"}
             </button>
           </div>
+          </FieldVisibilityProvider>
         </form>
       )}
     </>

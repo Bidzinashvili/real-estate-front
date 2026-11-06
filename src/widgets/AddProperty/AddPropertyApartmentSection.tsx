@@ -12,11 +12,12 @@ import {
   RENOVATION_SELECT_OPTIONS,
 } from "@/features/properties/addPropertyFormOptions";
 import { isBuildingCondition } from "@/features/properties/types";
-import { SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
+import { CheckboxField, SelectField, TextField } from "@/widgets/AddProperty/addPropertyFormFields";
 import { BuildingStructureFields } from "@/widgets/AddProperty/BuildingStructureFields";
 import { MinRentalPeriodField } from "@/widgets/AddProperty/MinRentalPeriodField";
 import { VerifiableBooleanField } from "@/widgets/AddProperty/VerifiableBooleanField";
 import { ListingParkingFields } from "@/widgets/AddProperty/ListingParkingFields";
+import { CountChipField } from "@/widgets/AddProperty/CountChipField";
 import { ListingBalconyFields } from "@/widgets/AddProperty/ListingBalconyFields";
 import type { FormState } from "@/features/properties/addPropertyFormState";
 import type { FormErrors } from "@/features/properties/addPropertyFormValidation";
@@ -129,6 +130,7 @@ export function AddPropertyApartmentSection({
     patchApartment({
       [fieldKey]: next.value,
       needsVerification: next.needsVerification,
+      ...(fieldKey === "furnished" && next.value !== true ? { dishwasher: false } : {}),
     } as Partial<FormState["apartment"]>);
   }
 
@@ -162,19 +164,18 @@ export function AddPropertyApartmentSection({
           required
           error={fieldErrors["apartment.totalArea"]}
         />
-        <TextField
+        <CountChipField
           id="aptRooms"
           label="ოთახები"
-          type="number"
           value={apartment.rooms}
           onChange={handleRoomsChange}
           required
           error={fieldErrors["apartment.rooms"]}
         />
-        <TextField
+        <CountChipField
           id="aptBedrooms"
           label="საძინებლები"
-          type="number"
+          min={0}
           value={apartment.bedrooms}
           onChange={handleBedroomsChange}
           required
@@ -254,26 +255,40 @@ export function AddPropertyApartmentSection({
           idPrefix="apt"
           parking={apartment.parking}
           parkingTypes={apartment.parkingTypes}
-          onChange={(nextParking) => patchApartment(nextParking)}
-        />
-        <NumericVerificationRow
-          id="aptParking"
-          label="პარკინგის ადგილები"
-          value={apartment.parkingSpaces}
-          fieldKey="parkingSpaces"
-          error={fieldErrors["apartment.parkingSpaces"]}
-          needsVerification={apartment.needsVerification}
-          onValueChange={(value) => patchApartment({ parkingSpaces: value })}
-          onNeedsVerificationChange={(nextFields) =>
-            patchApartment({ needsVerification: nextFields })
+          onChange={(nextParking) =>
+            patchApartment(
+              nextParking.parking === "YES"
+                ? nextParking
+                : {
+                    ...nextParking,
+                    parkingSpaces: "",
+                    needsVerification: apartment.needsVerification.filter(
+                      (fieldKey) => fieldKey !== "parkingSpaces",
+                    ),
+                  },
+            )
           }
         />
+        {apartment.parking === "YES" ? (
+          <NumericVerificationRow
+            id="aptParking"
+            label="პარკინგის ადგილები"
+            value={apartment.parkingSpaces}
+            fieldKey="parkingSpaces"
+            error={fieldErrors["apartment.parkingSpaces"]}
+            needsVerification={apartment.needsVerification}
+            onValueChange={(value) => patchApartment({ parkingSpaces: value })}
+            onNeedsVerificationChange={(nextFields) =>
+              patchApartment({ needsVerification: nextFields })
+            }
+          />
+        ) : null}
         {(
           [
             { id: "aptElevator", label: "ლიფტი", key: "elevator" },
             { id: "aptCentralHeating", label: "ცენტრალური გათბობა", key: "centralHeating" },
             { id: "aptAirConditioner", label: "კონდიციონერი", key: "airConditioner" },
-            { id: "aptFurnished", label: "ავეჯით", key: "furnished" },
+            { id: "aptFurnished", label: "ავეჯი და ტექნიკა", key: "furnished" },
             { id: "aptGoodView", label: "კარგი ხედი", key: "goodView" },
           ] as const
         ).map((field) => (
@@ -289,6 +304,14 @@ export function AddPropertyApartmentSection({
             onChange={(nextState) => handleBooleanFieldChange(field.key, nextState)}
           />
         ))}
+        {apartment.furnished === true ? (
+          <CheckboxField
+            id="aptDishwasher"
+            label="ჭურჭლის სარეცხი მანქანა"
+            checked={apartment.dishwasher === true}
+            onChange={(checked) => patchApartment({ dishwasher: checked })}
+          />
+        ) : null}
         {dealType === "RENT" ? (
           <VerifiableBooleanField
             id="aptPetsAllowed"

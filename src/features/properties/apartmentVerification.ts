@@ -4,7 +4,11 @@ import {
   isApartmentVerifiableField,
 } from "@/features/matching/matchingEnums";
 
-export type VerifiableBooleanUiState = "unknown" | "toBeVerified" | "yes" | "no";
+/**
+ * "Not specified" and "to be verified" are the same thing for agents, so an
+ * unset value (null) is always shown and saved as to-verify.
+ */
+export type VerifiableBooleanUiState = "toBeVerified" | "yes" | "no";
 
 const APARTMENT_BOOLEAN_VERIFIABLE_FIELDS = [
   "elevator",
@@ -41,7 +45,7 @@ export function booleanUiStateFromApartment(
   if (value === false) {
     return "no";
   }
-  return "unknown";
+  return "toBeVerified";
 }
 
 export function applyBooleanUiState(
@@ -58,13 +62,10 @@ export function applyBooleanUiState(
   if (nextState === "no") {
     return { value: false, needsVerification: withoutKey };
   }
-  if (nextState === "toBeVerified") {
-    return {
-      value: null,
-      needsVerification: [...withoutKey, fieldKey],
-    };
-  }
-  return { value: null, needsVerification: withoutKey };
+  return {
+    value: null,
+    needsVerification: [...withoutKey, fieldKey],
+  };
 }
 
 export function omitUnspecifiedBoolean(value: boolean | null | undefined): boolean | undefined {

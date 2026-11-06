@@ -392,7 +392,7 @@ export function useAddPropertyForm() {
         const created = await create(payload, images);
         if (created?.id) {
           clearDraft();
-          router.push(`/properties/${created.id}/edit`);
+          router.push(`/properties/${created.id}`);
           return;
         }
         clearDraft();

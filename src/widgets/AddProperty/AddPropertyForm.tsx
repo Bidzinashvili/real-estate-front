@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldVisibilityProvider } from "@/shared/ui/VisibilityHint";
 import { AddPropertyApartmentSection } from "@/widgets/AddProperty/AddPropertyApartmentSection";
 import { AddPropertyCommercialSection } from "@/widgets/AddProperty/AddPropertyCommercialSection";
 import { AddPropertyCoreFields } from "@/widgets/AddProperty/AddPropertyCoreFields";
@@ -41,6 +42,7 @@ export function AddPropertyForm() {
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-6" noValidate>
+          <FieldVisibilityProvider value="public">
           <AddPropertyCoreFields
             form={form}
             fieldErrors={fieldErrors}
@@ -131,6 +133,7 @@ export function AddPropertyForm() {
               {isLoading ? "ინახება…" : "განცხადების შექმნა"}
             </button>
           </div>
+          </FieldVisibilityProvider>
         </form>
       </div>
     </main>

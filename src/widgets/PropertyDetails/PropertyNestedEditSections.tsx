@@ -43,6 +43,7 @@ import { MinRentalPeriodEditField } from "@/widgets/PropertyDetails/MinRentalPer
 import { parseDecimalInput, parseIntegerInput } from "@/shared/lib/parseNumericInput";
 import { VerifiableBooleanField } from "@/widgets/AddProperty/VerifiableBooleanField";
 import { ListingParkingFields } from "@/widgets/AddProperty/ListingParkingFields";
+import { CountChipField } from "@/widgets/AddProperty/CountChipField";
 import { ListingBalconyFields } from "@/widgets/AddProperty/ListingBalconyFields";
 import { NeedsVerificationToggle } from "@/shared/components/NeedsVerificationToggle";
 import {
@@ -55,6 +56,8 @@ import {
   parseBalconyAreaDraft,
   type ListingBalconySelection,
 } from "@/features/properties/listingBalcony";
+
+const EDIT_COUNT_LABEL_CLASS_NAME = "mb-2 block text-sm font-medium text-foreground";
 
 function listingBalconyUpdatePatch(nextBalcony: ListingBalconySelection): {
   balconyCount: number | null;
@@ -93,6 +96,7 @@ export function ApartmentEditSection({
     setApartment({
       [fieldKey]: next.value,
       needsVerification: next.needsVerification,
+      ...(fieldKey === "furnished" && next.value !== true ? { dishwasher: null } : {}),
     });
   }
 
@@ -112,19 +116,20 @@ export function ApartmentEditSection({
           inputMode="decimal"
           placeholder={CANONICAL_AREA_MISSING_LABEL}
         />
-        <EditableNumericTextInput
+        <CountChipField
+          id="editAptRooms"
           label="ოთახები"
-          value={apartment.rooms}
-          onValueChange={(next) => setApartment({ rooms: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
+          labelClassName={EDIT_COUNT_LABEL_CLASS_NAME}
+          value={apartment.rooms === undefined ? "" : String(apartment.rooms)}
+          onChange={(raw) => setApartment({ rooms: parseIntegerInput(raw) })}
         />
-        <EditableNumericTextInput
+        <CountChipField
+          id="editAptBedrooms"
           label="საძინებლები"
-          value={apartment.bedrooms}
-          onValueChange={(next) => setApartment({ bedrooms: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
+          min={0}
+          labelClassName={EDIT_COUNT_LABEL_CLASS_NAME}
+          value={apartment.bedrooms === undefined ? "" : String(apartment.bedrooms)}
+          onChange={(raw) => setApartment({ bedrooms: parseIntegerInput(raw) })}
         />
         <EditableNumericTextInput
           label="სართული"
@@ -159,8 +164,21 @@ export function ApartmentEditSection({
           idPrefix="editApt"
           parking={apartment.parking ?? DEFAULT_LISTING_PARKING}
           parkingTypes={apartment.parkingTypes ?? []}
-          onChange={(nextParking) => setApartment(nextParking)}
+          onChange={(nextParking) =>
+            setApartment(
+              nextParking.parking === "YES"
+                ? nextParking
+                : {
+                    ...nextParking,
+                    parkingSpaces: null,
+                    needsVerification: (apartment.needsVerification ?? []).filter(
+                      (fieldKey) => fieldKey !== "parkingSpaces",
+                    ),
+                  },
+            )
+          }
         />
+        {(apartment.parking ?? DEFAULT_LISTING_PARKING) === "YES" ? (
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <EditableNumericTextInput
@@ -188,6 +206,7 @@ export function ApartmentEditSection({
             onChange={(nextFields) => setApartment({ needsVerification: nextFields })}
           />
         </div>
+        ) : null}
         <SelectField
           id="editAptBathrooms"
           label="სველი წერტილები"
@@ -246,7 +265,7 @@ export function ApartmentEditSection({
             { label: "ლიფტი", key: "elevator" },
             { label: "ცენტრალური გათბობა", key: "centralHeating" },
             { label: "კონდიციონერი", key: "airConditioner" },
-            { label: "ავეჯით", key: "furnished" },
+            { label: "ავეჯი და ტექნიკა", key: "furnished" },
             { label: "კარგი ხედი", key: "goodView" },
           ] as const
         ).map((field) => (
@@ -262,6 +281,13 @@ export function ApartmentEditSection({
             onChange={(nextState) => handleBooleanFieldChange(field.key, nextState)}
           />
         ))}
+        {apartment.furnished === true ? (
+          <EditableCheckbox
+            label="ჭურჭლის სარეცხი მანქანა"
+            checked={apartment.dishwasher === true}
+            onChange={(checked) => setApartment({ dishwasher: checked })}
+          />
+        ) : null}
         {dealType === "RENT" ? (
           <VerifiableBooleanField
             id="editAptPetsAllowed"
@@ -357,20 +383,39 @@ export function PrivateHouseEditSection({
           idPrefix="editPh"
           parking={privateHouse.parking ?? DEFAULT_LISTING_PARKING}
           parkingTypes={privateHouse.parkingTypes ?? []}
-          onChange={(nextParking) => setPrivateHouse(nextParking)}
+          onChange={(nextParking) =>
+            setPrivateHouse(
+              nextParking.parking === "YES"
+                ? nextParking
+                : { ...nextParking, parkingSpaces: null },
+            )
+          }
         />
-        <EditableNumericTextInput
-          label="პარკინგის ადგილები"
-          value={privateHouse.parkingSpaces ?? undefined}
-          onValueChange={(next) => setPrivateHouse({ parkingSpaces: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
-        />
+        {(privateHouse.parking ?? DEFAULT_LISTING_PARKING) === "YES" ? (
+          <EditableNumericTextInput
+            label="პარკინგის ადგილები"
+            value={privateHouse.parkingSpaces ?? undefined}
+            onValueChange={(next) => setPrivateHouse({ parkingSpaces: next })}
+            parse={parseIntegerInput}
+            inputMode="numeric"
+          />
+        ) : null}
         <EditableCheckbox
-          label="ავეჯით"
+          label="ავეჯი და ტექნიკა"
           checked={Boolean(privateHouse.furnished)}
-          onChange={(checked) => setPrivateHouse({ furnished: checked })}
+          onChange={(checked) =>
+            setPrivateHouse(
+              checked ? { furnished: true } : { furnished: false, dishwasher: null },
+            )
+          }
         />
+        {privateHouse.furnished ? (
+          <EditableCheckbox
+            label="ჭურჭლის სარეცხი მანქანა"
+            checked={privateHouse.dishwasher === true}
+            onChange={(checked) => setPrivateHouse({ dishwasher: checked })}
+          />
+        ) : null}
         <EditableCheckbox
           label="აუზი"
           checked={Boolean(privateHouse.pool)}
@@ -508,15 +553,23 @@ export function CommercialEditSection({
           idPrefix="editCm"
           parking={commercial.parking ?? DEFAULT_LISTING_PARKING}
           parkingTypes={commercial.parkingTypes ?? []}
-          onChange={(nextParking) => setCommercial(nextParking)}
+          onChange={(nextParking) =>
+            setCommercial(
+              nextParking.parking === "YES"
+                ? nextParking
+                : { ...nextParking, parkingSpaces: null },
+            )
+          }
         />
-        <EditableNumericTextInput
-          label="პარკინგის ადგილები"
-          value={commercial.parkingSpaces ?? undefined}
-          onValueChange={(next) => setCommercial({ parkingSpaces: next })}
-          parse={parseIntegerInput}
-          inputMode="numeric"
-        />
+        {(commercial.parking ?? DEFAULT_LISTING_PARKING) === "YES" ? (
+          <EditableNumericTextInput
+            label="პარკინგის ადგილები"
+            value={commercial.parkingSpaces ?? undefined}
+            onValueChange={(next) => setCommercial({ parkingSpaces: next })}
+            parse={parseIntegerInput}
+            inputMode="numeric"
+          />
+        ) : null}
         <EditableCheckbox
           label="კონდიციონერი"
           checked={Boolean(commercial.airConditioner)}

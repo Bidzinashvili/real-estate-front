@@ -82,11 +82,12 @@ export function VerifiableBooleanFact({
       />
     );
   }
+  // Unset = to verify (there is no separate "not specified" state).
   return (
     <PropertyViewFact
       label={label}
-      value="უცნობი"
-      tone="no"
+      value={NEEDS_VERIFICATION_LABEL}
+      tone="verify"
     />
   );
 }

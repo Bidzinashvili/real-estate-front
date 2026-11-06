@@ -97,10 +97,10 @@ export function DetailVerification({
   value: boolean | null | undefined;
   isToBeVerified: boolean;
 }) {
-  if (isToBeVerified) {
+  if (isToBeVerified || value === null || value === undefined) {
     return (
       <DetailRow label={label}>
-        <span className="font-medium text-warning-foreground">გადასამოწმებელია</span>
+        <span className="font-medium text-warning-foreground">გადასამოწმებელი</span>
       </DetailRow>
     );
   }

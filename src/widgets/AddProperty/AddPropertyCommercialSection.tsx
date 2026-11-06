@@ -120,16 +120,24 @@ export function AddPropertyCommercialSection({
           idPrefix="cm"
           parking={commercial.parking}
           parkingTypes={commercial.parkingTypes}
-          onChange={(nextParking) => patchCommercial(nextParking)}
+          onChange={(nextParking) =>
+            patchCommercial(
+              nextParking.parking === "YES"
+                ? nextParking
+                : { ...nextParking, parkingSpaces: "" },
+            )
+          }
         />
-        <TextField
-          id="cmParking"
-          label="პარკინგის ადგილები"
-          type="number"
-          value={commercial.parkingSpaces}
-          onChange={(value) => patchCommercial({ parkingSpaces: value })}
-          error={fieldErrors["commercial.parkingSpaces"]}
-        />
+        {commercial.parking === "YES" ? (
+          <TextField
+            id="cmParking"
+            label="პარკინგის ადგილები"
+            type="number"
+            value={commercial.parkingSpaces}
+            onChange={(value) => patchCommercial({ parkingSpaces: value })}
+            error={fieldErrors["commercial.parkingSpaces"]}
+          />
+        ) : null}
         <CheckboxField
           id="cmElectricity"
           label="ელექტროენერგია"
