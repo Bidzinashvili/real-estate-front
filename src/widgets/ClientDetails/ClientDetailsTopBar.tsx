@@ -9,7 +9,6 @@ import { ARCHIVE_COPY } from "@/features/lifecycle/archiveCopy";
 import { canEditRecordColor, type RecordColor } from "@/features/recordColor/recordColor";
 import { RecordColorPicker } from "@/widgets/RecordColor/RecordColorPicker";
 import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
-import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
 
 type ClientDetailsTopBarProps = {
@@ -80,7 +79,6 @@ export function ClientDetailsTopBar({
 
       <div className="flex flex-col items-end gap-1">
         <div className="flex flex-wrap items-center justify-end gap-2">
-        <AdminModeToggle />
         <RequestCollaborationButton
           collaborationClientId={collaborationClientId}
           canRequest={canRequestCollaboration}

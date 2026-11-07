@@ -12,6 +12,7 @@ import type {
 } from "@/features/adminTrash/types";
 import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
 import { ApiError } from "@/shared/lib/apiError";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type TrashKind = "properties" | "clients";
 
@@ -31,6 +32,7 @@ export function useTrashList<Item extends TrashPropertyRecord | TrashClientRecor
   query: TrashListQuery,
   enabled: boolean,
 ): UseTrashListResult<Item> {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [items, setItems] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(query.page ?? 1);
@@ -117,7 +119,7 @@ export function useTrashList<Item extends TrashPropertyRecord | TrashClientRecor
       cancelled = true;
       controller.abort();
     };
-  }, [enabled, kind, search, sortBy, order, queryPage, queryLimit, refetchTick]);
+  }, [enabled, kind, search, sortBy, order, queryPage, queryLimit, refetchTick, isAdminMode]);
 
   return { items, total, page, limit, isLoading, error, statusCode, refetch };
 }

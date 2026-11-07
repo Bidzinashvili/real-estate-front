@@ -1,7 +1,7 @@
 "use client";
 
 import { FieldVisibilityProvider } from "@/shared/ui/VisibilityHint";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArchiveCarryLink } from "@/features/lifecycle/ArchiveCarryLink";
 import {
   GEORGIAN_CITY_OPTIONS,
@@ -242,12 +242,27 @@ export function PropertyDetailsCard(props: PropertyDetailsCardProps) {
     assignmentFromProperty(property),
   );
   const [clientError, setClientError] = useState<string | null>(null);
+  // A refetch (e.g. Admin Mode toggled) must not wipe what the user typed.
+  // Replace the draft only while it still equals the last loaded snapshot.
+  const lastInitialValuesRef = useRef(initialValues);
   useEffect(() => {
-    setValues(initialValues);
+    const previous = lastInitialValuesRef.current;
+    lastInitialValuesRef.current = initialValues;
+    setValues((current) =>
+      JSON.stringify(current) === JSON.stringify(previous) ? initialValues : current,
+    );
   }, [initialValues]);
 
+  const lastOwnerAssignmentRef = useRef<PropertyOwnerAssignment | null>(null);
   useEffect(() => {
-    setOwnerAssignment(assignmentFromProperty(property));
+    const next = assignmentFromProperty(property);
+    const previous = lastOwnerAssignmentRef.current;
+    lastOwnerAssignmentRef.current = next;
+    setOwnerAssignment((current) =>
+      previous === null || JSON.stringify(current) === JSON.stringify(previous)
+        ? next
+        : current,
+    );
   }, [property.id, property.updatedAt, property.propertyOwner, property.ownerName, property.ownerPhones]);
 
   const handleDealTypeChange = (value: DealType) => {

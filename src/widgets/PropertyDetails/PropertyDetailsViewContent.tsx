@@ -33,7 +33,6 @@ import { HideFromOthersBadge } from "@/widgets/HideFromOthers/HideFromOthersBadg
 import { HideFromOthersToggle } from "@/widgets/HideFromOthers/HideFromOthersToggle";
 import { ReadyToUploadBadge } from "@/widgets/ReadyToUpload/ReadyToUploadBadge";
 import { ReadyToUploadToggle } from "@/widgets/ReadyToUpload/ReadyToUploadToggle";
-import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { canRequestCollaborationOnProperty } from "@/features/collaboration/canRequestCollaboration";
 import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestCollaborationButton";
 import { RequestPropertyVerificationButton } from "@/widgets/PropertyVerificationRequest/RequestPropertyVerificationButton";
@@ -168,7 +167,6 @@ export function PropertyDetailsViewContent({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <AdminModeToggle />
             {canEditRecordColor(canEdit, property.color) && property.color !== undefined ? (
               <RecordColorPicker
                 value={property.color}

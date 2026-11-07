@@ -68,6 +68,7 @@ export function CollaborationDetailBody({
   onAdminReject,
 }: CollaborationDetailBodyProps) {
   const [confirmReject, setConfirmReject] = useState(false);
+  const [confirmApprove, setConfirmApprove] = useState(false);
   const [showCounterPanel, setShowCounterPanel] = useState(false);
   const listing = collaboration.property;
   const listingPriceLabel = listing
@@ -293,7 +294,7 @@ export function CollaborationDetailBody({
           <button
             type="button"
             disabled={isSubmitting}
-            onClick={onAdminApprove}
+            onClick={() => setConfirmApprove(true)}
             className="inline-flex items-center rounded-full bg-success px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             დამტკიცება
@@ -306,6 +307,33 @@ export function CollaborationDetailBody({
           >
             უარყოფა
           </button>
+        </div>
+      ) : null}
+
+      {confirmApprove && showAdminActions ? (
+        <div className="rounded-xl border border-success/30 bg-success/5 p-4">
+          <p className="text-sm text-foreground">დარწმუნებული ხართ, რომ გსურთ დამტკიცება?</p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => {
+                setConfirmApprove(false);
+                onAdminApprove?.();
+              }}
+              className="inline-flex items-center rounded-full bg-success px-4 py-2 text-sm font-medium text-white"
+            >
+              დიახ, დამტკიცება
+            </button>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => setConfirmApprove(false)}
+              className="inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground"
+            >
+              გაუქმება
+            </button>
+          </div>
         </div>
       ) : null}
 

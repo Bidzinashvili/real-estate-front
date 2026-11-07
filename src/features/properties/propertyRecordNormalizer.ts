@@ -505,7 +505,8 @@ export function normalizeProperty(value: unknown): Property | null {
     ...optionalRecord("userId", readOptionalString(value, "userId")),
     ...optionalRecord(
       "managingAgent",
-      hasOwnJsonField(value, "agent") ||
+      hasOwnJsonField(value, "managingAgent") ||
+        hasOwnJsonField(value, "agent") ||
         hasOwnJsonField(value, "ownerAgent") ||
         hasOwnJsonField(value, "user")
         ? readManagingAgentFromRecord(value)

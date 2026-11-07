@@ -29,6 +29,8 @@ import { useUserStore } from "@/shared/stores";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { useCollaborationInboxCount } from "@/features/collaboration/useCollaborationInboxCount";
 import { useNotificationUnreadCount } from "@/features/notifications/useNotificationUnreadCount";
+import { useAdminMode } from "@/features/adminMode/useAdminMode";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 
 type AppSidebarProps = {
   isOpen: boolean;
@@ -204,6 +206,7 @@ function AppSidebarFrame({
 }: AppSidebarFrameProps) {
 
   const visibleItems = SIDEBAR_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+  const { isAdminMode } = useAdminMode();
   const collapseToggleLabel = isDesktopCollapsed
     ? "გვერდითი პანელის გაშლა"
     : "გვერდითი პანელის ჩაკეცვა";
@@ -219,7 +222,12 @@ function AppSidebarFrame({
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card/95 px-3 py-4 shadow-lg backdrop-blur-sm transition-[transform,width,padding] duration-200 ease-in-out lg:translate-x-0 ${
+        data-admin-mode={isAdminMode ? "on" : "off"}
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r px-3 py-4 shadow-lg backdrop-blur-sm transition-[transform,width,padding,background-color] duration-200 ease-in-out lg:translate-x-0 ${
+          isAdminMode
+            ? "border-amber-500 bg-amber-50/95 dark:bg-amber-950/95"
+            : "border-border bg-card/95"
+        } ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } ${isDesktopCollapsed ? "lg:w-16 lg:px-2" : "lg:w-64 lg:px-3"}`}
       >
@@ -255,6 +263,12 @@ function AppSidebarFrame({
             <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
+
+        {isAdmin ? (
+          <div className="mb-3 px-1">
+            <AdminModeToggle isCollapsed={isDesktopCollapsed} />
+          </div>
+        ) : null}
 
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden">
           {visibleItems.map((item) => {

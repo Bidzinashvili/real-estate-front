@@ -8,6 +8,7 @@ import { useDeleteAgent } from "@/features/agents/useDeleteAgent";
 import { useAgentDetails } from "@/features/agents/useAgentDetails";
 import { useResendAgentSetup } from "@/features/agents/useResendAgentSetup";
 import { useResetAgentPassword } from "@/features/agents/useResetAgentPassword";
+import { blockAgent, unblockAgent } from "@/features/agents/api";
 import { AgentDetailsCard } from "@/widgets/AgentDetails/AgentDetailsCard";
 import { AdminResetPasswordDialog } from "@/widgets/AgentDetails/AdminResetPasswordDialog";
 import { ConfirmDialog } from "@/widgets/ConfirmDialog/ConfirmDialog";
@@ -40,6 +41,9 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [restrictOpen, setRestrictOpen] = useState(false);
+  const [isRestricting, setIsRestricting] = useState(false);
+  const [restrictError, setRestrictError] = useState<string | null>(null);
 
   const handleGoBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -60,6 +64,29 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
     }
     await update(agent.id, values);
     reload();
+  };
+
+  const handleToggleRestriction = async () => {
+    if (!agent) {
+      return;
+    }
+    setIsRestricting(true);
+    setRestrictError(null);
+    try {
+      if (agent.blocked) {
+        await unblockAgent(agent.id);
+      } else {
+        await blockAgent(agent.id);
+      }
+      setRestrictOpen(false);
+      reload();
+    } catch (failure) {
+      setRestrictError(
+        failure instanceof Error ? failure.message : "მოქმედება ვერ შესრულდა.",
+      );
+    } finally {
+      setIsRestricting(false);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -135,6 +162,11 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
         </button>
         <div className="flex items-center gap-2">
           <PasswordSetBadge passwordSet={agent.passwordSet} />
+          {agent.blocked ? (
+            <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
+              დაბლოკილია
+            </span>
+          ) : null}
         </div>
         <AgentDetailsCard
           agent={agent}
@@ -170,6 +202,27 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
               {AUTH_COPY.adminResetPassword}
             </button>
           </div>
+          <div className="mt-6 border-t border-border pt-4">
+            <h3 className="text-sm font-semibold text-foreground">წვდომის შეზღუდვა</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              შეზღუდვისას აგენტი გამოდის ყველა სესიიდან და ვერ შედის სისტემაში. მისი
+              განცხადებები და კლიენტები ხელუხლებელი რჩება.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setRestrictError(null);
+                setRestrictOpen(true);
+              }}
+              className={`mt-3 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium shadow-sm transition ${
+                agent.blocked
+                  ? "border border-border bg-card text-foreground hover:bg-muted"
+                  : "border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15"
+              }`}
+            >
+              {agent.blocked ? "🔓 შეზღუდვის მოხსნა" : "🔒 წვდომის შეზღუდვა"}
+            </button>
+          </div>
           {statusMessage ? (
             <p className="mt-3 text-sm text-foreground" role="status">
               {statusMessage}
@@ -198,6 +251,23 @@ export function AgentDetailsView({ agentId }: AgentDetailsViewProps) {
         isProcessing={isDeleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={restrictOpen}
+        title={agent.blocked ? "მოიხსნას შეზღუდვა?" : "შეიზღუდოს წვდომა?"}
+        description={
+          agent.blocked
+            ? "აგენტს კვლავ ექნება შესვლის უფლება."
+            : "აგენტი გამოვა ყველა სესიიდან და ვერ შევა სისტემაში, სანამ შეზღუდვას არ მოხსნით."
+        }
+        confirmLabel={agent.blocked ? "დიახ, მოხსნა" : "დიახ, შეზღუდვა"}
+        cancelLabel="გაუქმება"
+        tone={agent.blocked ? "primary" : "danger"}
+        isProcessing={isRestricting}
+        error={restrictError}
+        onConfirm={handleToggleRestriction}
+        onCancel={() => setRestrictOpen(false)}
       />
 
       <AdminResetPasswordDialog

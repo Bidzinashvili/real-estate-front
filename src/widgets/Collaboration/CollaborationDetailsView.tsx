@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { useActiveAdminPrivileges } from "@/features/adminMode/useEffectiveAccessViewer";
 import { useCurrentUser } from "@/shared/hooks";
 import { useCollaborationDetails } from "@/features/collaboration/useCollaborationDetails";
 import {
@@ -25,10 +24,11 @@ type CollaborationDetailsViewProps = {
 export function CollaborationDetailsView({ collaborationId }: CollaborationDetailsViewProps) {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useCurrentUser();
-  const hasAdminPrivileges = useActiveAdminPrivileges();
+  // Admin decisions depend on the role only. Admin Mode controls data reveal, which the API applies.
+  const isAdminRole = user?.role === "ADMIN";
   const { collaboration, isLoading, error, refetch } = useCollaborationDetails({
     collaborationId,
-    mode: hasAdminPrivileges ? "admin" : "agent",
+    mode: isAdminRole ? "admin" : "agent",
     enabled: Boolean(user),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,7 +80,7 @@ export function CollaborationDetailsView({ collaborationId }: CollaborationDetai
       {!isUserLoading && !isLoading && !error && collaboration ? (
         <CollaborationDetailBody
           collaboration={collaboration}
-          isAdmin={hasAdminPrivileges}
+          isAdmin={isAdminRole}
           isSubmitting={isSubmitting}
           actionError={actionError}
           onAccept={() => void runAction(() => acceptCollaboration(collaborationId))}

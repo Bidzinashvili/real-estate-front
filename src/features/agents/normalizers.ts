@@ -41,6 +41,7 @@ export function normalizeAgentDetails(value: unknown): AgentDetails | null {
       value.passwordSet !== undefined
         ? asBoolean(value.passwordSet)
         : undefined,
+    blocked: value.blocked === true,
   };
 }
 

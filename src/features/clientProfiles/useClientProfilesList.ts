@@ -5,6 +5,7 @@ import { getClientProfiles } from "@/features/clientProfiles/api";
 import type { GetClientProfilesQuery } from "@/features/clientProfiles/getClientProfilesQuery";
 import type { ClientProfileListItem } from "@/features/clientProfiles/types";
 import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseClientProfilesListResult = {
   profiles: ClientProfileListItem[];
@@ -19,6 +20,7 @@ type UseClientProfilesListResult = {
 export function useClientProfilesList(
   query?: GetClientProfilesQuery,
 ): UseClientProfilesListResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [profiles, setProfiles] = useState<ClientProfileListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -84,7 +86,7 @@ export function useClientProfilesList(
       cancelled = true;
       controller.abort();
     };
-  }, [search, blacklisted, queryPage, queryLimit, refetchTick]);
+  }, [search, blacklisted, queryPage, queryLimit, refetchTick, isAdminMode]);
 
   return { profiles, total, page, limit, isLoading, error, refetch };
 }

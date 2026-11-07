@@ -10,6 +10,7 @@ import type {
   TrashPropertyRecord,
 } from "@/features/adminTrash/types";
 import { ApiError } from "@/shared/lib/apiError";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseTrashDetailResult<Item> = {
   record: Item | null;
@@ -38,6 +39,7 @@ function useTrashDetail<Item>(
   enabled: boolean,
   loader: (id: string) => Promise<Item>,
 ): UseTrashDetailResult<Item> {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [record, setRecord] = useState<Item | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ function useTrashDetail<Item>(
       setStatusCode(loadError instanceof ApiError ? loadError.statusCode : 500);
       setRecord(null);
     }
-  }, [enabled, loader, recordId]);
+  }, [enabled, loader, recordId, isAdminMode]);
 
   useEffect(() => {
     if (!recordId || !enabled) {
@@ -103,7 +105,7 @@ function useTrashDetail<Item>(
     return () => {
       cancelled = true;
     };
-  }, [enabled, loader, recordId]);
+  }, [enabled, loader, recordId, isAdminMode]);
 
   return { record, isLoading, error, statusCode, refetch };
 }

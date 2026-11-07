@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import { getApiBaseUrl, getStoredAuthToken } from "@/shared/lib/auth";
 import { getAgentsList } from "@/features/agents/api";
 import type { Agent } from "@/features/agents/types";
@@ -16,10 +17,15 @@ type UseAgentsListResult = {
   agents: Agent[];
   isLoading: boolean;
   error: string | null;
+  reload: () => void;
 };
 
 export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResult {
   const { enabled, search, sortBy, order } = options;
+  // Admin Mode changes what the API returns (blocked agents are masked), so refetch on change.
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const reload = useCallback(() => setRefreshTick((tick) => tick + 1), []);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +77,7 @@ export function useAgentsList(options: UseAgentsListOptions): UseAgentsListResul
     return () => {
       cancelled = true;
     };
-  }, [enabled, search, sortBy, order]);
+  }, [enabled, search, sortBy, order, isAdminMode, refreshTick]);
 
-  return { agents, isLoading, error };
+  return { agents, isLoading, error, reload };
 }

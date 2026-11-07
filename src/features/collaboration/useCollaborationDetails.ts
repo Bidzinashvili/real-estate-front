@@ -6,6 +6,7 @@ import {
   fetchAdminCollaborationById,
 } from "@/features/collaboration/collaborationApi";
 import type { CollaborationRequestDto } from "@/features/collaboration/collaborationApi.types";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseCollaborationDetailsArgs = {
   collaborationId: string;
@@ -25,6 +26,7 @@ export function useCollaborationDetails({
   mode,
   enabled = true,
 }: UseCollaborationDetailsArgs): UseCollaborationDetailsResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [collaboration, setCollaboration] = useState<CollaborationRequestDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export function useCollaborationDetails({
     } finally {
       setIsLoading(false);
     }
-  }, [collaborationId, mode]);
+  }, [collaborationId, mode, isAdminMode]);
 
   useEffect(() => {
     if (!enabled) {

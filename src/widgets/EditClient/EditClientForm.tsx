@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,13 +67,19 @@ function EditClientFormInner({
     watch,
     setValue,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema) as Resolver<ClientFormValues>,
     defaultValues: mapClientDetailToFormValues(client),
   });
 
+  // A refetch (e.g. Admin Mode toggled) must not wipe unsaved input.
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
   useEffect(() => {
+    if (isDirtyRef.current) {
+      return;
+    }
     reset(mapClientDetailToFormValues(client));
   }, [client, reset]);
 

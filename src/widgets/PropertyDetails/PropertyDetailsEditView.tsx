@@ -16,7 +16,6 @@ import { useCurrentUser } from "@/shared/hooks";
 import { usePropertyDetails } from "@/features/properties/usePropertyDetails";
 import { useUpdateProperty } from "@/features/properties/useUpdateProperty";
 import { PropertyDetailsCard } from "@/widgets/PropertyDetails/PropertyDetailsCard";
-import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { useEffect, useMemo, useState } from "react";
 import type { Property, PropertyUpdatePayload } from "@/features/properties/types";
 import { canManageProperty } from "@/features/properties/listingVisibility";
@@ -150,7 +149,6 @@ export function PropertyDetailsEditView({ propertyId }: PropertyDetailsEditViewP
             <Eye className="h-4 w-4" aria-hidden="true" />
             ობიექტის ნახვა
           </ArchiveCarryLink>
-          <AdminModeToggle />
         </div>
 
         <NoteRemindersSection

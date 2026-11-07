@@ -295,7 +295,8 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
         client={client}
         getLock={getLock}
         onLockChange={handleLockChange}
-        canViewContactDetails={canEditStatus}
+        // The API omits phone fields from shared rows, so presence decides visibility.
+        canViewContactDetails={"phones" in client}
         showLockControls={canEditStatus}
       />
 

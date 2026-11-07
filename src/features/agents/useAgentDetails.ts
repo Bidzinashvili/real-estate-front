@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 import type { AgentDetails } from "@/features/agents/types";
 import { getAgentById } from "@/features/agents/api";
 
@@ -16,6 +17,7 @@ export function useAgentDetails(id: string | null | undefined): UseAgentDetailsR
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
 
   const reload = useCallback(() => {
     setReloadCount((current) => current + 1);
@@ -56,7 +58,7 @@ export function useAgentDetails(id: string | null | undefined): UseAgentDetailsR
     return () => {
       cancelled = true;
     };
-  }, [id, reloadCount]);
+  }, [id, reloadCount, isAdminMode]);
 
   return { agent, isLoading, error, reload };
 }

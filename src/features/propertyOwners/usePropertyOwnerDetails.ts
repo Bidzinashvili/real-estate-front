@@ -5,6 +5,7 @@ import { getPropertyOwnerById } from "@/features/propertyOwners/api";
 import type { PropertyOwner } from "@/features/propertyOwners/types";
 import { ApiError } from "@/shared/lib/apiError";
 import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UsePropertyOwnerDetailsResult = {
   owner: PropertyOwner | null;
@@ -17,6 +18,7 @@ type UsePropertyOwnerDetailsResult = {
 export function usePropertyOwnerDetails(
   ownerId: string,
 ): UsePropertyOwnerDetailsResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [owner, setOwner] = useState<PropertyOwner | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export function usePropertyOwnerDetails(
       setStatusCode(loadError instanceof ApiError ? loadError.statusCode : 500);
       setOwner(null);
     }
-  }, [ownerId]);
+  }, [ownerId, isAdminMode]);
 
   useRecordsChangedListener(refetch);
 
@@ -85,7 +87,7 @@ export function usePropertyOwnerDetails(
     return () => {
       cancelled = true;
     };
-  }, [ownerId]);
+  }, [ownerId, isAdminMode]);
 
   return { owner, isLoading, error, statusCode, refetch };
 }

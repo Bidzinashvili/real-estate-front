@@ -5,6 +5,8 @@ export type Agent = {
   phone: string | null;
   createdAt: string;
   passwordSet?: boolean;
+  /** Admin restricted access. A blocked agent's name is masked unless Admin Mode is ON. */
+  blocked?: boolean;
 };
 
 export type AgentsResponse = {
@@ -34,6 +36,7 @@ export type AgentDetails = {
   updatedAt: string;
   deletedAt: string | null;
   passwordSet?: boolean;
+  blocked?: boolean;
 };
 
 export type AgentCreatePayload = {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Bell, Eye, MapPin } from "lucide-react";
 import { formatHotelScopeLabel } from "@/features/properties/addPropertyFormOptions";
+import { RecordManagingAgentLine } from "@/widgets/RecordManagingAgent/RecordManagingAgentLine";
 import { formatDealTypeLabel } from "@/features/properties/dealType";
 import { formatPropertyCardTitle, formatPropertyStreetLine } from "@/features/properties/formatPropertyCardTitle";
 import { propertyCompactStats } from "@/features/properties/propertyCompactStats";
@@ -235,6 +236,13 @@ export function PropertyListingCard({
 
         {listingOurSiteId ? (
           <p className="text-xs text-muted-foreground">ID: {listingOurSiteId}</p>
+        ) : null}
+
+        {property.managingAgent ? (
+          <RecordManagingAgentLine
+            managingAgent={property.managingAgent}
+            className="text-xs text-muted-foreground"
+          />
         ) : null}
 
         {streetLine ? (

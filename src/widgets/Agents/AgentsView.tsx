@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { blockAgent, unblockAgent } from "@/features/agents/api";
+import { ConfirmDialog } from "@/widgets/ConfirmDialog/ConfirmDialog";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAgentsList } from "@/features/agents/useAgentsList";
@@ -34,11 +36,35 @@ export function AgentsView() {
   const [order, setOrder] = useState<Order>("desc");
   const [page, setPage] = useState(1);
 
-  const { agents, isLoading, error } = useAgentsList({
+  const { agents, isLoading, error, reload } = useAgentsList({
     enabled: true,
     sortBy,
     order,
   });
+  const [restrictTarget, setRestrictTarget] = useState<{ id: string; fullName: string; blocked: boolean } | null>(null);
+  const [isRestricting, setIsRestricting] = useState(false);
+  const [restrictError, setRestrictError] = useState<string | null>(null);
+
+  const handleConfirmRestriction = async () => {
+    if (!restrictTarget) {
+      return;
+    }
+    setIsRestricting(true);
+    setRestrictError(null);
+    try {
+      if (restrictTarget.blocked) {
+        await unblockAgent(restrictTarget.id);
+      } else {
+        await blockAgent(restrictTarget.id);
+      }
+      setRestrictTarget(null);
+      reload();
+    } catch (failure) {
+      setRestrictError(failure instanceof Error ? failure.message : "მოქმედება ვერ შესრულდა.");
+    } finally {
+      setIsRestricting(false);
+    }
+  };
 
   const normalizedSearch = search.trim().toLowerCase();
   const filteredAgents = normalizedSearch
@@ -172,6 +198,11 @@ export function AgentsView() {
                       <div className="flex flex-col gap-1">
                         <span>{agent.fullName}</span>
                         <PasswordSetBadge passwordSet={agent.passwordSet} />
+                        {agent.blocked ? (
+                          <span className="w-fit rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
+                            დაბლოკილია
+                          </span>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-foreground">
@@ -184,13 +215,31 @@ export function AgentsView() {
                       {new Date(agent.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/agents/${agent.id}`)}
-                        className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
-                      >
-                        ნახვა
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRestrictError(null);
+                            setRestrictTarget({ id: agent.id, fullName: agent.fullName, blocked: Boolean(agent.blocked) });
+                          }}
+                          aria-label={agent.blocked ? "შეზღუდვის მოხსნა" : "წვდომის შეზღუდვა"}
+                          title={agent.blocked ? "შეზღუდვის მოხსნა" : "წვდომის შეზღუდვა"}
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition ${
+                            agent.blocked
+                              ? "border-border bg-card text-foreground hover:bg-muted"
+                              : "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                          }`}
+                        >
+                          {agent.blocked ? "🔓" : "🔒"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/agents/${agent.id}`)}
+                          className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
+                        >
+                          ნახვა
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -227,6 +276,23 @@ export function AgentsView() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={restrictTarget !== null}
+        title={restrictTarget?.blocked ? "მოიხსნას შეზღუდვა?" : "შეიზღუდოს წვდომა?"}
+        description={
+          restrictTarget?.blocked
+            ? `${restrictTarget.fullName} კვლავ შეძლებს შესვლას.`
+            : `${restrictTarget?.fullName ?? ""} გამოვა ყველა სესიიდან და ვერ შევა სისტემაში, სანამ შეზღუდვას არ მოხსნით.`
+        }
+        confirmLabel={restrictTarget?.blocked ? "დიახ, მოხსნა" : "დიახ, შეზღუდვა"}
+        cancelLabel="გაუქმება"
+        tone={restrictTarget?.blocked ? "primary" : "danger"}
+        isProcessing={isRestricting}
+        error={restrictError}
+        onConfirm={handleConfirmRestriction}
+        onCancel={() => setRestrictTarget(null)}
+      />
     </>
   );
 }

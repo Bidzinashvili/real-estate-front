@@ -7,6 +7,8 @@ import { UserBootstrap } from "@/widgets/userBootstrap/UserBootstrap";
 import { AppSidebar } from "@/widgets/AppSidebar/AppSidebar";
 import { useDesktopSidebarCollapsed } from "@/widgets/AppSidebar/useDesktopSidebarCollapsed";
 import { UndoSnackbarHost } from "@/widgets/UndoSnackbar/UndoSnackbarHost";
+import { AdminModeBanner } from "@/widgets/AdminMode/AdminModeBanner";
+import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 
 type AppShellProps = {
   children: ReactNode;
@@ -57,8 +59,12 @@ export function AppShell({ children }: AppShellProps) {
           <Link href="/dashboard" className="text-sm font-semibold tracking-tight text-foreground">
             უძრავი ქონება
           </Link>
+          <div className="ml-auto w-44">
+            <AdminModeToggle />
+          </div>
         </header>
         <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+          <AdminModeBanner />
           {children}
         </div>
       </div>

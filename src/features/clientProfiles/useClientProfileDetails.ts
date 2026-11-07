@@ -5,6 +5,7 @@ import { getClientProfileById } from "@/features/clientProfiles/api";
 import type { ClientProfile } from "@/features/clientProfiles/types";
 import { ApiError } from "@/shared/lib/apiError";
 import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseClientProfileDetailsResult = {
   profile: ClientProfile | null;
@@ -17,6 +18,7 @@ type UseClientProfileDetailsResult = {
 export function useClientProfileDetails(
   profileId: string,
 ): UseClientProfileDetailsResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export function useClientProfileDetails(
       setStatusCode(loadError instanceof ApiError ? loadError.statusCode : 500);
       setProfile(null);
     }
-  }, [profileId]);
+  }, [profileId, isAdminMode]);
 
   useRecordsChangedListener(refetch);
 
@@ -85,7 +87,7 @@ export function useClientProfileDetails(
     return () => {
       cancelled = true;
     };
-  }, [profileId]);
+  }, [profileId, isAdminMode]);
 
   return { profile, isLoading, error, statusCode, refetch };
 }

@@ -5,6 +5,7 @@ import { getPropertyOwners } from "@/features/propertyOwners/api";
 import type { GetPropertyOwnersQuery } from "@/features/propertyOwners/getPropertyOwnersQuery";
 import type { PropertyOwner } from "@/features/propertyOwners/types";
 import { useRecordsChangedListener } from "@/features/lifecycle/useRecordsChangedListener";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UsePropertyOwnersListResult = {
   owners: PropertyOwner[];
@@ -19,6 +20,7 @@ type UsePropertyOwnersListResult = {
 export function usePropertyOwnersList(
   query?: GetPropertyOwnersQuery,
 ): UsePropertyOwnersListResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [owners, setOwners] = useState<PropertyOwner[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -82,7 +84,7 @@ export function usePropertyOwnersList(
       cancelled = true;
       controller.abort();
     };
-  }, [search, queryPage, queryLimit, refetchTick]);
+  }, [search, queryPage, queryLimit, refetchTick, isAdminMode]);
 
   return { owners, total, page, limit, isLoading, error, refetch };
 }

@@ -8,7 +8,12 @@ import type { JsonObject } from "@/shared/lib/jsonValue";
 export type ManagingAgentSummary = {
   id: string;
   fullName: string;
+  /** Empty when the API does not send contact details (blocked agent, non-admin view). */
   email: string;
+  /** Admin restricted this agent's access. Name is masked for non-Active-Admin viewers. */
+  blocked?: boolean;
+  /** Agent was removed (soft-deleted). Their records are kept. */
+  deleted?: boolean;
 };
 
 export function formatManagingAgentDisplayName(
@@ -48,13 +53,15 @@ export function normalizeManagingAgentSummary(
     id: agentId,
     fullName,
     email,
+    ...(value.blocked === true ? { blocked: true } : {}),
+    ...(value.deleted === true ? { deleted: true } : {}),
   };
 }
 
 export function readManagingAgentFromRecord(
   record: JsonObject,
 ): ManagingAgentSummary | null {
-  const nestedKeys = ["agent", "ownerAgent", "user"] as const;
+  const nestedKeys = ["managingAgent", "agent", "ownerAgent", "user"] as const;
 
   for (const fieldKey of nestedKeys) {
     if (!Object.prototype.hasOwnProperty.call(record, fieldKey)) {

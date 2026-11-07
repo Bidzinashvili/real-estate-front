@@ -32,7 +32,6 @@ import {
   viewerCanViewClientDetail,
 } from "@/features/databaseList/viewerOwnership";
 import { OnlyMineToggle } from "@/widgets/DatabaseList/OnlyMineToggle";
-import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { ActiveNotesCount } from "@/widgets/DatabaseList/ActiveNotesCount";
 import { ClientListCard } from "@/widgets/Clients/ClientListCard";
 import { DatabaseListSearchRow } from "@/widgets/DatabaseList/DatabaseListSearchRow";
@@ -275,7 +274,6 @@ export function ClientsView({ listingScope = "current" }: ClientsViewProps) {
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
             <OnlyMineToggle isActive={isMineScope} onToggle={toggleOnlyMine} />
-            <AdminModeToggle />
           </div>
           <ClientsListSortFields
             sortBy={state.sortBy}

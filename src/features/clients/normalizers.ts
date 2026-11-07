@@ -364,7 +364,8 @@ export function normalizeClient(client: ClientApi): Client {
     userId: asString(record.userId),
     ...optionalClientField(
       "managingAgent",
-      hasOwnJsonField(record, "agent") ||
+      hasOwnJsonField(record, "managingAgent") ||
+        hasOwnJsonField(record, "agent") ||
         hasOwnJsonField(record, "ownerAgent") ||
         hasOwnJsonField(record, "user")
         ? readManagingAgentFromRecord(record)

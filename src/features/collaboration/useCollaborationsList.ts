@@ -7,6 +7,7 @@ import type {
   CollaborationListQuery,
   CollaborationListResponse,
 } from "@/features/collaboration/collaborationApi.types";
+import { useAdminModeStore } from "@/features/adminMode/adminModeStore";
 
 type UseCollaborationsListArgs = {
   enabled?: boolean;
@@ -28,6 +29,7 @@ export function useCollaborationsList({
   query,
   pollIntervalMs,
 }: UseCollaborationsListArgs): UseCollaborationsListResult {
+  const isAdminMode = useAdminModeStore((state) => state.isAdminMode);
   const [data, setData] = useState<CollaborationListResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export function useCollaborationsList({
         }
       }
     },
-    [mode, statusKey, groupKey, page, limit],
+    [mode, statusKey, groupKey, page, limit, isAdminMode],
   );
 
   const refetch = useCallback(async () => {
@@ -85,7 +87,7 @@ export function useCollaborationsList({
       return;
     }
     void loadRows(true);
-  }, [enabled, loadRows]);
+  }, [enabled, loadRows, isAdminMode]);
 
   useEffect(() => {
     if (!enabled || !pollIntervalMs || pollIntervalMs <= 0) {
@@ -108,7 +110,7 @@ export function useCollaborationsList({
     return () => {
       window.removeEventListener(collaborationsChangedEventName, handleCollaborationsChanged);
     };
-  }, [enabled, loadRows]);
+  }, [enabled, loadRows, isAdminMode]);
 
   return { data, isLoading, error, refetch };
 }

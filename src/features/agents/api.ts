@@ -263,3 +263,62 @@ export async function resetAgentPassword(
     throw error;
   }
 }
+
+export async function blockAgent(
+  agentId: string,
+  reason?: string,
+): Promise<AgentDetails> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/admin/agents/${agentId}/block`,
+      reason?.trim() ? { reason: reason.trim() } : {},
+      { headers },
+    );
+    const normalized = normalizeAgentDetails(res.data);
+    if (!normalized) {
+      throw new Error("აგენტის შეზღუდვა ვერ მოხერხდა.");
+    }
+    return normalized;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "აგენტის შეზღუდვა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}
+
+export async function unblockAgent(agentId: string): Promise<AgentDetails> {
+  const { baseUrl, headers } = getAuthHeaders();
+
+  try {
+    const res = await axios.post(
+      `${baseUrl}/admin/agents/${agentId}/unblock`,
+      {},
+      { headers },
+    );
+    const normalized = normalizeAgentDetails(res.data);
+    if (!normalized) {
+      throw new Error("შეზღუდვის მოხსნა ვერ მოხერხდა.");
+    }
+    return normalized;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const fallback = "შეზღუდვის მოხსნა ვერ მოხერხდა.";
+      const parsed = parseStandardApiError(
+        error.response?.data,
+        error.response?.status ?? 500,
+        fallback,
+      );
+      throw new ApiError(parsed, fallback);
+    }
+    throw error;
+  }
+}

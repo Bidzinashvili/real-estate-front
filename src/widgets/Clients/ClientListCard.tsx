@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import { Bell, Eye, MapPin } from "lucide-react";
 import { canRunClientMatches } from "@/features/matching/canRunClientMatches";
+import { RecordManagingAgentLine } from "@/widgets/RecordManagingAgent/RecordManagingAgentLine";
 import { clientMatchesHref } from "@/features/matching/matchingRoutes";
 import { ui } from "@/shared/i18n/ui";
 import { MatchPercentActions } from "@/widgets/Matching/MatchPercentActions";
@@ -151,6 +152,13 @@ export function ClientListCard({
           <p className="truncate text-sm font-medium text-foreground">
             {client.name}
           </p>
+        ) : null}
+
+        {client.managingAgent ? (
+          <RecordManagingAgentLine
+            managingAgent={client.managingAgent}
+            className="text-xs text-muted-foreground"
+          />
         ) : null}
 
         {locationLine ? (

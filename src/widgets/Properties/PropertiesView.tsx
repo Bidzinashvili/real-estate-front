@@ -9,7 +9,6 @@ import { useCurrentUser } from "@/shared/hooks";
 import { PropertyCatalogAdvancedSearch } from "@/widgets/Properties/propertyCatalogFilters";
 import { PropertyCatalogBasicFilters } from "@/widgets/Properties/propertyCatalogBasicFilters";
 import { PropertyCatalogScopeToggle } from "@/widgets/Properties/PropertyCatalogScopeToggle";
-import { AdminModeToggle } from "@/widgets/AdminMode/AdminModeToggle";
 import { prefetchGelToUsdForAmounts } from "@/features/currency/gelToUsdConvertCache";
 import type { Property } from "@/features/properties/types";
 import { PropertyListingCard } from "@/widgets/Properties/PropertyListingCard";
@@ -156,7 +155,6 @@ export function PropertiesView({ listingScope = "current" }: PropertiesViewProps
               isLoggedIn={isLoggedIn}
               isAuthLoading={isAuthLoading}
             />
-            <AdminModeToggle />
           </div>
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:gap-4 lg:w-auto">
             <OptionChips
