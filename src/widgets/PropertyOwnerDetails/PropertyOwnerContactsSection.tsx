@@ -49,7 +49,7 @@ export function PropertyOwnerContactsSection({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canDeleteContact = owner.contacts.length > 1;
+  const canDeleteContact = true; // phone is optional: the last number may be removed
 
   function validateDraft(draft: ContactDraft): string | null {
     if (!draft.phone.trim()) {

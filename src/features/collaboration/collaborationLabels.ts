@@ -38,13 +38,13 @@ export function formatCollaborationStatusLabel(
   }
   if (status === "PENDING_RECIPIENT") {
     if (viewerRole === "RECIPIENT" && awaitingRole === "RECIPIENT") {
-      return "თქვენი პასუხი ელოდება";
+      return "თქვენს პასუხი ელოდება";
     }
     return COLLABORATION_STATUS_LABELS.PENDING_RECIPIENT;
   }
   if (status === "PENDING_REQUESTER") {
     if (viewerRole === "REQUESTER" && awaitingRole === "REQUESTER") {
-      return "თქვენი პასუხი ელოდება";
+      return "თქვენს პასუხი ელოდება";
     }
     return COLLABORATION_STATUS_LABELS.PENDING_REQUESTER;
   }
@@ -75,6 +75,22 @@ export const COLLABORATION_STATUS_GROUP_LABELS: Record<
   WAITING_ADMIN: "ადმინის დასტურს ელოდება",
   APPROVED: "დამტკიცებულია",
   REJECTED: "უარყოფილია",
+};
+
+/** Any split is shown as "NN%". Standard splits also get a short description. */
+export function formatCollaborationSplitShort(split: number): string {
+  return `${split}%`;
+}
+
+export function formatCollaborationSplitLabel(split: number): string {
+  const description = COLLABORATION_SPLIT_DESCRIPTIONS[split];
+  return description ? `${split}% — ${description}` : `${split}%`;
+}
+
+const COLLABORATION_SPLIT_DESCRIPTIONS: Record<number, string> = {
+  50: "ორმხრივი გაყოფა",
+  33: "სამმხრივი გაყოფა",
+  25: "ოთხმხრივი გაყოფა",
 };
 
 export const COLLABORATION_SPLIT_LABELS: Record<CollaborationSplit, string> = {

@@ -112,13 +112,7 @@ export function validateOwnerAssignment(
     return "მესაკუთრის სახელი სავალდებულოა.";
   }
 
-  const usableContacts = filledContacts(assignment.contacts).filter((contact) =>
-    isPhoneLike(contact.phone),
-  );
-  if (usableContacts.length === 0) {
-    return "საჭიროა მინიმუმ ერთი ტელეფონის ნომერი.";
-  }
-
+  // Phone is optional: an owner can be saved with only a name.
   const invalidContact = filledContacts(assignment.contacts).find(
     (contact) => contact.phone.trim() !== "" && !isPhoneLike(contact.phone),
   );
@@ -142,7 +136,7 @@ export function buildNestedOwnerInput(
     ),
   );
 
-  if (!assignment.name.trim() || usableContacts.length === 0) {
+  if (!assignment.name.trim()) {
     return null;
   }
 

@@ -151,10 +151,8 @@ const lockedStringArrayListFieldSchema = z.object({
 export const clientFormSchema = z
   .object({
     name: z.string().min(1, "სრული სახელი სავალდებულოა").max(500),
-    phones: z
-      .array(z.string().min(1, "ტელეფონის ნომერი სავალდებულოა"))
-      .min(1, "ტელეფონის ნომერი სავალდებულოა")
-      .max(50),
+    // Phone is optional. Empty or prefix-only entries are dropped on submit.
+    phones: z.array(z.string()).max(50),
     whatsapp: z.string().max(64).optional().or(z.literal("")),
     budgetMin: lockedPartialNumberFieldSchema,
     budgetMax: lockedPartialNumberFieldSchema,
@@ -201,11 +199,13 @@ export const clientFormSchema = z
     minRentalPeriod: lockedPartialNumberFieldSchema,
   })
   .superRefine((data, context) => {
+    // Only a partly typed number is an error. An empty field is fine.
     const primaryPhone = data.phones[0] ?? "";
-    if (isIncompleteClientPhone(primaryPhone)) {
+    const typedAnything = primaryPhone.trim() !== "" && normalizeGeorgianPhone(primaryPhone.trim()) !== GEORGIAN_PHONE_PREFIX;
+    if (typedAnything && isIncompleteClientPhone(primaryPhone)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "ტელეფონის ნომერი სავალდებულოა",
+        message: "ტელეფონის ნომერი არასწორია",
         path: ["phones", 0],
       });
     }

@@ -49,7 +49,7 @@ export function ClientProfilePhonesSection({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canDeletePhone = profile.phones.length > 1;
+  const canDeletePhone = true; // phone is optional: the last number may be removed
 
   function validateDraft(draft: PhoneDraft): string | null {
     if (!draft.phone.trim()) {

@@ -9,8 +9,8 @@ import {
   type CollaborationSplit,
 } from "@/features/collaboration/collaborationEnums";
 import {
-  COLLABORATION_SPLIT_LABELS,
-  COLLABORATION_SPLIT_SHORT_LABELS,
+  formatCollaborationSplitLabel,
+  formatCollaborationSplitShort,
   formatCollaborationProposalUpdatedHint,
   MONITORING_STATE_LABELS,
 } from "@/features/collaboration/collaborationLabels";
@@ -146,10 +146,10 @@ export function CollaborationDetailBody({
       <section className="space-y-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
         <h2 className="text-sm font-semibold text-foreground">{splitSectionTitle}</h2>
         <p className="text-lg font-semibold text-foreground">
-          {COLLABORATION_SPLIT_SHORT_LABELS[collaboration.split]}
+          {formatCollaborationSplitShort(collaboration.split)}
         </p>
         <p className="text-sm text-muted-foreground">
-          {COLLABORATION_SPLIT_LABELS[collaboration.split]}
+          {formatCollaborationSplitLabel(collaboration.split)}
         </p>
         {collaboration.proposedAt ? (
           <p className="text-xs text-muted-foreground">

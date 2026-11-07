@@ -6,7 +6,7 @@ import { useCollaborationsList } from "@/features/collaboration/useCollaboration
 import { useAdminMonitorsList } from "@/features/collaboration/useAdminMonitors";
 import type { CollaborationStatusGroup } from "@/features/collaboration/collaborationEnums";
 import {
-  COLLABORATION_SPLIT_LABELS,
+  formatCollaborationSplitLabel,
   MONITORING_STATE_LABELS,
 } from "@/features/collaboration/collaborationLabels";
 import { CollaborationRequestCard } from "@/widgets/Collaboration/CollaborationRequestCard";
@@ -136,7 +136,7 @@ export function AdminCollaborationsView() {
                 </span>
               </div>
               <p className="text-sm text-foreground">
-                {COLLABORATION_SPLIT_LABELS[monitor.split]}
+                {formatCollaborationSplitLabel(monitor.split)}
               </p>
               <CollaborationStatusBadge status={monitor.collaboration.status} />
               <p className="text-xs text-muted-foreground">

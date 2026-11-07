@@ -147,11 +147,13 @@ export function PropertyViewActionsCard({
           </button>
         ) : null}
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <span className="rounded-full bg-success-muted px-3 py-1.5 text-xs font-semibold text-success-foreground">
-          ინფორმაციის შევსება: {matchPercentage ?? "—"}%
-        </span>
-      </div>
+      {property.ownedByViewer === true ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full bg-success-muted px-3 py-1.5 text-xs font-semibold text-success-foreground">
+            ინფორმაციის შევსება: {matchPercentage ?? "—"}%
+          </span>
+        </div>
+      ) : null}
       {archiveError ? (
         <p className="mt-2 text-xs text-destructive" role="alert">
           {archiveError}

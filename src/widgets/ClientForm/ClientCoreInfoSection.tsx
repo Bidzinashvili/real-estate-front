@@ -114,7 +114,7 @@ export function ClientCoreInfoSection({
 
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-foreground">
-            ტელეფონები <span className="text-red-500">*</span>
+            ტელეფონები
           </label>
           <div className="space-y-2">
             <div className="flex items-center gap-2">

@@ -247,6 +247,7 @@ export function ClientDetailsContent({ client, onClientChanged }: ClientDetailsC
   return (
     <div className="space-y-6">
       <ClientDetailsTopBar
+        isOwnRecord={client.ownedByViewer === true}
         clientId={client.id}
         canRunMatches={canRunMatches}
         canEditStatus={canEditStatus}

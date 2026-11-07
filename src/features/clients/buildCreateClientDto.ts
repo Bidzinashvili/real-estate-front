@@ -7,20 +7,25 @@ import type {
 } from "@/features/clients/clientApi.types";
 import type { ClientPreferenceValue } from "@/features/matching/matchingEnums";
 import { persistEntityLock } from "@/features/matching/persistEntityLock";
-import { normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
+import { GEORGIAN_PHONE_PREFIX, normalizeGeorgianPhone } from "@/shared/lib/normalizeGeorgianPhone";
 import { districtsPayloadValueForCity } from "@/features/clients/clientCities";
 import { normalizeClientStatusForApi } from "@/features/clients/clientStatusDisplay";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 
+function isEmptyPhoneEntry(raw: string): boolean {
+  const trimmed = raw.trim();
+  return trimmed === "" || normalizeGeorgianPhone(trimmed) === GEORGIAN_PHONE_PREFIX;
+}
+
 function phonesForIdentitySubmit(phones: string[]): string[] {
   return phones
     .map((phoneNumber) => phoneNumber.trim())
-    .filter((phoneNumber) => phoneNumber !== "");
+    .filter((phoneNumber) => !isEmptyPhoneEntry(phoneNumber));
 }
 
 function toSubmittedWhatsapp(rawWhatsapp: string | undefined): string | undefined {
   const trimmedWhatsapp = rawWhatsapp?.trim() ?? "";
-  if (!trimmedWhatsapp) {
+  if (isEmptyPhoneEntry(trimmedWhatsapp)) {
     return undefined;
   }
   return normalizeGeorgianPhone(trimmedWhatsapp);

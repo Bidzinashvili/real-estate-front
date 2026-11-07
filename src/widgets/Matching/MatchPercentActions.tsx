@@ -7,6 +7,8 @@ import {
 import { cn } from "@/shared/lib/utils";
 
 type MatchPercentActionsProps = {
+  /** Green (all clients/listings) button. The purple one stays visible. */
+  showGlobalMatches?: boolean;
   allHref: string;
   mineHref: string;
   allLabel: string;
@@ -29,6 +31,7 @@ export function MatchPercentActions({
   sessionKind,
   entityId,
   temporaryLockedFields,
+  showGlobalMatches = true,
 }: MatchPercentActionsProps) {
   function handleNavigate() {
     if (!sessionKind || !entityId) {
@@ -39,6 +42,7 @@ export function MatchPercentActions({
 
   return (
     <div className={cn("inline-flex items-center gap-1.5", className)}>
+      {showGlobalMatches ? (
       <ArchiveCarryLink
         href={allHref}
         aria-label={allLabel}
@@ -51,6 +55,7 @@ export function MatchPercentActions({
       >
         %
       </ArchiveCarryLink>
+      ) : null}
       <ArchiveCarryLink
         href={mineHref}
         aria-label={mineLabel}

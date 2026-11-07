@@ -9,7 +9,7 @@ import {
   COLLABORATION_SPLITS,
   type CollaborationSplit,
 } from "@/features/collaboration/collaborationEnums";
-import { COLLABORATION_SPLIT_LABELS } from "@/features/collaboration/collaborationLabels";
+import { formatCollaborationSplitLabel } from "@/features/collaboration/collaborationLabels";
 import { useCollaborationAgentOptions } from "@/features/collaboration/useCollaborationAgentOptions";
 
 type CreateCollaborationModalProps = {
@@ -78,16 +78,7 @@ export function CreateCollaborationModal({
       setSubmitError("თანამშრომლობის მიზანი ვერ განისაზღვრა.");
       return;
     }
-    if (selectedAgents.length !== neededCount) {
-      setSubmitError(
-        neededCount === 0
-          ? null
-          : `აირჩიეთ ზუსტად ${neededCount} დამატებითი აგენტი.`,
-      );
-      if (neededCount > 0) {
-        return;
-      }
-    }
+    // Extra agents are optional (up to neededCount). With none, only the two parties are listed.
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -95,7 +86,7 @@ export function CreateCollaborationModal({
         split,
         ...(propertyId ? { propertyId } : {}),
         ...(clientId ? { clientId } : {}),
-        ...(neededCount > 0
+        ...(selectedAgents.length > 0
           ? { additionalParticipantIds: selectedAgents.map((agentOption) => agentOption.id) }
           : {}),
       });
@@ -145,7 +136,7 @@ export function CreateCollaborationModal({
                 onChange={() => handleSplitChange(splitOption)}
                 className="mt-1"
               />
-              <span>{COLLABORATION_SPLIT_LABELS[splitOption]}</span>
+              <span>{formatCollaborationSplitLabel(splitOption)}</span>
             </label>
           ))}
         </fieldset>
@@ -153,7 +144,7 @@ export function CreateCollaborationModal({
         {neededCount > 0 ? (
           <div className="mt-4 space-y-2">
             <p className="text-xs font-medium text-muted-foreground">
-              დამატებითი აგენტები ({selectedAgents.length}/{neededCount})
+              დამატებითი აგენტები — არასავალდებულო (მაქს. {neededCount}): {selectedAgents.length}/{neededCount}
             </p>
             <input
               type="search"
@@ -233,7 +224,7 @@ export function CreateCollaborationModal({
           </button>
           <button
             type="button"
-            disabled={isSubmitting || selectedAgents.length !== neededCount}
+            disabled={isSubmitting}
             onClick={() => void handleSubmit()}
             className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >

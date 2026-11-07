@@ -42,7 +42,8 @@ export type AgentDetails = {
 export type AgentCreatePayload = {
   fullName: string;
   email: string;
-  phone: string;
+  /** Optional. Omitted when the admin leaves it empty. */
+  phone?: string;
 };
 
 export type AgentCreateResult = AgentDetails & {

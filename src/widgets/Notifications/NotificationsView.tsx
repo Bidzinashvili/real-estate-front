@@ -42,12 +42,24 @@ export function NotificationsView() {
           <SectionHeader title="ბოლო შეტყობინებები" />
           <ul className="flex flex-col gap-2">
             {notifications.map((notification) => {
-              const hasPropertyLink = Boolean(notification.propertyId);
+              // Collaboration notices open the request itself; others open the property.
+              const collaborationHref = notification.collaborationRequestId
+                ? `/collaborations/${notification.collaborationRequestId}`
+                : null;
+              const propertyHref = notification.propertyId
+                ? `/properties/${notification.propertyId}`
+                : null;
+              const href = collaborationHref ?? propertyHref;
               const content = (
                 <>
                   <p className="text-sm font-medium text-foreground">
                     {notification.message}
                   </p>
+                  {collaborationHref ? (
+                    <p className="mt-1 text-xs font-medium text-primary">
+                      გახსენით თანამშრომლობა →
+                    </p>
+                  ) : null}
                   {notification.createdAt ? (
                     <p className="mt-1 text-xs text-muted-foreground">
                       {formatTbilisiDateTime(notification.createdAt)}
@@ -58,9 +70,9 @@ export function NotificationsView() {
 
               return (
                 <li key={notification.id}>
-                  {hasPropertyLink ? (
+                  {href ? (
                     <Link
-                      href={`/properties/${notification.propertyId}`}
+                      href={href}
                       className={`block p-4 transition-colors hover:bg-muted/40 ${surfaceCardClassName}`}
                     >
                       {content}

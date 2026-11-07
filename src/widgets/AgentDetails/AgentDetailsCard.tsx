@@ -3,6 +3,7 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import type { AgentDetails } from "@/features/agents/types";
 import { normalizeGeorgianAgentPhone } from "@/features/agents/normalizeAgentPhone";
+import { agentPhoneForApi } from "@/features/agents/agentPhoneOptional";
 import { AgentPhoneInput } from "@/widgets/Agents/AgentPhoneInput";
 
 type FormValues = {
@@ -53,7 +54,8 @@ export function AgentDetailsCard({
     event.preventDefault();
     onSubmit({
       ...values,
-      phone: normalizeGeorgianAgentPhone(values.phone),
+      // Empty phone is valid; the card passes it on as an optional value.
+      phone: agentPhoneForApi(values.phone) ?? "",
     });
   };
 

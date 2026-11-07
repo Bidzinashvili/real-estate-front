@@ -8,6 +8,7 @@ import * as z from "zod";
 import { useCreateAgent } from "@/features/agents/useCreateAgent";
 import { useResendAgentSetup } from "@/features/agents/useResendAgentSetup";
 import { normalizeGeorgianAgentPhone } from "@/features/agents/normalizeAgentPhone";
+import { agentPhoneForApi } from "@/features/agents/agentPhoneOptional";
 import type { AgentCreateResult } from "@/features/agents/types";
 import { useSessionDraft } from "@/shared/hooks/useSessionDraft";
 import { AgentPhoneInput } from "@/widgets/Agents/AgentPhoneInput";
@@ -16,7 +17,7 @@ import { AUTH_COPY } from "@/features/auth/authCopy";
 const formSchema = z.object({
   fullName: z.string().min(2, "სახელი უნდა შეიცავდეს მინიმუმ 2 სიმბოლოს"),
   email: z.string().email("შეიყვანეთ სწორი ელფოსტა"),
-  phone: z.string().min(6, "შეიყვანეთ ტელეფონის ნომერი"),
+  phone: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -79,7 +80,7 @@ export function AddAgentForm() {
   const onSubmit = async (values: FormValues) => {
     const result = await create({
       ...values,
-      phone: normalizeGeorgianAgentPhone(values.phone),
+      phone: agentPhoneForApi(values.phone),
     });
     clearDraft();
     setCreatedAgent(result);
@@ -212,7 +213,7 @@ export function AddAgentForm() {
                 <AgentPhoneInput
                   id="phone"
                   name={field.name}
-                  value={field.value}
+                  value={field.value ?? ""}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                 />

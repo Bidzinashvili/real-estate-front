@@ -255,6 +255,7 @@ export function ClientListCard({
                   mineHref={clientMatchesHref(client.id, "MINE")}
                   allLabel={`${ui.matchAll}: ${ui.allListings}`}
                   mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+                  showGlobalMatches={client.ownedByViewer === true}
                   sessionKind="client"
                   entityId={client.id}
                 />

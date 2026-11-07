@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { CollaborationRequestDto } from "@/features/collaboration/collaborationApi.types";
 import { canViewerNegotiate } from "@/features/collaboration/collaborationEnums";
-import { COLLABORATION_SPLIT_SHORT_LABELS } from "@/features/collaboration/collaborationLabels";
+import { formatCollaborationSplitShort } from "@/features/collaboration/collaborationLabels";
 import {
-  COLLABORATION_SPLIT_LABELS,
+  formatCollaborationSplitLabel,
 } from "@/features/collaboration/collaborationLabels";
 import { DEAL_TYPE_LABELS, lookupEnumLabel } from "@/shared/i18n/enumLabels";
 import { CollaborationStatusBadge } from "@/widgets/Collaboration/CollaborationStatusBadge";
@@ -58,10 +58,10 @@ export function CollaborationRequestCard({
         />
       </div>
       <p className="text-sm font-medium text-foreground">
-        შეთავაზებული განაწილება: {COLLABORATION_SPLIT_SHORT_LABELS[collaboration.split]}
+        შეთავაზებული განაწილება: {formatCollaborationSplitShort(collaboration.split)}
       </p>
       <p className="text-xs text-muted-foreground">
-        {COLLABORATION_SPLIT_LABELS[collaboration.split]}
+        {formatCollaborationSplitLabel(collaboration.split)}
       </p>
       <p className="text-xs text-muted-foreground">
         მოთხოვნა: {formatDateTime(collaboration.createdAt)}

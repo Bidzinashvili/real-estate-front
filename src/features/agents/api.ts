@@ -157,7 +157,12 @@ export async function updateAgent(
   const { baseUrl, headers } = getAuthHeaders();
 
   try {
-    const res = await axios.patch(`${baseUrl}/admin/agents/${id}`, payload, {
+    // Phone is optional: an empty value means "no change", so leave it out of the body.
+    const body: AgentUpdatePayload = { ...payload };
+    if (body.phone === "") {
+      delete body.phone;
+    }
+    const res = await axios.patch(`${baseUrl}/admin/agents/${id}`, body, {
       headers,
     });
     const normalized = normalizeAgentDetails(res.data);

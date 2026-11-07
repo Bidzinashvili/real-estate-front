@@ -5,12 +5,7 @@ import type {
   CollaborationAgentOption,
   CollaborationParticipant,
 } from "@/features/collaboration/collaborationApi.types";
-import {
-  additionalParticipantsNeeded,
-  COLLABORATION_SPLITS,
-  type CollaborationSplit,
-} from "@/features/collaboration/collaborationEnums";
-import { COLLABORATION_SPLIT_SHORT_LABELS } from "@/features/collaboration/collaborationLabels";
+import type { CollaborationSplit } from "@/features/collaboration/collaborationEnums";
 import { useCollaborationAgentOptions } from "@/features/collaboration/useCollaborationAgentOptions";
 
 type CollaborationCounterOfferPanelProps = {
@@ -21,18 +16,29 @@ type CollaborationCounterOfferPanelProps = {
   onSubmit: (split: CollaborationSplit, additionalParticipantIds: string[]) => void;
 };
 
-function readExcludedParticipantUserIds(participants: CollaborationParticipant[]): Set<string> {
-  const excludedIds = new Set<string>();
+const MIN_SPLIT = 1;
+const MAX_SPLIT = 100;
+const MAX_EXTRA_AGENTS = 2;
+
+/** Requester and recipient cannot be picked again as extra agents. */
+function readPartyUserIds(participants: CollaborationParticipant[]): Set<string> {
+  const ids = new Set<string>();
   for (const participant of participants) {
-    if (participant.role !== "REQUESTER" && participant.role !== "RECIPIENT") {
-      continue;
-    }
-    const userId = participant.user?.id;
-    if (userId) {
-      excludedIds.add(userId);
+    if (participant.role === "REQUESTER" || participant.role === "RECIPIENT") {
+      if (participant.user?.id) ids.add(participant.user.id);
     }
   }
-  return excludedIds;
+  return ids;
+}
+
+/** Current extra agents, pre-selected so they stay unless the user removes them. */
+function readCurrentExtras(participants: CollaborationParticipant[]): CollaborationAgentOption[] {
+  return participants
+    .filter((participant) => participant.role === "ADDITIONAL" && participant.user)
+    .map((participant) => ({
+      id: participant.user!.id,
+      fullName: participant.user!.fullName,
+    }));
 }
 
 export function CollaborationCounterOfferPanel({
@@ -42,62 +48,42 @@ export function CollaborationCounterOfferPanel({
   onCancel,
   onSubmit,
 }: CollaborationCounterOfferPanelProps) {
-  const counterSplitOptions = useMemo(
-    () => COLLABORATION_SPLITS.filter((splitOption) => splitOption !== currentSplit),
-    [currentSplit],
-  );
-  const [split, setSplit] = useState<CollaborationSplit>(
-    counterSplitOptions[0] ?? 50,
-  );
+  const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
-  const [selectedAgents, setSelectedAgents] = useState<CollaborationAgentOption[]>([]);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const neededCount = additionalParticipantsNeeded(split);
-  const excludedUserIds = useMemo(
-    () => readExcludedParticipantUserIds(participants),
-    [participants],
+  const [selectedAgents, setSelectedAgents] = useState<CollaborationAgentOption[]>(() =>
+    readCurrentExtras(participants),
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const excludedIds = useMemo(() => readPartyUserIds(participants), [participants]);
   const { agents, isLoading, error } = useCollaborationAgentOptions({
-    enabled: neededCount > 0,
+    enabled: true,
     search,
   });
-
   const availableAgents = useMemo(
     () =>
       agents.filter(
         (agentOption) =>
-          !excludedUserIds.has(agentOption.id) &&
+          !excludedIds.has(agentOption.id) &&
           !selectedAgents.some((selected) => selected.id === agentOption.id),
       ),
-    [agents, excludedUserIds, selectedAgents],
+    [agents, excludedIds, selectedAgents],
   );
 
-  function handleSplitChange(nextSplit: CollaborationSplit) {
-    setSplit(nextSplit);
-    const nextNeeded = additionalParticipantsNeeded(nextSplit);
-    setSelectedAgents((current) => current.slice(0, nextNeeded));
-    setSubmitError(null);
-  }
-
   function handleSubmit() {
-    if (split === currentSplit) {
-      setSubmitError("აირჩიეთ მიმდინარე შეთავაზებისგან განსხვავებული წილი.");
+    const trimmed = value.trim();
+    const split = Number(trimmed);
+    if (trimmed === "" || !Number.isInteger(split) || split < MIN_SPLIT || split > MAX_SPLIT) {
+      setSubmitError(`შეიყვანეთ მთელი პროცენტი ${MIN_SPLIT}-დან ${MAX_SPLIT}-მდე.`);
       return;
     }
-    if (selectedAgents.length !== neededCount) {
-      setSubmitError(
-        neededCount === 0
-          ? null
-          : `აირჩიეთ ზუსტად ${neededCount} დამატებითი აგენტი.`,
-      );
-      if (neededCount > 0) {
-        return;
-      }
+    if (split === currentSplit) {
+      setSubmitError(`მიმდინარე შეთავაზება (${currentSplit}%) უკვე დაყენებულია.`);
+      return;
     }
     setSubmitError(null);
     onSubmit(
       split,
-      neededCount > 0 ? selectedAgents.map((agentOption) => agentOption.id) : [],
+      selectedAgents.map((agentOption) => agentOption.id),
     );
   }
 
@@ -106,94 +92,95 @@ export function CollaborationCounterOfferPanel({
       <div className="space-y-1">
         <h3 className="text-sm font-semibold text-foreground">პროცენტის შეცვლა</h3>
         <p className="text-xs text-muted-foreground">
-          აირჩიეთ სხვა დაშვებული წილი. მიმდინარე შეთავაზება ({currentSplit}%) ხელმისაწვდომი
-          არ არის.
+          ჩაწერეთ თქვენი შეთავაზებული პროცენტი ({MIN_SPLIT}-{MAX_SPLIT}%). მიმდინარე შეთავაზება:{" "}
+          {currentSplit}%.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {counterSplitOptions.map((splitOption) => (
-          <button
-            key={splitOption}
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => handleSplitChange(splitOption)}
-            className={`inline-flex min-w-[4.5rem] items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition ${
-              split === splitOption
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "border border-border bg-card text-foreground hover:bg-muted"
-            }`}
-          >
-            {COLLABORATION_SPLIT_SHORT_LABELS[splitOption]}
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          inputMode="numeric"
+          min={MIN_SPLIT}
+          max={MAX_SPLIT}
+          step={1}
+          value={value}
+          disabled={isSubmitting}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setSubmitError(null);
+          }}
+          placeholder="მაგ. 40"
+          aria-label="შეთავაზებული პროცენტი"
+          className="h-9 w-28 rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary"
+        />
+        <span className="text-sm text-foreground">%</span>
       </div>
 
-      {neededCount > 0 ? (
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">
-            დამატებითი აგენტები ({selectedAgents.length}/{neededCount})
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground">
+          დამატებითი აგენტები — არასავალდებულო (მაქს. {MAX_EXTRA_AGENTS}): {selectedAgents.length}/
+          {MAX_EXTRA_AGENTS}
+        </p>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="აგენტის ძიება…"
+          className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+        />
+        {selectedAgents.length > 0 ? (
+          <ul className="flex flex-wrap gap-1.5">
+            {selectedAgents.map((agentOption) => (
+              <li key={agentOption.id}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedAgents((current) =>
+                      current.filter((item) => item.id !== agentOption.id),
+                    )
+                  }
+                  className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+                >
+                  {agentOption.fullName} ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {isLoading ? <p className="text-xs text-muted-foreground">აგენტები იტვირთება…</p> : null}
+        {error ? (
+          <p className="text-xs text-destructive" role="alert">
+            {error}
           </p>
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="აგენტის ძიება…"
-            className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
-          {selectedAgents.length > 0 ? (
-            <ul className="flex flex-wrap gap-1.5">
-              {selectedAgents.map((agentOption) => (
+        ) : null}
+        {!isLoading && !error ? (
+          <ul className="max-h-40 overflow-y-auto rounded-xl border border-border">
+            {availableAgents.length === 0 ? (
+              <li className="px-3 py-2 text-xs text-muted-foreground">აგენტები ვერ მოიძებნა.</li>
+            ) : (
+              availableAgents.map((agentOption) => (
                 <li key={agentOption.id}>
                   <button
                     type="button"
+                    disabled={selectedAgents.length >= MAX_EXTRA_AGENTS || isSubmitting}
                     onClick={() =>
                       setSelectedAgents((current) =>
-                        current.filter((item) => item.id !== agentOption.id),
+                        current.some((item) => item.id === agentOption.id)
+                          ? current
+                          : [...current, agentOption],
                       )
                     }
-                    className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+                    className="flex w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {agentOption.fullName} ×
+                    {agentOption.fullName}
                   </button>
                 </li>
-              ))}
-            </ul>
-          ) : null}
-          {isLoading ? <p className="text-xs text-muted-foreground">აგენტები იტვირთება…</p> : null}
-          {error ? (
-            <p className="text-xs text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          {!isLoading && !error ? (
-            <ul className="max-h-40 overflow-y-auto rounded-xl border border-border">
-              {availableAgents.length === 0 ? (
-                <li className="px-3 py-2 text-xs text-muted-foreground">აგენტები ვერ მოიძებნა.</li>
-              ) : (
-                availableAgents.map((agentOption) => (
-                  <li key={agentOption.id}>
-                    <button
-                      type="button"
-                      disabled={selectedAgents.length >= neededCount || isSubmitting}
-                      onClick={() =>
-                        setSelectedAgents((current) =>
-                          current.some((item) => item.id === agentOption.id)
-                            ? current
-                            : [...current, agentOption],
-                        )
-                      }
-                      className="flex w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {agentOption.fullName}
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
+              ))
+            )}
+          </ul>
+        ) : null}
+      </div>
 
       {submitError ? (
         <p className="text-sm text-destructive" role="alert">
@@ -204,7 +191,7 @@ export function CollaborationCounterOfferPanel({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={isSubmitting || selectedAgents.length !== neededCount}
+          disabled={isSubmitting || value.trim() === ""}
           onClick={handleSubmit}
           className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >

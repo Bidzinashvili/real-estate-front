@@ -13,6 +13,8 @@ import { RequestCollaborationButton } from "@/widgets/Collaboration/RequestColla
 
 type ClientDetailsTopBarProps = {
   clientId: string;
+  /** Green match-percent buttons show only on records the viewer owns. */
+  isOwnRecord: boolean;
   canRunMatches: boolean;
   canEditStatus: boolean;
   canShowArchive: boolean;
@@ -41,6 +43,7 @@ type ClientDetailsTopBarProps = {
 
 export function ClientDetailsTopBar({
   clientId,
+  isOwnRecord,
   canRunMatches,
   canEditStatus,
   canShowArchive,
@@ -104,6 +107,7 @@ export function ClientDetailsTopBar({
             mineHref={clientMatchesHref(clientId, "MINE")}
             allLabel={`${ui.matchAll}: ${ui.allListings}`}
             mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+            showGlobalMatches={isOwnRecord}
             sessionKind="client"
             entityId={clientId}
             temporaryLockedFields={temporaryLockedFields}

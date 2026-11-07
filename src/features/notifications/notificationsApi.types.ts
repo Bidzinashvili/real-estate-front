@@ -4,6 +4,7 @@ export type AppNotification = {
   createdAt: string;
   readAt: string | null;
   propertyId: string | null;
+  collaborationRequestId: string | null;
   propertyVerificationRequestId: string | null;
 };
 

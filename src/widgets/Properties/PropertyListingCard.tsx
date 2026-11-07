@@ -346,6 +346,7 @@ export function PropertyListingCard({
                 mineHref={propertyMatchesHref(property.id, "MINE")}
                 allLabel={`${ui.matchAll}: ${ui.allClients}`}
                 mineLabel={`${ui.matchMine}: ${ui.myClients}`}
+                showGlobalMatches={property.ownedByViewer === true}
                 sessionKind="property"
                 entityId={property.id}
               />

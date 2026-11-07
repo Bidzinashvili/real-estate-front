@@ -143,6 +143,7 @@ function EditClientFormInner({
             mineHref={clientMatchesHref(clientId, "MINE")}
             allLabel={`${ui.matchAll}: ${ui.allListings}`}
             mineLabel={`${ui.matchMine}: ${ui.myListings}`}
+            showGlobalMatches={client.ownedByViewer === true}
             sessionKind="client"
             entityId={clientId}
             temporaryLockedFields={temporaryLockedFields}

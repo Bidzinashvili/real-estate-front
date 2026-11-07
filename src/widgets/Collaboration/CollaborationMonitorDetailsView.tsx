@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useCurrentUser } from "@/shared/hooks";
 import { useAdminMonitorDetails } from "@/features/collaboration/useAdminMonitors";
 import {
-  COLLABORATION_SPLIT_LABELS,
+  formatCollaborationSplitLabel,
   MONITORING_STATE_LABELS,
 } from "@/features/collaboration/collaborationLabels";
 import {
@@ -105,7 +105,7 @@ export function CollaborationMonitorDetailsView({
 
           <section className="space-y-2 rounded-xl bg-card p-4 shadow-sm ring-1 ring-border">
             <h2 className="text-sm font-semibold text-foreground">თანამშრომლობა</h2>
-            <p className="text-sm text-foreground">{COLLABORATION_SPLIT_LABELS[monitor.split]}</p>
+            <p className="text-sm text-foreground">{formatCollaborationSplitLabel(monitor.split)}</p>
             <CollaborationStatusBadge status={monitor.collaboration.status} />
             <p className="text-xs text-muted-foreground">
               მოთხოვნის ID: {monitor.collaborationRequestId}

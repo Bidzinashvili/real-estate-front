@@ -27,6 +27,7 @@ function normalizeNotificationRow(value: JsonValue): AppNotification | null {
     createdAt: asString(record.createdAt).trim(),
     readAt: asNullableString(record.readAt),
     propertyId: readOptionalNullableId(record.propertyId),
+    collaborationRequestId: readOptionalNullableId(record.collaborationRequestId),
     propertyVerificationRequestId: readOptionalNullableId(
       record.propertyVerificationRequestId,
     ),

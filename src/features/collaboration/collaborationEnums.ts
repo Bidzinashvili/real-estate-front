@@ -19,9 +19,11 @@ export const COLLABORATION_STATUS_GROUPS = [
 
 export type CollaborationStatusGroup = (typeof COLLABORATION_STATUS_GROUPS)[number];
 
+/** Standard splits offered when creating a request. */
 export const COLLABORATION_SPLITS = [50, 33, 25] as const;
 
-export type CollaborationSplit = (typeof COLLABORATION_SPLITS)[number];
+/** Commission split in percent (1-100). A counter-offer may use any whole percent. */
+export type CollaborationSplit = number;
 
 export const COLLABORATION_PARTICIPANT_ROLES = [
   "REQUESTER",
@@ -60,8 +62,8 @@ export function isCollaborationStatusGroup(
   return (COLLABORATION_STATUS_GROUPS as readonly string[]).includes(value);
 }
 
-export function isCollaborationSplit(value: number): value is CollaborationSplit {
-  return (COLLABORATION_SPLITS as readonly number[]).includes(value);
+export function isCollaborationSplit(value: number): boolean {
+  return Number.isInteger(value) && value >= 1 && value <= 100;
 }
 
 export function additionalParticipantsNeeded(split: CollaborationSplit): number {
