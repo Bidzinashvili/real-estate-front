@@ -11,6 +11,7 @@ import { GEORGIAN_PHONE_PREFIX, normalizeGeorgianPhone } from "@/shared/lib/norm
 import { districtsPayloadValueForCity } from "@/features/clients/clientCities";
 import { normalizeClientStatusForApi } from "@/features/clients/clientStatusDisplay";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
+import { descriptionWithPet } from "@/features/clients/clientPetDescription";
 
 function isEmptyPhoneEntry(raw: string): boolean {
   const trimmed = raw.trim();
@@ -223,7 +224,7 @@ export function buildCreateClientDto(values: ClientFormValues): CreateClientPayl
     name: values.name,
     phones: phonesForIdentitySubmit(values.phones),
     dealType: values.dealType,
-    description: values.description,
+    description: descriptionWithPet(values.description, values.petKind, values.petOther),
     publicComment: toSubmittedPublicComment(values.publicComment),
     districts: {
       value: districtsPayloadValueForCity(values.city, values.districts.value),
@@ -307,7 +308,7 @@ export function buildUpdateClientDto(
     name: values.name,
     phones: phonesForIdentitySubmit(values.phones),
     dealType: values.dealType,
-    description: values.description,
+    description: descriptionWithPet(values.description, values.petKind, values.petOther),
     publicComment: toSubmittedPublicComment(values.publicComment),
     districts: {
       value: districtsPayloadValueForCity(values.city, values.districts.value),

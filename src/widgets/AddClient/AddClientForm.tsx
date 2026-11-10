@@ -174,7 +174,6 @@ export function AddClientForm({
           phoneFields={phoneFields}
           appendPhone={appendPhone}
           removePhone={removePhone}
-          isRentDeal={isRentDeal}
           showDefaultStatusOption
           clientStatusSelectOptions={CLIENT_CREATE_STATUSES.map((clientStatus) => ({
             value: clientStatus,

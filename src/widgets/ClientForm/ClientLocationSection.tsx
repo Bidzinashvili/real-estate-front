@@ -111,7 +111,7 @@ export function ClientLocationSection({
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
             <label className="block flex-1 text-sm font-medium text-foreground">
-              მისამართები
+              ჩაწერეთ სასურველი ქუჩები
             </label>
             {showLockForPath("addresses") ? (
               <Controller
@@ -146,14 +146,14 @@ export function ClientLocationSection({
                         type="button"
                         onClick={() => removeAddress(addressIndex)}
                         className="flex-none text-muted-foreground transition hover:text-destructive"
-                        aria-label="მისამართის წაშლა"
+                        aria-label="ქუჩის წაშლა"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-muted-foreground">დაამატეთ მისამართი დასაწყებად.</p>
+                  <p className="text-xs text-muted-foreground">დაამატეთ ქუჩა დასაწყებად.</p>
                 )}
                 <button
                   type="button"
@@ -161,7 +161,7 @@ export function ClientLocationSection({
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  მისამართის დამატება
+                  ქუჩის დამატება
                 </button>
               </div>
             )}

@@ -171,7 +171,6 @@ function EditClientFormInner({
           phoneFields={phoneFields}
           appendPhone={appendPhone}
           removePhone={removePhone}
-          isRentDeal={isRentDeal}
           showReminderHint
           showReminderDateField={false}
           clientStatusSelectOptions={(CLIENT_EDIT_STATUSES.includes(

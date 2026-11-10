@@ -139,7 +139,7 @@ export function ClientLabelsField({
                 commitCustomLabel(customInput);
               }
             }}
-            placeholder="მაგ. ლიფტის გარეშე სართული"
+            placeholder="მაგ: სპორტის სასახლესთან; მეტრო სარაჯიშვილთან..."
             className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
           />
           <button

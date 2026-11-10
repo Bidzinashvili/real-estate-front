@@ -8,6 +8,7 @@ import {
 import { CLIENT_BUSINESS_STATUSES } from "@/features/clients/clientStatusDisplay";
 import type { LockState } from "@/features/clients/clientApi.types";
 import { CLIENT_PREFERENCE_VALUES } from "@/features/matching/matchingEnums";
+import { PET_KIND_FORM_VALUES } from "@/features/clients/clientPetDescription";
 import { OUTCOME_SOURCES } from "@/features/lifecycle/lifecycleEnums";
 import { CLIENT_CITY_TBILISI, CLIENT_CITY_VALUES } from "@/features/clients/clientCities";
 import {
@@ -161,6 +162,8 @@ export const clientFormSchema = z
     description: z.string().max(20000),
     publicComment: z.string().max(20000).optional().or(z.literal("")),
     pet: lockedPetPreferenceFieldSchema,
+    petKind: z.enum(PET_KIND_FORM_VALUES),
+    petOther: z.string().max(200),
     city: z.enum(CLIENT_CITY_VALUES),
     districts: lockedStringArrayFieldSchema,
     addresses: lockedStringArrayFieldSchema,
@@ -338,7 +341,9 @@ export const emptyClientFormDefaults: ClientFormValues = {
   dealType: "SALE",
   description: "",
   publicComment: "",
-  pet: { value: "TO_VERIFY", lock: "none" },
+  pet: { value: "NO", lock: "none" },
+  petKind: "NONE",
+  petOther: "",
   city: CLIENT_CITY_TBILISI,
   districts: { value: [], lock: "none" },
   addresses: { value: [], lock: "none" },

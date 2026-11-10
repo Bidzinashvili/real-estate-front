@@ -45,7 +45,7 @@ export const BUILDING_STRUCTURE_FIELD_LABEL = "კორპუსი";
 
 export const KITCHEN_TYPE_FIELD_LABEL = "სამზარეულო";
 
-export const APARTMENT_PROJECT_FIELD_LABEL = "არასტანდარტული";
+export const APARTMENT_PROJECT_FIELD_LABEL = "პროექტი";
 
 export const KITCHEN_TYPE_LABELS = {
   SEPARATE: "ცალკე",

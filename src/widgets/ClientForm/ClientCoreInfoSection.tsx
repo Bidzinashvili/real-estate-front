@@ -21,7 +21,8 @@ import type { EnumSelectOption } from "@/features/clientInviteLinks/formSchemaHi
 import { GeorgianPhoneInput } from "@/shared/components/GeorgianPhoneInput";
 import { GEORGIAN_PHONE_PREFIX } from "@/shared/lib/normalizeGeorgianPhone";
 import { PreferenceLockButton } from "@/widgets/ClientForm/PreferenceLockButton";
-import { ClientFeatureRequirementValueControl } from "@/widgets/ClientForm/ClientFeatureRequirementValueControl";
+import { ClientPetField } from "@/widgets/ClientForm/ClientPetField";
+import { petKindToPreference } from "@/features/clients/clientPetDescription";
 import { OutcomeSourcePicker } from "@/widgets/Lifecycle/OutcomeSourcePicker";
 import { isOutcomeSource } from "@/features/lifecycle/lifecycleEnums";
 import { ClientProfileLookupSignals } from "@/widgets/ClientProfiles/ClientProfileLookupSignals";
@@ -39,7 +40,6 @@ type ClientCoreInfoSectionProps = {
   phoneFields: Array<{ id: string }>;
   appendPhone: (value: string) => void;
   removePhone: (index: number) => void;
-  isRentDeal?: boolean;
   showDefaultStatusOption?: boolean;
   optionalStatusChoice?: boolean;
   showClientStatusField?: boolean;
@@ -61,7 +61,6 @@ export function ClientCoreInfoSection({
   phoneFields,
   appendPhone,
   removePhone,
-  isRentDeal = false,
   showDefaultStatusOption = false,
   optionalStatusChoice = false,
   showClientStatusField = true,
@@ -240,36 +239,44 @@ export function ClientCoreInfoSection({
             ) : null}
           </div>
 
-          {isRentDeal ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <label className="block flex-1 text-sm font-medium text-foreground">შინაური ცხოველი</label>
-                {showLockForPath("pet") ? (
-                  <Controller
-                    name="pet.lock"
-                    control={control}
-                    render={({ field }) => (
-                      <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
-                    )}
-                  />
-                ) : null}
-              </div>
-              <Controller
-                name="pet.value"
-                control={control}
-                render={({ field }) => (
-                  <ClientFeatureRequirementValueControl
-                    value={field.value}
-                    onChange={field.onChange}
-                    includeToVerify
-                  />
-                )}
-              />
-              {fieldDescriptions?.pet ? (
-                <p className="text-xs text-muted-foreground">{fieldDescriptions.pet}</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <label className="block flex-1 text-sm font-medium text-foreground">შინაური ცხოველი</label>
+              {showLockForPath("pet") ? (
+                <Controller
+                  name="pet.lock"
+                  control={control}
+                  render={({ field }) => (
+                    <PreferenceLockButton mode="client-form" value={field.value} onChange={field.onChange} />
+                  )}
+                />
               ) : null}
             </div>
-          ) : null}
+            <Controller
+              name="petKind"
+              control={control}
+              render={({ field: kindField }) => (
+                <Controller
+                  name="petOther"
+                  control={control}
+                  render={({ field: otherField }) => (
+                    <ClientPetField
+                      kind={kindField.value}
+                      onKindChange={(nextKind) => {
+                        kindField.onChange(nextKind);
+                        setValue("pet.value", petKindToPreference(nextKind), { shouldDirty: true });
+                      }}
+                      otherText={otherField.value}
+                      onOtherTextChange={otherField.onChange}
+                    />
+                  )}
+                />
+              )}
+            />
+            {fieldDescriptions?.pet ? (
+              <p className="text-xs text-muted-foreground">{fieldDescriptions.pet}</p>
+            ) : null}
+          </div>
         </div>
 
         <div

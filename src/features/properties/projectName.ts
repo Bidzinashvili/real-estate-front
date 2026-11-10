@@ -6,7 +6,7 @@ const NON_STANDARD_PROJECT_KEYS = new Set([
   "non-standard",
   "nonstandard",
   "non_standard",
-  "არასტანდარტული",
+  "პროექტი",
 ]);
 
 function projectLookupKey(value: string): string {

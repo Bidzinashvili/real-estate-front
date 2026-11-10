@@ -10,6 +10,7 @@ import {
   inferClientCityFromDistricts,
 } from "@/features/clients/clientCities";
 import { clientStatusToFormValue } from "@/features/clients/clientStatusDisplay";
+import { petKindFromPreference } from "@/features/clients/clientPetDescription";
 
 function isoToDatetimeLocal(iso: string | null): string {
   if (!iso) {
@@ -63,6 +64,8 @@ export function mapClientDetailToFormValues(client: ClientDetail): ClientFormVal
     description: client.description ?? "",
     publicComment: client.publicComment ?? "",
     pet: wrapLockedPreference(client.pet ?? undefined, client.petLock),
+    petKind: petKindFromPreference(client.pet ?? undefined),
+    petOther: "",
     city: inferredCity,
     districts: {
       value: districtsFormValueForCity(inferredCity, client.districts),
